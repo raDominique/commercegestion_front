@@ -1,7 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { publicRoutes, privateRoutes } from './routes';
-import Layout from '../components/Layout/Layout.jsx';
+import { Layout } from '../components/Layout/Layout.jsx';
+// import AdminLayout from '../components/Layout/AdminLayout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 
@@ -33,6 +34,7 @@ const AppRoutes = () => {
                             />
                         );
                     }
+                    if (path === '/') return null; // route Home supprimée
                     return (
                         <Route
                             key={idx}

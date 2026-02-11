@@ -1,4 +1,7 @@
-import React from 'react';
+import usePageTitle from '../../utils/usePageTitle.jsx';
 
-const Passifs = () => <h1>Passifs</h1>;
+const Passifs = () => {
+	usePageTitle('Passifs');
+	return <h1>Passifs</h1>;
+};
 export default Passifs;

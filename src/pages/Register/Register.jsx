@@ -1,65 +1,129 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import usePageTitle from '../../utils/usePageTitle.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { Button } from '../../components/ui/button.jsx';
+import { Card } from '../../components/ui/card.jsx';
+import { Input } from '../../components/ui/input.jsx';
+import { Label } from '../../components/ui/label.jsx';
+import { toast } from 'sonner';
+
 
 const Register = () => {
-  const [username, setUsername] = useState('');
+  usePageTitle('Inscription');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== confirm) {
-      setError('Les mots de passe ne correspondent pas');
-      setSuccess('');
+
+    if (password !== confirmPassword) {
+      toast.error('Les mots de passe ne correspondent pas');
       return;
     }
-    // Ici, tu pourrais envoyer les infos à une API ou les stocker localement pour test
-    setError('');
-    setSuccess('Inscription réussie !');
-    setTimeout(() => navigate('/login'), 1500);
+
+    setLoading(true);
+
+    try {
+      await register(email, password, name);
+      toast.success('Inscription réussie !');
+      navigate('/actifs');
+    } catch (error) {
+      toast.error("Erreur lors de l'inscription");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded shadow mt-10">
-      <h1 className="text-2xl font-bold mb-4 text-center">Inscription</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block mb-1">Nom d'utilisateur</label>
-          <input
-            type="text"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            required
-            className="w-full border rounded px-3 py-2"
-          />
+    <div className="min-h-screen bg-linear-to-br from-neutral-50 to-neutral-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8 border-neutral-200">
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-linear-to-br from-violet-600 to-indigo-600 rounded-xl" />
+            </div>
+            <h1 className="text-2xl text-neutral-900">Créer un compte</h1>
+            <p className="text-sm text-neutral-600">
+              Rejoignez Etokisana dès aujourd'hui
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nom complet</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Jean Dupont"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="border-neutral-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="votre@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="border-neutral-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Mot de passe</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="border-neutral-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="border-neutral-300"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+              disabled={loading}
+            >
+              {loading ? 'Inscription...' : "S'inscrire"}
+            </Button>
+          </form>
+
+          <div className="text-center text-sm">
+            <span className="text-neutral-600">Déjà un compte ? </span>
+            <Link to="/login" className="text-violet-600 hover:text-violet-700">
+              Se connecter
+            </Link>
+          </div>
         </div>
-        <div className="mb-4">
-          <label className="block mb-1">Mot de passe</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1">Confirmer le mot de passe</label>
-          <input
-            type="password"
-            value={confirm}
-            onChange={e => setConfirm(e.target.value)}
-            required
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-        {error && <div className="text-red-500 mb-2">{error}</div>}
-        {success && <div className="text-green-600 mb-2">{success}</div>}
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">S'inscrire</button>
-      </form>
+      </Card>
     </div>
   );
 };

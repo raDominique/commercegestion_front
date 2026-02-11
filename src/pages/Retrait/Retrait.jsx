@@ -1,4 +1,9 @@
-import React from 'react';
 
-const Retrait = () => <h1>Retrait</h1>;
+import React from 'react';
+import usePageTitle from '../../utils/usePageTitle.jsx';
+
+const Retrait = () => {
+	usePageTitle('Retrait');
+	return <h1>Retrait</h1>;
+};
 export default Retrait;

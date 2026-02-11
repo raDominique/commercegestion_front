@@ -1,0 +1,4 @@
+// Select component
+export default function Select() {
+  return <select><option>Select</option></select>;
+}

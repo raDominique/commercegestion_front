@@ -1,54 +1,95 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { Button } from '../../components/ui/button';
+import { Card } from '../../components/ui/card';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { toast } from 'sonner';
+import usePageTitle from '../../utils/usePageTitle';
 
-const Login = () => {
-  const [username, setUsername] = useState('');
+export default function Login() {
+  usePageTitle('Connexion');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = login(username, password);
-    if (success) {
-      setError('');
-      navigate('/dashboard');
-    } else {
-      setError('Identifiants invalides');
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      toast.success('Connexion réussie !');
+      navigate('/actifs');
+    } catch (error) {
+      toast.error('Erreur de connexion');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded shadow mt-10">
-      <h1 className="text-2xl font-bold mb-4 text-center">Connexion</h1>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block mb-1">Nom d'utilisateur</label>
-          <input
-            type="text"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            required
-            className="w-full border rounded px-3 py-2"
-          />
+    <div className="min-h-screen bg-linear-to-br from-neutral-50 to-neutral-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8 border-neutral-200">
+        <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-linear-to-br from-violet-600 to-indigo-600 rounded-xl" />
+            </div>
+            <h1 className="text-2xl text-neutral-900">Connexion</h1>
+            <p className="text-sm text-neutral-600">
+              Connectez-vous à votre compte Etokisana
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="votre@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="border-neutral-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Mot de passe</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="border-neutral-300"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+              disabled={loading}
+            >
+              {loading ? 'Connexion...' : 'Se connecter'}
+            </Button>
+          </form>
+
+          <div className="text-center text-sm">
+            <span className="text-neutral-600">Pas encore de compte ? </span>
+            <Link to="/register" className="text-violet-600 hover:text-violet-700">
+              S'inscrire
+            </Link>
+          </div>
+
         </div>
-        <div className="mb-4">
-          <label className="block mb-1">Mot de passe</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-        {error && <div className="text-red-500 mb-2">{error}</div>}
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Se connecter</button>
-      </form>
+      </Card>
     </div>
   );
-};
-
-export default Login;
+}

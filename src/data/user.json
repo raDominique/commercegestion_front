@@ -2,13 +2,13 @@
   "users": [
     {
       "id": 1,
-      "username": "admin",
+      "username": "admin@admin.com",
       "password": "admin123",
       "role": "admin"
     },
     {
       "id": 2,
-      "username": "user",
+      "username": "user@user.com",
       "password": "user123",
       "role": "user"
     }
