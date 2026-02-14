@@ -7,7 +7,7 @@ import { Card } from '../../components/ui/card.jsx';
 import { Input } from '../../components/ui/input.jsx';
 import { Label } from '../../components/ui/label.jsx';
 import { toast } from 'sonner';
-
+import LogoImage from '../../assets/logo/logo.png';
 
 const Register = () => {
   usePageTitle('Inscription');
@@ -46,11 +46,11 @@ const Register = () => {
         <div className="space-y-6">
           <div className="space-y-2 text-center">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-linear-to-br from-violet-600 to-indigo-600 rounded-xl" />
+              <img src={LogoImage} alt="Logo Etokisana" className="h-16 w-auto" />
             </div>
             <h1 className="text-2xl text-neutral-900">Créer un compte</h1>
             <p className="text-sm text-neutral-600">
-              Rejoignez Etokisana dès aujourd'hui
+              Rejoignez <span className="font-bold text-violet-600">Etokisana</span> dès aujourd'hui
             </p>
           </div>
 

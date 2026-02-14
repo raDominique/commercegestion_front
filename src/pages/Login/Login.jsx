@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle';
+import LogoImage from '../../assets/logo/logo.png';
 
 export default function Login() {
   usePageTitle('Connexion');
@@ -37,11 +38,11 @@ export default function Login() {
         <div className="space-y-6">
           <div className="space-y-2 text-center">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-linear-to-br from-violet-600 to-indigo-600 rounded-xl" />
+              <img src={LogoImage} alt="Logo Etokisana" className="h-16 w-auto" />
             </div>
             <h1 className="text-2xl text-neutral-900">Connexion</h1>
             <p className="text-sm text-neutral-600">
-              Connectez-vous à votre compte Etokisana
+              Connectez-vous à votre compte <span className="font-bold text-violet-600">Etokisana</span>
             </p>
           </div>
 

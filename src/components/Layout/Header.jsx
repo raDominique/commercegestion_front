@@ -1,9 +1,9 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import { Logout, Menu, Close, AccountBalanceWallet } from '@mui/icons-material';
 import { privateRoutes } from '../../routes/routes';
+import LogoImage from '../../assets/logo/logo.png';
 
 function Header({ user, mobileMenuOpen, setMobileMenuOpen, handleLogout, userNavItems, accountNavItems, adminNavItems, isActive }) {
     return (
@@ -12,8 +12,7 @@ function Header({ user, mobileMenuOpen, setMobileMenuOpen, handleLogout, userNav
                 <div className="flex justify-between items-center h-16">
                     <div className="flex items-center gap-8">
                         <Link to="/" className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-linear-to-br from-violet-600 to-indigo-600 rounded-lg" />
-                            <span className="text-lg text-neutral-900">Etokisana</span>
+                            <img src={LogoImage} alt="Logo" className="h-8 w-auto" />
                         </Link>
                     </div>
                     {user && (
