@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "name": "Boutique Principale",
+    "url": "https://boutique-principale.com",
+    "status": "Actif",
+    "visits": 1250,
+    "sales": 45
+  },
+  {
+    "id": 2,
+    "name": "Site Promotionnel",
+    "url": "https://promo.com",
+    "status": "Actif",
+    "visits": 850,
+    "sales": 23
+  },
+  {
+    "id": 3,
+    "name": "Marketplace",
+    "url": "https://marketplace.com",
+    "status": "En pause",
+    "visits": 0,
+    "sales": 0
+  }
+]
