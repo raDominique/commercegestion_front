@@ -4,8 +4,10 @@ import { Separator } from '../ui/separator';
 import { Logout, Menu, Close, AccountBalanceWallet } from '@mui/icons-material';
 import { privateRoutes } from '../../routes/routes';
 import LogoImage from '../../assets/logo/logo.png';
+import { useAuth } from '../../context/AuthContext';
 
-function Header({ user, mobileMenuOpen, setMobileMenuOpen, handleLogout, userNavItems, accountNavItems, adminNavItems, isActive }) {
+function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
+    const { user } = useAuth();
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
