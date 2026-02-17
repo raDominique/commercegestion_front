@@ -10,17 +10,19 @@ function Sidebar({ user }) {
   const isActive = (path) => location.pathname === path;
 
   // Filter navigation items from routes.js
-  const userNavItems = privateRoutes.filter(r => ['user', 'admin'].some(role => r.role && r.role.includes(role)) && [
+  const userNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
     '/actifs', '/passifs', '/boutique', '/depot', '/retrait'
   ].includes(r.path));
 
-  const accountNavItems = privateRoutes.filter(r => ['user', 'admin'].some(role => r.role && r.role.includes(role)) && [
+  const accountNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
     '/mon-compte', '/mes-produits', '/mes-transactions', '/mes-sites'
   ].includes(r.path));
 
-  const adminNavItems = privateRoutes.filter(r => r.role && r.role.includes('admin') && [
-    '/admin/dashboard', '/admin/utilisateurs', '/admin/produits', '/admin/categories'
-  ].includes(r.path));
+  const adminNavItems = privateRoutes.filter(
+    r => r.role && r.role.includes('Admin') && [
+      '/admin/dashboard', '/admin/utilisateurs', '/admin/produits', '/admin/categories', '/administration'
+    ].includes(r.path)
+  );
 
   return (
     <aside className="hidden md:block w-64 bg-white border-r border-neutral-200 sticky top-16">
@@ -66,7 +68,7 @@ function Sidebar({ user }) {
             </Link>
           ))}
         </nav>
-        {user.role === 'admin' && (
+        {user.userAccess === 'Admin' && (
           <>
             <Separator />
             <nav className="space-y-1">

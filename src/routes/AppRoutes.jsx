@@ -2,13 +2,16 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { publicRoutes, privateRoutes } from './routes';
 import { Layout } from '../components/Layout/Layout.jsx';
-// import AdminLayout from '../components/Layout/AdminLayout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ allowedRoles, children }) => {
     const { user } = useAuth();
-    return user ? children : <Navigate to="/login" />;
+    if (!user) return <Navigate to="/login" />;
+    if (allowedRoles && !allowedRoles.includes(user.userAccess)) {
+        return <Navigate to="/actifs" replace />;
+    }
+    return children;
 };
 
 
@@ -49,12 +52,8 @@ const AppRoutes = () => {
                         key={idx}
                         path={path}
                         element={
-                            <ProtectedRoute>
-                                {role && user && !role.split(',').map(r => r.trim()).includes(user.role) ? (
-                                    <Navigate to="/actifs" replace />
-                                ) : (
-                                    <Layout>{React.createElement(element)}</Layout>
-                                )}
+                            <ProtectedRoute allowedRoles={role ? role.split(',').map(r => r.trim()) : undefined}>
+                                <Layout>{React.createElement(element)}</Layout>
                             </ProtectedRoute>
                         }
                     />

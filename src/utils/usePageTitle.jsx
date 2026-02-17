@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 
 const usePageTitle = (title) => {
     useEffect(() => {
-        document.title = `${title} || Etokisana`;
+        document.title = `${title} | Etokisana`;
     }, [title]);
 };
 

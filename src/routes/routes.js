@@ -13,7 +13,6 @@ import Dashboard from '@mui/icons-material/Dashboard';
 import Group from '@mui/icons-material/Group';
 import Category from '@mui/icons-material/Category';
 
-import Home from '../pages/Home/Home.jsx';
 import Login from '../pages/Login/Login.jsx';
 import Register from '../pages/Register/Register.jsx';
 import Depot from '../pages/Depot/Depot.jsx';
@@ -21,7 +20,6 @@ import Retrait from '../pages/Retrait/Retrait.jsx';
 import Boutique from '../pages/Boutique/Boutique.jsx';
 import Actifs from '../pages/Actifs/Actifs.jsx';
 import Passifs from '../pages/Passifs/Passifs.jsx';
-import Administration from '../pages/Administration/Administration.jsx';
 import AdminDashboard from '../pages/Administration/AdminDashboard.jsx';
 import AdminUsers from '../pages/Administration/AdminUsers.jsx';
 import AdminProducts from '../pages/Administration/AdminProducts.jsx';
@@ -37,19 +35,20 @@ export const publicRoutes = [
 ];
 
 export const privateRoutes = [
-    { path: '/actifs', element: Actifs, role: 'user, admin', icon: TrendingUp },
-    { path: '/passifs', element: Passifs, role: 'user, admin', icon: TrendingDown },
-    { path: '/boutique', element: Boutique, role: 'user, admin', icon: Store },
-    { path: '/depot', element: Depot, role: 'user, admin', icon: CreditCard },
-    { path: '/retrait', element: Retrait, role: 'user, admin', icon: AccountBalanceWallet },
-    { path: '/mon-compte', element: MonCompte, role: 'user, admin', icon: Person },
-    { path: '/mes-produits', element: MesProduits, role: 'user, admin', icon: Inventory },
-    { path: '/mes-transactions', element: MesTransactions, role: 'user, admin', icon: ReceiptLong },
-    { path: '/mes-sites', element: MesSites, role: 'user, admin', icon: Public },
-    { path: '/administration', element: Administration, role: 'admin' },
-    { path: '/admin/dashboard', element: AdminDashboard, role: 'admin', icon: Dashboard },
-    { path: '/admin/utilisateurs', element: AdminUsers, role: 'admin', icon: Group },
-    { path: '/admin/produits', element: AdminProducts, role: 'admin', icon: Inventory },
-    { path: '/admin/categories', element: AdminCategories, role: 'admin', icon: Category },
+    // Routes accessibles à Utilisateur et Moderateur et Admin
+    { path: '/actifs', element: Actifs, role: 'Utilisateur,Admin', icon: TrendingUp },
+    { path: '/passifs', element: Passifs, role: 'Utilisateur,Admin', icon: TrendingDown },
+    { path: '/boutique', element: Boutique, role: 'Utilisateur,Admin', icon: Store },
+    { path: '/depot', element: Depot, role: 'Utilisateur,Admin', icon: CreditCard },
+    { path: '/retrait', element: Retrait, role: 'Utilisateur,Admin', icon: AccountBalanceWallet },
+    { path: '/mon-compte', element: MonCompte, role: 'Utilisateur,Admin', icon: Person },
+    { path: '/mes-produits', element: MesProduits, role: 'Utilisateur,Admin', icon: Inventory },
+    { path: '/mes-transactions', element: MesTransactions, role: 'Utilisateur,Admin', icon: ReceiptLong },
+    { path: '/mes-sites', element: MesSites, role: 'Utilisateur,Admin', icon: Public },
+    // Routes strictement admin
+    { path: '/admin/dashboard', element: AdminDashboard, role: 'Admin', icon: Dashboard },
+    { path: '/admin/utilisateurs', element: AdminUsers, role: 'Admin', icon: Group },
+    { path: '/admin/produits', element: AdminProducts, role: 'Admin', icon: Inventory },
+    { path: '/admin/categories', element: AdminCategories, role: 'Admin', icon: Category },
     // Settings icon for categories
 ];
