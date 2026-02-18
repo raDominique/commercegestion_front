@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Squelette } from '../../components/ui/skeleton.jsx';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getProfile } from '../../services/auth.service';
@@ -90,13 +91,17 @@ export default function Login() {
                   className="border-neutral-300"
                 />
               </div>
-              <Button
-                type="submit"
-                className="w-full bg-violet-600 hover:bg-violet-700 text-white"
-                disabled={loading}
-              >
-                {loading ? 'Connexion...' : 'Se connecter'}
-              </Button>
+              {loading ? (
+                <Squelette className="w-full h-10 mb-2" />
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                  disabled={loading}
+                >
+                  Se connecter
+                </Button>
+              )}
             </form>
             <div className="text-center text-sm mt-6">
               <span className="text-neutral-600">Pas encore de compte ? </span>

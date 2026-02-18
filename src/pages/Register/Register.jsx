@@ -3,6 +3,7 @@ import LeafletMapPicker from '../../components/ui/LeafletMapPicker.jsx';
 import { Link, useNavigate } from 'react-router-dom';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { Button } from '../../components/ui/button.jsx';
+import { Squelette } from '../../components/ui/skeleton.jsx';
 import { toast } from 'sonner';
 import { Card } from '../../components/ui/card.jsx';
 import { Input } from '../../components/ui/input.jsx';
@@ -429,13 +430,17 @@ const Register = () => {
                   </Button>
                 )}
                 {step === steps.length - 1 && (
-                  <Button
-                    type="submit"
-                    className="bg-violet-600 hover:bg-violet-700 text-white"
-                    disabled={loading}
-                  >
-                    {loading ? 'Inscription...' : "S'inscrire"}
-                  </Button>
+                  loading ? (
+                    <Squelette className="w-full h-10 mb-2" />
+                  ) : (
+                    <Button
+                      type="submit"
+                      className="bg-violet-600 hover:bg-violet-700 text-white"
+                      disabled={loading}
+                    >
+                      S'inscrire
+                    </Button>
+                  )
                 )}
               </div>
             </form>

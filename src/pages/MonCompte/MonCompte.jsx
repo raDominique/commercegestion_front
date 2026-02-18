@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Squelette } from '../../components/ui/skeleton.jsx';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -70,7 +71,13 @@ export default function MonCompte() {
   };
 
   if (loading) {
-    return <div className="p-6 max-w-4xl mx-auto">Chargement du profil...</div>;
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <Squelette className="w-full h-32 mb-4" />
+        <Squelette className="w-1/2 h-8 mb-2" />
+        <Squelette className="w-1/3 h-6" />
+      </div>
+    );
   }
   if (error) {
     return <div className="p-6 max-w-4xl mx-auto text-red-600">{error}</div>;
