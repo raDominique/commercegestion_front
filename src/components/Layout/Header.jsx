@@ -43,7 +43,10 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={handleLogout}
+                                    onClick={() => {
+                                        console.log('[DEBUG] Déconnexion demandée depuis Header');
+                                        handleLogout();
+                                    }}
                                     className="text-neutral-600"
                                 >
                                     <Logout className="w-4 h-4" />
@@ -144,6 +147,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                         <Button
                             variant="ghost"
                             onClick={() => {
+                                console.log('[DEBUG] Déconnexion demandée depuis Header (mobile)');
                                 handleLogout();
                                 setMobileMenuOpen(false);
                             }}

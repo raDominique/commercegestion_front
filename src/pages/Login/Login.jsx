@@ -33,10 +33,13 @@ export default function Login() {
         toast.error("Votre rôle ne permet pas d'accéder à cette application.");
       }
     } catch (error) {
-      // Affiche uniquement l’erreur de l’API loginUser, jamais celle de refreshToken
+      // Affiche toujours l’erreur de l’API loginUser, jamais celle du refreshToken
       let apiMessage = error?.response?.data?.message;
+      // Si l’erreur est une AxiosError 401/403, c’est bien l’API login qui a échoué
       if (apiMessage) {
         toast.error(apiMessage);
+      } else if (error?.isAxiosError && error?.response?.status >= 400 && error?.response?.status < 500) {
+        toast.error('Erreur de connexion : identifiants invalides ou accès refusé.');
       } else if (error?.message && error?.message !== 'Session expirée') {
         toast.error(error.message);
       } else {

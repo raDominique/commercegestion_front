@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { loginUser, registerUser, verifyToken, refreshToken, logoutUser, getProfile } from '../services/auth.service';
-import { getAccessToken, clearAccessToken } from '../services/token.service';
+
+import { loginUser, refreshToken, logoutUser, getProfile } from '../services/auth.service';
+import { getAccessToken, setAccessToken, clearAccessToken, getRefreshToken } from '../services/token.service';
 import { setAxiosBootstrapping } from '../services/axios.config';
 
 const AuthContext = createContext();
@@ -12,6 +13,7 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState(null);
 
+
   // Décoder le payload du JWT (sans vérif signature)
   const decodeJWT = (token) => {
     try {
@@ -22,37 +24,24 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Initialisation robuste : appel unique à /auth/refresh au mount, logs de debug, synchronisation avec axios
+
+
+  // Initialisation robuste : session persistante via refreshToken JS cookie
   useEffect(() => {
     async function initAuth() {
       setAxiosBootstrapping(true);
       setLoading(true);
-      let bootstrapped = false;
       try {
-        const token = getAccessToken();
-        if (token) {
+        const refreshToken = getRefreshToken();
+        if (refreshToken) {
           try {
-            await verifyToken(token);
-            const decoded = decodeJWT(token);
-            setUser(decoded);
-            setIsAuthenticated(true);
-            setError(null);
-            console.debug('[DEBUG] Token en mémoire valide, utilisateur restauré.');
-            bootstrapped = true;
-          } catch {
-            // Token en mémoire invalide, on tente refresh
-          }
-        }
-        if (!bootstrapped) {
-          // Appel unique à /auth/refresh
-          try {
-            console.debug('[DEBUG] Appel /auth/refresh au mount (initAuth)');
-            const newToken = await refreshToken();
-            console.debug('[DEBUG] Nouveau accessToken reçu:', newToken);
+            const newToken = await refreshTokenFn();
+            setAccessToken(newToken);
             const decoded = decodeJWT(newToken);
             setUser(decoded);
             setIsAuthenticated(true);
             setError(null);
+            console.debug('[DEBUG] Session restaurée via refreshToken cookie');
           } catch (err) {
             setUser(null);
             setIsAuthenticated(false);
@@ -60,14 +49,22 @@ export function AuthProvider({ children }) {
             clearAccessToken();
             console.debug('[DEBUG] Echec du refresh au mount:', err);
           }
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
+          setError(null);
+          clearAccessToken();
         }
       } finally {
         setLoading(false);
         setAxiosBootstrapping(false);
       }
     }
+    // Pour éviter shadowing avec import
+    const refreshTokenFn = refreshToken;
     initAuth();
   }, []);
+
 
   // Login
   const login = async (email, password) => {
@@ -76,6 +73,7 @@ export function AuthProvider({ children }) {
     try {
       const data = await loginUser(email, password);
       if (data && data.accessToken) {
+        setAccessToken(data.accessToken);
         const decoded = decodeJWT(data.accessToken);
         setUser(decoded);
         setIsAuthenticated(true);
@@ -93,8 +91,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Register (optionnel, expose la fonction)
-  const register = async (formData) => registerUser(formData);
 
   // Logout
   const logout = async () => {
@@ -110,6 +106,7 @@ export function AuthProvider({ children }) {
     }
   };
 
+
   return (
     <AuthContext.Provider
       value={{
@@ -119,7 +116,6 @@ export function AuthProvider({ children }) {
         error,
         login,
         logout,
-        register,
         getProfile,
       }}
     >

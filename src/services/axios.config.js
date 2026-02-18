@@ -1,18 +1,20 @@
 import axios from "axios";
 import { getAccessToken, setAccessToken, clearAccessToken } from './token.service';
 
-// Configuration Axios pour l'API EMIT
 const axiosConfig = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
 });
 // Debug : log à chaque requête
+
+// Debug : log à chaque requête /auth/refresh
 axiosConfig.interceptors.request.use((config) => {
   if (config.url?.includes('/auth/refresh')) {
     console.debug('[DEBUG] Appel /auth/refresh, cookie envoyé:', document.cookie);
   }
   return config;
 });
+
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -29,32 +31,27 @@ function processQueue(error, token = null) {
   failedQueue = [];
 }
 
+
 axiosConfig.interceptors.request.use(
   (config) => {
-    // Ajouter le token d'accès aux en-têtes de la requête
+    // Injecte le token d'accès si présent
     const token = getAccessToken();
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    // Gérer les erreurs de requête
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Intercepteur pour les réponses
+
+// Premier intercepteur : 401 pendant bootstrap => pas de redirection
 axiosConfig.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
-    // Gérer les erreurs de réponse
     if (error.response?.status === 401) {
-      // Token expiré ou invalide
       clearAccessToken();
-      // Ne pas forcer de reload, laisser React gérer la redirection ou l'affichage d'erreur
       if (isBootstrapping) {
         console.debug('[DEBUG] 401 intercepté pendant bootstrap, aucune redirection.');
       }
@@ -64,26 +61,27 @@ axiosConfig.interceptors.response.use(
 );
 
 export default axiosConfig;
+
+// Second intercepteur : gestion du refresh automatique, queue, retry, redirection si refresh échoue
 axiosConfig.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       if (isBootstrapping) {
-        // On ne tente pas de refresh automatique pendant le bootstrap
+        // Pas de refresh auto pendant bootstrap
         return Promise.reject(error);
       }
       if (isRefreshing) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
         })
-        .then(token => {
-          originalRequest.headers['Authorization'] = 'Bearer ' + token;
-          return axiosConfig(originalRequest);
-        })
-        .catch(err => Promise.reject(err));
+          .then(token => {
+            originalRequest.headers['Authorization'] = 'Bearer ' + token;
+            return axiosConfig(originalRequest);
+          })
+          .catch(err => Promise.reject(err));
       }
-
       originalRequest._retry = true;
       isRefreshing = true;
       try {
@@ -96,6 +94,10 @@ axiosConfig.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         clearAccessToken();
+        // Redirige vers /login si refresh échoue définitivement
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

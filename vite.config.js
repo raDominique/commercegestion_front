@@ -14,6 +14,13 @@ export default defineConfig(({ mode }) => {
     server: {
       port: Number(env.VITE_PORT),
       host: true,
+      proxy: {
+        '/api': {
+          target: 'https://api-etokisana.tsirylab.com',
+          changeOrigin: true,
+          secure: true,
+        },
+      },
     },
     resolve: {
       alias: {
