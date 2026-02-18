@@ -1,13 +1,38 @@
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
+import {
+    Dialog,
+    DialogTrigger,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogClose,
+} from '../ui/dialog';
 import { Logout, Menu, Close, AccountBalanceWallet } from '@mui/icons-material';
 import { privateRoutes } from '../../routes/routes';
 import LogoImage from '../../assets/logo/logo.png';
-import { useAuth } from '../../context/AuthContext';
+// import { useAuth } from '../../context/AuthContext';
+import { useEffect, useState } from 'react';
+import { getProfile } from '../../services/auth.service';
+import { toast } from 'sonner';
 
 function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
-    const { user } = useAuth();
+    // const { user: authUser } = useAuth();
+    const [profile, setProfile] = useState(null);
+    useEffect(() => {
+        let mounted = true;
+        getProfile()
+            .then((data) => { if (mounted) setProfile(data); })
+            .catch(() => { if (mounted) setProfile(null); });
+        return () => { mounted = false; };
+    }, []);
+
+    // Modal state for logout confirmation
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+    const user = profile;
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,28 +54,55 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                 <div className="flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg">
                                     <AccountBalanceWallet className="w-4 h-4 text-neutral-600" />
                                     <span className="text-sm text-neutral-900">
-                                        {typeof user.balance === 'number' ? user.balance.toLocaleString() : '0'} FCFA
+                                        {typeof user.userTotalSolde === 'number' ? user.userTotalSolde.toLocaleString('fr-MG') : '0'} Ariary
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center">
                                         <span className="text-xs text-white">
-                                            {typeof user.name === 'string' && user.name.length > 0 ? user.name.charAt(0).toUpperCase() : '?'}
+                                            {typeof user.userName === 'string' && user.userName.length > 0 ? user.userName.charAt(0).toUpperCase() : '?'}
                                         </span>
                                     </div>
-                                    <span className="text-sm text-neutral-700">{typeof user.name === 'string' ? user.name : 'Utilisateur'}</span>
+                                    <span className="text-sm text-neutral-700">{typeof user.userName === 'string' ? user.userName : 'Utilisateur'}</span>
                                 </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        console.log('[DEBUG] Déconnexion demandée depuis Header');
-                                        handleLogout();
-                                    }}
-                                    className="text-neutral-600"
-                                >
-                                    <Logout className="w-4 h-4" />
-                                </Button>
+                                <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setLogoutDialogOpen(true)}
+                                            className="text-neutral-600"
+                                        >
+                                            <Logout className="w-4 h-4" />
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Confirmer la déconnexion</DialogTitle>
+                                            <DialogDescription>
+                                                Êtes-vous sûr de vouloir vous déconnecter&nbsp;?
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button variant="outline" onClick={() => setLogoutDialogOpen(false)}>
+                                                    Annuler
+                                                </Button>
+                                            </DialogClose>
+                                            <Button
+                                                variant="destructive"
+                                                className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+                                                onClick={() => {
+                                                    setLogoutDialogOpen(false);
+                                                    handleLogout();
+                                                    toast.success('Déconnecté avec succès');
+                                                }}
+                                            >
+                                                Se déconnecter
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                         </>
                     )}
@@ -116,7 +168,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                             ))}
                         </nav>
                         {/* ADMINISTRATION */}
-                        {user.role === 'admin' && (
+                        {user.userAccess === 'Admin' && (
                             <>
                                 <Separator />
                                 <nav className="space-y-1">
@@ -144,18 +196,45 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                 </nav>
                             </>
                         )}
-                        <Button
-                            variant="ghost"
-                            onClick={() => {
-                                console.log('[DEBUG] Déconnexion demandée depuis Header (mobile)');
-                                handleLogout();
-                                setMobileMenuOpen(false);
-                            }}
-                            className="w-full justify-start text-neutral-600"
-                        >
-                            <Logout className="w-4 h-4 mr-2" />
-                            Déconnexion
-                        </Button>
+                        <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setLogoutDialogOpen(true)}
+                                    className="w-full justify-start text-neutral-600"
+                                >
+                                    <Logout className="w-4 h-4 mr-2" />
+                                    Déconnexion
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Confirmer la déconnexion</DialogTitle>
+                                    <DialogDescription>
+                                        Êtes-vous sûr de vouloir vous déconnecter&nbsp;?
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter>
+                                    <DialogClose asChild>
+                                        <Button variant="outline" onClick={() => setLogoutDialogOpen(false)}>
+                                            Annuler
+                                        </Button>
+                                    </DialogClose>
+                                    <Button
+                                        variant="destructive"
+                                        className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+                                        onClick={() => {
+                                            setLogoutDialogOpen(false);
+                                            handleLogout();
+                                            setMobileMenuOpen(false);
+                                            toast.success('Déconnecté avec succès');
+                                        }}
+                                    >
+                                        Se déconnecter
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
             )}

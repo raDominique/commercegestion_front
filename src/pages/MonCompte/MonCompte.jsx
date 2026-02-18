@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -7,15 +6,21 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useAuth } from '../../context/AuthContext';
+import { getProfile } from '../../services/auth.service';
 import { toast } from 'sonner';
 import { Switch } from '../../components/ui/switch';
 import { Person as UserIcon, Security as ShieldIcon, Notifications as BellIcon } from '@mui/icons-material';
 
 export default function MonCompte() {
   usePageTitle('Mon compte');
-  const { user } = useAuth();
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const { user: authUser } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Champs éditables
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -25,6 +30,27 @@ export default function MonCompte() {
     transactions: true,
     promotions: false,
   });
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    getProfile()
+      .then((data) => {
+        if (!mounted) return;
+        setProfile(data);
+        setName(data.userName || '');
+        setEmail(data.userEmail || '');
+        setError(null);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setError('Impossible de charger le profil');
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
 
   const handleUpdateProfile = (e) => {
     e.preventDefault();
@@ -43,6 +69,16 @@ export default function MonCompte() {
     setConfirmPassword('');
   };
 
+  if (loading) {
+    return <div className="p-6 max-w-4xl mx-auto">Chargement du profil...</div>;
+  }
+  if (error) {
+    return <div className="p-6 max-w-4xl mx-auto text-red-600">{error}</div>;
+  }
+  if (!profile) {
+    return <div className="p-6 max-w-4xl mx-auto">Aucun profil trouvé.</div>;
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="space-y-6">
@@ -58,19 +94,30 @@ export default function MonCompte() {
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-linear-to-br from-violet-600 to-indigo-600 rounded-full flex items-center justify-center">
               <span className="text-2xl text-white">
-                {user?.name?.charAt(0)?.toUpperCase()}
+                {profile.userName?.charAt(0)?.toUpperCase()}
               </span>
             </div>
             <div className="flex-1">
-              <h2 className="text-lg text-neutral-900">{user?.name}</h2>
-              <p className="text-sm text-neutral-600">{user?.email}</p>
+              <h2 className="text-lg text-neutral-900">{profile.userName} {profile.userFirstname}</h2>
+              <p className="text-sm text-neutral-600">{profile.userEmail}</p>
               <div className="flex items-center gap-2 mt-2">
-                <div className="px-2 py-1 bg-violet-50 text-violet-600 rounded text-xs">
-                  {user?.role === 'admin' ? 'Administrateur' : 'Utilisateur'}
+                <div className="px-2 py-1 bg-violet-50 text-violet-600 rounded text-xs capitalize">
+                  {profile.userAccess === 'Admin' ? 'Administrateur' : (profile.userAccess || 'Utilisateur')}
                 </div>
-                <div className="px-2 py-1 bg-green-50 text-green-600 rounded text-xs">
-                  Compte vérifié
-                </div>
+                {profile.userValidated ? (
+                  <div className="px-2 py-1 bg-green-50 text-green-600 rounded text-xs">
+                    Compte vérifié
+                  </div>
+                ) : (
+                  <div className="px-2 py-1 bg-yellow-50 text-yellow-700 rounded text-xs">
+                    Non vérifié
+                  </div>
+                )}
+                {profile.userEmailVerified === false && (
+                  <div className="px-2 py-1 bg-red-50 text-red-600 rounded text-xs">
+                    Email non vérifié
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -122,8 +169,9 @@ export default function MonCompte() {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+225 XX XX XX XX XX"
-                    className="border-neutral-300"
+                    value={profile.userPhone || ''}
+                    readOnly
+                    className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
                   />
                 </div>
 
