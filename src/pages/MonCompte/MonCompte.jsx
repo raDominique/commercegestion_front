@@ -132,16 +132,16 @@ export default function MonCompte() {
 
         {/* Tabs */}
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="w-full flex bg-neutral-100 rounded-full px-auto">
-            <TabsTrigger value="profile" className="flex-1 rounded-full data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=active]:shadow-none data-[state=active]:text-neutral-900 data-[state=inactive]:text-neutral-700 transition-colors h-9 px-4 py-1 flex items-center justify-center">
+          <TabsList className="grid w-full grid-cols-3 bg-muted p-1 rounded-xl">
+            <TabsTrigger value="profile" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">
               <UserIcon className="w-4 h-4 mr-2" />
               Profil
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex-1 rounded-full data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=active]:shadow-none data-[state=active]:text-neutral-900 data-[state=inactive]:text-neutral-700 transition-colors h-9 px-4 py-2 flex items-center justify-center">
+            <TabsTrigger value="security" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">
               <ShieldIcon className="w-4 h-4 mr-2" />
               Sécurité
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex-1 rounded-full data-[state=active]:bg-white data-[state=active]:font-semibold data-[state=active]:shadow-none data-[state=active]:text-neutral-900 data-[state=inactive]:text-neutral-700 transition-colors h-9 px-4 py-2 flex items-center justify-center">
+            <TabsTrigger value="notifications" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">
               <BellIcon className="w-4 h-4 mr-2" />
               Notifications
             </TabsTrigger>
