@@ -12,6 +12,7 @@ import Public from '@mui/icons-material/Public';
 import Dashboard from '@mui/icons-material/Dashboard';
 import Group from '@mui/icons-material/Group';
 import Category from '@mui/icons-material/Category';
+import ShoppingBag from '@mui/icons-material/ShoppingBag';
 
 import Login from '../pages/Login/Login.jsx';
 import Register from '../pages/Register/Register.jsx';
@@ -20,6 +21,7 @@ import Retrait from '../pages/Retrait/Retrait.jsx';
 import Boutique from '../pages/Boutique/Boutique.jsx';
 import Actifs from '../pages/Actifs/Actifs.jsx';
 import Passifs from '../pages/Passifs/Passifs.jsx';
+import Panier from '../pages/Panier/Panier.jsx';
 import AdminDashboard from '../pages/Administration/AdminDashboard.jsx';
 import AdminUsers from '../pages/Administration/AdminUsers.jsx';
 import AdminProducts from '../pages/Administration/AdminProducts.jsx';
@@ -41,6 +43,7 @@ export const privateRoutes = [
     { path: '/boutique', element: Boutique, role: 'Utilisateur,Admin', icon: Store },
     { path: '/depot', element: Depot, role: 'Utilisateur,Admin', icon: CreditCard },
     { path: '/retrait', element: Retrait, role: 'Utilisateur,Admin', icon: AccountBalanceWallet },
+    { path: '/panier', element: Panier, role: 'Utilisateur,Admin', icon: ShoppingBag },
     { path: '/mon-compte', element: MonCompte, role: 'Utilisateur,Admin', icon: Person },
     { path: '/mes-produits', element: MesProduits, role: 'Utilisateur,Admin', icon: Inventory },
     { path: '/mes-transactions', element: MesTransactions, role: 'Utilisateur,Admin', icon: ReceiptLong },

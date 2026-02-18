@@ -11,10 +11,11 @@ import {
     DialogFooter,
     DialogClose,
 } from '../ui/dialog';
-import { Logout, Menu, Close, AccountBalanceWallet } from '@mui/icons-material';
+import { Logout, Menu, Close, AccountBalanceWallet, ShoppingCart } from '@mui/icons-material';
 import { privateRoutes } from '../../routes/routes';
 import LogoImage from '../../assets/logo/logo.png';
-// import { useAuth } from '../../context/AuthContext';
+import { CartSheet } from '../commons/CartSheet';
+import { useCart } from '../../context/CartContext';
 import { useEffect, useState } from 'react';
 import { getProfile } from '../../services/auth.service';
 import { toast } from 'sonner';
@@ -32,7 +33,9 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
 
     // Modal state for logout confirmation
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+    const [cartOpen, setCartOpen] = useState(false);
     const user = profile;
+    const { items } = useCart ? useCart() : { items: [] };
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,12 +54,28 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                 {mobileMenuOpen ? <Close className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                             </button>
                             <div className="hidden md:flex items-center gap-4">
+                                {/* Solde */}
                                 <div className="flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg">
                                     <AccountBalanceWallet className="w-4 h-4 text-neutral-600" />
                                     <span className="text-sm text-neutral-900">
                                         {typeof user.userTotalSolde === 'number' ? user.userTotalSolde.toLocaleString('fr-MG') : '0'} Ariary
                                     </span>
                                 </div>
+                                {/* Panier */}
+                                <button
+                                    className="relative flex items-center justify-center p-2 hover:bg-violet-50 rounded-lg transition-colors"
+                                    onClick={() => setCartOpen(true)}
+                                    aria-label="Ouvrir le panier"
+                                >
+                                    <ShoppingCart className="w-6 h-6 text-violet-600" />
+                                    {items && items.length > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-violet-600 text-white text-xs rounded-full px-1.5 py-0.5">
+                                            {items.length}
+                                        </span>
+                                    )}
+                                </button>
+                                <CartSheet open={cartOpen} onOpenChange={setCartOpen} />
+                                {/* Profil */}
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center">
                                         <span className="text-xs text-white">
@@ -65,6 +84,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                     </div>
                                     <span className="text-sm text-neutral-700">{typeof user.userName === 'string' ? user.userName : 'Utilisateur'}</span>
                                 </div>
+                                {/* Déconnexion */}
                                 <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button
