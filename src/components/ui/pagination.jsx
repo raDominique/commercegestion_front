@@ -1,9 +1,6 @@
-import * as React from "react";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  MoreHorizontalIcon,
-} from "lucide-react";
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 import { cn } from "./utils";
 import { buttonVariants } from "./button";
@@ -71,7 +68,7 @@ function PaginationPrevious({
       className={cn("gap-1 px-2.5 sm:pl-2.5", className)}
       {...props}
     >
-      <ChevronLeftIcon />
+      <ChevronLeftIcon fontSize="small" />
       <span className="hidden sm:block">Previous</span>
     </PaginationLink>
   );
@@ -89,7 +86,7 @@ function PaginationNext({
       {...props}
     >
       <span className="hidden sm:block">Next</span>
-      <ChevronRightIcon />
+      <ChevronRightIcon fontSize="small" />
     </PaginationLink>
   );
 }
@@ -105,7 +102,7 @@ function PaginationEllipsis({
       className={cn("flex size-9 items-center justify-center", className)}
       {...props}
     >
-      <MoreHorizontalIcon className="size-4" />
+      <MoreHorizIcon fontSize="small" className="size-4" />
       <span className="sr-only">More pages</span>
     </span>
   );

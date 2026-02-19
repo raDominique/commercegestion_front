@@ -5,17 +5,23 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
+import { Pagination } from '../../components/ui/pagination';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
-import { Public as GlobeIcon, Add as PlusIcon, Link as ExternalLinkIcon, Edit as EditIcon, Delete as TrashIcon, Visibility as EyeIcon, LocationOn as LocationIcon, ContentCopy as CopyIcon } from '@mui/icons-material';
+import PublicIcon from '@mui/icons-material/Public';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { createSite, getMySites } from '../../services/site.service';
 import LeafletMapPicker from '../../components/ui/LeafletMapPicker.jsx';
 import { useIsMobile } from '../../components/ui/use-mobile.js';
 
 const MesSites = () => {
-    const isMobile = useIsMobile();
+  const isMobile = useIsMobile();
   usePageTitle('Mes sites');
   const [sites, setSites] = useState([]);
+  const [total, setTotal] = useState(0);
   const [newSite, setNewSite] = useState({
     siteName: '',
     siteAddress: '',
@@ -34,6 +40,7 @@ const MesSites = () => {
       try {
         const data = await getMySites({ limit, page, search });
         setSites(Array.isArray(data.data) ? data.data : []);
+        setTotal(typeof data.total === 'number' ? data.total : 0);
       } catch (e) {
         setSites([]);
       } finally {
@@ -61,6 +68,7 @@ const MesSites = () => {
       // Recharge la liste après ajout
       const data = await getMySites({ limit, page, search });
       setSites(Array.isArray(data.data) ? data.data : []);
+      setTotal(typeof data.total === 'number' ? data.total : 0);
     } catch (error) {
       toast.error("Erreur lors de l'ajout du site");
     } finally {
@@ -70,17 +78,15 @@ const MesSites = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl text-neutral-900 mb-2">Mes Sites</h1>
-            <p className="text-sm text-neutral-600">
-              Gérez vos sites web et boutiques en ligne
-            </p>
-          </div>
+        <div className="space-y-2 mb-4">
+          <h1 className="text-2xl text-neutral-900 mb-2">Mes Sites</h1>
+          <p className="text-sm text-neutral-600">
+            Gérez vos sites web et boutiques en ligne
+          </p>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-violet-600 hover:bg-violet-700 text-white">
-                <PlusIcon className="w-4 h-4 mr-2" />
+              <Button className="bg-violet-600 hover:bg-violet-700 text-white mt-2">
+                <AddIcon className="w-4 h-4 mr-2" />
                 Ajouter un site
               </Button>
             </DialogTrigger>
@@ -160,7 +166,7 @@ const MesSites = () => {
           <Card className="p-4 border-neutral-200">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center">
-                <GlobeIcon className="w-5 h-5 text-violet-600" />
+                <PublicIcon className="w-5 h-5 text-violet-600" />
               </div>
               <div>
                 <p className="text-sm text-neutral-600">Total sites</p>
@@ -171,6 +177,18 @@ const MesSites = () => {
         </div>
 
         {/* Sites Grid */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full max-w-md">
+          <Input
+            type="search"
+            placeholder="Rechercher un site..."
+            value={search}
+            onChange={e => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
+            className="w-full"
+          />
+        </div>
         <div
           className={
             isMobile
@@ -181,23 +199,12 @@ const MesSites = () => {
           {sites.map((site) => (
             <Card key={site.id} className="p-6 border-neutral-200 hover:border-violet-200 transition-colors">
               <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="w-12 h-12 bg-linear -to-br from-violet-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                    <GlobeIcon className="w-6 h-6 text-white" />
-                  </div>
-                  <Badge
-                    variant={site.status === 'Actif' ? 'default' : 'secondary'}
-                    className="text-xs"
-                  >
-                    {site.status}
-                  </Badge>
-                </div>
                 <div>
                   <h3 className="text-lg text-neutral-900 mb-1 flex items-center gap-2">
                     {site.siteName}
                   </h3>
                   <div className="flex items-center gap-1 text-sm text-neutral-700">
-                    <LocationIcon className="w-4 h-4 text-violet-600" />
+                    <LocationOnIcon className="w-4 h-4 text-violet-600" />
                     <span className="truncate max-w-45" title={site.siteAddress}>{site.siteAddress}</span>
                   </div>
                 </div>
@@ -225,7 +232,7 @@ const MesSites = () => {
                     size="sm"
                     onClick={() => handleDeleteSite(site.id)}
                   >
-                    <TrashIcon className="w-4 h-4 text-red-600" />
+                    <DeleteIcon className="w-4 h-4 text-red-600" />
                   </Button>
                 </div>
               </div>
@@ -233,15 +240,25 @@ const MesSites = () => {
           ))}
         </div>
 
+        {/* Pagination (hors de la grille) */}
+        <div className="flex justify-center mt-6">
+          <Pagination
+            page={page}
+            total={total}
+            limit={limit}
+            onChange={setPage}
+          />
+        </div>
+
         {sites.length === 0 && (
           <Card className="p-12 text-center border-neutral-200">
-            <GlobeIcon className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+            <PublicIcon className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
             <p className="text-neutral-500 mb-4">Aucun site enregistré</p>
             <Button
               className="bg-violet-600 hover:bg-violet-700 text-white"
               onClick={() => setIsDialogOpen(true)}
             >
-              <PlusIcon className="w-4 h-4 mr-2" />
+              <AddIcon className="w-4 h-4 mr-2" />
               Ajouter votre premier site
             </Button>
           </Card>
