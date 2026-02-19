@@ -9,7 +9,7 @@ const axiosConfig = axios.create({
 
 // Debug : log à chaque requête /auth/refresh
 axiosConfig.interceptors.request.use((config) => {
-  if (config.url?.includes('/auth/refresh')) {
+  if (config.url?.includes('/api/v1/auth/refresh')) {
     console.debug('[DEBUG] Appel /auth/refresh, cookie envoyé:', document.cookie);
   }
   return config;

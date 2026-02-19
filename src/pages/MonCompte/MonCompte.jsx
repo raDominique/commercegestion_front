@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { Squelette } from '../../components/ui/skeleton.jsx';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { Card } from '../../components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useAuth } from '../../context/AuthContext';
 import { getProfile } from '../../services/auth.service';
+import { updateUser, getFullMediaUrl } from '../../services/user.service';
+import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
 import { Switch } from '../../components/ui/switch';
 import { Person as UserIcon, Security as ShieldIcon, Notifications as BellIcon } from '@mui/icons-material';
@@ -20,8 +23,11 @@ export default function MonCompte() {
   const [error, setError] = useState(null);
 
   // Champs éditables
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [userNickName, setUserNickName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [avatar, setAvatar] = useState(null);
+  const [updating, setUpdating] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,8 +45,8 @@ export default function MonCompte() {
       .then((data) => {
         if (!mounted) return;
         setProfile(data);
-        setName(data.userName || '');
-        setEmail(data.userEmail || '');
+        setUserNickName(data.userNickName || '');
+        setPhone(data.userPhone || '');
         setError(null);
       })
       .catch((err) => {
@@ -55,7 +61,37 @@ export default function MonCompte() {
 
   const handleUpdateProfile = (e) => {
     e.preventDefault();
-    toast.success('Profil mis à jour avec succès');
+    setShowConfirm(true);
+  };
+
+  const handleConfirmUpdate = async () => {
+    const token = getAccessToken();
+    const userId = authUser?.sub;
+    if (!userId || !token) {
+      toast.error('Utilisateur non authentifié');
+      setShowConfirm(false);
+      return;
+    }
+    setUpdating(true);
+    try {
+      const data = {
+        userNickName,
+        userPhone: phone,
+      };
+      if (avatar) data.avatar = avatar;
+      await updateUser(userId, data, token);
+      toast.success('Profil mis à jour avec succès');
+      // Rafraîchir le profil localement sans reload global
+      const refreshed = await getProfile();
+      setProfile(refreshed);
+      setAvatar(null);
+      setShowConfirm(false);
+    } catch (err) {
+      toast.error('Erreur lors de la mise à jour du profil');
+      setShowConfirm(false);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const handleUpdatePassword = (e) => {
@@ -99,10 +135,18 @@ export default function MonCompte() {
         {/* Profile Card */}
         <Card className="p-6 border-neutral-200">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-linear-to-br from-violet-600 to-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-2xl text-white">
-                {profile.userName?.charAt(0)?.toUpperCase()}
-              </span>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center bg-neutral-100 overflow-hidden border border-neutral-200">
+              {profile.userImage ? (
+                <img
+                  src={getFullMediaUrl(profile.userImage)}
+                  alt={profile.userNickName || profile.userName || 'Avatar'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl text-neutral-500">
+                  {profile.userName?.charAt(0)?.toUpperCase()}
+                </span>
+              )}
             </div>
             <div className="flex-1">
               <h2 className="text-lg text-neutral-900">{profile.userName} {profile.userFirstname}</h2>
@@ -150,41 +194,100 @@ export default function MonCompte() {
           <TabsContent value="profile">
             <Card className="p-6 border-neutral-200">
               <form onSubmit={handleUpdateProfile} className="space-y-4">
+
+
+
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nom complet</Label>
+                  <Label htmlFor="userNickName">Pseudo</Label>
                   <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    id="userNickName"
+                    value={userNickName}
+                    onChange={(e) => setUserNickName(e.target.value)}
                     className="border-neutral-300"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nom</Label>
+                  <Input
+                    id="name"
+                    value={profile.userName || ''}
+                    readOnly
+                    className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="firstname">Prénom</Label>
+                  <Input
+                    id="firstname"
+                    value={profile.userFirstname || ''}
+                    readOnly
+                    className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
+                  />
+                </div>
+
+
+
+                <div className="space-y-2">
+                  <Label htmlFor="avatar">Avatar (photo de profil)</Label>
+                  <Input
+                    id="avatar"
+                    type="file"
+                    accept="image/*"
+                    onChange={e => setAvatar(e.target.files[0])}
+                    className="border-neutral-300"
+                  />
+                </div>
+
+
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="border-neutral-300"
+                    value={profile.userEmail || ''}
+                    readOnly
+                    className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
                   />
                 </div>
+
+
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Téléphone</Label>
                   <Input
                     id="phone"
                     type="tel"
-                    value={profile.userPhone || ''}
-                    readOnly
-                    className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    className="border-neutral-300"
                   />
                 </div>
 
-                <Button type="submit" className="bg-violet-600 hover:bg-violet-700 text-white">
-                  Enregistrer les modifications
+                <Button type="submit" className="bg-violet-600 hover:bg-violet-700 text-white" disabled={updating}>
+                  {updating ? 'Enregistrement...' : 'Enregistrer les modifications'}
                 </Button>
+                {/* Modal de confirmation */}
+                <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Confirmer la modification</DialogTitle>
+                      <DialogDescription>
+                        Voulez-vous vraiment enregistrer les modifications de votre profil&nbsp;?
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={updating}>
+                        Annuler
+                      </Button>
+                      <Button onClick={handleConfirmUpdate} className="bg-violet-600 text-white" disabled={updating}>
+                        Confirmer
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </form>
             </Card>
           </TabsContent>

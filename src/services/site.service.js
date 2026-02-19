@@ -12,7 +12,7 @@ import axiosConfig from './axios.config';
  */
 export async function createSite(siteData) {
     try {
-        const response = await axiosConfig.post('/sites', siteData, {
+        const response = await axiosConfig.post('/api/v1/sites', siteData, {
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -34,7 +34,7 @@ export async function createSite(siteData) {
  */
 export const getMySites = async ({ limit = 10, page = 1, search = '' } = {}) => {
     try {
-        const response = await axiosConfig.get('/sites/me', {
+        const response = await axiosConfig.get('/api/v1/sites/me', {
             params: {
                 limit,
                 page,
@@ -55,7 +55,7 @@ export const getMySites = async ({ limit = 10, page = 1, search = '' } = {}) => 
  */
 export async function getSiteById(id) {
     try {
-        const response = await axiosConfig.get(`/sites/get-by-id/${id}`);
+        const response = await axiosConfig.get(`/api/v1/sites/get-by-id/${id}`);
         return response.data;
     } catch (error) {
         console.error('Erreur lors de la récupération du site par ID:', error);
@@ -71,7 +71,7 @@ export async function getSiteById(id) {
  */
 export async function updateSite(id, siteData) {
     try {
-        const response = await axiosConfig.patch(`/sites/update/${id}`, siteData, {
+        const response = await axiosConfig.patch(`/api/v1/sites/update/${id}`, siteData, {
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -90,7 +90,7 @@ export async function updateSite(id, siteData) {
  */
 export async function deleteSite(id) {
     try {
-        const response = await axiosConfig.delete(`/sites/delete/${id}`);
+        const response = await axiosConfig.delete(`/api/v1/sites/delete/${id}`);
         return response.data;
     } catch (error) {
         console.error('Erreur lors de la suppression du site:', error);
@@ -109,7 +109,7 @@ export async function deleteSite(id) {
  */
 export async function getAllSites({ search = '', limit = 10, page = 1 } = {}) {
     try {
-        const response = await axiosConfig.get('/sites', {
+        const response = await axiosConfig.get('/api/v1/sites', {
             params: {
                 ...(search ? { search } : {}),
                 limit,

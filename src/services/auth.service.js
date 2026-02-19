@@ -6,7 +6,7 @@ import { setAccessToken, clearAccessToken, setRefreshToken, getRefreshToken, cle
 // Connexion utilisateur : POST /auth/login
 export async function loginUser(userEmail, userPassword) {
   try {
-    const response = await axiosInstance.post('/auth/login', { userEmail, userPassword }, {
+    const response = await axiosInstance.post('/api/v1/auth/login', { userEmail, userPassword }, {
       headers: { 'Content-Type': 'application/json', 'accept': 'application/json' },
     });
     if (response.data && response.data.accessToken) {
@@ -32,7 +32,7 @@ export async function refreshToken() {
   try {
     const refreshToken = getRefreshToken();
     if (!refreshToken) throw new Error('Aucun refreshToken trouvé');
-    const response = await axiosInstance.post('/auth/refresh', { refreshToken });
+    const response = await axiosInstance.post('/api/v1/auth/refresh', { refreshToken });
     if (response.data && response.data.accessToken) {
       setAccessToken(response.data.accessToken);
       if (response.data.refreshToken) {
@@ -54,7 +54,7 @@ export async function refreshToken() {
 // Récupère le profil utilisateur : GET /getProfile
 export async function getProfile() {
   try {
-    const response = await axiosInstance.get('/auth/profile');
+    const response = await axiosInstance.get('/api/v1/auth/profile');
     return response.data;
   } catch (error) {
     throw error;
@@ -65,7 +65,7 @@ export async function getProfile() {
 export async function logoutUser() {
   try {
     const refreshToken = getRefreshToken();
-    await axiosInstance.post('/auth/logout', { refreshToken });
+    await axiosInstance.post('/api/v1/auth/logout', { refreshToken });
   } finally {
     clearAccessToken();
     clearRefreshToken();
