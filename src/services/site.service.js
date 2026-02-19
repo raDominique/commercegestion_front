@@ -1,3 +1,4 @@
+
 import axiosConfig from './axios.config';
 
 /**
@@ -93,6 +94,31 @@ export async function deleteSite(id) {
         return response.data;
     } catch (error) {
         console.error('Erreur lors de la suppression du site:', error);
+        throw error;
+    }
+}
+
+
+/**
+ * Récupère tous les sites avec pagination et recherche (GET /sites)
+ * @param {Object} params - Les paramètres de pagination et de recherche
+ * @param {string} [params.search] - Terme de recherche optionnel
+ * @param {number} [params.limit] - Nombre d'éléments par page
+ * @param {number} [params.page] - Numéro de page
+ * @return {Promise} - Une promesse qui résout la réponse de l'API
+ */
+export async function getAllSites({ search = '', limit = 10, page = 1 } = {}) {
+    try {
+        const response = await axiosConfig.get('/sites', {
+            params: {
+                ...(search ? { search } : {}),
+                limit,
+                page,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Erreur lors de la récupération de tous les sites:', error);
         throw error;
     }
 }
