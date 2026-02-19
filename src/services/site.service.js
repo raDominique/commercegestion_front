@@ -32,17 +32,67 @@ export async function createSite(siteData) {
  * @return {Promise} - Une promesse qui résout la réponse de l'API
  */
 export const getMySites = async ({ limit = 10, page = 1, search = '' } = {}) => {
-  try {
-    const response = await axiosConfig.get('/sites/me', {
-      params: {
-        limit,
-        page,
-        ...(search ? { search } : {}),
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Erreur lors de la récupération des sites:', error);
-    throw error;
-  }
+    try {
+        const response = await axiosConfig.get('/sites/me', {
+            params: {
+                limit,
+                page,
+                ...(search ? { search } : {}),
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Erreur lors de la récupération des sites:', error);
+        throw error;
+    }
 };
+
+/**
+ * Récupère un site par son ID (GET /sites/get-by-id/:id)
+ * @param {string} id - L'identifiant du site
+ * @return {Promise} - Une promesse qui résout la réponse de l'API
+ */
+export async function getSiteById(id) {
+    try {
+        const response = await axiosConfig.get(`/sites/get-by-id/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Erreur lors de la récupération du site par ID:', error);
+        throw error;
+    }
+}
+
+/**
+ * Met à jour un site (PATCH /sites/update/:id)
+ * @param {string} id - L'identifiant du site
+ * @param {Object} siteData - Les données à mettre à jour
+ * @return {Promise} - Une promesse qui résout la réponse de l'API
+ */
+export async function updateSite(id, siteData) {
+    try {
+        const response = await axiosConfig.patch(`/sites/update/${id}`, siteData, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du site:', error);
+        throw error;
+    }
+}
+
+/**
+ * Supprime un site (DELETE /sites/delete/:id)
+ * @param {string} id - L'identifiant du site
+ * @return {Promise} - Une promesse qui résout la réponse de l'API
+ */
+export async function deleteSite(id) {
+    try {
+        const response = await axiosConfig.delete(`/sites/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('Erreur lors de la suppression du site:', error);
+        throw error;
+    }
+}

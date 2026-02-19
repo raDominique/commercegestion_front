@@ -13,7 +13,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import { createSite, getMySites } from '../../services/site.service';
+import { createSite, getMySites, getSiteById, updateSite, deleteSite } from '../../services/site.service';
 import LeafletMapPicker from '../../components/ui/LeafletMapPicker.jsx';
 import { useIsMobile } from '../../components/ui/use-mobile.js';
 
@@ -29,7 +29,13 @@ const MesSites = () => {
     siteLng: '',
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editSite, setEditSite] = useState(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [siteToDelete, setSiteToDelete] = useState(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
   const [loadingSites, setLoadingSites] = useState(true);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -75,6 +81,74 @@ const MesSites = () => {
       setLoading(false);
     }
   };
+  // Ouvre le dialog de modification et charge les données du site
+  const handleEditSite = async (siteId) => {
+    setLoadingEdit(true);
+    try {
+      const data = await getSiteById(siteId);
+      setEditSite({
+        id: data._id,
+        siteName: data.siteName || '',
+        siteAddress: data.siteAddress || '',
+        siteLat: data.siteLat || '',
+        siteLng: data.siteLng || '',
+      });
+      setIsEditDialogOpen(true);
+    } catch (error) {
+      toast.error("Erreur lors du chargement du site");
+    } finally {
+      setLoadingEdit(false);
+    }
+  };
+
+  // Soumission du formulaire de modification
+  const handleUpdateSite = async (e) => {
+    e.preventDefault();
+    setLoadingEdit(true);
+    try {
+      await updateSite(editSite.id, {
+        siteName: editSite.siteName,
+        siteAddress: editSite.siteAddress,
+        siteLat: editSite.siteLat,
+        siteLng: editSite.siteLng,
+      });
+      toast.success('Site modifié avec succès');
+      setIsEditDialogOpen(false);
+      // Recharge la liste après modification
+      const data = await getMySites({ limit, page, search });
+      setSites(Array.isArray(data.data) ? data.data : []);
+      setTotal(typeof data.total === 'number' ? data.total : 0);
+    } catch (error) {
+      toast.error("Erreur lors de la modification du site");
+    } finally {
+      setLoadingEdit(false);
+    }
+  };
+
+  // Suppression d'un site (à compléter avec l'API de suppression si besoin)
+  const handleDeleteSite = (site) => {
+    setSiteToDelete(site);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteSite = async () => {
+    setLoadingDelete(true);
+    try {
+      await deleteSite(siteToDelete._id);
+      toast.success('Site supprimé avec succès');
+      setIsDeleteDialogOpen(false);
+      setSiteToDelete(null);
+      // Recharge la liste sans changer la page
+      const data = await getMySites({ limit, page, search });
+      setSites(Array.isArray(data.data) ? data.data : []);
+      setTotal(typeof data.total === 'number' ? data.total : 0);
+    } catch (error) {
+      toast.error("Erreur lors de la suppression du site");
+    } finally {
+      setLoadingDelete(false);
+    }
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="space-y-6">
@@ -159,6 +233,82 @@ const MesSites = () => {
               </form>
             </DialogContent>
           </Dialog>
+
+          {/* Dialog de modification placé ici pour overlay identique */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Modifier le site</DialogTitle>
+              </DialogHeader>
+              {editSite ? (
+                <form onSubmit={handleUpdateSite} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="editSiteName">Nom du site</Label>
+                    <Input
+                      id="editSiteName"
+                      value={editSite.siteName}
+                      onChange={e => setEditSite({ ...editSite, siteName: e.target.value })}
+                      placeholder="Ma boutique en ligne"
+                      required
+                      className="border-neutral-300"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="editSiteAddress">Adresse du site</Label>
+                    <Input
+                      id="editSiteAddress"
+                      value={editSite.siteAddress}
+                      onChange={e => setEditSite({ ...editSite, siteAddress: e.target.value })}
+                      placeholder="Analakely, Antananarivo"
+                      required
+                      className="border-neutral-300"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Localisation sur la carte</Label>
+                    <LeafletMapPicker
+                      lat={editSite.siteLat}
+                      lng={editSite.siteLng}
+                      onChange={({ lat, lng }) => setEditSite({ ...editSite, siteLat: lat, siteLng: lng })}
+                    />
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="space-y-2 flex-1">
+                      <Label htmlFor="editSiteLat">Latitude</Label>
+                      <Input
+                        id="editSiteLat"
+                        type="number"
+                        step="any"
+                        value={editSite.siteLat}
+                        readOnly
+                        className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
+                      />
+                    </div>
+                    <div className="space-y-2 flex-1">
+                      <Label htmlFor="editSiteLng">Longitude</Label>
+                      <Input
+                        id="editSiteLng"
+                        type="number"
+                        step="any"
+                        value={editSite.siteLng}
+                        readOnly
+                        className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                    disabled={loadingEdit}
+                  >
+                    {loadingEdit ? 'Modification...' : 'Enregistrer les modifications'}
+                  </Button>
+                </form>
+              ) : (
+                <div className="text-center py-8">Chargement...</div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Stats */}
@@ -223,17 +373,118 @@ const MesSites = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleEditSite(site._id)}
+                  >
                     <EditIcon className="w-4 h-4 mr-1" />
                     Modifier
                   </Button>
+                  {/* Dialog de modification */}
+                  <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Modifier le site</DialogTitle>
+                      </DialogHeader>
+                      {editSite ? (
+                        <form onSubmit={handleUpdateSite} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="editSiteName">Nom du site</Label>
+                            <Input
+                              id="editSiteName"
+                              value={editSite.siteName}
+                              onChange={e => setEditSite({ ...editSite, siteName: e.target.value })}
+                              placeholder="Ma boutique en ligne"
+                              required
+                              className="border-neutral-300"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="editSiteAddress">Adresse du site</Label>
+                            <Input
+                              id="editSiteAddress"
+                              value={editSite.siteAddress}
+                              onChange={e => setEditSite({ ...editSite, siteAddress: e.target.value })}
+                              placeholder="Analakely, Antananarivo"
+                              required
+                              className="border-neutral-300"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Localisation sur la carte</Label>
+                            <LeafletMapPicker
+                              lat={editSite.siteLat}
+                              lng={editSite.siteLng}
+                              onChange={({ lat, lng }) => setEditSite({ ...editSite, siteLat: lat, siteLng: lng })}
+                            />
+                          </div>
+                          <div className="flex gap-4">
+                            <div className="space-y-2 flex-1">
+                              <Label htmlFor="editSiteLat">Latitude</Label>
+                              <Input
+                                id="editSiteLat"
+                                type="number"
+                                step="any"
+                                value={editSite.siteLat}
+                                readOnly
+                                className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
+                              />
+                            </div>
+                            <div className="space-y-2 flex-1">
+                              <Label htmlFor="editSiteLng">Longitude</Label>
+                              <Input
+                                id="editSiteLng"
+                                type="number"
+                                step="any"
+                                value={editSite.siteLng}
+                                readOnly
+                                className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
+                              />
+                            </div>
+                          </div>
+                          <Button
+                            type="submit"
+                            className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                            disabled={loadingEdit}
+                          >
+                            {loadingEdit ? 'Modification...' : 'Enregistrer les modifications'}
+                          </Button>
+                        </form>
+                      ) : (
+                        <div className="text-center py-8">Chargement...</div>
+                      )}
+                    </DialogContent>
+                  </Dialog>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDeleteSite(site.id)}
+                    onClick={() => handleDeleteSite(site)}
                   >
                     <DeleteIcon className="w-4 h-4 text-red-600" />
                   </Button>
+                  {/* Dialog de confirmation de suppression (hors de la grille) */}
+                  <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Confirmer la suppression</DialogTitle>
+                      </DialogHeader>
+                      <div className="py-4 text-center">
+                        <p>Voulez-vous vraiment supprimer le site&nbsp;:
+                          <span className="font-semibold"> {siteToDelete?.siteName}</span> ?
+                        </p>
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={loadingDelete}>
+                          Annuler
+                        </Button>
+                        <Button variant="destructive" onClick={confirmDeleteSite} disabled={loadingDelete}>
+                          {loadingDelete ? 'Suppression...' : 'Supprimer'}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </Card>
