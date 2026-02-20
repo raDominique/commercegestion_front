@@ -3,6 +3,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import SearchIcon from '@mui/icons-material/Search';
+import InfoIcon from '@mui/icons-material/Info';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getProducts, createProduct, validateProduct, getProductById } from '../../services/product.service';
@@ -261,7 +262,7 @@ const AdminProducts = () => {
                       </td>
                       <td className="p-4 text-sm">
                         <Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)}>
-                          Détail
+                          <InfoIcon className="w-5 h-5 text-violet-600" />
                         </Button>
                       </td>
                     </tr>
@@ -329,26 +330,29 @@ const AdminProducts = () => {
             <div className="p-8 text-center text-neutral-400">Chargement...</div>
           ) : detailProduct ? (
             <Card className="p-4 border-violet-200 bg-violet-50">
-              <div className="mb-2 flex items-center gap-2">
-                <span className="text-lg font-bold text-violet-700">{detailProduct.productName}</span>
-                <Badge variant="secondary" className="text-xs capitalize">{detailProduct.productCategory}</Badge>
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-1 space-y-2">
+                  <div className="text-lg font-bold text-violet-700">{detailProduct.productName}</div>
+                  <Badge variant="secondary" className="text-xs capitalize mb-2">{detailProduct.productCategory}</Badge>
+                  <div className="text-neutral-900 font-semibold mb-2">{detailProduct.productDescription}</div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-neutral-700">
+                    <div><b>Code CPC :</b> {detailProduct.codeCPC || '-'}</div>
+                    <div><b>État :</b> {detailProduct.productState || '-'}</div>
+                    <div><b>Volume :</b> {detailProduct.productVolume || '-'}</div>
+                    <div><b>Poids :</b> {detailProduct.productPoids || '-'}</div>
+                    <div><b>Dimensions :</b> {detailProduct.productLongueur || '-'} x {detailProduct.productLargeur || '-'} x {detailProduct.productHauteur || '-'}</div>
+                    <div><b>Stocké :</b> <Badge variant={detailProduct.isStocker ? 'default' : 'secondary'} className={detailProduct.isStocker ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{detailProduct.isStocker ? 'Oui' : 'Non'}</Badge></div>
+                    <div><b>Validé :</b> <Badge variant={detailProduct.productValidation ? 'default' : 'secondary'} className={detailProduct.productValidation ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{detailProduct.productValidation ? 'Oui' : 'Non'}</Badge></div>
+                    <div><b>Date création :</b> {detailProduct.createdAt ? new Date(detailProduct.createdAt).toLocaleString() : '-'}</div>
+                    <div><b>Date modification :</b> {detailProduct.updatedAt ? new Date(detailProduct.updatedAt).toLocaleString() : '-'}</div>
+                  </div>
+                </div>
+                <div className="flex-1 flex flex-col items-center justify-center">
+                  {detailProduct.productImage && (
+                    <img src={getFullMediaUrl(detailProduct.productImage)} alt={detailProduct.productName} className="w-40 h-40 object-cover rounded mb-2" />
+                  )}
+                </div>
               </div>
-              <div className="mt-4">
-                {detailProduct.productImage && (
-                  console.log('Image URL:', getFullMediaUrl(detailProduct.productImage)),
-                  <img src={getFullMediaUrl(detailProduct.productImage)} alt={detailProduct.productName} className="w-40 h-40 object-cover rounded mx-auto" />
-                )}
-              </div>
-              <div className="mb-2 text-neutral-900 font-semibold">{detailProduct.productDescription}</div>
-              <div className="mb-2 text-neutral-700 text-sm"><b>Code CPC :</b> {detailProduct.codeCPC || '-'}</div>
-              <div className="mb-2 text-neutral-700 text-sm"><b>État :</b> {detailProduct.productState || '-'}</div>
-              <div className="mb-2 text-neutral-700 text-sm"><b>Volume :</b> {detailProduct.productVolume || '-'}</div>
-              <div className="mb-2 text-neutral-700 text-sm"><b>Dimensions :</b> {detailProduct.productLongueur || '-'} x {detailProduct.productLargeur || '-'} x {detailProduct.productHauteur || '-'}</div>
-              <div className="mb-2 text-neutral-700 text-sm"><b>Poids :</b> {detailProduct.productPoids || '-'}</div>
-              <div className="mb-2 text-neutral-700 text-sm"><b>Stocké :</b> {detailProduct.isStocker ? 'Oui' : 'Non'}</div>
-              <div className="mb-2 text-neutral-700 text-sm"><b>Validé :</b> {detailProduct.productValidation ? 'Oui' : 'Non'}</div>
-              <div className="mb-2 text-neutral-700 text-sm"><b>Date création :</b> {detailProduct.createdAt ? new Date(detailProduct.createdAt).toLocaleString() : '-'}</div>
-              <div className="mb-2 text-neutral-700 text-sm"><b>Date modification :</b> {detailProduct.updatedAt ? new Date(detailProduct.updatedAt).toLocaleString() : '-'}</div>
             </Card>
           ) : (
             <div className="p-8 text-center text-neutral-400">Aucune donnée</div>
