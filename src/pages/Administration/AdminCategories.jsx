@@ -1,4 +1,3 @@
-import React from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 
 const AdminCategories = () => {

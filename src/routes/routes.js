@@ -13,6 +13,7 @@ import Dashboard from '@mui/icons-material/Dashboard';
 import Group from '@mui/icons-material/Group';
 import Category from '@mui/icons-material/Category';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
+import QrCodeIcon from '@mui/icons-material/QrCode';
 
 import Login from '../pages/Login/Login.jsx';
 import Register from '../pages/Register/Register.jsx';
@@ -26,6 +27,7 @@ import AdminDashboard from '../pages/Administration/AdminDashboard.jsx';
 import AdminUsers from '../pages/Administration/AdminUsers.jsx';
 import AdminProducts from '../pages/Administration/AdminProducts.jsx';
 import AdminCategories from '../pages/Administration/AdminCategories.jsx';
+import AdminCpc from '../pages/Administration/AdminCpc.jsx';
 import MonCompte from '../pages/MonCompte/MonCompte.jsx';
 import MesProduits from '../pages/MesProduits/MesProduits.jsx';
 import MesTransactions from '../pages/MesTransactions/MesTransactions.jsx';
@@ -49,9 +51,10 @@ export const privateRoutes = [
     { path: '/mes-transactions', element: MesTransactions, role: 'Utilisateur,Admin', icon: ReceiptLong },
     { path: '/mes-sites', element: MesSites, role: 'Utilisateur,Admin', icon: Public },
     // Routes strictement admin
-    { path: '/admin/dashboard', element: AdminDashboard, role: 'Admin', icon: Dashboard },
-    { path: '/admin/utilisateurs', element: AdminUsers, role: 'Admin', icon: Group },
-    { path: '/admin/produits', element: AdminProducts, role: 'Admin', icon: Inventory },
-    { path: '/admin/categories', element: AdminCategories, role: 'Admin', icon: Category },
+    { path: '/admin/dashboard', element: AdminDashboard, role: 'Admin', icon: Dashboard, label: 'Tableau de bord' },
+    { path: '/admin/utilisateurs', element: AdminUsers, role: 'Admin', icon: Group, label: 'Utilisateurs' },
+    { path: '/admin/produits', element: AdminProducts, role: 'Admin', icon: Inventory, label: 'Produits' },
+    { path: '/admin/categories', element: AdminCategories, role: 'Admin', icon: Category, label: 'Catégories' },
+    { path: '/admin/cpc', element: AdminCpc, role: 'Admin', icon: QrCodeIcon, label: 'CPC' },
     // Settings icon for categories
 ];
