@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -31,6 +31,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { updateCpc } from '../../services/cpc.service';
 import { deleteCpc } from '../../services/cpc.service';
+import { importCpcs } from '../../services/cpc.service';
 
 const AdminCpc = () => {
     usePageTitle('CPC');
@@ -59,6 +60,8 @@ const AdminCpc = () => {
     const [editId, setEditId] = useState(null);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
+    const [importing, setImporting] = useState(false);
+    const fileInputRef = useRef();
 
     const mapApiCpc = (item) => ({
         code: item.code,
@@ -192,6 +195,29 @@ const AdminCpc = () => {
         }
     };
 
+    const handleImportClick = () => {
+        if (fileInputRef.current) fileInputRef.current.value = null;
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setImporting(true);
+        try {
+            const token = localStorage.getItem('token');
+            const formData = new FormData();
+            formData.append('file', file);
+            await importCpcs(formData, token);
+            toast.success('Importation réussie');
+            fetchCpc();
+        } catch (err) {
+            toast.error('Erreur lors de l\'importation');
+        } finally {
+            setImporting(false);
+        }
+    };
+
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="space-y-6">
@@ -202,56 +228,28 @@ const AdminCpc = () => {
                             Gérez les codes CPC
                         </p>
                     </div>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700">Ajouter un CPC</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Ajouter un CPC</DialogTitle>
-                                <DialogDescription>Remplissez les informations du code CPC.</DialogDescription>
-                            </DialogHeader>
-                            <form className="space-y-4">
-                                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="code">Code</label>
-                                <Input name="code" id="code" placeholder="Code" value={form.code} onChange={handleFormChange} required />
-                                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="nom">Nom</label>
-                                <Input name="nom" id="nom" placeholder="Nom" value={form.nom} onChange={handleFormChange} required />
-                                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="niveau">Niveau</label>
-                                <div className="relative">
-                                    <Select value={form.niveau} onValueChange={value => setForm({ ...form, niveau: value })}>
-                                        <SelectTrigger id="niveau" className="w-full border-neutral-300 bg-white" style={{ zIndex: 11000 }}>
-                                            <SelectValue placeholder="Choisir un niveau" />
-                                        </SelectTrigger>
-                                        <SelectContent className="z-11000">
-                                            <SelectItem value="section">Section</SelectItem>
-                                            <SelectItem value="division">Division</SelectItem>
-                                            <SelectItem value="groupe">Groupe</SelectItem>
-                                            <SelectItem value="classe">Classe</SelectItem>
-                                            <SelectItem value="sous-classe">Sous-classe</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="parentCode">Code Parent</label>
-                                <Input name="parentCode" id="parentCode" placeholder="Parent Code" value={form.parentCode} onChange={handleFormChange} />
-                                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="ancetres">Ancêtres</label>
-                                <Input name="ancetres" id="ancetres" placeholder="0,01,011,0111" value={form.ancetres.join(',')} onChange={handleFormChange} />
-                                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="correspondances.sh">SH</label>
-                                <Input name="correspondances.sh" id="correspondances.sh" placeholder="SH" value={form.correspondances.sh} onChange={handleFormChange} />
-                                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="correspondances.citi">CITI</label>
-                                <Input name="correspondances.citi" id="correspondances.citi" placeholder="CITI" value={form.correspondances.citi} onChange={handleFormChange} />
-                                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="correspondances.ctci">CTCI</label>
-                                <Input name="correspondances.ctci" id="correspondances.ctci" placeholder="CTCI" value={form.correspondances.ctci} onChange={handleFormChange} />
-                            </form>
-                            <DialogFooter>
-                                <DialogClose asChild>
-                                    <Button variant="outline">Annuler</Button>
-                                </DialogClose>
-                                <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" onClick={handleAddCpc} disabled={saving}>
-                                    {saving ? 'Ajout...' : 'Ajouter'}
-                                </Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                    <div className="flex gap-2">
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700">Ajouter un CPC</Button>
+                            </DialogTrigger>
+                            <input
+                                type="file"
+                                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                onChange={handleFileChange}
+                            />
+                        </Dialog>
+                        <Button
+                            variant="outline"
+                            className="border-violet-600 text-violet-700 hover:bg-violet-50"
+                            onClick={handleImportClick}
+                            disabled={importing}
+                        >
+                            {importing ? 'Importation...' : 'Importer CSV/Excel'}
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Filtres + Search */}

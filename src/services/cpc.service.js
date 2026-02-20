@@ -105,3 +105,24 @@ export const deleteCpc = async (code, token) => {
         throw error;
     }
 };
+
+// Service to import CPCs from a CSV/excel file
+export const importCpcs = async (file, token) => {
+    try {
+        const response = await axiosInstance.post(
+            "/api/v1/cpc/import",
+            file,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`,
+                    'accept': '*/*',
+                },
+            }
+        );
+        return response.data;
+    }
+    catch (error) {
+        throw error;
+    }
+};
