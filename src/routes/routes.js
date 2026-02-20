@@ -11,7 +11,7 @@ import ReceiptLong from '@mui/icons-material/ReceiptLong';
 import Public from '@mui/icons-material/Public';
 import Dashboard from '@mui/icons-material/Dashboard';
 import Group from '@mui/icons-material/Group';
-import Category from '@mui/icons-material/Category';
+// import Category from '@mui/icons-material/Category';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 
@@ -26,7 +26,7 @@ import Panier from '../pages/Panier/Panier.jsx';
 import AdminDashboard from '../pages/Administration/AdminDashboard.jsx';
 import AdminUsers from '../pages/Administration/AdminUsers.jsx';
 import AdminProducts from '../pages/Administration/AdminProducts.jsx';
-import AdminCategories from '../pages/Administration/AdminCategories.jsx';
+// import AdminCategories from '../pages/Administration/AdminCategories.jsx';
 import AdminCpc from '../pages/Administration/AdminCpc.jsx';
 import MonCompte from '../pages/MonCompte/MonCompte.jsx';
 import MesProduits from '../pages/MesProduits/MesProduits.jsx';
@@ -54,7 +54,7 @@ export const privateRoutes = [
     { path: '/admin/dashboard', element: AdminDashboard, role: 'Admin', icon: Dashboard, label: 'Tableau de bord' },
     { path: '/admin/utilisateurs', element: AdminUsers, role: 'Admin', icon: Group, label: 'Utilisateurs' },
     { path: '/admin/produits', element: AdminProducts, role: 'Admin', icon: Inventory, label: 'Produits' },
-    { path: '/admin/categories', element: AdminCategories, role: 'Admin', icon: Category, label: 'Catégories' },
+    // { path: '/admin/categories', element: AdminCategories, role: 'Admin', icon: Category, label: 'Catégories' },
     { path: '/admin/cpc', element: AdminCpc, role: 'Admin', icon: QrCodeIcon, label: 'CPC' },
     // Settings icon for categories
 ];

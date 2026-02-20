@@ -20,7 +20,11 @@ function Sidebar({ user }) {
 
   const adminNavItems = privateRoutes.filter(
     r => r.role && r.role.includes('Admin') && [
-      '/admin/dashboard', '/admin/utilisateurs', '/admin/produits', '/admin/categories', '/admin/cpc'
+      '/admin/dashboard',
+      '/admin/utilisateurs',
+      '/admin/produits',
+      // '/admin/categories',
+      '/admin/cpc'
     ].includes(r.path)
   );
 

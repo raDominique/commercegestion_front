@@ -7,6 +7,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getCpc } from '../../services/cpc.service';
+import { getCpcByCode } from '../../services/cpc.service';
 import {
     Dialog,
     DialogTrigger,
@@ -25,6 +26,11 @@ import {
     SelectItem,
     SelectValue,
 } from '../../components/ui/select';
+import InfoIcon from '@mui/icons-material/Info';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { updateCpc } from '../../services/cpc.service';
+import { deleteCpc } from '../../services/cpc.service';
 
 const AdminCpc = () => {
     usePageTitle('CPC');
@@ -46,6 +52,13 @@ const AdminCpc = () => {
         correspondances: { sh: '', citi: '' },
     });
     const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [selectedCpc, setSelectedCpc] = useState(null);
+    const [infoOpen, setInfoOpen] = useState(false);
+    const [editOpen, setEditOpen] = useState(false);
+    const [editId, setEditId] = useState(null);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
 
     const mapApiCpc = (item) => ({
         code: item.code,
@@ -98,7 +111,6 @@ const AdminCpc = () => {
     const handleAddCpc = async () => {
         setSaving(true);
         try {
-            // Remplacez TOKEN par le vrai token
             const token = localStorage.getItem('token');
             await createCpc(form, token);
             toast.success('CPC ajouté avec succès');
@@ -109,6 +121,74 @@ const AdminCpc = () => {
             toast.error('Erreur lors de l\'ajout du CPC');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleShowInfo = async (code) => {
+        try {
+            const res = await getCpcByCode(code);
+            const data = Array.isArray(res.data) ? res.data[0] : res.data;
+            setSelectedCpc(data);
+            setInfoOpen(true);
+        } catch (err) {
+            toast.error("Impossible de charger les infos du CPC");
+        }
+    };
+
+    const handleEditCpc = async (code) => {
+        try {
+            const res = await getCpcByCode(code);
+            const data = Array.isArray(res.data) ? res.data[0] : res.data;
+            setForm({
+                code: data.code || '',
+                nom: data.nom || '',
+                niveau: data.niveau || '',
+                parentCode: data.parentCode || '',
+                ancetres: data.ancetres || [],
+                correspondances: data.correspondances || { sh: '', citi: '' },
+            });
+            setEditId(data.code);
+            setEditOpen(true);
+        } catch (err) {
+            toast.error("Impossible de charger le CPC à modifier");
+        }
+    };
+
+    const handleUpdateCpc = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            const token = localStorage.getItem('token');
+            await updateCpc(editId, form, token);
+            toast.success('CPC modifié avec succès');
+            setEditOpen(false);
+            setForm({ code: '', nom: '', niveau: '', parentCode: '', ancetres: [], correspondances: { sh: '', citi: '' } });
+            fetchCpc();
+        } catch (err) {
+            toast.error("Erreur lors de la modification du CPC");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDeleteCpc = (code) => {
+        setDeleteId(code);
+        setDeleteOpen(true);
+    };
+
+    const confirmDeleteCpc = async () => {
+        setDeleting(true);
+        try {
+            const token = localStorage.getItem('token');
+            await deleteCpc(deleteId, token);
+            toast.success('CPC supprimé avec succès');
+            setDeleteOpen(false);
+            setDeleteId(null);
+            fetchCpc();
+        } catch (err) {
+            toast.error("Erreur lors de la suppression du CPC");
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -139,10 +219,10 @@ const AdminCpc = () => {
                                 <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="niveau">Niveau</label>
                                 <div className="relative">
                                     <Select value={form.niveau} onValueChange={value => setForm({ ...form, niveau: value })}>
-                                        <SelectTrigger id="niveau" className="w-full border-neutral-300 bg-white">
+                                        <SelectTrigger id="niveau" className="w-full border-neutral-300 bg-white" style={{ zIndex: 11000 }}>
                                             <SelectValue placeholder="Choisir un niveau" />
                                         </SelectTrigger>
-                                        <SelectContent className="z-10000">
+                                        <SelectContent className="z-11000">
                                             <SelectItem value="section">Section</SelectItem>
                                             <SelectItem value="division">Division</SelectItem>
                                             <SelectItem value="groupe">Groupe</SelectItem>
@@ -159,6 +239,8 @@ const AdminCpc = () => {
                                 <Input name="correspondances.sh" id="correspondances.sh" placeholder="SH" value={form.correspondances.sh} onChange={handleFormChange} />
                                 <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="correspondances.citi">CITI</label>
                                 <Input name="correspondances.citi" id="correspondances.citi" placeholder="CITI" value={form.correspondances.citi} onChange={handleFormChange} />
+                                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="correspondances.ctci">CTCI</label>
+                                <Input name="correspondances.ctci" id="correspondances.ctci" placeholder="CTCI" value={form.correspondances.ctci} onChange={handleFormChange} />
                             </form>
                             <DialogFooter>
                                 <DialogClose asChild>
@@ -186,17 +268,20 @@ const AdminCpc = () => {
                             className="pl-10 border-neutral-300"
                         />
                     </div>
-                    <select
-                        className="border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 bg-white"
-                        value={niveau}
-                        onChange={e => { setPage(1); setNiveau(e.target.value); }}
-                    >
-                        <option value="">Niveau</option>
-                        <option value="classe">Classe</option>
-                        <option value="sous-classe">Sous-classe</option>
-                        <option value="groupe">Groupe</option>
-                        <option value="sous-groupe">Sous-groupe</option>
-                    </select>
+                    <div className="relative w-56">
+                        <Select value={niveau} onValueChange={value => { setPage(1); setNiveau(value); }}>
+                            <SelectTrigger id="niveau" className="w-full border-neutral-300 bg-white">
+                                <SelectValue placeholder="Choisir un niveau" />
+                            </SelectTrigger>
+                            <SelectContent className="z-10000">
+                                <SelectItem value="section">Section</SelectItem>
+                                <SelectItem value="division">Division</SelectItem>
+                                <SelectItem value="groupe">Groupe</SelectItem>
+                                <SelectItem value="classe">Classe</SelectItem>
+                                <SelectItem value="sous-classe">Sous-classe</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 {/* CPC Table */}
@@ -208,12 +293,13 @@ const AdminCpc = () => {
                                     <th className="text-left p-4 text-xs text-neutral-600">Code</th>
                                     <th className="text-left p-4 text-xs text-neutral-600">Nom</th>
                                     <th className="text-left p-4 text-xs text-neutral-600">Niveau</th>
+                                    <th className="text-right p-4 text-xs text-neutral-600">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="3" className="p-8 text-center text-neutral-400">Chargement...</td>
+                                        <td colSpan="4" className="p-8 text-center text-neutral-400">Chargement...</td>
                                     </tr>
                                 ) : cpcList.length > 0 ? (
                                     cpcList.map((item, idx) => (
@@ -223,11 +309,24 @@ const AdminCpc = () => {
                                             <td className="p-4 text-sm text-neutral-600">
                                                 <Badge variant="secondary" className="text-xs">{item.niveau}</Badge>
                                             </td>
+                                            <td className="p-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button variant="ghost" size="sm" onClick={() => handleShowInfo(item.code)}>
+                                                        <InfoIcon className="w-5 h-5 text-violet-600" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" onClick={() => handleEditCpc(item.code)}>
+                                                        <EditIcon className="w-5 h-5 text-amber-600" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteCpc(item.code)}>
+                                                        <DeleteIcon className="w-5 h-5 text-red-600" />
+                                                    </Button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="3" className="p-8 text-center text-neutral-400">Aucun code trouvé</td>
+                                        <td colSpan="4" className="p-8 text-center text-neutral-400">Aucun code trouvé</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -258,6 +357,107 @@ const AdminCpc = () => {
                     </Button>
                 </div>
             </div>
+
+            {/* Dialog Info CPC */}
+            <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
+                <DialogContent aria-describedby="cpc-info-desc">
+                    <DialogHeader>
+                        <DialogTitle>Détail du code CPC</DialogTitle>
+                        <DialogDescription id="cpc-info-desc">
+                            Informations détaillées sur le code CPC sélectionné.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedCpc ? (
+                        <Card className="p-4 border-violet-200 bg-violet-50">
+                            <div className="mb-2 flex items-center gap-2">
+                                <span className="text-lg font-bold text-violet-700">{selectedCpc.code}</span>
+                                <Badge variant="secondary" className="text-xs capitalize">{selectedCpc.niveau}</Badge>
+                            </div>
+                            <div className="mb-2 text-neutral-900 font-semibold">{selectedCpc.nom}</div>
+                            <div className="text-sm text-neutral-700 mb-1"><b>Parent :</b> {selectedCpc.parentCode || <span className="italic text-neutral-400">Aucun</span>}</div>
+                            <div className="text-sm text-neutral-700 mb-1"><b>Ancêtres :</b> {selectedCpc.ancetres?.length ? selectedCpc.ancetres.join(' > ') : <span className="italic text-neutral-400">Aucun</span>}</div>
+                            <div className="flex gap-4 mt-2">
+                                <div className="text-xs text-neutral-600"><b>SH :</b> {selectedCpc.correspondances?.sh || <span className="italic text-neutral-400">-</span>}</div>
+                                <div className="text-xs text-neutral-600"><b>CITI :</b> {selectedCpc.correspondances?.citi || <span className="italic text-neutral-400">-</span>}</div>
+                                <div className="text-xs text-neutral-600"><b>CTCI :</b> {selectedCpc.correspondances?.ctci || <span className="italic text-neutral-400">-</span>}</div>
+                            </div>
+                            <div className="mt-4 text-xs text-neutral-400">Créé le : {selectedCpc.createdAt ? new Date(selectedCpc.createdAt).toLocaleString() : '-'}</div>
+                            <div className="text-xs text-neutral-400">Modifié le : {selectedCpc.updatedAt ? new Date(selectedCpc.updatedAt).toLocaleString() : '-'}</div>
+                        </Card>
+                    ) : (
+                        <div>Chargement...</div>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* Dialog Edit CPC */}
+            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                <DialogContent aria-describedby="cpc-edit-desc">
+                    <DialogHeader>
+                        <DialogTitle>Modifier le code CPC</DialogTitle>
+                        <DialogDescription id="cpc-edit-desc">
+                            Modifiez les informations du code CPC sélectionné.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form className="space-y-4">
+                        <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="code">Code</label>
+                        <Input name="code" id="code" placeholder="Code" value={form.code} onChange={handleFormChange} required disabled />
+                        <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="nom">Nom</label>
+                        <Input name="nom" id="nom" placeholder="Nom" value={form.nom} onChange={handleFormChange} required />
+                        <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="niveau">Niveau</label>
+                        <div className="relative">
+                            <Select value={form.niveau} onValueChange={value => setForm({ ...form, niveau: value })}>
+                                <SelectTrigger id="niveau" className="w-full border-neutral-300 bg-white" style={{ zIndex: 11000 }}>
+                                    <SelectValue placeholder="Choisir un niveau" />
+                                </SelectTrigger>
+                                <SelectContent className="z-11000">
+                                    <SelectItem value="section">Section</SelectItem>
+                                    <SelectItem value="division">Division</SelectItem>
+                                    <SelectItem value="groupe">Groupe</SelectItem>
+                                    <SelectItem value="classe">Classe</SelectItem>
+                                    <SelectItem value="sous-classe">Sous-classe</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="parentCode">Code Parent</label>
+                        <Input name="parentCode" id="parentCode" placeholder="Parent Code" value={form.parentCode} onChange={handleFormChange} />
+                        <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="ancetres">Ancêtres</label>
+                        <Input name="ancetres" id="ancetres" placeholder="0,01,011,0111" value={form.ancetres.join(',')} onChange={handleFormChange} />
+                        <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="correspondances.sh">SH</label>
+                        <Input name="correspondances.sh" id="correspondances.sh" placeholder="SH" value={form.correspondances.sh} onChange={handleFormChange} />
+                        <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="correspondances.citi">CITI</label>
+                        <Input name="correspondances.citi" id="correspondances.citi" placeholder="CITI" value={form.correspondances.citi} onChange={handleFormChange} />
+                    </form>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">Annuler</Button>
+                        </DialogClose>
+                        <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" onClick={handleUpdateCpc} disabled={saving}>
+                            {saving ? 'Enregistrement...' : 'Enregistrer'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dialog Delete CPC */}
+            <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <DialogContent aria-describedby="cpc-delete-desc">
+                    <DialogHeader>
+                        <DialogTitle>Supprimer le code CPC</DialogTitle>
+                        <DialogDescription id="cpc-delete-desc">
+                            Êtes-vous sûr de vouloir supprimer ce code CPC ? Cette action est irréversible.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 mt-4">
+                        <DialogClose asChild>
+                            <Button variant="outline">Annuler</Button>
+                        </DialogClose>
+                        <Button variant="default" className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDeleteCpc} disabled={deleting}>
+                            {deleting ? 'Suppression...' : 'Confirmer la suppression'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
