@@ -52,9 +52,8 @@ export const privateRoutes = [
     { path: '/mes-sites', element: MesSites, role: 'Utilisateur,Admin', icon: Public },
     // Routes strictement admin
     { path: '/admin/dashboard', element: AdminDashboard, role: 'Admin', icon: Dashboard, label: 'Tableau de bord' },
-    { path: '/admin/utilisateurs', element: AdminUsers, role: 'Admin', icon: Group, label: 'Utilisateurs' },
     { path: '/admin/produits', element: AdminProducts, role: 'Admin', icon: Inventory, label: 'Produits' },
-    // { path: '/admin/categories', element: AdminCategories, role: 'Admin', icon: Category, label: 'Catégories' },
     { path: '/admin/cpc', element: AdminCpc, role: 'Admin', icon: QrCodeIcon, label: 'CPC' },
-    // Settings icon for categories
+    { path: '/admin/utilisateurs', element: AdminUsers, role: 'Admin', icon: Group, label: 'Utilisateurs' },
+    // { path: '/admin/categories', element: AdminCategories, role: 'Admin', icon: Category, label: 'Catégories' },
 ];

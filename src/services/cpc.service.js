@@ -126,3 +126,16 @@ export const importCpcs = async (file, token) => {
         throw error;
     }
 };
+
+/**
+ * Récupère tous les CPC pour select (GET /cpc/select/all)
+ * @returns {Promise}
+ */
+export const getAllCpcSelect = async () => {
+    const response = await axiosInstance.get('/api/v1/cpc/select/all', {
+        headers: {
+            'accept': '*/*',
+        },
+    });
+    return response.data;
+};

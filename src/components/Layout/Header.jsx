@@ -194,7 +194,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                 <nav className="space-y-1">
                                     <p className="text-xs text-neutral-500 px-3 mb-2">ADMINISTRATION</p>
                                     {privateRoutes.filter(r => r.role && r.role.includes('admin') && [
-                                        '/admin/dashboard', '/admin/utilisateurs', '/admin/produits', '/admin/categories'
+                                        '/admin/dashboard', '/admin/produits', '/admin/utilisateurs', '/admin/categories'
                                     ].includes(r.path)).map((item) => (
                                         <Link
                                             key={item.path}
