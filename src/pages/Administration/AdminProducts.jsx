@@ -43,7 +43,6 @@ const AdminProducts = () => {
       setProducts(Array.isArray(res.data) ? res.data : []);
       setTotal(res.total || 0);
     } catch (err) {
-      console.error(err);
       toast.error('Erreur lors du chargement des produits');
     } finally {
       setLoading(false);

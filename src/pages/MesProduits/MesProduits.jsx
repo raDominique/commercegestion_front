@@ -9,15 +9,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle.jsx';
-import { getMyProducts, toggleProductStocker } from '../../services/product.service';
+import { getMyProducts, toggleProductStocker, getProductById } from '../../services/product.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { Switch } from '../../components/ui/switch';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogClose
-} from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '../../components/ui/dialog';
 
 const MesProduits = () => {
   usePageTitle('Mes Produits');
@@ -32,6 +27,24 @@ const MesProduits = () => {
   const [confirmStockerModal, setConfirmStockerModal] = useState({ open: false, productId: null });
   const [validationFilter, setValidationFilter] = useState('all'); // 'all', 'true', 'false'
   const [isStockerFilter, setIsStockerFilter] = useState('all'); // 'all', 'true', 'false'
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailProduct, setDetailProduct] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const handleShowDetail = async (id) => {
+    setLoadingDetail(true);
+    setDetailOpen(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await getProductById(id, token);
+      const data = Array.isArray(res.data) ? res.data[0] : res.data;
+      setDetailProduct(data);
+    } catch (err) {
+      toast.error("Impossible de charger le détail du produit");
+      setDetailProduct(null);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -195,7 +208,7 @@ const MesProduits = () => {
                         <td className="p-4 text-sm text-neutral-600">{product.codeCPC || '-'}</td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleShowInfo(item.code)}>
+                            <Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)}>
                               <InfoIcon className="w-5 h-5 text-violet-600" />
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => handleEditCpc(item.code)}>
@@ -242,23 +255,71 @@ const MesProduits = () => {
       </div>
       {/* Modal de confirmation pour toggle stocker */}
       <Dialog open={confirmStockerModal.open} onOpenChange={(open) => setConfirmStockerModal({ open, productId: open ? confirmStockerModal.productId : null })}>
-        <DialogContent>
-          <DialogHeader className="mb-2 text-lg font-semibold text-violet-700">Confirmation</DialogHeader>
-          <div className="mb-4 text-neutral-700">Voulez-vous vraiment modifier l'état stocké de ce produit ?</div>
-          <div className="flex justify-end gap-2">
+        <DialogContent aria-describedby="stocker-validate-desc">
+          <DialogHeader>
+            <div className="text-lg font-semibold text-violet-700" as="h2" id="stocker-validate-title">Modifier l'état stocké ?</div>
+            <div className="text-sm text-neutral-600 mt-1" as="p" id="stocker-validate-desc">
+              Cette action changera l'état de stockage du produit. Continuer ?
+            </div>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
             <DialogClose asChild>
-              <Button variant="outline" size="sm">Annuler</Button>
+              <Button variant="outline">Annuler</Button>
             </DialogClose>
             <Button
               variant="default"
-              size="sm"
-              loading={!!stockerLoadingId}
+              className="bg-violet-600 text-white hover:bg-violet-700"
               onClick={() => handleToggleStocker(confirmStockerModal.productId)}
               disabled={!!stockerLoadingId}
+              aria-labelledby="stocker-validate-title"
+              aria-describedby="stocker-validate-desc"
             >
-              Valider
+              {stockerLoadingId ? 'Modification...' : 'Confirmer'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal détail produit */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent aria-describedby="product-detail-desc">
+          <DialogHeader>
+            <DialogTitle>Détail du produit</DialogTitle>
+            <DialogDescription id="product-detail-desc">
+              Informations détaillées sur le produit sélectionné.
+            </DialogDescription>
+          </DialogHeader>
+          {loadingDetail ? (
+            <div className="p-8 text-center text-neutral-400">Chargement...</div>
+          ) : detailProduct ? (
+            <Card className="p-4 border-violet-200 bg-violet-50">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-1 space-y-2">
+                  <div className="text-lg font-bold text-violet-700">{detailProduct.productName}</div>
+                  <Badge variant="secondary" className="text-xs capitalize mb-2">{detailProduct.productCategory}</Badge>
+                  <div className="text-neutral-900 font-semibold mb-2">{detailProduct.productDescription}</div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-neutral-700">
+                    <div><b>Code CPC :</b> {detailProduct.codeCPC || '-'}</div>
+                    <div><b>État :</b> {detailProduct.productState || '-'}</div>
+                    <div><b>Volume :</b> {detailProduct.productVolume || '-'}</div>
+                    <div><b>Poids :</b> {detailProduct.productPoids || '-'}</div>
+                    <div><b>Dimensions :</b> {detailProduct.productLongueur || '-'} x {detailProduct.productLargeur || '-'} x {detailProduct.productHauteur || '-'}</div>
+                    <div><b>Stocké :</b> <Badge variant={detailProduct.isStocker ? 'default' : 'secondary'} className={detailProduct.isStocker ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{detailProduct.isStocker ? 'Oui' : 'Non'}</Badge></div>
+                    <div><b>Validé :</b> <Badge variant={detailProduct.productValidation ? 'default' : 'secondary'} className={detailProduct.productValidation ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{detailProduct.productValidation ? 'Oui' : 'Non'}</Badge></div>
+                    <div><b>Date création :</b> {detailProduct.createdAt ? new Date(detailProduct.createdAt).toLocaleString() : '-'}</div>
+                    <div><b>Date modification :</b> {detailProduct.updatedAt ? new Date(detailProduct.updatedAt).toLocaleString() : '-'}</div>
+                  </div>
+                </div>
+                <div className="flex-1 flex flex-col items-center justify-center">
+                  {detailProduct.productImage && (
+                    <img src={getFullMediaUrl(detailProduct.productImage)} alt={detailProduct.productName} className="w-40 h-40 object-cover rounded mb-2" />
+                  )}
+                </div>
+              </div>
+            </Card>
+          ) : (
+            <div className="p-8 text-center text-neutral-400">Aucune donnée</div>
+          )}
         </DialogContent>
       </Dialog>
     </>
