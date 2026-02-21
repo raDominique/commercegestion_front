@@ -10,27 +10,14 @@ import axiosInstance from './axios.config';
  * @param {string} token - Token d'authentification
  * @returns {Promise} - Réponse de l'API
  */
-export const getProducts = async ({ isStocker = '', search = '', limit = 10, page = 1 } = {}, token) => {
-    try {
-        const response = await axiosInstance.get(
-            '/api/v1/products',
-            {
-                params: {
-                    isStocker,
-                    search,
-                    limit,
-                    page,
-                },
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'accept': '*/*',
-                },
-            }
-        );
+export const getProducts = async (params = {}) => {
+    if (!params || Object.keys(params).length === 0) {
+        const response = await axiosInstance.get("/api/v1/products");
         return response.data;
-    } catch (error) {
-        throw error;
     }
+
+    const response = await axiosInstance.get("/api/v1/products", { params });
+    return response.data;
 };
 
 /**
@@ -93,7 +80,7 @@ export const toggleProductValidation = async (id, token) => {
         `/api/v1/products/toggle-validation/${id}`,
         {},
         {
-            headers: {  
+            headers: {
                 'Authorization': `Bearer ${token}`,
                 'accept': '*/*',
             },

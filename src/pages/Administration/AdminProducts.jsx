@@ -9,7 +9,6 @@ import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getProducts, validateProduct, getProductById } from '../../services/product.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '../../components/ui/dialog';
 import { Badge } from '../../components/ui/badge';
-import { useRef } from 'react';
 import { Switch } from '../../components/ui/switch';
 import { getFullMediaUrl } from '../../services/media.service';
 
@@ -22,45 +21,29 @@ const AdminProducts = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    productState: '',
-    codeCPC: '',
-    productVolume: '',
-    productLargeur: '',
-    productPoids: '',
-    productCategory: '',
-    productDescription: '',
-    productLongueur: '',
-    categoryId: '',
-    productName: '',
-    productHauteur: '',
-  });
-  const [image, setImage] = useState(null);
-  const imageInputRef = useRef();
   const [validateOpen, setValidateOpen] = useState(false);
   const [validateId, setValidateId] = useState(null);
   const [validating, setValidating] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailProduct, setDetailProduct] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [isStocker, setIsStocker] = useState('');
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
       const params = {
-        isStocker: '',
-        search: searchTerm,
-        limit,
+        search: searchTerm || undefined,
         page,
+        limit,
+        isStocker: isStocker === '' ? undefined : isStocker === 'true',
       };
       const res = await getProducts(params, token);
-      console.log(res);
       setProducts(Array.isArray(res.data) ? res.data : []);
       setTotal(res.total || 0);
     } catch (err) {
+      console.error(err);
       toast.error('Erreur lors du chargement des produits');
     } finally {
       setLoading(false);
@@ -69,7 +52,7 @@ const AdminProducts = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [searchTerm, page, limit]);
+  }, [searchTerm, page, limit, isStocker]);
 
   const handleAskValidate = (id) => {
     setValidateId(id);

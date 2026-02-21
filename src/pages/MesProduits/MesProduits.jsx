@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import SearchIcon from '@mui/icons-material/Search';
+import InfoIcon from '@mui/icons-material/Info';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getMyProducts, toggleProductStocker } from '../../services/product.service';
@@ -11,7 +14,6 @@ import { getFullMediaUrl } from '../../services/media.service';
 import { Switch } from '../../components/ui/switch';
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogClose
@@ -149,6 +151,7 @@ const MesProduits = () => {
                     <th className="text-left p-4 text-xs text-neutral-600">Stocké</th>
                     <th className="text-left p-4 text-xs text-neutral-600">Validé</th>
                     <th className="text-left p-4 text-xs text-neutral-600">Code CPC</th>
+                    <th className="text-right p-4 text-xs text-neutral-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -190,6 +193,19 @@ const MesProduits = () => {
                           </Badge>
                         </td>
                         <td className="p-4 text-sm text-neutral-600">{product.codeCPC || '-'}</td>
+                        <td className="p-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleShowInfo(item.code)}>
+                              <InfoIcon className="w-5 h-5 text-violet-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleEditCpc(item.code)}>
+                              <EditIcon className="w-5 h-5 text-amber-600" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteCpc(item.code)}>
+                              <DeleteIcon className="w-5 h-5 text-red-600" />
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
                     ))
                   ) : (

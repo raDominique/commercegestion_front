@@ -5,7 +5,6 @@ import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { Switch } from '../../components/ui/switch';
 import SearchIcon from '@mui/icons-material/Search';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
