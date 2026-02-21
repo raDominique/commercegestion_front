@@ -6,8 +6,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle.jsx';
-import { getProducts, createProduct, validateProduct, getProductById } from '../../services/product.service';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '../../components/ui/dialog';
+import { getProducts, validateProduct, getProductById } from '../../services/product.service';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '../../components/ui/dialog';
 import { Badge } from '../../components/ui/badge';
 import { useRef } from 'react';
 import { Switch } from '../../components/ui/switch';
@@ -52,11 +52,12 @@ const AdminProducts = () => {
       const token = localStorage.getItem('token');
       const params = {
         isStocker: '',
-        search: searchTerm || '',
+        search: searchTerm,
         limit,
         page,
       };
       const res = await getProducts(params, token);
+      console.log(res);
       setProducts(Array.isArray(res.data) ? res.data : []);
       setTotal(res.total || 0);
     } catch (err) {
@@ -69,34 +70,6 @@ const AdminProducts = () => {
   useEffect(() => {
     fetchProducts();
   }, [searchTerm, page, limit]);
-
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
-
-  const handleImageChange = (e) => {
-    setImage(e.target.files[0] || null);
-  };
-
-  const handleAddProduct = async () => {
-    setSaving(true);
-    try {
-      const token = localStorage.getItem('token');
-      await createProduct(form, image, token);
-      toast.success('Produit ajouté avec succès');
-      setOpen(false);
-      setForm({
-        productState: '', codeCPC: '', productVolume: '', productLargeur: '', productPoids: '', productCategory: '', productDescription: '', productLongueur: '', categoryId: '', productName: '', productHauteur: '',
-      });
-      setImage(null);
-      fetchProducts();
-    } catch (err) {
-      toast.error("Erreur lors de l'ajout du produit");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleAskValidate = (id) => {
     setValidateId(id);
@@ -149,51 +122,6 @@ const AdminProducts = () => {
               Gérez les produits de la plateforme
             </p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700">Ajouter un produit</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ajouter un produit</DialogTitle>
-                <DialogDescription>Remplissez les informations du produit.</DialogDescription>
-              </DialogHeader>
-              <form className="space-y-4">
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="productName">Nom</label>
-                <Input name="productName" id="productName" placeholder="Nom du produit" value={form.productName} onChange={handleFormChange} required />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="productCategory">Catégorie</label>
-                <Input name="productCategory" id="productCategory" placeholder="Catégorie" value={form.productCategory} onChange={handleFormChange} required />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="codeCPC">Code CPC</label>
-                <Input name="codeCPC" id="codeCPC" placeholder="Code CPC" value={form.codeCPC} onChange={handleFormChange} required />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="productState">État</label>
-                <Input name="productState" id="productState" placeholder="État (ex: Brut)" value={form.productState} onChange={handleFormChange} required />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="productVolume">Volume</label>
-                <Input name="productVolume" id="productVolume" placeholder="Volume (ex: 1000 L)" value={form.productVolume} onChange={handleFormChange} />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="productLargeur">Largeur</label>
-                <Input name="productLargeur" id="productLargeur" placeholder="Largeur (ex: 0.8 m)" value={form.productLargeur} onChange={handleFormChange} />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="productLongueur">Longueur</label>
-                <Input name="productLongueur" id="productLongueur" placeholder="Longueur (ex: 0.8 m)" value={form.productLongueur} onChange={handleFormChange} />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="productHauteur">Hauteur</label>
-                <Input name="productHauteur" id="productHauteur" placeholder="Hauteur (ex: 1.2 m)" value={form.productHauteur} onChange={handleFormChange} />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="productPoids">Poids</label>
-                <Input name="productPoids" id="productPoids" placeholder="Poids (ex: 500 kg)" value={form.productPoids} onChange={handleFormChange} />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="categoryId">ID Catégorie</label>
-                <Input name="categoryId" id="categoryId" placeholder="ID Catégorie" value={form.categoryId} onChange={handleFormChange} />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="productDescription">Description</label>
-                <Input name="productDescription" id="productDescription" placeholder="Description" value={form.productDescription} onChange={handleFormChange} />
-                <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="image">Image</label>
-                <Input type="file" name="image" id="image" accept="image/*" ref={imageInputRef} onChange={handleImageChange} />
-              </form>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Annuler</Button>
-                </DialogClose>
-                <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" onClick={handleAddProduct} disabled={saving}>
-                  {saving ? 'Ajout...' : 'Ajouter'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
         <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
           <div className="relative flex-1">
@@ -217,8 +145,10 @@ const AdminProducts = () => {
                   <th className="text-left p-4 text-xs text-neutral-600">Aperçu</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Nom</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Catégorie</th>
+                  <th className="text-left p-4 text-xs text-neutral-600">Propriétaire</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Stocké</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Validé</th>
+                  <th className="text-left p-4 text-xs text-neutral-600">Code CPC</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Détail</th>
                 </tr>
               </thead>
@@ -232,7 +162,6 @@ const AdminProducts = () => {
                     <tr key={product._id} className="border-b border-neutral-200 last:border-0">
                       <td className="p-4 text-sm">
                         {product.image ? (
-                          console.log('Image URL table:', getFullMediaUrl(product.image)),
                           <img src={getFullMediaUrl(product.image)} alt={product.name} className="w-12 h-12 object-cover rounded" />
                         ) : (
                           <span className="text-neutral-400">-</span>
@@ -240,6 +169,7 @@ const AdminProducts = () => {
                       </td>
                       <td className="p-4 text-sm text-neutral-900">{product.name}</td>
                       <td className="p-4 text-sm text-neutral-600">{product.categoryNom || '-'}</td>
+                      <td className="p-4 text-sm text-neutral-600">{product.ownerName || product.ownerNickName || '-'}</td>
                       <td className="p-4 text-sm">
                         <Badge
                           variant={product.isStocker ? 'default' : 'secondary'}
@@ -260,6 +190,7 @@ const AdminProducts = () => {
                           {product.validation ? 'Oui' : 'Non'}
                         </Badge>
                       </td>
+                      <td className="p-4 text-sm text-neutral-600">{product.codeCPC || '-'}</td>
                       <td className="p-4 text-sm">
                         <Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)}>
                           <InfoIcon className="w-5 h-5 text-violet-600" />

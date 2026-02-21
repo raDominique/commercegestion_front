@@ -83,6 +83,46 @@ export const validateProduct = async (id, token) => {
 };
 
 /**
+ * Bascule la validation d'un produit (PATCH /products/toggle-validation/:id)
+ * @param {string} id - ID du produit
+ * @param {string} token - Token d'authentification
+ * @returns {Promise}
+ */
+export const toggleProductValidation = async (id, token) => {
+    const response = await axiosInstance.patch(
+        `/api/v1/products/toggle-validation/${id}`,
+        {},
+        {
+            headers: {  
+                'Authorization': `Bearer ${token}`,
+                'accept': '*/*',
+            },
+        }
+    );
+    return response.data;
+};
+
+/**
+ * Bascule l'état stocké d'un produit (PATCH /products/toggle-stocker/:id)
+ * @param {string} id - ID du produit
+ * @param {string} token - Token d'authentification
+ * @returns {Promise}
+ */
+export const toggleProductStocker = async (id, token) => {
+    const response = await axiosInstance.patch(
+        `/api/v1/products/toggle-stock/${id}`,
+        {},
+        {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'accept': '*/*',
+            },
+        }
+    );
+    return response.data;
+};
+
+/**
  * Récupère un produit par son ID (GET /products/:id)
  * @param {string} id - ID du produit
  * @param {string} token - Token d'authentification
@@ -103,13 +143,15 @@ export const getProductById = async (id, token) => {
 
 /**
  * Récupère les produits de l'utilisateur courant (GET /products/me)
+ * @param {Object} params - Paramètres de recherche (search, limit, page, etc.)
  * @param {string} token - Token d'authentification
  * @returns {Promise}
  */
-export const getMyProducts = async (token) => {
+export const getMyProducts = async (params = {}, token) => {
     const response = await axiosInstance.get(
         '/api/v1/products/me',
         {
+            params,
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'accept': '*/*',
