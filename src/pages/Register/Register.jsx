@@ -22,7 +22,7 @@ const Register = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     try {
-      console.log('Form data:', JSON.stringify(form));
+      ('Form data:', JSON.stringify(form));
       toast.success('Inscription réussie !');
     } catch (error) {
       toast.error('Erreur lors de l\'inscription.');

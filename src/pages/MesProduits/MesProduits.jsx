@@ -58,7 +58,6 @@ const MesProduits = () => {
       });
     } catch (err) {
       toast.error('Erreur lors du dépôt');
-      console.log(err);
     }
   };
   usePageTitle('Mes Produits');

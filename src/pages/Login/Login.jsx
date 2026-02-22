@@ -46,7 +46,6 @@ export default function Login() {
       } else {
         toast.error('Erreur de connexion');
       }
-      console.log('Login error:', error);
     } finally {
       setLoading(false);
     }
