@@ -87,7 +87,7 @@ const Depot = () => {
 									</tr>
 								))
 							) : (
-								<tr><td colSpan="6" className="p-8 text-center text-neutral-400">Aucun actif trouvé</td></tr>
+								<tr><td colSpan="6" className="p-8 text-center text-neutral-400">Aucun dépôt trouvé</td></tr>
 							)}
 						</tbody>
 					</table>
