@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog.jsx';
 import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Pagination } from '../../components/ui/pagination';

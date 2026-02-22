@@ -26,6 +26,7 @@ import {
     SelectItem,
     SelectValue,
 } from '../../components/ui/select';
+import AddIcon from '@mui/icons-material/Add';
 import InfoIcon from '@mui/icons-material/Info';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -44,6 +45,7 @@ const AdminCpc = () => {
     const [total, setTotal] = useState(0);
     const [niveau, setNiveau] = useState('');
     const [open, setOpen] = useState(false);
+    
     const [form, setForm] = useState({
         code: '',
         nom: '',
@@ -231,7 +233,10 @@ const AdminCpc = () => {
                     <div className="flex gap-2">
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700">Ajouter un CPC</Button>
+                                <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700">
+                                    <AddIcon className="w-4 h-4 mr-2" />
+                                    Ajouter un CPC
+                                </Button>
                             </DialogTrigger>
                             <input
                                 type="file"

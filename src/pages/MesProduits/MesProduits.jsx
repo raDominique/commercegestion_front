@@ -4,15 +4,19 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
 import InfoIcon from '@mui/icons-material/Info';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle.jsx';
-import { getMyProducts, toggleProductStocker, getProductById } from '../../services/product.service';
+import { getMyProducts, toggleProductStocker, getProductById, createProduct } from '../../services/product.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { Switch } from '../../components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription, DialogTrigger } from '../../components/ui/dialog';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
+import { Label } from '../../components/ui/label';
+import { getAllCpcSelect } from '../../services/cpc.service';
 
 const MesProduits = () => {
   usePageTitle('Mes Produits');
@@ -30,6 +34,86 @@ const MesProduits = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailProduct, setDetailProduct] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  // Ajout pour le modal d'ajout de produit
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [cpcOptions, setCpcOptions] = useState([]);
+  const [form, setForm] = useState({
+    productState: '',
+    codeCPC: '',
+    productVolume: '',
+    productLargeur: '',
+    productPoids: '',
+    productCategory: '',
+    productDescription: '',
+    productLongueur: '',
+    categoryId: '',
+    productName: '',
+    productHauteur: '',
+    image: null,
+  });
+  // Complétion auto
+  const handleCpcSelect = (id, nom, code) => {
+    setForm(f => ({
+      ...f,
+      productCategory: nom,
+      categoryId: id,
+      codeCPC: code,
+    }));
+  };
+
+  // Soumission du formulaire d'ajout
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try {
+      await createProduct({
+        productState: form.productState,
+        codeCPC: form.codeCPC,
+        productVolume: form.productVolume,
+        productLargeur: form.productLargeur,
+        productPoids: form.productPoids,
+        productCategory: form.productCategory,
+        productDescription: form.productDescription,
+        productLongueur: form.productLongueur,
+        categoryId: form.categoryId,
+        productName: form.productName,
+        productHauteur: form.productHauteur,
+      }, form.image, token);
+      toast.success('Produit ajouté avec succès');
+      setAddModalOpen(false);
+      setForm({
+        productState: '',
+        codeCPC: '',
+        productVolume: '',
+        productLargeur: '',
+        productPoids: '',
+        productCategory: '',
+        productDescription: '',
+        productLongueur: '',
+        categoryId: '',
+        productName: '',
+        productHauteur: '',
+        image: null,
+      });
+      fetchProducts();
+    } catch (err) {
+      toast.error('Erreur lors de l\'ajout du produit');
+    }
+  };
+  useEffect(() => {
+    if (addModalOpen) {
+      getAllCpcSelect().then(res => {
+        setCpcOptions(res.data || []);
+      });
+    }
+  }, [addModalOpen]);
+  const handleInputChange = e => {
+    const { name, value, files, type } = e.target;
+    setForm(f => ({
+      ...f,
+      [name]: type === 'file' ? files[0] : value,
+    }));
+  };
   const handleShowDetail = async (id) => {
     setLoadingDetail(true);
     setDetailOpen(true);
@@ -105,6 +189,101 @@ const MesProduits = () => {
               <p className="text-sm text-neutral-600">
                 Liste de vos produits
               </p>
+            </div>
+            <div>
+              <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    className="bg-violet-600 hover:bg-violet-700 text-white"
+                    onClick={() => setAddModalOpen(true)}
+                  >
+                    <AddIcon className="w-5 h-5 mr-2" />
+                    Ajouter un produit
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Ajouter un produit</DialogTitle>
+                  </DialogHeader>
+                  <form className="space-y-4" onSubmit={handleAddProduct}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="productName">Nom du produit</Label>
+                        <Input name="productName" value={form.productName} onChange={handleInputChange} required placeholder="Blé dur de qualité supérieure" className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="productState">État</Label>
+                        <Select value={form.productState} onValueChange={val => setForm(f => ({ ...f, productState: val }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner l'état" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Brut">Brut</SelectItem>
+                            <SelectItem value="Conditionné">Conditionné</SelectItem>
+                            <SelectItem value="Transformé">Transformé</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="productVolume">Volume</Label>
+                        <Input name="productVolume" value={form.productVolume} onChange={handleInputChange} required placeholder="1000 L" className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="productLargeur">Largeur</Label>
+                        <Input name="productLargeur" value={form.productLargeur} onChange={handleInputChange} required placeholder="0.8 m" className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="productPoids">Poids</Label>
+                        <Input name="productPoids" value={form.productPoids} onChange={handleInputChange} required placeholder="500 kg" className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="productLongueur">Longueur</Label>
+                        <Input name="productLongueur" value={form.productLongueur} onChange={handleInputChange} required placeholder="0.8 m" className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="productHauteur">Hauteur</Label>
+                        <Input name="productHauteur" value={form.productHauteur} onChange={handleInputChange} required placeholder="1.2 m" className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="productDescription">Description</Label>
+                        <Input name="productDescription" value={form.productDescription} onChange={handleInputChange} required placeholder="Blé dur récolté en 2025, teneur en humidité < 12%" className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="image">Image</Label>
+                        <Input name="image" type="file" accept="image/*" onChange={handleInputChange} required className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="productCategory">Catégorie CPC</Label>
+                        <Select value={form.productCategory} onValueChange={val => {
+                          const selected = cpcOptions.find(opt => opt.nom === val);
+                          if (selected) handleCpcSelect(selected.id, selected.nom, selected.code);
+                        }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner une catégorie" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {cpcOptions.map(opt => (
+                              <SelectItem key={opt.id} value={opt.nom}>{opt.nom}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="codeCPC">Code CPC</Label>
+                        <Input name="codeCPC" value={form.codeCPC} onChange={handleInputChange} required placeholder="01111" className="border-neutral-300" readOnly />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="categoryId">ID Catégorie</Label>
+                        <Input name="categoryId" value={form.categoryId} onChange={handleInputChange} required placeholder="65dcf1234567890abcdef123" className="border-neutral-300" readOnly />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <Button variant="outline" type="button" onClick={() => setAddModalOpen(false)}>Annuler</Button>
+                      <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Ajouter</Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
