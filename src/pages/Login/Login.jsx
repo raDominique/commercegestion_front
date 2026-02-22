@@ -91,17 +91,16 @@ export default function Login() {
                   className="border-neutral-300"
                 />
               </div>
-              {loading ? (
-                <Squelette className="w-full h-10 mb-2" />
-              ) : (
-                <Button
-                  type="submit"
-                  className="w-full bg-violet-600 hover:bg-violet-700 text-white"
-                  disabled={loading}
-                >
-                  Se connecter
-                </Button>
-              )}
+              <Button
+                type="submit"
+                className="w-full bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="w-5 h-5 mr-2 animate-spin border-2 border-white border-t-violet-600 rounded-full"></span>
+                ) : null}
+                Se connecter
+              </Button>
             </form>
             <div className="text-center text-sm mt-6">
               <span className="text-neutral-600">Pas encore de compte ? </span>

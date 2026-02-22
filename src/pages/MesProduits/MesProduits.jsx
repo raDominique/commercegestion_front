@@ -12,13 +12,55 @@ import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getMyProducts, toggleProductStocker, getProductById, createProduct } from '../../services/product.service';
 import { getFullMediaUrl } from '../../services/media.service';
-import { Switch } from '../../components/ui/switch';
+// import { Switch } from '../../components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription, DialogTrigger } from '../../components/ui/dialog';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Label } from '../../components/ui/label';
 import { getAllCpcSelect } from '../../services/cpc.service';
+import { depositStock } from '../../services/stocker_move.service';
+import { getMySites } from '../../services/site.service';
 
 const MesProduits = () => {
+  // Ouvrir le modal dépôt
+  const handleOpenDepositModal = async (productId) => {
+    setDepositProductId(productId);
+    setDepositForm(f => ({ ...f, productId }));
+    setDepositModalOpen(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await getMySites({ limit: 100, page: 1 });
+      setSites(res.data || []);
+    } catch (err) {
+      toast.error('Erreur lors du chargement des sites');
+      setSites([]);
+    }
+  };
+
+  // Soumission du dépôt
+  const handleDepositSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try {
+      await depositStock({
+        ...depositForm,
+        productId: depositProductId,
+        quantite: Number(depositForm.quantite),
+      }, token);
+      toast.success('Produit déposé avec succès');
+      setDepositModalOpen(false);
+      setDepositForm({
+        siteOrigineId: '',
+        siteDestinationId: '',
+        productId: '',
+        quantite: '',
+        type: 'Depot',
+        observations: '',
+      });
+    } catch (err) {
+      toast.error('Erreur lors du dépôt');
+      console.log(err);
+    }
+  };
   usePageTitle('Mes Produits');
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,6 +78,18 @@ const MesProduits = () => {
   const [loadingDetail, setLoadingDetail] = useState(false);
   // Ajout pour le modal d'ajout de produit
   const [addModalOpen, setAddModalOpen] = useState(false);
+  // Modal dépôt
+  const [depositModalOpen, setDepositModalOpen] = useState(false);
+  const [depositProductId, setDepositProductId] = useState(null);
+  const [sites, setSites] = useState([]);
+  const [depositForm, setDepositForm] = useState({
+    siteOrigineId: '',
+    siteDestinationId: '',
+    productId: '',
+    quantite: '',
+    type: 'Depot',
+    observations: '',
+  });
   const [cpcOptions, setCpcOptions] = useState([]);
   const [form, setForm] = useState({
     productState: '',
@@ -203,6 +257,30 @@ const MesProduits = () => {
                   </DialogHeader>
                   <form className="space-y-4" onSubmit={handleAddProduct}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Catégorie CPC et Code CPC côte à côte */}
+                      <div className="col-span-1 md:col-span-2 flex gap-4">
+                        <div className="space-y-2 flex-1">
+                          <Label htmlFor="productCategory">Catégorie CPC</Label>
+                          <Select value={form.productCategory} onValueChange={val => {
+                            const selected = cpcOptions.find(opt => opt.nom === val);
+                            if (selected) handleCpcSelect(selected.id, selected.nom, selected.code);
+                          }}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Choisir la catégorie" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {cpcOptions.map(opt => (
+                                <SelectItem key={opt.id} value={opt.nom}>{opt.nom}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2 flex-1">
+                          <Label htmlFor="codeCPC">Code CPC</Label>
+                          <Input name="codeCPC" value={form.codeCPC} onChange={handleInputChange} required placeholder="01111" className="border-neutral-300" readOnly />
+                        </div>
+                      </div>
+                      {/* ...autres champs... */}
                       <div className="space-y-2">
                         <Label htmlFor="productName">Nom du produit</Label>
                         <Input name="productName" value={form.productName} onChange={handleInputChange} required placeholder="Blé dur de qualité supérieure" className="border-neutral-300" />
@@ -248,30 +326,11 @@ const MesProduits = () => {
                         <Label htmlFor="image">Image</Label>
                         <Input name="image" type="file" accept="image/*" onChange={handleInputChange} required className="border-neutral-300" />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productCategory">Catégorie CPC</Label>
-                        <Select value={form.productCategory} onValueChange={val => {
-                          const selected = cpcOptions.find(opt => opt.nom === val);
-                          if (selected) handleCpcSelect(selected.id, selected.nom, selected.code);
-                        }}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner une catégorie" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {cpcOptions.map(opt => (
-                              <SelectItem key={opt.id} value={opt.nom}>{opt.nom}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="codeCPC">Code CPC</Label>
-                        <Input name="codeCPC" value={form.codeCPC} onChange={handleInputChange} required placeholder="01111" className="border-neutral-300" readOnly />
-                      </div>
-                      <div className="space-y-2">
+                      {/* Champ ID Catégorie masqué */}
+                      {/* <div className="space-y-2">
                         <Label htmlFor="categoryId">ID Catégorie</Label>
                         <Input name="categoryId" value={form.categoryId} onChange={handleInputChange} required placeholder="65dcf1234567890abcdef123" className="border-neutral-300" readOnly />
-                      </div>
+                      </div> */}
                     </div>
                     <div className="flex justify-end gap-2 mt-4">
                       <Button variant="outline" type="button" onClick={() => setAddModalOpen(false)}>Annuler</Button>
@@ -370,7 +429,7 @@ const MesProduits = () => {
                         </td>
                         <td className="p-4 text-sm text-neutral-600">{product.codeCPC || '-'}</td>
                         <td className="p-4 text-sm">
-                          <Button onClick={() => console.log('Ajouter à un dépôt', product._id)} variant="outline" size="sm">
+                          <Button onClick={() => handleOpenDepositModal(product._id)} variant="outline" size="sm">
                             Ajouter à un dépôt
                           </Button>
                         </td>
@@ -421,30 +480,59 @@ const MesProduits = () => {
           </div>
         </div>
       </div>
-      {/* Modal de confirmation pour toggle stocker */}
-      <Dialog open={confirmStockerModal.open} onOpenChange={(open) => setConfirmStockerModal({ open, productId: open ? confirmStockerModal.productId : null })}>
-        <DialogContent aria-describedby="stocker-validate-desc">
+
+      {/* Modal dépôt */}
+      <Dialog open={depositModalOpen} onOpenChange={setDepositModalOpen}>
+        <DialogContent className="bg-white border border-neutral-200">
           <DialogHeader>
-            <div className="text-lg font-semibold text-violet-700" as="h2" id="stocker-validate-title">Modifier l'état stocké ?</div>
-            <div className="text-sm text-neutral-600 mt-1" as="p" id="stocker-validate-desc">
-              Cette action changera l'état de stockage du produit. Continuer ?
-            </div>
+            <DialogTitle>Déposer le produit</DialogTitle>
           </DialogHeader>
-          <div className="flex justify-end gap-2 mt-4">
-            <DialogClose asChild>
-              <Button variant="outline">Annuler</Button>
-            </DialogClose>
-            <Button
-              variant="default"
-              className="bg-violet-600 text-white hover:bg-violet-700"
-              onClick={() => handleToggleStocker(confirmStockerModal.productId)}
-              disabled={!!stockerLoadingId}
-              aria-labelledby="stocker-validate-title"
-              aria-describedby="stocker-validate-desc"
-            >
-              {stockerLoadingId ? 'Modification...' : 'Confirmer'}
-            </Button>
-          </div>
+          <form className="space-y-4" onSubmit={handleDepositSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="siteOrigineId">Site d'origine</Label>
+                <Select value={depositForm.siteOrigineId} onValueChange={val => setDepositForm(f => ({ ...f, siteOrigineId: val }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner le site d'origine" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sites.map(site => (
+                      <SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="siteDestinationId">Site de destination</Label>
+                <Select value={depositForm.siteDestinationId} onValueChange={val => setDepositForm(f => ({ ...f, siteDestinationId: val }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner le site de destination" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sites.map(site => (
+                      <SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="quantite">Quantité</Label>
+                <Input name="quantite" value={depositForm.quantite} onChange={e => setDepositForm(f => ({ ...f, quantite: e.target.value }))} required placeholder="Quantité à déposer" className="border-neutral-300" type="number" min="1" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
+                <Input name="type" value={depositForm.type} onChange={e => setDepositForm(f => ({ ...f, type: e.target.value }))} required placeholder="Type de mouvement" className="border-neutral-300" />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="observations">Observations</Label>
+                <Input name="observations" value={depositForm.observations} onChange={e => setDepositForm(f => ({ ...f, observations: e.target.value }))} placeholder="Observations (facultatif)" className="border-neutral-300" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" type="button" onClick={() => setDepositModalOpen(false)}>Annuler</Button>
+              <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Déposer</Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
