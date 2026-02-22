@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       host: true,
       proxy: {
         '/api': {
-          target: 'https://api-etokisana.tsirylab.com',
+          target: env.VITE_API_BASE_URL,
           changeOrigin: true,
           secure: true,
         },

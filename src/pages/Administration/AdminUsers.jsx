@@ -226,7 +226,7 @@ export default function AdminUsers() {
                       </td>
                       <td className={`p-4 text-sm ${user.status === 'Actif' ? 'text-neutral-600' : 'text-neutral-400'}`}>{user.email}</td>
                       <td className="p-4 text-sm text-neutral-900">
-                        {user.balance.toLocaleString()} FCFA
+                        {user.balance.toLocaleString()} Ariary
                       </td>
 
                       <td className="p-4 text-sm text-neutral-600">

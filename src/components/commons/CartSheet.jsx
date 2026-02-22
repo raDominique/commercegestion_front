@@ -89,7 +89,7 @@ export function CartSheet({ open, onOpenChange }) {
                         </button>
                       </div>
                       <p className="text-sm text-primary mb-3">
-                        {item.price.toLocaleString()} FCFA
+                        {item.price.toLocaleString()} Ariary
                       </p>
                       <div className="flex items-center gap-2">
                         <button
@@ -121,7 +121,7 @@ export function CartSheet({ open, onOpenChange }) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Sous-total</span>
                   <span className="text-sm text-foreground">
-                    {getTotalPrice().toLocaleString()} FCFA
+                    {getTotalPrice().toLocaleString()} Ariary
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -132,7 +132,7 @@ export function CartSheet({ open, onOpenChange }) {
                 <div className="flex items-center justify-between">
                   <span className="text-foreground">Total</span>
                   <span className="text-lg text-primary">
-                    {getTotalPrice().toLocaleString()} FCFA
+                    {getTotalPrice().toLocaleString()} Ariary
                   </span>
                 </div>
               </div>

@@ -171,10 +171,6 @@ const MesProduits = () => {
     }
   };
 
-  const askToggleStocker = (id) => {
-    setConfirmStockerModal({ open: true, productId: id });
-  };
-
   useEffect(() => {
     fetchProducts();
   }, [searchTerm, page, limit, validationFilter, isStockerFilter]);
@@ -340,9 +336,10 @@ const MesProduits = () => {
                     <th className="text-left p-4 text-xs text-neutral-600">Aperçu</th>
                     <th className="text-left p-4 text-xs text-neutral-600">Nom</th>
                     <th className="text-left p-4 text-xs text-neutral-600">Catégorie</th>
-                    <th className="text-left p-4 text-xs text-neutral-600">Stocké</th>
+                    {/* <th className="text-left p-4 text-xs text-neutral-600">Stocké</th> */}
                     <th className="text-left p-4 text-xs text-neutral-600">Validé</th>
                     <th className="text-left p-4 text-xs text-neutral-600">Code CPC</th>
+                    <th className="text-left p-4 text-xs text-neutral-600">Déposer</th>
                     <th className="text-right p-4 text-xs text-neutral-600">Actions</th>
                   </tr>
                 </thead>
@@ -364,19 +361,6 @@ const MesProduits = () => {
                         <td className="p-4 text-sm text-neutral-900">{product.name}</td>
                         <td className="p-4 text-sm text-neutral-600">{product.categoryNom || '-'}</td>
                         <td className="p-4 text-sm">
-                          <Switch
-                            checked={product.isStocker}
-                            onCheckedChange={() => askToggleStocker(product._id)}
-                            disabled={stockerLoadingId === product._id}
-                          />
-                          <Badge
-                            variant={product.isStocker ? 'default' : 'secondary'}
-                            className={product.isStocker ? 'bg-green-100 text-green-700 border-green-200 ml-2' : 'bg-neutral-200 text-neutral-500 border-neutral-200 ml-2'}
-                          >
-                            {product.isStocker ? 'Oui' : 'Non'}
-                          </Badge>
-                        </td>
-                        <td className="p-4 text-sm">
                           <Badge
                             variant={product.validation ? 'default' : 'secondary'}
                             className={product.validation ? 'bg-green-100 text-green-700 border-green-200 ml-2' : 'bg-neutral-200 text-neutral-500 border-neutral-200 ml-2'}
@@ -385,6 +369,11 @@ const MesProduits = () => {
                           </Badge>
                         </td>
                         <td className="p-4 text-sm text-neutral-600">{product.codeCPC || '-'}</td>
+                        <td className="p-4 text-sm">
+                          <Button onClick={() => console.log('Ajouter à un dépôt', product._id)} variant="outline" size="sm">
+                            Ajouter à un dépôt
+                          </Button>
+                        </td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)}>

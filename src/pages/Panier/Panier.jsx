@@ -133,7 +133,7 @@ export default function Panier() {
                           </button>
                         </div>
                         <p className="text-lg text-violet-600 mb-3">
-                          {item.price.toLocaleString()} FCFA
+                          {item.price.toLocaleString()} Ariary
                         </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -158,7 +158,7 @@ export default function Panier() {
                           <div className="text-right">
                             <p className="text-sm text-neutral-600">Total</p>
                             <p className="text-lg text-neutral-900">
-                              {(item.price * item.quantity).toLocaleString()} FCFA
+                              {(item.price * item.quantity).toLocaleString()} Ariary
                             </p>
                           </div>
                         </div>
@@ -202,20 +202,20 @@ export default function Panier() {
                   <div className="flex justify-between text-sm">
                     <span className="text-neutral-600">Sous-total</span>
                     <span className="text-neutral-900">
-                      {getTotalPrice().toLocaleString()} FCFA
+                      {getTotalPrice().toLocaleString()} Ariary
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-neutral-600">Livraison</span>
                     <span className="text-neutral-900">
-                      {shippingCost.toLocaleString()} FCFA
+                      {shippingCost.toLocaleString()} Ariary
                     </span>
                   </div>
                   <Separator />
                   <div className="flex justify-between">
                     <span className="text-neutral-900">Total</span>
                     <span className="text-xl text-violet-600">
-                      {totalWithShipping.toLocaleString()} FCFA
+                      {totalWithShipping.toLocaleString()} Ariary
                     </span>
                   </div>
                 </div>

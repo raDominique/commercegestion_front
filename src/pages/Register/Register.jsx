@@ -8,10 +8,11 @@ import { toast } from 'sonner';
 import { Card } from '../../components/ui/card.jsx';
 import { Input } from '../../components/ui/input.jsx';
 import { Label } from '../../components/ui/label.jsx';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import LogoImage from '../../assets/logo/logo.png';
 
 const steps = [
-  'Informations de connexion',
+  "Type d'utilisateur",
   'Informations personnelles',
   'Documents & Images',
 ];
@@ -124,298 +125,130 @@ const Register = () => {
           {/* Right column: Form */}
           <div className="md:w-1/2 p-8 flex flex-col justify-center">
             <form onSubmit={step === steps.length - 1 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }} className="space-y-4">
-              {/* ÉTAPE 1 */}
+              {/* ÉTAPE 1 : Choix du type d'utilisateur */}
               {step === 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="userEmail">Email</Label>
-                    <Input
-                      id="userEmail"
-                      name="userEmail"
-                      type="email"
-                      placeholder="votre@email.com"
-                      value={form.userEmail}
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="userPassword">Mot de passe</Label>
-                    <Input
-                      id="userPassword"
-                      name="userPassword"
-                      type="password"
-                      placeholder="••••••••"
-                      value={form.userPassword}
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      placeholder="••••••••"
-                      value={form.confirmPassword}
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="userType">Type d'utilisateur</Label>
-                    <select
-                      id="userType"
-                      name="userType"
-                      value={form.userType}
-                      onChange={handleChange}
-                      required
-                      className="border border-neutral-300 focus:border-violet-600 w-full rounded-md px-3 py-1.5"
-                    >
-                      <option value="">Sélectionner</option>
-                      <option value="Particulier">Particulier</option>
-                      <option value="Professionnel">Professionnel</option>
-                      <option value="Entreprise">Entreprise</option>
-                    </select>
-                  </div>
+                <div className="flex flex-col gap-6 max-w-xs mx-auto">
+                  <Label htmlFor="userType" className="text-lg">Type d'utilisateur</Label>
+                  <Select value={form.userType} onValueChange={val => setForm(f => ({ ...f, userType: val }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner le type d'utilisateur" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Particulier">Particulier</SelectItem>
+                      <SelectItem value="Entreprise">Entreprise</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
               {/* ÉTAPE 2 */}
-              {step === 1 && (
+              {step === 1 && form.userType && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="userName">Nom</Label>
-                    <Input
-                      id="userName"
-                      name="userName"
-                      type="text"
-                      placeholder="Alain Patrick"
-                      value={form.userName}
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
+                    <Label htmlFor="userNickName">Pseudo</Label>
+                    <Input id="userNickName" name="userNickName" type="text" placeholder="Pseudo" value={form.userNickName} onChange={handleChange} required className="border-neutral-300" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="userNickName">Pseudo</Label>
-                    <Input
-                      id="userNickName"
-                      name="userNickName"
-                      type="text"
-                      placeholder="Alain Patrick"
-                      value={form.userNickName}
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
+                    <Label htmlFor="userName">Nom</Label>
+                    <Input id="userName" name="userName" type="text" placeholder="Nom" value={form.userName} onChange={handleChange} required className="border-neutral-300" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="userFirstname">Prénom</Label>
-                    <Input
-                      id="userFirstname"
-                      name="userFirstname"
-                      type="text"
-                      placeholder="RAMAHEFARSON"
-                      value={form.userFirstname}
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
+                    <Input id="userFirstname" name="userFirstname" type="text" placeholder="Prénom" value={form.userFirstname} onChange={handleChange} required className="border-neutral-300" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="userEmail">Email</Label>
+                    <Input id="userEmail" name="userEmail" type="email" placeholder="Email" value={form.userEmail} onChange={handleChange} required className="border-neutral-300" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="userPassword">Mot de passe</Label>
+                    <Input id="userPassword" name="userPassword" type="password" placeholder="Mot de passe" value={form.userPassword} onChange={handleChange} required className="border-neutral-300" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="userPhone">Téléphone</Label>
-                    <Input
-                      id="userPhone"
-                      name="userPhone"
-                      type="tel"
-                      placeholder="0345682040"
-                      value={form.userPhone}
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
+                    <Input id="userPhone" name="userPhone" type="tel" placeholder="Téléphone" value={form.userPhone} onChange={handleChange} required className="border-neutral-300" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="userAddress">Adresse</Label>
-                    <Input
-                      id="userAddress"
-                      name="userAddress"
-                      type="text"
-                      placeholder="Ivory Nord"
-                      value={form.userAddress}
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
+                    <Input id="userAddress" name="userAddress" type="text" placeholder="Adresse" value={form.userAddress} onChange={handleChange} required className="border-neutral-300" />
                   </div>
                   <div className="md:col-span-2">
                     <Label>Localisation sur la carte (OpenStreetMap)</Label>
-                    <LeafletMapPicker
-                      lat={form.userMainLat}
-                      lng={form.userMainLng}
-                      onChange={({ lat, lng }) => setForm((prev) => ({ ...prev, userMainLat: lat, userMainLng: lng }))}
-                    />
+                    <LeafletMapPicker lat={form.userMainLat} lng={form.userMainLng} onChange={({ lat, lng }) => setForm((prev) => ({ ...prev, userMainLat: lat, userMainLng: lng }))} />
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="userMainLat">Latitude</Label>
-                        <Input
-                          id="userMainLat"
-                          name="userMainLat"
-                          type="text"
-                          placeholder="-21.45267"
-                          value={form.userMainLat}
-                          readOnly
-                          required
-                          className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
-                        />
+                        <Input id="userMainLat" name="userMainLat" type="text" placeholder="-21.45267" value={form.userMainLat} readOnly required className="border-neutral-300 bg-neutral-100 cursor-not-allowed" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="userMainLng">Longitude</Label>
-                        <Input
-                          id="userMainLng"
-                          name="userMainLng"
-                          type="text"
-                          placeholder="47.08569"
-                          value={form.userMainLng}
-                          readOnly
-                          required
-                          className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
-                        />
+                        <Input id="userMainLng" name="userMainLng" type="text" placeholder="47.08569" value={form.userMainLng} readOnly required className="border-neutral-300 bg-neutral-100 cursor-not-allowed" />
                       </div>
                     </div>
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="identityCardNumber">Numéro CIN</Label>
-                    <Input
-                      id="identityCardNumber"
-                      name="identityCardNumber"
-                      type="text"
-                      placeholder="201031054771"
-                      value={form.identityCardNumber}
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="documentType">Type de document</Label>
-                    <select
-                      id="documentType"
-                      name="documentType"
-                      value={form.documentType}
-                      onChange={handleChange}
-                      required
-                      className="border border-neutral-300 focus:border-violet-600 w-full rounded-md px-3 py-1.5"
-                    >
-                      <option value="">Sélectionner</option>
-                      <option value="cin">CIN</option>
-                      <option value="passeport">Passeport</option>
-                      <option value="permi-de-conduire">Permis de conduire</option>
-                    </select>
+                    <Select value={form.documentType} onValueChange={val => setForm(f => ({ ...f, documentType: val }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cin">CIN</SelectItem>
+                        <SelectItem value="passeport">Passeport</SelectItem>
+                        <SelectItem value="permis-de-conduire">Permis de conduire</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               )}
               {/* ÉTAPE 3 */}
-              {step === 2 && (
+              {step === 2 && form.userType && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Carte fiscale (PNG)</Label>
-                    {form.carteFiscal.map((file, idx) => (
-                      <div key={idx} className="flex items-center gap-2 mb-2">
-                        <Input
-                          id={`carteFiscal-${idx}`}
-                          name="carteFiscal"
-                          type="file"
-                          accept="image/png"
-                          data-idx={idx}
-                          onChange={handleChange}
-                          required={idx === 0}
-                          className="border-neutral-300 flex-1"
-                        />
-                        {form.carteFiscal.length > 1 && (
-                          <button type="button" onClick={() => handleRemoveFile('carteFiscal', idx)}
-                            className="rounded-full bg-red-100 hover:bg-red-200 text-red-600 w-8 h-8 flex items-center justify-center transition">
-                            <span className="text-xl font-bold">&minus;</span>
-                          </button>
-                        )}
-                        {idx === form.carteFiscal.length - 1 && form.carteFiscal.length < 5 && (
-                          <button type="button" onClick={() => handleAddFile('carteFiscal')}
-                            className="rounded-full bg-violet-100 hover:bg-violet-200 text-violet-700 w-8 h-8 flex items-center justify-center transition">
-                            <span className="text-xl font-bold">+</span>
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="carteStat">Carte Stat (PNG)</Label>
-                    <Input
-                      id="carteStat"
-                      name="carteStat"
-                      type="file"
-                      accept="image/png"
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="logo">Logo (JPEG)</Label>
-                    <Input
-                      id="logo"
-                      name="logo"
-                      type="file"
-                      accept="image/jpeg"
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
-                  </div>
-                  <div className="space-y-2">
+                  {/* Documents pour Particulier et Entreprise */}
+                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="avatar">Avatar (PNG)</Label>
-                    <Input
-                      id="avatar"
-                      name="avatar"
-                      type="file"
-                      accept="image/png"
-                      onChange={handleChange}
-                      required
-                      className="border-neutral-300"
-                    />
+                    <Input id="avatar" name="avatar" type="file" accept="image/png" onChange={handleChange} required className="border-neutral-300" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label>Documents (PNG)</Label>
+                    <Label>Documents (PNG recto-verso)</Label>
                     {form.documents.map((file, idx) => (
                       <div key={idx} className="flex items-center gap-2 mb-2">
-                        <Input
-                          id={`documents-${idx}`}
-                          name="documents"
-                          type="file"
-                          accept="image/png"
-                          data-idx={idx}
-                          onChange={handleChange}
-                          required={idx === 0}
-                          className="border-neutral-300 flex-1"
-                        />
+                        <Input id={`documents-${idx}`} name="documents" type="file" accept="image/png" data-idx={idx} onChange={handleChange} required={idx === 0} className="border-neutral-300 flex-1" />
                         {form.documents.length > 1 && (
-                          <button type="button" onClick={() => handleRemoveFile('documents', idx)}
-                            className="rounded-full bg-red-100 hover:bg-red-200 text-red-600 w-8 h-8 flex items-center justify-center transition">
-                            <span className="text-xl font-bold">&minus;</span>
-                          </button>
+                          <button type="button" onClick={() => handleRemoveFile('documents', idx)} className="rounded-full bg-red-100 hover:bg-red-200 text-red-600 w-8 h-8 flex items-center justify-center transition"><span className="text-xl font-bold">&minus;</span></button>
                         )}
                         {idx === form.documents.length - 1 && form.documents.length < 5 && (
-                          <button type="button" onClick={() => handleAddFile('documents')}
-                            className="rounded-full bg-violet-100 hover:bg-violet-200 text-violet-700 w-8 h-8 flex items-center justify-center transition">
-                            <span className="text-xl font-bold">+</span>
-                          </button>
+                          <button type="button" onClick={() => handleAddFile('documents')} className="rounded-full bg-violet-100 hover:bg-violet-200 text-violet-700 w-8 h-8 flex items-center justify-center transition"><span className="text-xl font-bold">+</span></button>
                         )}
                       </div>
                     ))}
                   </div>
+                  {/* Champs entreprise uniquement */}
+                  {form.userType === 'Entreprise' && (
+                    <>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="logo">Logo (JPEG)</Label>
+                        <Input id="logo" name="logo" type="file" accept="image/jpeg" onChange={handleChange} required className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="carteStat">Carte Stat (PNG recto-verso)</Label>
+                        <Input id="carteStat" name="carteStat" type="file" accept="image/png" onChange={handleChange} required className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Carte fiscale (PNG recto-verso)</Label>
+                        {form.carteFiscal.map((file, idx) => (
+                          <div key={idx} className="flex items-center gap-2 mb-2">
+                            <Input id={`carteFiscal-${idx}`} name="carteFiscal" type="file" accept="image/png" data-idx={idx} onChange={handleChange} required={idx === 0} className="border-neutral-300 flex-1" />
+                            {form.carteFiscal.length > 1 && (
+                              <button type="button" onClick={() => handleRemoveFile('carteFiscal', idx)} className="rounded-full bg-red-100 hover:bg-red-200 text-red-600 w-8 h-8 flex items-center justify-center transition"><span className="text-xl font-bold">&minus;</span></button>
+                            )}
+                            {idx === form.carteFiscal.length - 1 && form.carteFiscal.length < 5 && (
+                              <button type="button" onClick={() => handleAddFile('carteFiscal')} className="rounded-full bg-violet-100 hover:bg-violet-200 text-violet-700 w-8 h-8 flex items-center justify-center transition"><span className="text-xl font-bold">+</span></button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
               <div className="flex gap-2 pt-2">

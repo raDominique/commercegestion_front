@@ -135,7 +135,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                         <div className="flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg">
                             <AccountBalanceWallet className="w-4 h-4 text-neutral-600" />
                             <span className="text-sm text-neutral-900">
-                                {typeof user.balance === 'number' ? user.balance.toLocaleString() : '0'} FCFA
+                                {typeof user.balance === 'number' ? user.balance.toLocaleString() : '0'} Ariary
                             </span>
                         </div>
                         {/* NAVIGATION */}
