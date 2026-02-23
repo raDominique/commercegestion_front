@@ -14,8 +14,8 @@ import {
 import { Logout, Menu, Close, AccountBalanceWallet, ShoppingCart } from '@mui/icons-material';
 import { privateRoutes } from '../../routes/routes';
 import LogoImage from '../../assets/logo/logo.png';
-import { CartSheet } from '../commons/CartSheet';
-import { useCart } from '../../context/CartContext';
+// import { CartSheet } from '../commons/CartSheet';
+// import { useCart } from '../../context/CartContext';
 import { useEffect, useState } from 'react';
 import { getProfile } from '../../services/auth.service';
 import { toast } from 'sonner';
@@ -33,9 +33,9 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
 
     // Modal state for logout confirmation
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-    const [cartOpen, setCartOpen] = useState(false);
+    // const [cartOpen, setCartOpen] = useState(false);
     const user = profile;
-    const { items } = useCart ? useCart() : { items: [] };
+    // const { items } = useCart ? useCart() : { items: [] };
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,7 +61,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                         {typeof user.userTotalSolde === 'number' ? user.userTotalSolde.toLocaleString('fr-MG') : '0'} Ariary
                                     </span>
                                 </div>
-                                {/* Panier */}
+                                {/* Panier 
                                 <button
                                     className="relative flex items-center justify-center p-2 hover:bg-violet-50 rounded-lg transition-colors"
                                     onClick={() => setCartOpen(true)}
@@ -75,6 +75,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                     )}
                                 </button>
                                 <CartSheet open={cartOpen} onOpenChange={setCartOpen} />
+                                */}
                                 {/* Profil */}
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center">

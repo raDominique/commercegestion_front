@@ -4,9 +4,10 @@ import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { getMyPassifs } from '../../services/passifs.service.js';
+import { getMyStocksPassifs } from '../../services/stocks_move.service.js';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '../../components/ui/dialog';
 
 const Passifs = () => {
 	usePageTitle('Passifs');
@@ -17,15 +18,22 @@ const Passifs = () => {
 	const [limit, setLimit] = useState(10);
 	const [total, setTotal] = useState(0);
 
+	// Pour le détail d'un passif
+	const [detailOpen, setDetailOpen] = useState(false);
+	const [detailPassif, setDetailPassif] = useState(null);
+	const [loadingDetail, setLoadingDetail] = useState(false);
+
 	const fetchPassifs = async () => {
 		setLoading(true);
 		try {
 			const token = localStorage.getItem('token');
-			const res = await getMyPassifs({ search, page, limit }, token);
-
+			const params = {
+				limit,
+				page,
+			};
+			const res = await getMyStocksPassifs(params, token);
 			setPassifs(res.data || []);
 			setTotal(res.total || 0);
-
 		} catch (err) {
 			setPassifs([]);
 		} finally {
@@ -36,6 +44,21 @@ const Passifs = () => {
 	useEffect(() => {
 		fetchPassifs();
 	}, [search, page, limit]);
+
+	// Fonction pour afficher le détail d'un passif
+	const handleShowDetail = async (passifId) => {
+		setLoadingDetail(true);
+		setDetailOpen(true);
+		try {
+			const data = await getPassifById(passifId);
+			setDetailPassif(data);
+		} catch (err) {
+			setDetailPassif(null);
+			console.error('Erreur lors de la récupération du détail du passif :', err);
+		} finally {
+			setLoadingDetail(false);
+		}
+	};
 
 	return (
 		<div className="p-6 max-w-5xl mx-auto">
@@ -55,10 +78,11 @@ const Passifs = () => {
 							<tr>
 								<th className="p-4 text-xs text-neutral-600 text-left">Produit</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Image</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Dépôt</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Site origine</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Site destination</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Quantité</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Code CPC</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Actif</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Prix unitaire</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Type</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
 							</tr>
 						</thead>
@@ -71,19 +95,16 @@ const Passifs = () => {
 										<td className="p-4 text-sm font-semibold text-neutral-900">{item.productId?.productName || '-'}</td>
 										<td className="p-4 text-sm">
 											{item.productId?.productImage ? (
-												<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
+												<img src={item.productId.productImage} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
 											) : (
 												<span className="text-neutral-400">-</span>
 											)}
 										</td>
-										<td className="p-4 text-sm">{item.depotId?.siteName || '-'}</td>
+										<td className="p-4 text-sm">{item.siteOrigineId?.siteName || '-'}</td>
+										<td className="p-4 text-sm">{item.siteDestinationId?.siteName || '-'}</td>
 										<td className="p-4 text-sm">{item.quantite || '-'}</td>
-										<td className="p-4 text-sm">{item.productId?.codeCPC || '-'}</td>
-										<td className="p-4 text-sm">
-											<Badge variant={item.isActive ? 'default' : 'secondary'} className={item.isActive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
-												{item.isActive ? 'Oui' : 'Non'}
-											</Badge>
-										</td>
+										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
+										<td className="p-4 text-sm">{item.type || '-'}</td>
 										<td className="p-4 text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</td>
 									</tr>
 								))
@@ -115,6 +136,26 @@ const Passifs = () => {
 					Suivant
 				</Button>
 			</div>
+			{/* Modal de détail du passif avec Dialog */}
+			<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+				<DialogContent aria-describedby="detail-passif-desc">
+					<DialogTitle>Détail du Passif</DialogTitle>
+					<DialogDescription id="detail-passif-desc">
+						Informations détaillées sur le passif sélectionné.
+					</DialogDescription>
+					{loadingDetail ? (
+						<div className="p-8 text-center text-neutral-400">Chargement...</div>
+					) : detailPassif ? (
+						<div className="space-y-2 text-sm">
+							<div><b>Produit :</b> {detailPassif.productId?.productName || '-'}</div>
+							<div><b>Produit codeCPC :</b> {detailPassif.productId?.codeCPC || '-'}</div>
+							<div><b>Quantité :</b> {detailPassif.quantite || '-'}</div>
+						</div>
+					) : (
+						<div className="p-8 text-center text-neutral-400">Aucune donnée</div>
+					)}
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 };

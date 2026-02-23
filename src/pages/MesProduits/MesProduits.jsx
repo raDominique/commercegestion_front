@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDe
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Label } from '../../components/ui/label';
 import { getAllCpcSelect } from '../../services/cpc.service';
-import { depositStock } from '../../services/stocker_move.service';
+import { depositStock } from '../../services/stocks_move.service.js';
 import { getMySites } from '../../services/site.service';
 
 const MesProduits = () => {
@@ -45,6 +45,7 @@ const MesProduits = () => {
         ...depositForm,
         productId: depositProductId,
         quantite: Number(depositForm.quantite),
+        prixUnitaire: Number(depositForm.prixUnitaire),
       }, token);
       toast.success('Produit déposé avec succès');
       setDepositModalOpen(false);
@@ -53,7 +54,7 @@ const MesProduits = () => {
         siteDestinationId: '',
         productId: '',
         quantite: '',
-        type: 'Depot',
+        prixUnitaire: '',
         observations: '',
       });
     } catch (err) {
@@ -86,7 +87,7 @@ const MesProduits = () => {
     siteDestinationId: '',
     productId: '',
     quantite: '',
-    type: 'Depot',
+    prixUnitaire: '',
     observations: '',
   });
   const [cpcOptions, setCpcOptions] = useState([]);
@@ -519,8 +520,8 @@ const MesProduits = () => {
                 <Input name="quantite" value={depositForm.quantite} onChange={e => setDepositForm(f => ({ ...f, quantite: e.target.value }))} required placeholder="Quantité à déposer" className="border-neutral-300" type="number" min="1" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type">Type</Label>
-                <Input name="type" value={depositForm.type} onChange={e => setDepositForm(f => ({ ...f, type: e.target.value }))} required placeholder="Type de mouvement" className="border-neutral-300" />
+                <Label htmlFor="prixUnitaire">Prix Unitaire</Label>
+                <Input name="prixUnitaire" value={depositForm.prixUnitaire} onChange={e => setDepositForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix Unitaire du produit" className="border-neutral-300" type="number" min="0" step="0.01" />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="observations">Observations</Label>

@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { getMyActifs } from '../../services/actifs.service';
+import { getMyStocksActifs } from '../../services/stocks_move.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
 
@@ -20,11 +20,14 @@ const Depot = () => {
 		setLoading(true);
 		try {
 			const token = localStorage.getItem('token');
-			const res = await getMyActifs({ search, page, limit }, token);
-
+			const params = {
+				limit,
+				page,
+			};
+			const res = await getMyStocksActifs(params, token);
+			console.log('Actifs récupérés :', JSON.stringify(res));
 			setActifs(res.data || []);
 			setTotal(res.total || 0);
-
 		} catch (err) {
 			setActifs([]);
 		} finally {
@@ -54,10 +57,11 @@ const Depot = () => {
 							<tr>
 								<th className="p-4 text-xs text-neutral-600 text-left">Produit</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Image</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Dépôt</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Site origine</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Site destination</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Quantité</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Code CPC</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Actif</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Prix unitaire</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Type</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
 							</tr>
 						</thead>
@@ -70,19 +74,16 @@ const Depot = () => {
 										<td className="p-4 text-sm font-semibold text-neutral-900">{item.productId?.productName || '-'}</td>
 										<td className="p-4 text-sm">
 											{item.productId?.productImage ? (
-												<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
+												<img src={item.productId.productImage} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
 											) : (
 												<span className="text-neutral-400">-</span>
 											)}
 										</td>
-										<td className="p-4 text-sm">{item.depotId?.siteName || '-'}</td>
+										<td className="p-4 text-sm">{item.siteOrigineId?.siteName || '-'}</td>
+										<td className="p-4 text-sm">{item.siteDestinationId?.siteName || '-'}</td>
 										<td className="p-4 text-sm">{item.quantite || '-'}</td>
-										<td className="p-4 text-sm">{item.productId?.codeCPC || '-'}</td>
-										<td className="p-4 text-sm">
-											<Badge variant={item.isActive ? 'default' : 'secondary'} className={item.isActive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
-												{item.isActive ? 'Oui' : 'Non'}
-											</Badge>
-										</td>
+										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
+										<td className="p-4 text-sm">{item.type || '-'}</td>
 										<td className="p-4 text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</td>
 									</tr>
 								))

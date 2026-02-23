@@ -4,9 +4,11 @@ import { Card } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { getMyActifs } from '../../services/actifs.service';
+import { getMyStocksActifs } from '../../services/stocks_move.service';
+import InfoIcon from '@mui/icons-material/Info';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '../../components/ui/dialog';
 
 const Actifs = () => {
 	usePageTitle('Actifs');
@@ -17,17 +19,26 @@ const Actifs = () => {
 	const [limit, setLimit] = useState(10);
 	const [total, setTotal] = useState(0);
 
+	// Pour le détail d'un actif
+	const [detailOpen, setDetailOpen] = useState(false);
+	const [detailActif, setDetailActif] = useState(null);
+	const [loadingDetail, setLoadingDetail] = useState(false);
+
 	const fetchActifs = async () => {
 		setLoading(true);
 		try {
 			const token = localStorage.getItem('token');
-			const res = await getMyActifs({ search, page, limit }, token);
-
+			const params = {
+				limit,
+				page,
+				search: search || undefined,
+			};
+			const res = await getMyStocksActifs(params, token);
 			setActifs(res.data || []);
 			setTotal(res.total || 0);
-
 		} catch (err) {
 			setActifs([]);
+			console.error('Erreur lors de la récupération des actifs :', err);
 		} finally {
 			setLoading(false);
 		}
@@ -36,6 +47,21 @@ const Actifs = () => {
 	useEffect(() => {
 		fetchActifs();
 	}, [search, page, limit]);
+
+	// Fonction pour afficher le détail d'un actif
+	const handleShowDetail = async (actifId) => {
+		setLoadingDetail(true);
+		setDetailOpen(true);
+		try {
+			const data = await getActifById(actifId);
+			setDetailActif(data);
+		} catch (err) {
+			setDetailActif(null);
+			console.error('Erreur lors de la récupération du détail de l\'actif :', err);
+		} finally {
+			setLoadingDetail(false);
+		}
+	};
 
 	return (
 		<div className="p-6 max-w-5xl mx-auto">
@@ -55,10 +81,11 @@ const Actifs = () => {
 							<tr>
 								<th className="p-4 text-xs text-neutral-600 text-left">Produit</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Image</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Dépôt</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Site origine</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Site destination</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Quantité</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Code CPC</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Actif</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Prix unitaire</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Type</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
 							</tr>
 						</thead>
@@ -71,19 +98,16 @@ const Actifs = () => {
 										<td className="p-4 text-sm font-semibold text-neutral-900">{item.productId?.productName || '-'}</td>
 										<td className="p-4 text-sm">
 											{item.productId?.productImage ? (
-												<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
+												<img src={item.productId.productImage} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
 											) : (
 												<span className="text-neutral-400">-</span>
 											)}
 										</td>
-										<td className="p-4 text-sm">{item.depotId?.siteName || '-'}</td>
+										<td className="p-4 text-sm">{item.siteOrigineId?.siteName || '-'}</td>
+										<td className="p-4 text-sm">{item.siteDestinationId?.siteName || '-'}</td>
 										<td className="p-4 text-sm">{item.quantite || '-'}</td>
-										<td className="p-4 text-sm">{item.productId?.codeCPC || '-'}</td>
-										<td className="p-4 text-sm">
-											<Badge variant={item.isActive ? 'default' : 'secondary'} className={item.isActive ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
-												{item.isActive ? 'Oui' : 'Non'}
-											</Badge>
-										</td>
+										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
+										<td className="p-4 text-sm">{item.type || '-'}</td>
 										<td className="p-4 text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</td>
 									</tr>
 								))
@@ -94,6 +118,7 @@ const Actifs = () => {
 					</table>
 				</div>
 			</Card>
+
 			<div className="flex justify-end items-center gap-4 mt-4">
 				<Button
 					variant="outline"
@@ -115,6 +140,31 @@ const Actifs = () => {
 					Suivant
 				</Button>
 			</div>
+			{/* Modal détail actif avec Dialog */}
+			<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+				<DialogContent aria-describedby="actif-detail-desc">
+					<DialogHeader>
+						<DialogTitle>Détail de l'actif</DialogTitle>
+						<DialogDescription id="actif-detail-desc">
+							Informations détaillées sur l'actif sélectionné.
+						</DialogDescription>
+					</DialogHeader>
+					{loadingDetail ? (
+						<div className="p-8 text-center text-neutral-400">Chargement...</div>
+					) : detailActif ? (
+						<div className="space-y-2 text-sm">
+							<div><b>Produit :</b> {detailActif.productId?.productName || '-'}</div>
+							<div><b>Produit codeCPC :</b> {detailActif.productId?.codeCPC || '-'}</div>
+							<div><b>Dépôt :</b> {detailActif.depotId?.siteName || '-'}</div>
+							<div><b>Dépôt ID :</b> {detailActif.depotId?._id || '-'}</div>
+							<div><b>User ID :</b> {detailActif.userId?._id || '-'}</div>
+							<div><b>Quantité :</b> {detailActif.quantite || '-'}</div>
+						</div>
+					) : (
+						<div className="p-8 text-center text-neutral-400">Aucune donnée</div>
+					)}
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 };
