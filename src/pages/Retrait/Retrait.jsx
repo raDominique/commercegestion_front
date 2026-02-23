@@ -6,8 +6,10 @@ import { Button } from '../../components/ui/button';
 import { getMyStocksPassifs } from '../../services/stocks_move.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
+import useDateFormat from '../../utils/useDateFormat.jsx';
 
 const Retrait = () => {
+	const dateFormat = useDateFormat();
 	usePageTitle('Retrait');
 	const [passifs, setPassifs] = useState([]);
 	const [loading, setLoading] = useState(false);
@@ -83,7 +85,7 @@ const Retrait = () => {
 										<td className="p-4 text-sm">{item.quantite || '-'}</td>
 										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
 										<td className="p-4 text-sm">{item.type || '-'}</td>
-										<td className="p-4 text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</td>
+										<td className="p-4 text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</td>
 									</tr>
 								))
 							) : (

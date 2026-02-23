@@ -8,8 +8,10 @@ import { getMyStocksPassifs } from '../../services/stocks_move.service.js';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '../../components/ui/dialog';
+import useDateFormat from '../../utils/useDateFormat.jsx';
 
 const Passifs = () => {
+	const dateFormat = useDateFormat();
 	usePageTitle('Passifs');
 	const [passifs, setPassifs] = useState([]);
 	const [loading, setLoading] = useState(false);
@@ -105,7 +107,7 @@ const Passifs = () => {
 										<td className="p-4 text-sm">{item.quantite || '-'}</td>
 										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
 										<td className="p-4 text-sm">{item.type || '-'}</td>
-										<td className="p-4 text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</td>
+										<td className="p-4 text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</td>
 									</tr>
 								))
 							) : (

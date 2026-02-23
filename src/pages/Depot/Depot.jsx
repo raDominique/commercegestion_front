@@ -6,8 +6,10 @@ import { Button } from '../../components/ui/button';
 import { getMyStocksActifs } from '../../services/stocks_move.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
+import useDateFormat from '../../utils/useDateFormat.jsx';
 
 const Depot = () => {
+	const dateFormat = useDateFormat();
 	usePageTitle('Dépôt');
 	const [actifs, setActifs] = useState([]);
 	const [loading, setLoading] = useState(false);
@@ -84,7 +86,7 @@ const Depot = () => {
 										<td className="p-4 text-sm">{item.quantite || '-'}</td>
 										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
 										<td className="p-4 text-sm">{item.type || '-'}</td>
-										<td className="p-4 text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</td>
+										<td className="p-4 text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</td>
 									</tr>
 								))
 							) : (

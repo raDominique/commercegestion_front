@@ -9,8 +9,10 @@ import InfoIcon from '@mui/icons-material/Info';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '../../components/ui/dialog';
+import useDateFormat from '../../utils/useDateFormat.jsx';
 
 const Actifs = () => {
+	const dateFormat = useDateFormat();
 	usePageTitle('Actifs');
 	const [actifs, setActifs] = useState([]);
 	const [loading, setLoading] = useState(false);
@@ -108,7 +110,7 @@ const Actifs = () => {
 										<td className="p-4 text-sm">{item.quantite || '-'}</td>
 										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
 										<td className="p-4 text-sm">{item.type || '-'}</td>
-										<td className="p-4 text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</td>
+										<td className="p-4 text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</td>
 									</tr>
 								))
 							) : (
