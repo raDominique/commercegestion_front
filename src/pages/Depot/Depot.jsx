@@ -27,7 +27,6 @@ const Depot = () => {
 				page,
 			};
 			const res = await getMyStocksActifs(params, token);
-			console.log('Actifs récupérés :', JSON.stringify(res));
 			setActifs(res.data || []);
 			setTotal(res.total || 0);
 		} catch (err) {

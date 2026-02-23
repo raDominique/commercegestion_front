@@ -87,8 +87,8 @@ const Actifs = () => {
 								<th className="p-4 text-xs text-neutral-600 text-left">Site destination</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Quantité</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Prix unitaire</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Type</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
+								<th className="p-4 text-xs text-neutral-600 text-right">Actions</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -109,8 +109,15 @@ const Actifs = () => {
 										<td className="p-4 text-sm">{item.siteDestinationId?.siteName || '-'}</td>
 										<td className="p-4 text-sm">{item.quantite || '-'}</td>
 										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
-										<td className="p-4 text-sm">{item.type || '-'}</td>
 										<td className="p-4 text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</td>
+										<td className="p-4 text-sm text-right">
+											<Button>
+												Transférer
+											</Button>
+											<Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)}>
+												<InfoIcon className="w-5 h-5 text-violet-600" />
+											</Button>
+										</td>
 									</tr>
 								))
 							) : (
