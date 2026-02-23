@@ -1,5 +1,57 @@
+
 import axiosInstance from './axios.config';
 import { setAccessToken, clearAccessToken, setRefreshToken, getRefreshToken, clearRefreshToken } from './token.service';
+
+/**
+ * Crée un nouvel utilisateur (POST /users)
+ * @param {Object} data - Les données utilisateur à envoyer (voir champs requis)
+ * @returns {Promise<Object>} Résultat de l'API
+ *
+ * Champs supportés dans data :
+ * - userMainLng, userPhone, userType, userPassword, userAddress, userFirstname, userEmail, documentType, userName, identityCardNumber, userNickName, userMainLat, managerName, managerEmail, parrainID1, parrainID2
+ * - Fichiers : carteFiscal (array ou File), logo (File), documents (array ou File), carteStat (File), avatar (File)
+ */
+export async function createUser(data) {
+  if (!data) throw new Error('data est requis');
+  const formData = new FormData();
+  // Champs simples
+  [
+    'userMainLng', 'userPhone', 'userType', 'userPassword', 'userAddress',
+    'userFirstname', 'userEmail', 'documentType', 'userName', 'identityCardNumber',
+    'userNickName', 'userMainLat', 'managerName', 'managerEmail', 'parrainID1', 'parrainID2'
+  ].forEach(key => {
+    if (data[key] !== undefined && data[key] !== null) {
+      formData.append(key, data[key]);
+    }
+  });
+
+  // Fichiers multiples ou uniques
+  const fileFields = ['carteFiscal', 'documents'];
+  fileFields.forEach(field => {
+    if (data[field]) {
+      if (Array.isArray(data[field])) {
+        data[field].forEach(file => {
+          if (file) formData.append(field, file, file.name);
+        });
+      } else {
+        formData.append(field, data[field], data[field].name);
+      }
+    }
+  });
+  // Fichiers uniques
+  ['logo', 'carteStat', 'avatar'].forEach(field => {
+    if (data[field]) {
+      formData.append(field, data[field], data[field].name);
+    }
+  });
+
+  const res = await axiosInstance.post('/api/v1/users', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+}
 
 // Connexion utilisateur : POST /auth/login
 export async function loginUser(userEmail, userPassword) {

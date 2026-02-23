@@ -10,7 +10,8 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import { toast } from 'sonner';
-import { getUsers } from '../../services/user.service';
+import { getUsers, deleteUser, toggleUserRole, activateUser } from '../../services/user.service';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '../../components/ui/dialog';
 
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,31 +67,59 @@ export default function AdminUsers() {
   // Les filtres sont maintenant côté API, donc on affiche users directement
   const filteredUsers = users;
 
-  const handleDeleteUser = (id) => {
-    setUsers(users.filter((u) => u.id !== id));
-    toast.success('Utilisateur supprimé');
+  // Gestion modals
+  const [modalUserId, setModalUserId] = useState(null);
+  const [modalAction, setModalAction] = useState(null); // 'delete' | 'role' | 'activate'
+  const [modalOpen, setModalOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Token à récupérer selon votre logique d'auth (ex: localStorage)
+  const token = localStorage.getItem('token');
+
+  // API actions
+  const handleDeleteUser = async (id) => {
+    setActionLoading(true);
+    try {
+      await deleteUser(id, token);
+      toast.success('Utilisateur supprimé');
+      fetchUsers();
+    } catch (err) {
+      toast.error("Erreur lors de la suppression");
+      console.log("Erreur de suppression:", err);
+    } finally {
+      setActionLoading(false);
+      setModalOpen(false);
+    }
   };
 
-  const handleToggleRole = (id) => {
-    setUsers(
-      users.map((u) =>
-        u.id === id
-          ? { ...u, role: u.role === 'admin' ? 'user' : 'admin' }
-          : u
-      )
-    );
-    toast.success('Rôle mis à jour');
+  const handleToggleRole = async (id) => {
+    setActionLoading(true);
+    try {
+      await toggleUserRole(id, token);
+      toast.success('Rôle mis à jour');
+      fetchUsers();
+    } catch (err) {
+      toast.error("Erreur lors du changement de rôle");
+      console.log("Erreur de changement de rôle:", err);
+    } finally {
+      setActionLoading(false);
+      setModalOpen(false);
+    }
   };
 
-  const handleToggleStatus = (id) => {
-    setUsers(
-      users.map((u) =>
-        u.id === id
-          ? { ...u, status: u.status === 'Actif' ? 'Suspendu' : 'Actif' }
-          : u
-      )
-    );
-    toast.success('Statut mis à jour');
+  const handleActivateUser = async (id) => {
+    setActionLoading(true);
+    try {
+      await activateUser(id);
+      toast.success('Utilisateur activé');
+      fetchUsers();
+    } catch (err) {
+      toast.error("Erreur lors de l'activation");
+      console.log("Erreur d'activation:", err);
+    } finally {
+      setActionLoading(false);
+      setModalOpen(false);
+    }
   };
 
   const totalUsers = total;
@@ -236,7 +265,11 @@ export default function AdminUsers() {
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={user.role === 'admin'}
-                            onCheckedChange={() => handleToggleRole(user.id)}
+                            onCheckedChange={() => {
+                              setModalUserId(user.id);
+                              setModalAction('role');
+                              setModalOpen(true);
+                            }}
                           />
                           <Badge
                             variant={user.role === 'admin' ? 'default' : 'secondary'}
@@ -250,7 +283,11 @@ export default function AdminUsers() {
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={user.status === 'Actif'}
-                            onCheckedChange={() => handleToggleStatus(user.id)}
+                            onCheckedChange={() => {
+                              setModalUserId(user.id);
+                              setModalAction('activate');
+                              setModalOpen(true);
+                            }}
                           />
                           <Badge
                             variant={user.status === 'Actif' ? 'default' : 'secondary'}
@@ -268,7 +305,11 @@ export default function AdminUsers() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={() => {
+                              setModalUserId(user.id);
+                              setModalAction('delete');
+                              setModalOpen(true);
+                            }}
                           >
                             <DeleteOutlineIcon className="w-4 h-4 text-red-600" />
                           </Button>
@@ -285,6 +326,43 @@ export default function AdminUsers() {
             </table>
           </div>
         </Card>
+
+        {/* Modals de validation */}
+        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+          <DialogContent >
+            <DialogHeader>
+              <DialogTitle>
+                {modalAction === 'delete' && 'Confirmer la suppression'}
+                {modalAction === 'role' && 'Confirmer le changement de rôle'}
+                {modalAction === 'activate' && 'Confirmer l’activation/suspension'}
+              </DialogTitle>
+              <DialogDescription>
+                {modalAction === 'delete' && 'Voulez-vous vraiment supprimer cet utilisateur ? Cette action est irréversible.'}
+                {modalAction === 'role' && 'Voulez-vous vraiment changer le rôle de cet utilisateur ?'}
+                {modalAction === 'activate' && 'Voulez-vous vraiment activer ou suspendre cet utilisateur ?'}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 mt-4">
+              <DialogClose asChild>
+                <Button variant="outline">Annuler</Button>
+              </DialogClose>
+              <Button
+                variant="default"
+                className="bg-violet-600 text-white hover:bg-violet-700"
+                disabled={actionLoading}
+                onClick={() => {
+                  if (modalUserId && modalAction) {
+                    if (modalAction === 'delete') handleDeleteUser(modalUserId);
+                    if (modalAction === 'role') handleToggleRole(modalUserId);
+                    if (modalAction === 'activate') handleActivateUser(modalUserId);
+                  }
+                }}
+              >
+                {actionLoading ? 'Traitement...' : 'Confirmer'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Pagination simple */}
         <div className="flex justify-end items-center gap-4 mt-4">

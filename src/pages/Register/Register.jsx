@@ -10,6 +10,7 @@ import { Input } from '../../components/ui/input.jsx';
 import { Label } from '../../components/ui/label.jsx';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import LogoImage from '../../assets/logo/logo.png';
+import { createUser } from '../../services/auth.service.js';
 
 const steps = [
   "Type d'utilisateur",
@@ -19,13 +20,27 @@ const steps = [
 
 const Register = () => {
   // Handle form submission (final step)
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      ('Form data:', JSON.stringify(form));
+      // Préparer les données pour createUser
+      const dataToSend = { ...form };
+      // Nettoyer les tableaux de fichiers nulls éventuels
+      if (Array.isArray(dataToSend.carteFiscal)) {
+        dataToSend.carteFiscal = dataToSend.carteFiscal.filter(f => f);
+      }
+      if (Array.isArray(dataToSend.documents)) {
+        dataToSend.documents = dataToSend.documents.filter(f => f);
+      }
+      await createUser(dataToSend);
       toast.success('Inscription réussie !');
+      navigate('/login');
     } catch (error) {
-      toast.error('Erreur lors de l\'inscription.');
+      toast.error(error?.response?.data?.message || "Erreur lors de l'inscription.");
+      console.log('[REGISTER] Erreur lors de la création du compte:', error);
+    } finally {
+      setLoading(false);
     }
   };
   // Step navigation handlers
@@ -56,6 +71,8 @@ const Register = () => {
     logo: null,
     avatar: null,
     documents: [null],
+    managerName: '',
+    managerEmail: '',
   });
   // Handle input changes for both text and file inputs
   const handleChange = (e) => {
@@ -160,6 +177,10 @@ const Register = () => {
                     <Input id="userEmail" name="userEmail" type="email" placeholder="Email" value={form.userEmail} onChange={handleChange} required className="border-neutral-300" />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="identityCardNumber">Numéro de pièce d'identité</Label>
+                    <Input id="identityCardNumber" name="identityCardNumber" type="text" placeholder="Numéro de pièce d'identité" value={form.identityCardNumber} onChange={handleChange} required className="border-neutral-300" />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="userPassword">Mot de passe</Label>
                     <Input id="userPassword" name="userPassword" type="password" placeholder="Mot de passe" value={form.userPassword} onChange={handleChange} required className="border-neutral-300" />
                   </div>
@@ -171,6 +192,19 @@ const Register = () => {
                     <Label htmlFor="userAddress">Adresse</Label>
                     <Input id="userAddress" name="userAddress" type="text" placeholder="Adresse" value={form.userAddress} onChange={handleChange} required className="border-neutral-300" />
                   </div>
+                  {/* Champs manager pour Entreprise */}
+                  {form.userType === 'Entreprise' && (
+                    <>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="managerName">Nom du gérant</Label>
+                        <Input id="managerName" name="managerName" type="text" placeholder="Nom du gérant" value={form.managerName} onChange={handleChange} required className="border-neutral-300" />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="managerEmail">Email du gérant</Label>
+                        <Input id="managerEmail" name="managerEmail" type="email" placeholder="Email du gérant" value={form.managerEmail} onChange={handleChange} required className="border-neutral-300" />
+                      </div>
+                    </>
+                  )}
                   <div className="md:col-span-2">
                     <Label>Localisation sur la carte (OpenStreetMap)</Label>
                     <LeafletMapPicker lat={form.userMainLat} lng={form.userMainLng} onChange={({ lat, lng }) => setForm((prev) => ({ ...prev, userMainLat: lat, userMainLng: lng }))} />
