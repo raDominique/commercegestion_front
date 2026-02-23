@@ -27,7 +27,7 @@ const Retrait = () => {
 				page,
 			};
 			const res = await getMyStocksPassifs(params, token);
-			setPassifs(res.data || []);
+			setPassifs(Array.isArray(res.data) ? res.data : []);
 			setTotal(res.total || 0);
 		} catch (err) {
 			setPassifs([]);
@@ -56,40 +56,32 @@ const Retrait = () => {
 					<table className="w-full">
 						<thead className="bg-neutral-50 border-b border-neutral-200">
 							<tr>
-								<th className="p-4 text-xs text-neutral-600 text-left">Produit</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Image</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Site origine</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Site destination</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Quantité</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Prix unitaire</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Situation</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Type</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Montant</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Départ</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Arrivée</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Action</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
 							</tr>
 						</thead>
 						<tbody>
 							{loading ? (
-								<tr><td colSpan="6" className="p-8 text-center text-neutral-400">Chargement...</td></tr>
+								<tr><td colSpan="7" className="p-8 text-center text-neutral-400">Chargement...</td></tr>
 							) : passifs.length > 0 ? (
-								passifs.map((item) => (
-									<tr key={item._id} className="border-b border-neutral-100 last:border-0">
-										<td className="p-4 text-sm font-semibold text-neutral-900">{item.productId?.productName || '-'}</td>
-										<td className="p-4 text-sm">
-											{item.productId?.productImage ? (
-												<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
-											) : (
-												<span className="text-neutral-400">-</span>
-											)}
-										</td>
-										<td className="p-4 text-sm">{item.siteOrigineId?.siteName || '-'}</td>
-										<td className="p-4 text-sm">{item.siteDestinationId?.siteName || '-'}</td>
-										<td className="p-4 text-sm">{item.quantite || '-'}</td>
-										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
+								passifs.map((item, idx) => (
+									<tr key={idx} className="border-b border-neutral-100 last:border-0">
+										<td className="p-4 text-sm font-semibold text-neutral-900">{item.situation || '-'}</td>
 										<td className="p-4 text-sm">{item.type || '-'}</td>
-										<td className="p-4 text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</td>
+										<td className="p-4 text-sm">{item.montant !== undefined ? item.montant.toLocaleString() : '-'}</td>
+										<td className="p-4 text-sm">{item.departDe || '-'}</td>
+										<td className="p-4 text-sm">{item.arrivee || '-'}</td>
+										<td className="p-4 text-sm">{item.action || '-'}</td>
+										<td className="p-4 text-sm">{item.date ? dateFormat(item.date) : '-'}</td>
 									</tr>
 								))
 							) : (
-								<tr><td colSpan="6" className="p-8 text-center text-neutral-400">Aucun retrait trouvé</td></tr>
+								<tr><td colSpan="7" className="p-8 text-center text-neutral-400">Aucun retrait trouvé</td></tr>
 							)}
 						</tbody>
 					</table>
