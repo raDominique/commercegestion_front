@@ -75,7 +75,7 @@ const Retrait = () => {
 										<td className="p-4 text-sm font-semibold text-neutral-900">{item.productId?.productName || '-'}</td>
 										<td className="p-4 text-sm">
 											{item.productId?.productImage ? (
-												<img src={item.productId.productImage} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
+												<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
 											) : (
 												<span className="text-neutral-400">-</span>
 											)}
