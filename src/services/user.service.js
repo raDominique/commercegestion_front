@@ -13,19 +13,12 @@ export async function getUserById(userId) {
 /**
  * Supprime un utilisateur (DELETE /users/delete/:id)
  * @param {string|number} userId - L'identifiant de l'utilisateur à supprimer
- * @param {string} token - Le token d'authentification Bearer
  * @returns {Promise<Object>} Résultat de l'API
  */
-export async function deleteUser(userId, token) {
+export async function deleteUser(userId) {
     if (!userId) throw new Error('userId est requis');
-    if (!token) throw new Error('token est requis');
     const res = await axiosConfig.delete(
         `/api/v1/users/delete/${userId}`,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
     );
     return res.data;
 }
@@ -33,20 +26,13 @@ export async function deleteUser(userId, token) {
 /**
  * Bascule le rôle d'un utilisateur (PATCH /users/toggle-role/:id)
  * @param {string|number} userId - L'identifiant de l'utilisateur à modifier
- * @param {string} token - Le token d'authentification Bearer
  * @returns {Promise<Object>} Résultat de l'API
  */
-export async function toggleUserRole(userId, token) {
+export async function toggleUserRole(userId) {
     if (!userId) throw new Error('userId est requis');
-    if (!token) throw new Error('token est requis');
     const res = await axiosConfig.patch(
         `/api/v1/users/toggle-role/${userId}`,
         {},
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
     );
     return res.data;
 }
