@@ -1,14 +1,17 @@
 
 import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { getMyStocksActifs } from '../../services/stocks_move.service';
+import { getMyStocksActifs, withdrawStock } from '../../services/stocks_move.service';
+import { getMySites } from '../../services/site.service';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
+import { Label } from '../../components/ui/label';
+import { toast } from 'sonner';
 import InfoIcon from '@mui/icons-material/Info';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '../../components/ui/dialog';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 
 const Actifs = () => {
@@ -25,6 +28,72 @@ const Actifs = () => {
 	const [detailOpen, setDetailOpen] = useState(false);
 	const [detailActif, setDetailActif] = useState(null);
 	const [loadingDetail, setLoadingDetail] = useState(false);
+
+	// Pour le modal de transfert
+	const [transferModalOpen, setTransferModalOpen] = useState(false);
+	const [transferActifId, setTransferActifId] = useState(null);
+	const [sites, setSites] = useState([]);
+	const [transferForm, setTransferForm] = useState({
+		siteOrigineId: '',
+		siteDestinationId: '',
+		productId: '',
+		quantite: '',
+		prixUnitaire: '',
+		observations: '',
+	});
+	// Ouvrir le modal de transfert
+	const [maxTransferQty, setMaxTransferQty] = useState(null);
+	const handleOpenTransferModal = async (actif) => {
+		setTransferActifId(actif._id);
+		setTransferForm(f => ({
+			...f,
+			productId: actif.productId?._id || '',
+			quantite: actif.quantite || '',
+			prixUnitaire: actif.prixUnitaire || '',
+			siteOrigineId: actif.siteOrigineId?._id || '',
+		}));
+		setMaxTransferQty(actif.quantite || null);
+		setTransferModalOpen(true);
+		try {
+			const res = await getMySites({ limit: 100, page: 1 });
+			setSites(res.data || []);
+		} catch (err) {
+			toast.error('Erreur lors du chargement des sites');
+			setSites([]);
+		}
+	};
+
+	// Soumission du transfert
+	const handleTransferSubmit = async (e) => {
+		e.preventDefault();
+		const qty = Number(transferForm.quantite);
+		if (maxTransferQty !== null && qty > maxTransferQty) {
+			toast.error(`La quantité à transférer (${qty}) ne peut pas dépasser la quantité disponible (${maxTransferQty}) dans le dépôt.`);
+			return;
+		}
+		const token = localStorage.getItem('token');
+		try {
+			await withdrawStock({
+				...transferForm,
+				productId: transferForm.productId,
+				quantite: qty,
+				prixUnitaire: Number(transferForm.prixUnitaire),
+			}, token);
+			toast.success('Transfert effectué avec succès');
+			setTransferModalOpen(false);
+			setTransferForm({
+				siteOrigineId: '',
+				siteDestinationId: '',
+				productId: '',
+				quantite: '',
+				prixUnitaire: '',
+				observations: '',
+			});
+			fetchActifs();
+		} catch (err) {
+			toast.error('Erreur lors du transfert');
+		}
+	};
 
 	const fetchActifs = async () => {
 		setLoading(true);
@@ -55,7 +124,8 @@ const Actifs = () => {
 		setLoadingDetail(true);
 		setDetailOpen(true);
 		try {
-			const data = await getActifById(actifId);
+			const token = localStorage.getItem('token');
+			const data = await getActifById(actifId, token);
 			setDetailActif(data);
 		} catch (err) {
 			setDetailActif(null);
@@ -111,7 +181,7 @@ const Actifs = () => {
 										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
 										<td className="p-4 text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</td>
 										<td className="p-4 text-sm text-right">
-											<Button>
+											<Button onClick={() => handleOpenTransferModal(item)}>
 												Transférer
 											</Button>
 											<Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)}>
@@ -149,6 +219,74 @@ const Actifs = () => {
 					Suivant
 				</Button>
 			</div>
+			{/* Modal Transférer */}
+			<Dialog open={transferModalOpen} onOpenChange={setTransferModalOpen}>
+				<DialogContent className="bg-white border border-neutral-200">
+					<DialogHeader>
+						<DialogTitle>Transférer le produit</DialogTitle>
+					</DialogHeader>
+					<form className="space-y-4" onSubmit={handleTransferSubmit}>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div className="space-y-2">
+								<Label htmlFor="siteOrigineId">Site d'origine</Label>
+								<Input
+									name="siteOrigineId"
+									value={(() => {
+										const site = sites.find(s => s._id === transferForm.siteOrigineId);
+										return site ? site.siteName : '';
+									})()}
+									readOnly
+									disabled
+									className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="siteDestinationId">Site de destination</Label>
+								<Select value={transferForm.siteDestinationId} onValueChange={val => setTransferForm(f => ({ ...f, siteDestinationId: val }))}>
+									<SelectTrigger>
+										<SelectValue placeholder="Sélectionner le site de destination" />
+									</SelectTrigger>
+									<SelectContent>
+										{sites.map(site => (
+											<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="quantite">Quantité</Label>
+								<Input
+									name="quantite"
+									value={transferForm.quantite}
+									onChange={e => setTransferForm(f => ({ ...f, quantite: e.target.value }))}
+									required
+									placeholder={maxTransferQty !== null ? `Max: ${maxTransferQty}` : "Quantité à transférer"}
+									className="border-neutral-300"
+									type="number"
+									min="1"
+									max={maxTransferQty !== null ? maxTransferQty : undefined}
+								/>
+								{maxTransferQty !== null && (
+									<div className="text-xs text-neutral-500">Quantité disponible : {maxTransferQty}</div>
+								)}
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="prixUnitaire">Prix Unitaire</Label>
+								<Input name="prixUnitaire" value={transferForm.prixUnitaire} onChange={e => setTransferForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix Unitaire du produit" className="border-neutral-300" type="number" min="0" step="0.01" />
+							</div>
+							<div className="space-y-2 md:col-span-2">
+								<Label htmlFor="observations">Observations</Label>
+								<Input name="observations" value={transferForm.observations} onChange={e => setTransferForm(f => ({ ...f, observations: e.target.value }))} placeholder="Observations (facultatif)" className="border-neutral-300" />
+							</div>
+						</div>
+						<div className="flex justify-end gap-2 mt-4">
+							<Button variant="outline" type="button" onClick={() => setTransferModalOpen(false)}>Annuler</Button>
+							<Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Transférer</Button>
+						</div>
+					</form>
+				</DialogContent>
+			</Dialog>
+
 			{/* Modal détail actif avec Dialog */}
 			<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
 				<DialogContent aria-describedby="actif-detail-desc">

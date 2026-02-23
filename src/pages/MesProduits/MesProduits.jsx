@@ -27,7 +27,7 @@ const MesProduits = () => {
     setDepositForm(f => ({ ...f, productId }));
     setDepositModalOpen(true);
     try {
-      const token = localStorage.getItem('token');
+      // const token = localStorage.getItem('token');
       const res = await getMySites({ limit: 100, page: 1 });
       setSites(res.data || []);
     } catch (err) {
@@ -70,7 +70,6 @@ const MesProduits = () => {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [stockerLoadingId, setStockerLoadingId] = useState(null);
-  const [confirmStockerModal, setConfirmStockerModal] = useState({ open: false, productId: null });
   const [validationFilter, setValidationFilter] = useState('all'); // 'all', 'true', 'false'
   const [isStockerFilter, setIsStockerFilter] = useState('all'); // 'all', 'true', 'false'
   const [detailOpen, setDetailOpen] = useState(false);
