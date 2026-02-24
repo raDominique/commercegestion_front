@@ -63,7 +63,7 @@ function MapControls({ setTempPosition }) {
     };
 
     return (
-        <div className="absolute top-1/2 -translate-y-1/2 right-6 flex flex-col gap-4 z-[1000] pointer-events-auto">
+        <div className="absolute top-1/2 -translate-y-1/2 right-6 flex flex-col gap-4 z-1000 pointer-events-auto">
             <TooltipProvider>
                 <Tooltip>
                     <TooltipTrigger asChild>
@@ -164,7 +164,7 @@ export default function LeafletMapPicker({ lat, lng, onChange }) {
                     </div>
                     <div className="text-left">
                         <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mb-0.5">Emplacement du Site</p>
-                        <p className="text-sm font-bold text-neutral-900 truncate max-w-[180px] sm:max-w-none">
+                        <p className="text-sm font-bold text-neutral-900 truncate max-w-45 sm:max-w-none">
                             {lat && lng ? `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}` : "DÉFINIR SUR LA CARTE"}
                         </p>
                     </div>
@@ -179,10 +179,10 @@ export default function LeafletMapPicker({ lat, lng, onChange }) {
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent
                     ref={modalRef}
-                    className="max-w-none w-screen h-screen p-0 m-0 border-none rounded-none overflow-hidden bg-black z-[99999]"
+                    className="max-w-none w-screen h-screen p-0 m-0 border-none rounded-none overflow-hidden bg-black z-99999"
                 >
                     {/* Header Overlay - Glassmorphism */}
-                    <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-[1001] pointer-events-none">
+                    <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-1001 pointer-events-none">
                         <div className="flex items-center gap-4 pointer-events-auto bg-white/95 backdrop-blur-xl p-2.5 pr-6 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/20">
                             <Button
                                 variant="ghost"
@@ -246,13 +246,13 @@ export default function LeafletMapPicker({ lat, lng, onChange }) {
 
                             {/* Info Badge - Bottom */}
                             {tempPos && (
-                                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center gap-4 animate-in slide-in-from-bottom-8 duration-500">
+                                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-1000 flex flex-col items-center gap-4 animate-in slide-in-from-bottom-8 duration-500">
                                     <div className="bg-black/90 backdrop-blur-2xl text-white px-8 py-4 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border border-white/10 flex items-center gap-6">
                                         <div className="flex flex-col">
                                             <span className="text-[9px] text-neutral-500 font-black uppercase tracking-[0.2em] mb-1">Latitude</span>
                                             <span className="text-base font-mono font-bold tracking-wider">{tempPos[0].toFixed(7)}</span>
                                         </div>
-                                        <div className="w-[1px] h-8 bg-white/10" />
+                                        <div className="w-px h-8 bg-white/10" />
                                         <div className="flex flex-col">
                                             <span className="text-[9px] text-neutral-500 font-black uppercase tracking-[0.2em] mb-1">Longitude</span>
                                             <span className="text-base font-mono font-bold tracking-wider">{tempPos[1].toFixed(7)}</span>
@@ -269,7 +269,7 @@ export default function LeafletMapPicker({ lat, lng, onChange }) {
                         </MapContainer>
 
                         {!tempPos && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[1000] flex flex-col items-center">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-1000 flex flex-col items-center">
                                 <div className="relative mb-6">
                                     <div className="absolute inset-0 bg-red-600 blur-[80px] opacity-30 animate-pulse scale-150" />
                                     <LocationOnIcon className="text-red-500 text-8xl animate-bounce drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
