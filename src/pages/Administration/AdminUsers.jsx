@@ -34,6 +34,7 @@ export default function AdminUsers() {
     balance: apiUser.userTotalSolde || 0,
     status: apiUser.deletedAt ? 'Suspendu' : (apiUser.userValidated ? 'Actif' : 'Non validé'),
     createdAt: apiUser.createdAt,
+    emailVerified: apiUser.userEmailVerified,
     raw: apiUser,
   });
 
@@ -229,7 +230,8 @@ export default function AdminUsers() {
                   <th className="text-left p-4 text-xs text-neutral-600">Utilisateur</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Email</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Solde</th>
-                  <th className="text-left p-4 text-xs text-neutral-600">Date création</th>
+                  <th className="text-left p-4 text-xs text-neutral-600">Vérification e-mail</th>
+                  {/* <th className="text-left p-4 text-xs text-neutral-600">Date création</th> */}
                   <th className="text-left p-4 text-xs text-neutral-600">Rôle</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Statut</th>
                   <th className="text-right p-4 text-xs text-neutral-600" colSpan="2">Actions</th>
@@ -257,10 +259,18 @@ export default function AdminUsers() {
                       <td className="p-4 text-sm text-neutral-900">
                         {user.balance.toLocaleString()} Ariary
                       </td>
-
-                      <td className="p-4 text-sm text-neutral-600">
-                        {new Date(user.createdAt).toLocaleDateString()}
+                      <td className="p-4 text-sm">
+                        <Badge
+                          variant={user.emailVerified ? 'default' : 'secondary'}
+                          className={user.emailVerified ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}
+                        >
+                          {user.emailVerified ? 'Vérifié' : 'Non vérifié'}
+                        </Badge>
                       </td>
+
+                      {/* <td className="p-4 text-sm text-neutral-600">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </td> */}
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           <Switch
