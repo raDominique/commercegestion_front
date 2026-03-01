@@ -5,13 +5,13 @@ import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { Switch } from '../../components/ui/switch';
 import SearchIcon from '@mui/icons-material/Search';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import InfoIcon from '@mui/icons-material/Info';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import { toast } from 'sonner';
-import { getUsers, deleteUser, toggleUserRole, activateUser } from '../../services/user.service';
+import { getUsers, deleteUser, toggleUserRole, activateUser, getUserById } from '../../services/user.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '../../components/ui/dialog';
+import { getFullMediaUrl } from '../../services/media.service';
 
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -122,6 +122,25 @@ export default function AdminUsers() {
       setModalOpen(false);
     }
   };
+
+  const handleShowUserDetail = async (userId) => {
+    setDetailLoading(true);
+    setDetailOpen(true);
+    try {
+      const res = await getUserById(userId);
+      const user = Array.isArray(res.data) ? res.data[0] : res.data;
+      setDetailUser(user);
+    } catch (err) {
+      setDetailUser(null);
+      toast.error('Erreur lors de la récupération du détail utilisateur');
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const [detailUser, setDetailUser] = useState(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const totalUsers = total;
   const activeUsers = users.filter((u) => u.status === 'Actif').length;
@@ -309,10 +328,10 @@ export default function AdminUsers() {
                       </td>
                       <td className="p-4 text-right" colSpan="2">
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm">
-                            <EditIcon className="w-4 h-4" />
+                          <Button variant="ghost" size="sm" onClick={() => handleShowUserDetail(user.id)}>
+                            <InfoIcon className="w-5 h-5 text-violet-600" />
                           </Button>
-                          <Button
+                          {/* <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => {
@@ -322,7 +341,7 @@ export default function AdminUsers() {
                             }}
                           >
                             <DeleteOutlineIcon className="w-4 h-4 text-red-600" />
-                          </Button>
+                          </Button> */}
                         </div>
                       </td>
                     </tr>
@@ -371,6 +390,66 @@ export default function AdminUsers() {
                 {actionLoading ? 'Traitement...' : 'Confirmer'}
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Détail utilisateur */}
+        <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Détail utilisateur</DialogTitle>
+            </DialogHeader>
+            {detailLoading ? (
+              <div className="p-8 text-center text-neutral-400">Chargement...</div>
+            ) : detailUser ? (
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-4 mb-4">
+                  <img src={getFullMediaUrl(detailUser.userImage || detailUser.logo)} alt={detailUser.userNickName} className="w-16 h-16 object-cover rounded-full border" />
+                  <div>
+                    <div className="font-bold text-lg text-neutral-900">{detailUser.userName} {detailUser.userFirstname}</div>
+                    <div className="text-xs text-neutral-500">{detailUser.userType} - {detailUser.userAccess}</div>
+                  </div>
+                </div>
+                <div><b>Email :</b> {detailUser.userEmail}</div>
+                <div><b>Téléphone :</b> {detailUser.userPhone}</div>
+                <div><b>Adresse :</b> {detailUser.userAddress}</div>
+                <div><b>Solde :</b> {detailUser.userTotalSolde} Ariary</div>
+                <div><b>Validé :</b> {detailUser.userValidated ? 'Oui' : 'Non'}</div>
+                <div><b>Email vérifié :</b> {detailUser.userEmailVerified ? 'Oui' : 'Non'}</div>
+                <div><b>Type document :</b> {detailUser.documentType}</div>
+                <div><b>Numéro CIN :</b> {detailUser.identityCardNumber}</div>
+                <div><b>Manager :</b> {detailUser.managerName} ({detailUser.managerEmail})</div>
+                <div><b>Date création :</b> {new Date(detailUser.createdAt).toLocaleString()}</div>
+                {/* Téléchargement carteStat */}
+                {Array.isArray(detailUser.carteStat) && detailUser.carteStat.length > 0 && (
+                  <div className="mt-2">
+                    <b>Carte Stat :</b>
+                    <ul className="list-disc ml-6">
+                      {detailUser.carteStat.map((file, idx) => (
+                        <li key={idx}>
+                          <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {/* Téléchargement identityDocument */}
+                {Array.isArray(detailUser.identityDocument) && detailUser.identityDocument.length > 0 && (
+                  <div className="mt-2">
+                    <b>Documents d'identité :</b>
+                    <ul className="list-disc ml-6">
+                      {detailUser.identityDocument.map((file, idx) => (
+                        <li key={idx}>
+                          <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger document {idx + 1}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-neutral-400">Aucune donnée</div>
+            )}
           </DialogContent>
         </Dialog>
 
