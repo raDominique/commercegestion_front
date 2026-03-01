@@ -13,7 +13,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { createSite, getMySites, getSiteById, updateSite, deleteSite } from '../../services/site.service';
-import LeafletMapPicker from '../../components/ui/LeafletMapPicker.jsx';
+import GoogleMapPicker from '../../components/ui/GoogleMapPicker.jsx';
 import { useIsMobile } from '../../components/ui/use-mobile.js';
 
 const MesSites = () => {
@@ -195,7 +195,7 @@ const MesSites = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Localisation sur la carte</Label>
-                  <LeafletMapPicker
+                  <GoogleMapPicker
                     lat={newSite.siteLat}
                     lng={newSite.siteLng}
                     onChange={({ lat, lng }) => setNewSite({ ...newSite, siteLat: lat, siteLng: lng })}
@@ -353,7 +353,7 @@ const MesSites = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Localisation sur la carte</Label>
-                  <LeafletMapPicker
+                  <GoogleMapPicker
                     lat={editSite.siteLat}
                     lng={editSite.siteLng}
                     onChange={({ lat, lng }) => setEditSite({ ...editSite, siteLat: lat, siteLng: lng })}
