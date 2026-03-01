@@ -196,3 +196,18 @@ export const getMyProducts = async (params = {}, token) => {
     );
     return response.data;
 };
+
+/**
+ * Récupère la liste des produits pour la boutique (GET /products/shop)
+ * @param {Object} params - Paramètres de recherche et de tri (search, limit, page, sort, order)
+ * @returns {Promise<Object>} Résultat de l'API
+ */
+export const getShopProducts = async (params = {}) => {
+    const response = await axiosInstance.get('/api/v1/products/shop', {
+        params,
+        headers: {
+            'accept': '*/*',
+        },
+    });
+    return response.data;
+};

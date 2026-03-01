@@ -55,6 +55,8 @@ export const withdrawStock = async (params, token) => {
             siteDestinationId: params.siteDestinationId,
             productId: params.productId,
             quantite: params.quantite,
+            detentaire: params.detentaire,
+            ayant_droit: params.ayant_droit,
             prixUnitaire: params.prixUnitaire,
             observations: params.observations || '',
         },

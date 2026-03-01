@@ -29,7 +29,6 @@ const MesProduits = () => {
     setDepositForm(f => ({ ...f, productId }));
     setDepositModalOpen(true);
     try {
-      // const token = localStorage.getItem('token');
       const res = await getMySites({ limit: 100, page: 1 });
       setSites(res.data || []);
       try {
@@ -766,7 +765,7 @@ const MesProduits = () => {
                 <Input name="prixUnitaire" value={depositForm.prixUnitaire} onChange={e => setDepositForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix Unitaire du produit" className="border-neutral-300" type="number" min="0" step="0.01" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="detentaire">Détentaire</Label>
+                <Label htmlFor="detentaire">Détenteur</Label>
                 <Select value={depositForm.detentaire} onValueChange={val => setDepositForm(f => ({ ...f, detentaire: val }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner le détenteur" />
