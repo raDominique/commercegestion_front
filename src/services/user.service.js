@@ -102,3 +102,12 @@ export async function updateUser(userId, data, token) {
     );
     return res.data;
 }
+
+/**
+ * Récupère tous les utilisateurs au format sélection (GET /users/select/all)
+ * @returns {Promise<Object>} Résultat de l'API
+ */
+export async function getAllUsersSelect() {
+    const res = await axiosConfig.get('/api/v1/users/select/all');
+    return res.data;
+}

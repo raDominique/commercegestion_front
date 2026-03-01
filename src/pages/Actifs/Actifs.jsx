@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
@@ -13,7 +12,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
-
+import { getAllUsersSelect } from '../../services/user.service';
 const Actifs = () => {
 	const dateFormat = useDateFormat();
 	usePageTitle('Actifs');
@@ -33,11 +32,14 @@ const Actifs = () => {
 	const [transferModalOpen, setTransferModalOpen] = useState(false);
 	const [transferActifId, setTransferActifId] = useState(null);
 	const [sites, setSites] = useState([]);
+	const [usersOptions, setUsersOptions] = useState([]);
 	const [transferForm, setTransferForm] = useState({
 		siteOrigineId: '',
 		siteDestinationId: '',
 		productId: '',
 		quantite: '',
+		detentaire: '',
+		ayant_droit: '',
 		prixUnitaire: '',
 		observations: '',
 	});
@@ -57,6 +59,12 @@ const Actifs = () => {
 		try {
 			const res = await getMySites({ limit: 100, page: 1 });
 			setSites(res.data || []);
+			try {
+				const usersRes = await getAllUsersSelect();
+				setUsersOptions(Array.isArray(usersRes.data) ? usersRes.data : usersRes.data || []);
+			} catch (errUsers) {
+				setUsersOptions([]);
+			}
 		} catch (err) {
 			toast.error('Erreur lors du chargement des sites');
 			setSites([]);
@@ -86,6 +94,8 @@ const Actifs = () => {
 				siteDestinationId: '',
 				productId: '',
 				quantite: '',
+				detentaire: '',
+				ayant_droit: '',
 				prixUnitaire: '',
 				observations: '',
 			});
@@ -125,7 +135,9 @@ const Actifs = () => {
 		setDetailOpen(true);
 		try {
 			const token = localStorage.getItem('token');
-			const data = await getActifById(actifId, token);
+			// Correction : importer et utiliser getMyStocksActifs pour récupérer le détail
+			const res = await getMyStocksActifs({ id: actifId }, token);
+			const data = Array.isArray(res.data) ? res.data[0] : res.data;
 			setDetailActif(data);
 		} catch (err) {
 			setDetailActif(null);
@@ -157,6 +169,7 @@ const Actifs = () => {
 								<th className="p-4 text-xs text-neutral-600 text-left">Site destination</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Quantité</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Prix unitaire</th>
+								<th className="p-4 text-xs text-neutral-600 text-left">Prix total</th>
 								<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
 								<th className="p-4 text-xs text-neutral-600 text-right">Actions</th>
 							</tr>
@@ -179,12 +192,13 @@ const Actifs = () => {
 										<td className="p-4 text-sm">{item.siteDestinationId?.siteName || '-'}</td>
 										<td className="p-4 text-sm">{item.quantite || '-'}</td>
 										<td className="p-4 text-sm">{item.prixUnitaire || '-'}</td>
+										<td className="p-4 text-sm">{item.prixUnitaire * item.quantite || '-'}</td>
 										<td className="p-4 text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</td>
 										<td className="p-4 text-sm text-right">
 											<Button onClick={() => handleOpenTransferModal(item)}>
 												Transférer
 											</Button>
-											<Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)}>
+											<Button variant="ghost" size="sm" onClick={() => handleShowDetail(item._id)}>
 												<InfoIcon className="w-5 h-5 text-violet-600" />
 											</Button>
 										</td>
@@ -273,6 +287,32 @@ const Actifs = () => {
 							<div className="space-y-2">
 								<Label htmlFor="prixUnitaire">Prix Unitaire</Label>
 								<Input name="prixUnitaire" value={transferForm.prixUnitaire} onChange={e => setTransferForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix Unitaire du produit" className="border-neutral-300" type="number" min="0" step="0.01" />
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="detentaire">Détenteur</Label>
+								<Select value={transferForm.detentaire} onValueChange={val => setDepositForm(f => ({ ...f, detentaire: val }))}>
+									<SelectTrigger>
+										<SelectValue placeholder="Sélectionner le détenteur" />
+									</SelectTrigger>
+									<SelectContent>
+										{usersOptions.map(user => (
+											<SelectItem key={user._id} value={user._id}>{user.name}</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="ayant_droit">Ayant droit</Label>
+								<Select value={transferForm.ayant_droit} onValueChange={val => setTransferForm(f => ({ ...f, ayant_droit: val }))}>
+									<SelectTrigger>
+										<SelectValue placeholder="Sélectionner l'ayant droit" />
+									</SelectTrigger>
+									<SelectContent>
+										{usersOptions.map(user => (
+											<SelectItem key={user._id} value={user._id}>{user.name}</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 							</div>
 							<div className="space-y-2 md:col-span-2">
 								<Label htmlFor="observations">Observations</Label>

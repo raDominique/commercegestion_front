@@ -10,26 +10,33 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle.jsx';
-import { getMyProducts, toggleProductStocker, getProductById, createProduct } from '../../services/product.service';
+import { getMyProducts, toggleProductStocker, getProductById, createProduct, updateProduct, deleteProduct } from '../../services/product.service';
 import { getFullMediaUrl } from '../../services/media.service';
-// import { Switch } from '../../components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription, DialogTrigger } from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '../../components/ui/dialog';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Label } from '../../components/ui/label';
 import { getAllCpcSelect } from '../../services/cpc.service';
+import { getAllUsersSelect } from '../../services/user.service';
 import { depositStock } from '../../services/stocks_move.service.js';
 import { getMySites } from '../../services/site.service';
 
 const MesProduits = () => {
+  // Options CPC pour édition
+  const [editCpcOptions, setEditCpcOptions] = useState([]);
   // Ouvrir le modal dépôt
   const handleOpenDepositModal = async (productId) => {
     setDepositProductId(productId);
     setDepositForm(f => ({ ...f, productId }));
     setDepositModalOpen(true);
     try {
-      // const token = localStorage.getItem('token');
       const res = await getMySites({ limit: 100, page: 1 });
       setSites(res.data || []);
+      try {
+        const usersRes = await getAllUsersSelect();
+        setUsersOptions(Array.isArray(usersRes.data) ? usersRes.data : usersRes.data || []);
+      } catch (errUsers) {
+        setUsersOptions([]);
+      }
     } catch (err) {
       toast.error('Erreur lors du chargement des sites');
       setSites([]);
@@ -55,6 +62,8 @@ const MesProduits = () => {
         productId: '',
         quantite: '',
         prixUnitaire: '',
+        detentaire: '',
+        ayant_droit: '',
         observations: '',
       });
     } catch (err) {
@@ -77,6 +86,100 @@ const MesProduits = () => {
   const [loadingDetail, setLoadingDetail] = useState(false);
   // Ajout pour le modal d'ajout de produit
   const [addModalOpen, setAddModalOpen] = useState(false);
+  // Modal modification produit
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editProductId, setEditProductId] = useState(null);
+  const [editForm, setEditForm] = useState({
+    productState: '',
+    codeCPC: '',
+    productVolume: '',
+    productLargeur: '',
+    productPoids: '',
+    productCategory: '',
+    productDescription: '',
+    productLongueur: '',
+    categoryId: '',
+    productName: '',
+    productHauteur: '',
+    image: null,
+  });
+  // Ouvre le modal d'édition et pré-remplit le formulaire
+  const handleOpenEditModal = async (productId) => {
+    setEditProductId(productId);
+    setEditModalOpen(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await getProductById(productId, token);
+      const data = Array.isArray(res.data) ? res.data[0] : res.data;
+      setEditForm({
+        productState: data.productState || '',
+        codeCPC: data.codeCPC || '',
+        productVolume: data.productVolume || '',
+        productLargeur: data.productLargeur || '',
+        productPoids: data.productPoids || '',
+        productCategory: data.productCategory || '',
+        productDescription: data.productDescription || '',
+        productLongueur: data.productLongueur || '',
+        categoryId: data.categoryId || '',
+        productName: data.productName || data.name || '',
+        productHauteur: data.productHauteur || '',
+        image: data.image || data.productImage || null,
+      });
+    } catch (err) {
+      toast.error("Impossible de charger le produit à modifier");
+      setEditModalOpen(false);
+    }
+  };
+
+  // Gère la modification du produit
+  const handleEditProduct = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try {
+      // Remplacer par la fonction de modification réelle (updateProduct)
+      await updateProduct(editProductId, {
+        productState: editForm.productState,
+        codeCPC: editForm.codeCPC,
+        productVolume: editForm.productVolume,
+        productLargeur: editForm.productLargeur,
+        productPoids: editForm.productPoids,
+        productCategory: editForm.productCategory,
+        productDescription: editForm.productDescription,
+        productLongueur: editForm.productLongueur,
+        categoryId: editForm.categoryId,
+        productName: editForm.productName,
+        productHauteur: editForm.productHauteur,
+      }, editForm.image, token);
+      toast.success('Produit modifié avec succès');
+      setEditModalOpen(false);
+      setEditForm({
+        productState: '',
+        codeCPC: '',
+        productVolume: '',
+        productLargeur: '',
+        productPoids: '',
+        productCategory: '',
+        productDescription: '',
+        productLongueur: '',
+        categoryId: '',
+        productName: '',
+        productHauteur: '',
+        image: null,
+      });
+      fetchProducts();
+    } catch (err) {
+      toast.error("Erreur lors de la modification du produit");
+    }
+  };
+
+  // Gère le changement des champs du formulaire d'édition
+  const handleEditInputChange = e => {
+    const { name, value, files, type } = e.target;
+    setEditForm(f => ({
+      ...f,
+      [name]: type === 'file' ? files[0] : value,
+    }));
+  };
   // Modal dépôt
   const [depositModalOpen, setDepositModalOpen] = useState(false);
   const [depositProductId, setDepositProductId] = useState(null);
@@ -87,9 +190,12 @@ const MesProduits = () => {
     productId: '',
     quantite: '',
     prixUnitaire: '',
+    detentaire: '',
+    ayant_droit: '',
     observations: '',
   });
   const [cpcOptions, setCpcOptions] = useState([]);
+  const [usersOptions, setUsersOptions] = useState([]);
   const [form, setForm] = useState({
     productState: '',
     codeCPC: '',
@@ -159,7 +265,12 @@ const MesProduits = () => {
         setCpcOptions(res.data || []);
       });
     }
-  }, [addModalOpen]);
+    if (editModalOpen) {
+      getAllCpcSelect().then(res => {
+        setEditCpcOptions(res.data || []);
+      });
+    }
+  }, [addModalOpen, editModalOpen]);
   const handleInputChange = e => {
     const { name, value, files, type } = e.target;
     setForm(f => ({
@@ -221,6 +332,31 @@ const MesProduits = () => {
       toast.error('Erreur lors du changement de stocké');
     } finally {
       setStockerLoadingId(null);
+    }
+  };
+
+  const [deleting, setDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  const handleDeleteProduct = (id) => {
+    setDeleteId(id);
+    setDeleteOpen(true);
+  };
+
+  const confirmDeleteProduct = async () => {
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem('token');
+      await deleteProduct(deleteId, token);
+      toast.success('Produit supprimé avec succès');
+      setDeleteOpen(false);
+      setDeleteId(null);
+      fetchProducts();
+    } catch (err) {
+      toast.error('Erreur lors de la suppression du produit');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -437,10 +573,10 @@ const MesProduits = () => {
                             <Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)}>
                               <InfoIcon className="w-5 h-5 text-violet-600" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleEditCpc(item.code)}>
+                            <Button variant="ghost" size="sm" onClick={() => handleOpenEditModal(product._id)}>
                               <EditIcon className="w-5 h-5 text-amber-600" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDeleteCpc(item.code)}>
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product._id)}>
                               <DeleteIcon className="w-5 h-5 text-red-600" />
                             </Button>
                           </div>
@@ -479,6 +615,112 @@ const MesProduits = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal modification produit */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le produit</DialogTitle>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={handleEditProduct}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Catégorie CPC et Code CPC côte à côte */}
+              <div className="col-span-1 md:col-span-2 flex gap-4">
+                <div className="space-y-2 flex-1">
+                  <Label htmlFor="productCategory">Catégorie CPC</Label>
+                  <Select value={editForm.productCategory} onValueChange={val => {
+                    const selected = editCpcOptions.find(opt => opt.nom === val);
+                    if (selected) {
+                      setEditForm(f => ({
+                        ...f,
+                        productCategory: selected.nom,
+                        categoryId: selected.id,
+                        codeCPC: selected.code,
+                      }));
+                    }
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir la catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {editCpcOptions.map(opt => (
+                        <SelectItem key={opt.id} value={opt.nom}>{opt.nom}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 flex-1">
+                  <Label htmlFor="codeCPC">Code CPC</Label>
+                  <Input name="codeCPC" value={editForm.codeCPC} onChange={handleEditInputChange} required placeholder="01111" className="border-neutral-300" readOnly />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="productName">Nom du produit</Label>
+                <Input name="productName" value={editForm.productName} onChange={handleEditInputChange} required placeholder="Nom du produit" className="border-neutral-300" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="productState">État</Label>
+                <Input name="productState" value={editForm.productState} onChange={handleEditInputChange} required placeholder="État" className="border-neutral-300" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="productVolume">Volume</Label>
+                <Input name="productVolume" value={editForm.productVolume} onChange={handleEditInputChange} required placeholder="Volume" className="border-neutral-300" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="productLargeur">Largeur</Label>
+                <Input name="productLargeur" value={editForm.productLargeur} onChange={handleEditInputChange} required placeholder="Largeur" className="border-neutral-300" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="productPoids">Poids</Label>
+                <Input name="productPoids" value={editForm.productPoids} onChange={handleEditInputChange} required placeholder="Poids" className="border-neutral-300" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="productLongueur">Longueur</Label>
+                <Input name="productLongueur" value={editForm.productLongueur} onChange={handleEditInputChange} required placeholder="Longueur" className="border-neutral-300" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="productHauteur">Hauteur</Label>
+                <Input name="productHauteur" value={editForm.productHauteur} onChange={handleEditInputChange} required placeholder="Hauteur" className="border-neutral-300" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="productDescription">Description</Label>
+                <Input name="productDescription" value={editForm.productDescription} onChange={handleEditInputChange} required placeholder="Description" className="border-neutral-300" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="image">Image</Label>
+                {editForm.image && typeof editForm.image === 'string' && (
+                  <img src={getFullMediaUrl(editForm.image)} alt="Aperçu" className="w-24 h-24 object-cover rounded mb-2" />
+                )}
+                <Input name="image" type="file" accept="image/*" onChange={handleEditInputChange} className="border-neutral-300" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" type="button" onClick={() => setEditModalOpen(false)}>Annuler</Button>
+              <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Modifier</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Delete Product */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent aria-describedby="product-delete-desc">
+          <DialogHeader>
+            <DialogTitle>Supprimer le produit</DialogTitle>
+            <DialogDescription id="product-delete-desc">
+              Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-4">
+            <DialogClose asChild>
+              <Button variant="outline">Annuler</Button>
+            </DialogClose>
+            <Button variant="default" className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDeleteProduct} disabled={deleting}>
+              {deleting ? 'Suppression...' : 'Confirmer la suppression'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal dépôt */}
       <Dialog open={depositModalOpen} onOpenChange={setDepositModalOpen}>
@@ -521,6 +763,32 @@ const MesProduits = () => {
               <div className="space-y-2">
                 <Label htmlFor="prixUnitaire">Prix Unitaire</Label>
                 <Input name="prixUnitaire" value={depositForm.prixUnitaire} onChange={e => setDepositForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix Unitaire du produit" className="border-neutral-300" type="number" min="0" step="0.01" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="detentaire">Détenteur</Label>
+                <Select value={depositForm.detentaire} onValueChange={val => setDepositForm(f => ({ ...f, detentaire: val }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner le détenteur" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {usersOptions.map(user => (
+                      <SelectItem key={user._id} value={user._id}>{user.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ayant_droit">Ayant droit</Label>
+                <Select value={depositForm.ayant_droit} onValueChange={val => setDepositForm(f => ({ ...f, ayant_droit: val }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner l'ayant droit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {usersOptions.map(user => (
+                      <SelectItem key={user._id} value={user._id}>{user.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="observations">Observations</Label>

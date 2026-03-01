@@ -8,8 +8,7 @@ import { Button } from './button';
 import { Badge } from './badge';
 import {
     Dialog,
-    DialogContent,
-    DialogClose,
+    DialogContent
 } from './dialog';
 import {
     Tooltip,
@@ -224,63 +223,59 @@ export default function LeafletMapPicker({ lat, lng, onChange }) {
                             </Button>
                         </div>
                     </div>
+                    <MapContainer
+                        center={tempPos || MADAGASCAR_CENTER}
+                        zoom={16}
+                        zoomControl={false}
+                        style={{ width: '100%', height: '100%' }}
+                        scrollWheelZoom={true}
+                    >
+                        <TileLayer
+                            url={HYBRID_URL}
+                            maxZoom={21}
+                            attribution='&copy; Google Maps'
+                        />
 
-                    {/* Zone de Carte */}
-                    <div className="w-full h-full relative">
-                        <MapContainer
-                            center={tempPos || MADAGASCAR_CENTER}
-                            zoom={16}
-                            zoomControl={false}
-                            style={{ width: '100%', height: '100%' }}
-                            scrollWheelZoom={true}
-                        >
-                            <TileLayer
-                                url={HYBRID_URL}
-                                maxZoom={21}
-                                attribution='&copy; Google Maps'
-                            />
+                        <MapControls setTempPosition={setTempPosition} />
 
-                            <MapControls setTempPosition={setTempPosition} />
+                        {tempPos && <Marker position={tempPos} />}
 
-                            {tempPos && <Marker position={tempPos} />}
-
-                            {/* Info Badge - Bottom */}
-                            {tempPos && (
-                                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-1000 flex flex-col items-center gap-4 animate-in slide-in-from-bottom-8 duration-500">
-                                    <div className="bg-black/90 backdrop-blur-2xl text-white px-8 py-4 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border border-white/10 flex items-center gap-6">
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] text-neutral-500 font-black uppercase tracking-[0.2em] mb-1">Latitude</span>
-                                            <span className="text-base font-mono font-bold tracking-wider">{tempPos[0].toFixed(7)}</span>
-                                        </div>
-                                        <div className="w-px h-8 bg-white/10" />
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] text-neutral-500 font-black uppercase tracking-[0.2em] mb-1">Longitude</span>
-                                            <span className="text-base font-mono font-bold tracking-wider">{tempPos[1].toFixed(7)}</span>
-                                        </div>
-                                        <div className="ml-2 hidden lg:block">
-                                            <Badge variant="outline" className="border-violet-500/50 text-violet-400 font-bold bg-violet-500/5 px-3 py-1 rounded-full">Précision Satellite</Badge>
-                                        </div>
+                        {/* Info Badge - Bottom */}
+                        {tempPos && (
+                            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-1000 flex flex-col items-center gap-4 animate-in slide-in-from-bottom-8 duration-500">
+                                <div className="bg-black/90 backdrop-blur-2xl text-white px-8 py-4 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border border-white/10 flex items-center gap-6">
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] text-neutral-500 font-black uppercase tracking-[0.2em] mb-1">Latitude</span>
+                                        <span className="text-base font-mono font-bold tracking-wider">{tempPos[0].toFixed(7)}</span>
                                     </div>
-                                    <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest drop-shadow-lg">
-                                        Cliquez n'importe où pour déplacer le marqueur
-                                    </p>
+                                    <div className="w-px h-8 bg-white/10" />
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] text-neutral-500 font-black uppercase tracking-[0.2em] mb-1">Longitude</span>
+                                        <span className="text-base font-mono font-bold tracking-wider">{tempPos[1].toFixed(7)}</span>
+                                    </div>
+                                    <div className="ml-2 hidden lg:block">
+                                        <Badge variant="outline" className="border-violet-500/50 text-violet-400 font-bold bg-violet-500/5 px-3 py-1 rounded-full">Précision Satellite</Badge>
+                                    </div>
                                 </div>
-                            )}
-                        </MapContainer>
-
-                        {!tempPos && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-1000 flex flex-col items-center">
-                                <div className="relative mb-6">
-                                    <div className="absolute inset-0 bg-red-600 blur-[80px] opacity-30 animate-pulse scale-150" />
-                                    <LocationOnIcon className="text-red-500 text-8xl animate-bounce drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
-                                </div>
-                                <div className="bg-white px-8 py-3 rounded-2xl shadow-2xl border border-neutral-100 flex flex-col items-center">
-                                    <span className="text-neutral-900 font-black text-sm uppercase tracking-tighter">SÉLECTIONNEZ UN EMPLACEMENT</span>
-                                    <span className="text-neutral-400 text-[10px] font-bold">Cliquez sur un point précis de la vue satellite</span>
-                                </div>
+                                <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest drop-shadow-lg">
+                                    Cliquez n'importe où pour déplacer le marqueur
+                                </p>
                             </div>
                         )}
-                    </div>
+                    </MapContainer>
+
+                    {!tempPos && (
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-1000 flex flex-col items-center">
+                            <div className="relative mb-6">
+                                <div className="absolute inset-0 bg-red-600 blur-[80px] opacity-30 animate-pulse scale-150" />
+                                <LocationOnIcon className="text-red-500 text-8xl animate-bounce drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
+                            </div>
+                            <div className="bg-white px-8 py-3 rounded-2xl shadow-2xl border border-neutral-100 flex flex-col items-center">
+                                <span className="text-neutral-900 font-black text-sm uppercase tracking-tighter">SÉLECTIONNEZ UN EMPLACEMENT</span>
+                                <span className="text-neutral-400 text-[10px] font-bold">Cliquez sur un point précis de la vue satellite</span>
+                            </div>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>
