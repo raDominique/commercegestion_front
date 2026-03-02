@@ -40,16 +40,16 @@ export const publicRoutes = [
 
 export const privateRoutes = [
     // Routes accessibles à Utilisateur et Moderateur et Admin
-    { path: '/actifs', element: Actifs, role: 'Utilisateur,Admin', icon: TrendingUp },
-    { path: '/passifs', element: Passifs, role: 'Utilisateur,Admin', icon: TrendingDown },
-    { path: '/boutique', element: Boutique, role: 'Utilisateur,Admin', icon: Store },
-    { path: '/depot', element: Depot, role: 'Utilisateur,Admin', icon: CreditCard },
-    { path: '/retrait', element: Retrait, role: 'Utilisateur,Admin', icon: AccountBalanceWallet },
-    { path: '/panier', element: Panier, role: 'Utilisateur,Admin', icon: ShoppingBag },
-    { path: '/mon-compte', element: MonCompte, role: 'Utilisateur,Admin', icon: Person },
-    { path: '/mes-produits', element: MesProduits, role: 'Utilisateur,Admin', icon: Inventory },
-    { path: '/mes-transactions', element: MesTransactions, role: 'Utilisateur,Admin', icon: ReceiptLong },
-    { path: '/mes-sites', element: MesSites, role: 'Utilisateur,Admin', icon: Public },
+    { path: '/actifs', element: Actifs, role: 'Utilisateur,Admin', userValidated: true, icon: TrendingUp },
+    { path: '/passifs', element: Passifs, role: 'Utilisateur,Admin', userValidated: true, icon: TrendingDown },
+    { path: '/boutique', element: Boutique, role: 'Utilisateur,Admin', userValidated: true, icon: Store },
+    { path: '/depot', element: Depot, role: 'Utilisateur,Admin', userValidated: true, icon: CreditCard },
+    { path: '/retrait', element: Retrait, role: 'Utilisateur,Admin', userValidated: true, icon: AccountBalanceWallet },
+    { path: '/panier', element: Panier, role: 'Utilisateur,Admin', userValidated: true, icon: ShoppingBag },
+    { path: '/mon-compte', element: MonCompte, role: 'Utilisateur,Admin', userValidated: [true, false], icon: Person },
+    { path: '/mes-produits', element: MesProduits, role: 'Utilisateur,Admin', userValidated: true, icon: Inventory },
+    { path: '/mes-transactions', element: MesTransactions, role: 'Utilisateur,Admin', userValidated: true, icon: ReceiptLong },
+    { path: '/mes-sites', element: MesSites, role: 'Utilisateur,Admin', userValidated: true, icon: Public },
     // Routes strictement admin
     { path: '/admin/dashboard', element: AdminDashboard, role: 'Admin', icon: Dashboard, label: 'Tableau de bord' },
     { path: '/admin/produits', element: AdminProducts, role: 'Admin', icon: Inventory, label: 'Produits' },

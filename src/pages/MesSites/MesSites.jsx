@@ -15,8 +15,18 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { createSite, getMySites, getSiteById, updateSite, deleteSite } from '../../services/site.service';
 import GoogleMapPicker from '../../components/ui/GoogleMapPicker.jsx';
 import { useIsMobile } from '../../components/ui/use-mobile.js';
+import { useAuth } from '../../context/AuthContext';
+import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 
 const MesSites = () => {
+  const { user } = useAuth();
+  if (user && user.userValidated === false) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <UserNotValidatedBanner />
+      </div>
+    );
+  }
   const isMobile = useIsMobile();
   usePageTitle('Mes sites');
   const [sites, setSites] = useState([]);
@@ -152,6 +162,9 @@ const MesSites = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {user && user.userValidated === false && (
+        <UserNotValidatedBanner />
+      )}
       <div className="space-y-6">
         <div className="space-y-2 mb-4">
           <h1 className="text-2xl text-neutral-900 mb-2">Mes Sites</h1>

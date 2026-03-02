@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getShopProducts } from '../../services/product.service.js';
 import { getFullMediaUrl } from '../../services/media.service.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card.jsx';
 import { Badge } from '../../components/ui/badge.jsx';
 import { Button } from '../../components/ui/button.jsx';
+import { useAuth } from '../../context/AuthContext';
+import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 
 const sortOptions = [
   { value: 'createdAt', label: 'Date de création' },
@@ -17,6 +19,7 @@ const orderOptions = [
 ];
 
 const Boutique = () => {
+  const { user } = useAuth();
   usePageTitle('Boutique');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +46,13 @@ const Boutique = () => {
     fetchProducts();
   }, [page, limit, search, sort, order]);
 
+  if (user && user.userValidated === false) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <UserNotValidatedBanner />
+      </div>
+    );
+  }
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold mb-6 text-neutral-900">Boutique</h1>

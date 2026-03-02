@@ -19,6 +19,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router';
 import { ImageWithFallback } from '../../components/commons/ImageWithFallback';
 import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
+import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 
 export default function Panier() {
   const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart();
@@ -26,6 +28,15 @@ export default function Panier() {
   const [couponCode, setCouponCode] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
+
+  const { user } = useAuth();
+  if (user && user.userValidated === false) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <UserNotValidatedBanner />
+      </div>
+    );
+  }
 
   const shippingCost = items.length > 0 ? 5000 : 0;
   const totalWithShipping = getTotalPrice() + shippingCost;

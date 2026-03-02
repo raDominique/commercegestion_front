@@ -1,3 +1,38 @@
+// Validation pour les champs de l'étape 3 (Register)
+export function validateAvatar(file) {
+    if (!file) return "L'avatar est requis.";
+    return '';
+}
+
+export function validateDocuments(files) {
+    const errors = [];
+    if (!Array.isArray(files) || files.length < 2) {
+        errors[0] = 'Le document est requis.';
+        errors[1] = 'Le document est requis.';
+        return errors;
+    }
+    if (!files[0]) errors[0] = 'Le document est requis.';
+    if (!files[1]) errors[1] = 'Le document est requis.';
+    return errors.length ? errors : '';
+}
+
+export function validateLogo(file) {
+    if (!file) return 'Le logo est requis.';
+    return '';
+}
+
+export function validateCarteStat(file) {
+    if (!Array.isArray(file) || file.length === 0 || !file[0]) return 'La carte stat est requise.';
+    if (!file[0]) return 'La carte stat recto est requise.';
+    if (!file[1]) return 'La carte stat verso est requise.';
+}
+
+export function validateCarteFiscal(files) {
+    if (!Array.isArray(files) || files.length < 2) return 'Les deux cartes fiscales sont requises.';
+    if (!files[0]) return 'La carte recto est requise.';
+    if (!files[1]) return 'La carte verso est requise.';
+    return '';
+}
 export function validateUserNickName(value) {
     if (!value) return 'Le pseudo est requis.';
     return '';

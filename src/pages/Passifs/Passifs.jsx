@@ -9,6 +9,8 @@ import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '../../components/ui/dialog';
 import useDateFormat from '../../utils/useDateFormat.jsx';
+import { useAuth } from '../../context/AuthContext';
+import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 
 const Passifs = () => {
 	const dateFormat = useDateFormat();
@@ -24,6 +26,7 @@ const Passifs = () => {
 	const [detailOpen, setDetailOpen] = useState(false);
 	const [detailPassif, setDetailPassif] = useState(null);
 	const [loadingDetail, setLoadingDetail] = useState(false);
+	const { user } = useAuth();
 
 	const fetchPassifs = async () => {
 		setLoading(true);
@@ -62,95 +65,101 @@ const Passifs = () => {
 		}
 	};
 
-	return (
-		<div className="p-6 max-w-5xl mx-auto">
-			<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-				<h1 className="text-2xl text-neutral-900">Mes Passifs</h1>
-				<Input
-					placeholder="Rechercher..."
-					value={search}
-					onChange={e => { setPage(1); setSearch(e.target.value); }}
-					className="max-w-xs border-neutral-300"
-				/>
-			</div>
-			<Card className="border-neutral-200">
-				<div className="overflow-x-auto">
-					<table className="w-full">
-						<thead className="bg-neutral-50 border-b border-neutral-200">
-							<tr>
-								<th className="p-4 text-xs text-neutral-600 text-left">Situation</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Type</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Montant</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Départ</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Arrivée</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Action</th>
-								<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
-							</tr>
-						</thead>
-						<tbody>
-							{loading ? (
-								<tr><td colSpan="7" className="p-8 text-center text-neutral-400">Chargement...</td></tr>
-							) : passifs.length > 0 ? (
-								passifs.map((item, idx) => (
-									<tr key={idx} className="border-b border-neutral-100 last:border-0">
-										<td className="p-4 text-sm font-semibold text-neutral-900">{item.situation || '-'}</td>
-										<td className="p-4 text-sm">{item.type || '-'}</td>
-										<td className="p-4 text-sm">{item.montant !== undefined ? item.montant.toLocaleString() : '-'}</td>
-										<td className="p-4 text-sm">{item.departDe || '-'}</td>
-										<td className="p-4 text-sm">{item.arrivee || '-'}</td>
-										<td className="p-4 text-sm">{item.action || '-'}</td>
-										<td className="p-4 text-sm">{item.date ? dateFormat(item.date) : '-'}</td>
-									</tr>
-								))
-							) : (
-								<tr><td colSpan="7" className="p-8 text-center text-neutral-400">Aucun passif trouvé</td></tr>
-							)}
-						</tbody>
-					</table>
-				</div>
-			</Card>
-			<div className="flex justify-end items-center gap-4 mt-4">
-				<Button
-					variant="outline"
-					size="sm"
-					disabled={page === 1 || loading}
-					onClick={() => setPage((p) => Math.max(1, p - 1))}
-				>
-					Précédent
-				</Button>
-				<span className="text-sm text-neutral-600">
-					Page {page} / {Math.max(1, Math.ceil(total / limit))}
-				</span>
-				<Button
-					variant="outline"
-					size="sm"
-					disabled={page >= Math.ceil(total / limit) || loading}
-					onClick={() => setPage((p) => p + 1)}
-				>
-					Suivant
-				</Button>
-			</div>
-			{/* Modal de détail du passif avec Dialog */}
-			<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-				<DialogContent aria-describedby="detail-passif-desc">
-					<DialogTitle>Détail du Passif</DialogTitle>
-					<DialogDescription id="detail-passif-desc">
-						Informations détaillées sur le passif sélectionné.
-					</DialogDescription>
-					{loadingDetail ? (
-						<div className="p-8 text-center text-neutral-400">Chargement...</div>
-					) : detailPassif ? (
-						<div className="space-y-2 text-sm">
-							<div><b>Produit :</b> {detailPassif.productId?.productName || '-'}</div>
-							<div><b>Produit codeCPC :</b> {detailPassif.productId?.codeCPC || '-'}</div>
-							<div><b>Quantité :</b> {detailPassif.quantite || '-'}</div>
-						</div>
-					) : (
-						<div className="p-8 text-center text-neutral-400">Aucune donnée</div>
-					)}
-				</DialogContent>
-			</Dialog>
-		</div>
-	);
+	       return (
+		       <div className="p-6 max-w-7xl mx-auto">
+			       {user && user.userValidated === false ? (
+				       <UserNotValidatedBanner />
+			       ) : (
+				       <>
+					       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+						       <h1 className="text-2xl text-neutral-900">Mes Passifs</h1>
+						       <Input
+							       placeholder="Rechercher..."
+							       value={search}
+							       onChange={e => { setPage(1); setSearch(e.target.value); }}
+							       className="max-w-xs border-neutral-300"
+						       />
+					       </div>
+					       <Card className="border-neutral-200">
+						       <div className="overflow-x-auto">
+							       <table className="w-full">
+								       <thead className="bg-neutral-50 border-b border-neutral-200">
+									       <tr>
+										       <th className="p-4 text-xs text-neutral-600 text-left">Situation</th>
+										       <th className="p-4 text-xs text-neutral-600 text-left">Type</th>
+										       <th className="p-4 text-xs text-neutral-600 text-left">Montant</th>
+										       <th className="p-4 text-xs text-neutral-600 text-left">Départ</th>
+										       <th className="p-4 text-xs text-neutral-600 text-left">Arrivée</th>
+										       <th className="p-4 text-xs text-neutral-600 text-left">Action</th>
+										       <th className="p-4 text-xs text-neutral-600 text-left">Date</th>
+									       </tr>
+								       </thead>
+								       <tbody>
+									       {loading ? (
+										       <tr><td colSpan="7" className="p-8 text-center text-neutral-400">Chargement...</td></tr>
+									       ) : passifs.length > 0 ? (
+										       passifs.map((item, idx) => (
+											       <tr key={idx} className="border-b border-neutral-100 last:border-0">
+												       <td className="p-4 text-sm font-semibold text-neutral-900">{item.situation || '-'}</td>
+												       <td className="p-4 text-sm">{item.type || '-'}</td>
+												       <td className="p-4 text-sm">{item.montant !== undefined ? item.montant.toLocaleString() : '-'}</td>
+												       <td className="p-4 text-sm">{item.departDe || '-'}</td>
+												       <td className="p-4 text-sm">{item.arrivee || '-'}</td>
+												       <td className="p-4 text-sm">{item.action || '-'}</td>
+												       <td className="p-4 text-sm">{item.date ? dateFormat(item.date) : '-'}</td>
+											       </tr>
+										       ))
+									       ) : (
+										       <tr><td colSpan="7" className="p-8 text-center text-neutral-400">Aucun passif trouvé</td></tr>
+									       )}
+								       </tbody>
+							       </table>
+						       </div>
+					       </Card>
+					       <div className="flex justify-end items-center gap-4 mt-4">
+						       <Button
+							       variant="outline"
+							       size="sm"
+							       disabled={page === 1 || loading}
+							       onClick={() => setPage((p) => Math.max(1, p - 1))}
+						       >
+							       Précédent
+						       </Button>
+						       <span className="text-sm text-neutral-600">
+							       Page {page} / {Math.max(1, Math.ceil(total / limit))}
+						       </span>
+						       <Button
+							       variant="outline"
+							       size="sm"
+							       disabled={page >= Math.ceil(total / limit) || loading}
+							       onClick={() => setPage((p) => p + 1)}
+						       >
+							       Suivant
+						       </Button>
+					       </div>
+					       {/* Modal de détail du passif avec Dialog */}
+					       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+						       <DialogContent aria-describedby="detail-passif-desc">
+							       <DialogTitle>Détail du Passif</DialogTitle>
+							       <DialogDescription id="detail-passif-desc">
+								       Informations détaillées sur le passif sélectionné.
+							       </DialogDescription>
+							       {loadingDetail ? (
+								       <div className="p-8 text-center text-neutral-400">Chargement...</div>
+							       ) : detailPassif ? (
+								       <div className="space-y-2 text-sm">
+									       <div><b>Produit :</b> {detailPassif.productId?.productName || '-'}</div>
+									       <div><b>Produit codeCPC :</b> {detailPassif.productId?.codeCPC || '-'}</div>
+									       <div><b>Quantité :</b> {detailPassif.quantite || '-'}</div>
+								       </div>
+							       ) : (
+								       <div className="p-8 text-center text-neutral-400">Aucune donnée</div>
+							       )}
+						       </DialogContent>
+					       </Dialog>
+				       </>
+			       )}
+		       </div>
+	       );
 };
 export default Passifs;

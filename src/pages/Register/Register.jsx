@@ -16,9 +16,14 @@ import {
   validateUserMainLat,
   validateUserMainLng,
   validateDocumentType,
-  validateIdentityCardNumber
+  validateIdentityCardNumber,
+  validateAvatar,
+  validateDocuments,
+  validateLogo,
+  validateCarteStat,
+  validateCarteFiscal
 } from '../../utils/registerFieldControl.js';
-import LeafletMapPicker from '../../components/ui/LeafletMapPicker.jsx';
+import GoogleMapPicker from '../../components/ui/GoogleMapPicker.jsx';
 import { Link, useNavigate } from 'react-router-dom';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { Button } from '../../components/ui/button.jsx';
@@ -43,6 +48,22 @@ const Register = () => {
   // Handle form submission (final step)
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validation étape 3 avant soumission
+    const errors = {};
+    errors.avatar = validateAvatar(form.avatar);
+    errors.documents = validateDocuments(form.documents);
+    if (form.userType === 'Entreprise') {
+      errors.logo = validateLogo(form.logo);
+      errors.carteStat = validateCarteStat(form.carteStat);
+      errors.carteFiscal = validateCarteFiscal(form.carteFiscal);
+    }
+    const filtered = Object.fromEntries(Object.entries(errors).filter(([_, v]) => v));
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      setLoading(false);
+      toast.error('Veuillez remplir tous les champs requis.');
+      return;
+    }
     setLoading(true);
     try {
       // Préparer les données pour createUser
@@ -93,6 +114,23 @@ const Register = () => {
       errors.userMainLng = validateUserMainLng(form.userMainLng);
       errors.documentType = validateDocumentType(form.documentType);
       errors.identityCardNumber = validateIdentityCardNumber(form.identityCardNumber);
+      // Filtrer les erreurs non vides
+      const filtered = Object.fromEntries(Object.entries(errors).filter(([_, v]) => v));
+      if (Object.keys(filtered).length > 0) {
+        setFieldErrors(filtered);
+        return;
+      }
+      setFieldErrors({});
+    }
+    if (step === 2) {
+      const errors = {};
+      errors.avatar = validateAvatar(form.avatar);
+      errors.documents = validateDocuments(form.documents);
+      if (form.userType === 'Entreprise') {
+        errors.logo = validateLogo(form.logo);
+        errors.carteStat = validateCarteStat(form.carteStat);
+        errors.carteFiscal = validateCarteFiscal(form.carteFiscal);
+      }
       // Filtrer les erreurs non vides
       const filtered = Object.fromEntries(Object.entries(errors).filter(([_, v]) => v));
       if (Object.keys(filtered).length > 0) {
@@ -377,7 +415,7 @@ const Register = () => {
                       Localisation sur la carte
                       <span className='text-red-400'>*</span>
                     </Label>
-                    <LeafletMapPicker lat={form.userMainLat} lng={form.userMainLng} onChange={({ lat, lng }) => setForm((prev) => ({ ...prev, userMainLat: lat, userMainLng: lng }))} />
+                    <GoogleMapPicker lat={form.userMainLat} lng={form.userMainLng} onChange={({ lat, lng }) => setForm((prev) => ({ ...prev, userMainLat: lat, userMainLng: lng }))} />
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="userMainLat">
@@ -434,52 +472,152 @@ const Register = () => {
               )}
               {/* ÉTAPE 3 */}
               {step === 2 && form.userType && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Documents pour Particulier et Entreprise */}
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="avatar">Avatar (PNG)</Label>
-                    <Input id="avatar" name="avatar" type="file" accept="image/png" onChange={handleChange} required className="border-neutral-300" />
+                <div className="space-y-6">
+
+                  {/* Avatar */}
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="avatar">Avatar (PNG)</Label>
+                      <Input
+                        id="avatar"
+                        name="avatar"
+                        type="file"
+                        accept="image/png"
+                        onChange={handleChange}
+                        className="border-neutral-300"
+                      />
+                      {fieldErrors.avatar && (
+                        <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.avatar}</span>
+                      )}
+                    </div>
+                    {form.avatar && (
+                      <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-violet-400 shadow-lg">
+                        <img src={URL.createObjectURL(form.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+                      </div>
+                    )}
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>Documents (PNG recto-verso)</Label>
-                    {form.documents.map((file, idx) => (
-                      <div key={idx} className="flex items-center gap-2 mb-2">
-                        <Input id={`documents-${idx}`} name="documents" type="file" accept="image/png" data-idx={idx} onChange={handleChange} required={idx === 0} className="border-neutral-300 flex-1" />
-                        {form.documents.length > 1 && (
-                          <button type="button" onClick={() => handleRemoveFile('documents', idx)} className="rounded-full bg-red-100 hover:bg-red-200 text-red-600 w-8 h-8 flex items-center justify-center transition"><span className="text-xl font-bold">&minus;</span></button>
-                        )}
-                        {idx === form.documents.length - 1 && form.documents.length < 5 && (
-                          <button type="button" onClick={() => handleAddFile('documents')} className="rounded-full bg-violet-100 hover:bg-violet-200 text-violet-700 w-8 h-8 flex items-center justify-center transition"><span className="text-xl font-bold">+</span></button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  {/* Champs entreprise uniquement */}
-                  {form.userType === 'Entreprise' && (
-                    <>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="logo">Logo (JPEG)</Label>
-                        <Input id="logo" name="logo" type="file" accept="image/jpeg" onChange={handleChange} required className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="carteStat">Carte Stat (PNG recto-verso)</Label>
-                        <Input id="carteStat" name="carteStat" type="file" accept="image/png" onChange={handleChange} required className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label>Carte fiscale (PNG recto-verso)</Label>
-                        {form.carteFiscal.map((file, idx) => (
-                          <div key={idx} className="flex items-center gap-2 mb-2">
-                            <Input id={`carteFiscal-${idx}`} name="carteFiscal" type="file" accept="image/png" data-idx={idx} onChange={handleChange} required={idx === 0} className="border-neutral-300 flex-1" />
-                            {form.carteFiscal.length > 1 && (
-                              <button type="button" onClick={() => handleRemoveFile('carteFiscal', idx)} className="rounded-full bg-red-100 hover:bg-red-200 text-red-600 w-8 h-8 flex items-center justify-center transition"><span className="text-xl font-bold">&minus;</span></button>
+
+                  {/* Documents (fixe: 2 inputs) */}
+                  <div className="space-y-3">
+                    <Label>
+                      {form.documentType === 'cin' && "CIN (PNG recto-verso)"}
+                      {form.documentType === 'passeport' && "Passeport (PNG recto-verso)"}
+                      {form.documentType === 'permis-de-conduire' && "Permis de conduire (PNG recto-verso)"}
+                      {!form.documentType && "Documents (PNG recto-verso)"}
+                    </Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      {[0, 1].map((idx) => {
+                        // Erreur dynamique pour chaque document
+                        let docErrors = [];
+                        if (typeof validateDocuments === 'function') {
+                          docErrors = validateDocuments(form.documents);
+                        }
+                        return (
+                          <div key={idx} className="relative flex flex-col items-center justify-center">
+                            <Input
+                              id={`documents-${idx}`}
+                              name="documents"
+                              type="file"
+                              accept="image/png"
+                              data-idx={idx}
+                              onChange={handleChange}
+                              className="border-neutral-300 w-full"
+                            />
+                            {docErrors && Array.isArray(docErrors) && docErrors[idx] && (
+                              <span className="text-xs text-red-500 mt-1 flex items-center w-full text-left"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {docErrors[idx]}</span>
                             )}
-                            {idx === form.carteFiscal.length - 1 && form.carteFiscal.length < 5 && (
-                              <button type="button" onClick={() => handleAddFile('carteFiscal')} className="rounded-full bg-violet-100 hover:bg-violet-200 text-violet-700 w-8 h-8 flex items-center justify-center transition"><span className="text-xl font-bold">+</span></button>
+                            {form.documents[idx] && (
+                              <img
+                                src={URL.createObjectURL(form.documents[idx])}
+                                alt={`Document ${idx + 1}`}
+                                className="w-20 h-20 object-cover mt-2 rounded border"
+                              />
                             )}
                           </div>
-                        ))}
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Entreprise: Logo + Carte Stat + Carte Fiscale */}
+                  {form.userType === 'Entreprise' && (
+                    <div className="space-y-4">
+                      {/* Logo */}
+                      <div className="p-4 bg-neutral-50 rounded-lg flex items-center gap-6">
+                        <div className="flex flex-col gap-2">
+                          <Label htmlFor="logo">Logo (JPEG)</Label>
+                          <Input
+                            id="logo"
+                            name="logo"
+                            type="file"
+                            accept="image/jpeg"
+                            onChange={handleChange}
+                            className="border-neutral-300"
+                          />
+                          {fieldErrors.logo && (
+                            <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.logo}</span>
+                          )}
+                        </div>
+                        {form.logo && (
+                          <div className="w-24 h-24 rounded-lg overflow-hidden border-2 border-violet-400 shadow-lg">
+                            <img src={URL.createObjectURL(form.logo)} alt="Logo" className="w-full h-full object-cover" />
+                          </div>
+                        )}
                       </div>
-                    </>
+
+                      {/* Carte Stat */}
+                      <div className="p-4 bg-neutral-50 rounded-lg flex items-center gap-6">
+                        <div className="flex flex-col gap-2">
+                          <Label htmlFor="carteStat">Carte Stat (PNG recto-verso)</Label>
+                          <Input
+                            id="carteStat"
+                            name="carteStat"
+                            type="file"
+                            accept="image/png"
+                            onChange={handleChange}
+                            className="border-neutral-300"
+                          />
+                          {fieldErrors.carteStat && (
+                            <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.carteStat}</span>
+                          )}
+                        </div>
+                        {form.carteStat && (
+                          <div className="w-24 h-24 rounded-lg overflow-hidden border-2 border-violet-400 shadow-lg">
+                            <img src={URL.createObjectURL(form.carteStat)} alt="Carte Stat" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Carte Fiscale (fixe: 2 inputs) */}
+                      <div className="p-4 bg-neutral-50 rounded-lg space-y-3">
+                        <Label>Carte fiscale (PNG recto-verso)</Label>
+                        <div className="grid grid-cols-2 gap-4">
+                          {[0, 1].map((idx) => (
+                            <div key={idx} className="relative border rounded-lg p-2 flex flex-col items-center justify-center bg-white shadow-sm">
+                              <Input
+                                id={`carteFiscal-${idx}`}
+                                name="carteFiscal"
+                                type="file"
+                                accept="image/png"
+                                data-idx={idx}
+                                onChange={handleChange}
+                                className="border-neutral-300 w-full"
+                              />
+                              {fieldErrors.carteFiscal && fieldErrors.carteFiscal.includes(`carte fiscale ${idx+1}`) && (
+                                <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.carteFiscal}</span>
+                              )}
+                              {form.carteFiscal[idx] && (
+                                <img
+                                  src={URL.createObjectURL(form.carteFiscal[idx])}
+                                  alt={`Carte fiscale ${idx + 1}`}
+                                  className="w-20 h-20 object-cover mt-2 rounded border"
+                                />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}

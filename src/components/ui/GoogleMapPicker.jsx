@@ -7,18 +7,9 @@ import {
 import { useState, useEffect, useRef, useCallback } from "react";
 
 import { Button } from "./button";
-import { Badge } from "./badge";
 import { Dialog, DialogContent } from "./dialog";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "./tooltip";
 
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import CloseIcon from "@mui/icons-material/Close";
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
@@ -50,14 +41,46 @@ export default function GoogleMapPicker({ lat, lng, onChange }) {
     /* ================= INIT POSITION ================= */
 
     useEffect(() => {
-        if (isOpen) {
-            setTempPos(
-                lat && lng
-                    ? { lat: parseFloat(lat), lng: parseFloat(lng) }
-                    : MADAGASCAR_CENTER
-            );
-        }
+        if (!isOpen) return;
+
+        setTempPos(
+            lat && lng
+                ? { lat: parseFloat(lat), lng: parseFloat(lng) }
+                : MADAGASCAR_CENTER
+        );
+
+        // force fullscreen after dialog mount
+        setTimeout(() => {
+            modalRef.current?.requestFullscreen?.();
+        }, 150);
+
     }, [isOpen, lat, lng]);
+
+    /* ================= FULLSCREEN STATE ================= */
+
+    useEffect(() => {
+        const handler = () => {
+            const fs = !!document.fullscreenElement;
+            setIsFullscreen(fs);
+
+            // closing fullscreen closes dialog
+            if (!fs) {
+                setIsOpen(false);
+            }
+        };
+
+        document.addEventListener("fullscreenchange", handler);
+        return () =>
+            document.removeEventListener("fullscreenchange", handler);
+    }, []);
+
+    const toggleBrowserFullscreen = () => {
+        if (!document.fullscreenElement) {
+            modalRef.current?.requestFullscreen?.();
+        } else {
+            document.exitFullscreen();
+        }
+    };
 
     /* ================= MAP EVENTS ================= */
 
@@ -76,48 +99,24 @@ export default function GoogleMapPicker({ lat, lng, onChange }) {
 
     const locateMe = () => {
         navigator.geolocation.getCurrentPosition((pos) => {
+
             const newPos = {
                 lat: pos.coords.latitude,
                 lng: pos.coords.longitude,
             };
 
             setTempPos(newPos);
+
             map?.panTo(newPos);
             map?.setZoom(18);
         });
     };
 
-    /* ================= FULLSCREEN ================= */
-
-    const toggleBrowserFullscreen = () => {
-        if (!document.fullscreenElement) {
-            modalRef.current?.requestFullscreen();
-            setIsFullscreen(true);
-        } else {
-            document.exitFullscreen();
-        }
-    };
-
-    useEffect(() => {
-        const handler = () =>
-            setIsFullscreen(!!document.fullscreenElement);
-
-        document.addEventListener(
-            "fullscreenchange",
-            handler
-        );
-
-        return () =>
-            document.removeEventListener(
-                "fullscreenchange",
-                handler
-            );
-    }, []);
-
     /* ================= CONFIRM ================= */
 
     const handleConfirm = () => {
         if (tempPos) onChange(tempPos);
+
         document.exitFullscreen?.();
         setIsOpen(false);
     };
@@ -140,19 +139,20 @@ export default function GoogleMapPicker({ lat, lng, onChange }) {
             </Button>
 
             <Dialog open={isOpen}>
-                <DialogContent className="max-w-none w-screen h-screen p-0 m-0 border-none rounded-none overflow-hidden">
-
-                    <div
-                        ref={modalRef}
-                        className="w-full h-full"
-                    >
+                <DialogContent
+                    className="max-w-none w-screen h-screen p-0 m-0 border-none rounded-none overflow-hidden"
+                >
+                    <div ref={modalRef} className="w-full h-full">
 
                         {/* HEADER */}
                         <div className="absolute top-6 left-6 right-6 flex justify-between z-50">
 
                             <Button
                                 size="icon"
-                                onClick={() => setIsOpen(false)}
+                                onClick={() => {
+                                    document.exitFullscreen?.();
+                                    setIsOpen(false);
+                                }}
                             >
                                 <CloseIcon />
                             </Button>
@@ -200,23 +200,34 @@ export default function GoogleMapPicker({ lat, lng, onChange }) {
                         {/* CONTROLS */}
                         <div className="absolute right-6 top-1/2 flex flex-col gap-4 z-50">
 
-                            <Button
-                                size="icon"
-                                onClick={locateMe}
-                            >
+                            <Button size="icon" onClick={locateMe}>
                                 <MyLocationIcon />
                             </Button>
 
                             <div className="flex flex-col bg-white rounded-xl">
-                                <button onClick={() => map?.setZoom(map.getZoom() + 1)}>+</button>
-                                <button onClick={() => map?.setZoom(map.getZoom() - 1)}>-</button>
+                                <button
+                                    onClick={() =>
+                                        map?.setZoom(map.getZoom() + 1)
+                                    }
+                                >
+                                    +
+                                </button>
+
+                                <button
+                                    onClick={() =>
+                                        map?.setZoom(map.getZoom() - 1)
+                                    }
+                                >
+                                    -
+                                </button>
                             </div>
 
                         </div>
-                    </div>
 
+                    </div>
                 </DialogContent>
             </Dialog>
+
         </div>
     );
 }

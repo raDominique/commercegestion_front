@@ -7,8 +7,18 @@ import { getMyStocksActifs } from '../../services/stocks_move.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
+import { useAuth } from '../../context/AuthContext';
+import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 
 const Depot = () => {
+	const { user } = useAuth();
+	if (user && user.userValidated === false) {
+		return (
+			<div className="p-6 max-w-7xl mx-auto">
+				<UserNotValidatedBanner />
+			</div>
+		);
+	}
 	const dateFormat = useDateFormat();
 	usePageTitle('Dépôt');
 	const [actifs, setActifs] = useState([]);
@@ -41,7 +51,10 @@ const Depot = () => {
 	}, [search, page, limit]);
 
 	return (
-		<div className="p-6 max-w-5xl mx-auto">
+		<div className="p-6 max-w-7xl mx-auto">
+			{user && user.userValidated === false && (
+				<UserNotValidatedBanner />
+			)}
 			<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 				<h1 className="text-2xl text-neutral-900">Mes Dépôts</h1>
 				<Input

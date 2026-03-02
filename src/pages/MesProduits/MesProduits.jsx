@@ -19,8 +19,18 @@ import { getAllCpcSelect } from '../../services/cpc.service';
 import { getAllUsersSelect } from '../../services/user.service';
 import { depositStock } from '../../services/stocks_move.service.js';
 import { getMySites } from '../../services/site.service';
+import { useAuth } from '../../context/AuthContext';
+import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 
 const MesProduits = () => {
+  const { user } = useAuth();
+  if (user && user.userValidated === false) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <UserNotValidatedBanner />
+      </div>
+    );
+  }
   // Options CPC pour édition
   const [editCpcOptions, setEditCpcOptions] = useState([]);
   // Ouvrir le modal dépôt
@@ -365,7 +375,10 @@ const MesProduits = () => {
   }, [searchTerm, page, limit, validationFilter, isStockerFilter]);
 
   return (
-    <>
+    <div className="p-6 max-w-7xl mx-auto">
+      {user && user.userValidated === false && (
+        <UserNotValidatedBanner />
+      )}
       <div className="p-6 max-w-7xl mx-auto">
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -845,7 +858,7 @@ const MesProduits = () => {
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 
