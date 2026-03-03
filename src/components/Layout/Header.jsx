@@ -18,6 +18,7 @@ import LogoImage from '../../assets/logo/logo.png';
 // import { useCart } from '../../context/CartContext';
 import { useEffect, useState } from 'react';
 import { getProfile } from '../../services/auth.service';
+import { getFullMediaUrl } from '../../services/media.service';
 import { toast } from 'sonner';
 
 function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
@@ -78,11 +79,25 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                 */}
                                 {/* Profil */}
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center">
-                                        <span className="text-xs text-white">
-                                            {typeof user.userName === 'string' && user.userName.length > 0 ? user.userName.charAt(0).toUpperCase() : '?'}
-                                        </span>
-                                    </div>
+                                    {user.userType === 'Entreprise' && user.logo ? (
+                                        <img
+                                            src={getFullMediaUrl(user.logo)}
+                                            alt="Logo entreprise"
+                                            className="w-8 h-8 rounded-full object-cover bg-neutral-200"
+                                        />
+                                    ) : user.userType === 'Particulier' && user.userImage ? (
+                                        <img
+                                            src={getFullMediaUrl(user.userImage)}
+                                            alt="Avatar utilisateur"
+                                            className="w-8 h-8 rounded-full object-cover bg-neutral-200"
+                                        />
+                                    ) : (
+                                        <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center">
+                                            <span className="text-xs text-white">
+                                                {typeof user.userName === 'string' && user.userName.length > 0 ? user.userName.charAt(0).toUpperCase() : '?'}
+                                            </span>
+                                        </div>
+                                    )}
                                     <span className="text-sm text-neutral-700">{typeof user.userName === 'string' ? user.userName : 'Utilisateur'}</span>
                                 </div>
                                 {/* Déconnexion */}
