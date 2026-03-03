@@ -15,6 +15,7 @@ import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
 import { Switch } from '../../components/ui/switch';
 import { Person as UserIcon, Security as ShieldIcon, Notifications as BellIcon } from '@mui/icons-material';
+import { Badge } from '../../components/ui/badge';
 
 export default function MonCompte() {
   usePageTitle('Mon compte');
@@ -153,22 +154,26 @@ export default function MonCompte() {
               <h2 className="text-lg text-neutral-900">{profile.userName} {profile.userFirstname}</h2>
               <p className="text-sm text-neutral-600">{profile.userEmail}</p>
               <div className="flex items-center gap-2 mt-2">
-                <div className="px-2 py-1 bg-violet-50 text-violet-600 rounded text-xs capitalize">
+                <Badge variant="secondary" className="capitalize bg-violet-50 text-violet-700 border-violet-200">
                   {profile.userAccess === 'Admin' ? 'Administrateur' : (profile.userAccess || 'Utilisateur')}
-                </div>
-                {profile.userValidated ? (
-                  <div className="px-2 py-1 bg-green-50 text-green-600 rounded text-xs">
-                    Compte vérifié
-                  </div>
+                </Badge>
+                {profile.userEmailVerified ? (
+                  <Badge variant="default" className="bg-blue-50 text-blue-700 border-blue-200">
+                    Email vérifié
+                  </Badge>
                 ) : (
-                  <div className="px-2 py-1 bg-yellow-50 text-yellow-700 rounded text-xs">
-                    Non vérifié
-                  </div>
-                )}
-                {profile.userEmailVerified === false && (
-                  <div className="px-2 py-1 bg-red-50 text-red-600 rounded text-xs">
+                  <Badge variant="destructive" className="bg-red-50 text-red-600 border-red-200">
                     Email non vérifié
-                  </div>
+                  </Badge>
+                )}
+                {profile.userValidated ? (
+                  <Badge variant="default" className="bg-green-50 text-green-700 border-green-200">
+                    Compte vérifié
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                    Non vérifié
+                  </Badge>
                 )}
               </div>
             </div>

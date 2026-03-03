@@ -11,19 +11,25 @@ import {
     DialogFooter,
     DialogClose,
 } from '../ui/dialog';
-import { Logout, Menu, Close, AccountBalanceWallet, ShoppingCart } from '@mui/icons-material';
+import { Logout, Menu, Close, AccountBalanceWallet, ShoppingCart, Notifications as BellIcon } from '@mui/icons-material';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { privateRoutes } from '../../routes/routes';
 import LogoImage from '../../assets/logo/logo.png';
 // import { CartSheet } from '../commons/CartSheet';
 // import { useCart } from '../../context/CartContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { initSocket, onSocketEvent, offSocketEvent, disconnectSocket } from '../../services/socket.service';
 import { getProfile } from '../../services/auth.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { toast } from 'sonner';
 
+
 function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
-    // const { user: authUser } = useAuth();
+    // Notifications temps réel via socket
+    const [notifications, setNotifications] = useState([]);
     const [profile, setProfile] = useState(null);
+    const socketInitialized = useRef(false);
+
     useEffect(() => {
         let mounted = true;
         getProfile()
@@ -31,6 +37,43 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
             .catch(() => { if (mounted) setProfile(null); });
         return () => { mounted = false; };
     }, []);
+
+    // Connexion socket.io et écoute des notifications
+    useEffect(() => {
+        if (!profile || socketInitialized.current) return;
+        // Remplacez l'URL par celle de votre backend
+        const socketUrl = import.meta.env.VITE_API_BASE_URL?.replace(/^http/, 'ws');
+        if (!socketUrl || !profile._id || !profile.userAccess) return;
+        initSocket(socketUrl, { userId: profile._id, userAccess: profile.userAccess });
+        socketInitialized.current = true;
+
+        // Notifications personnelles
+        const notifHandler = (data) => {
+            setNotifications((prev) => [
+                { id: Date.now(), message: data.message, date: new Date().toLocaleDateString() },
+                ...prev
+            ]);
+        };
+        // Alertes admin globales
+        const adminHandler = (data) => {
+            setNotifications((prev) => [
+                { id: Date.now(), message: data.message, date: new Date().toLocaleDateString() },
+                ...prev
+            ]);
+        };
+        onSocketEvent(`notification`, notifHandler);
+        if (profile.userAccess === 'Admin') {
+            onSocketEvent('admin_event', adminHandler);
+        }
+        return () => {
+            offSocketEvent('notification', notifHandler);
+            if (profile.userAccess === 'Admin') {
+                offSocketEvent('admin_event', adminHandler);
+            }
+            disconnectSocket();
+            socketInitialized.current = false;
+        };
+    }, [profile]);
 
     // Modal state for logout confirmation
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
@@ -62,6 +105,37 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                         {typeof user.userTotalSolde === 'number' ? user.userTotalSolde.toLocaleString('fr-MG') : '0'} Ariary
                                     </span>
                                 </div>
+                                {/* Notifications Dropdown */}
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="relative text-neutral-600"
+                                            aria-label="Notifications"
+                                        >
+                                            <BellIcon className="w-5 h-5" />
+                                            {notifications.length > 0 && (
+                                                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
+                                                    {notifications.length}
+                                                </span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent align="end" className="w-72 p-0 bg-white rounded-xl shadow-xl border border-neutral-100">
+                                        <div className="px-4 py-3 border-b border-neutral-100 font-semibold text-neutral-800 text-base rounded-t-xl">Notifications</div>
+                                        <div className="divide-y divide-neutral-200 max-h-60 overflow-y-auto">
+                                            {notifications.length === 0 ? (
+                                                <div className="py-4 text-center text-neutral-500">Aucune notification</div>
+                                            ) : notifications.map((notif) => (
+                                                <div key={notif.id} className="py-3 px-4 flex flex-col gap-1 hover:bg-violet-50 cursor-pointer transition rounded-lg">
+                                                    <span className="text-sm text-neutral-800">{notif.message}</span>
+                                                    <span className="text-xs text-neutral-400">{notif.date}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
                                 {/* Panier 
                                 <button
                                     className="relative flex items-center justify-center p-2 hover:bg-violet-50 rounded-lg transition-colors"
