@@ -8,13 +8,15 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useAuth } from '../../context/AuthContext';
-import { getProfile } from '../../services/auth.service';
+import { getProfile, changePassword } from '../../services/auth.service';
 import { updateUser } from '../../services/user.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
 import { Switch } from '../../components/ui/switch';
 import { Person as UserIcon, Security as ShieldIcon, Notifications as BellIcon } from '@mui/icons-material';
+import { Badge } from '../../components/ui/badge';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 export default function MonCompte() {
   usePageTitle('Mon compte');
@@ -95,16 +97,40 @@ export default function MonCompte() {
     }
   };
 
-  const handleUpdatePassword = (e) => {
+  const [changingPassword, setChangingPassword] = useState(false);
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       toast.error('Les mots de passe ne correspondent pas');
       return;
     }
-    toast.success('Mot de passe modifié avec succès');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setChangingPassword(true);
+    try {
+      const token = getAccessToken();
+      const res = await changePassword({
+        currentPassword,
+        newPassword,
+        confirmPassword
+      }, token);
+      if (res.status === 'success') {
+        toast.success(res.message || 'Mot de passe modifié avec succès');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        toast.error(res.message || 'Erreur lors du changement de mot de passe');
+      }
+    } catch (err) {
+      if (err?.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else if (err?.message) {
+        toast.error(err.message);
+      } else {
+        toast.error('Erreur lors du changement de mot de passe');
+      }
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   if (loading) {
@@ -153,23 +179,45 @@ export default function MonCompte() {
               <h2 className="text-lg text-neutral-900">{profile.userName} {profile.userFirstname}</h2>
               <p className="text-sm text-neutral-600">{profile.userEmail}</p>
               <div className="flex items-center gap-2 mt-2">
-                <div className="px-2 py-1 bg-violet-50 text-violet-600 rounded text-xs capitalize">
+                <Badge variant="secondary" className="capitalize bg-violet-50 text-violet-700 border-violet-200">
                   {profile.userAccess === 'Admin' ? 'Administrateur' : (profile.userAccess || 'Utilisateur')}
-                </div>
-                {profile.userValidated ? (
-                  <div className="px-2 py-1 bg-green-50 text-green-600 rounded text-xs">
-                    Compte vérifié
-                  </div>
+                </Badge>
+                {profile.userEmailVerified ? (
+                  <Badge variant="default" className="bg-blue-50 text-blue-700 border-blue-200">
+                    Email vérifié
+                  </Badge>
                 ) : (
-                  <div className="px-2 py-1 bg-yellow-50 text-yellow-700 rounded text-xs">
-                    Non vérifié
-                  </div>
-                )}
-                {profile.userEmailVerified === false && (
-                  <div className="px-2 py-1 bg-red-50 text-red-600 rounded text-xs">
+                  <Badge variant="destructive" className="bg-red-50 text-red-600 border-red-200">
                     Email non vérifié
-                  </div>
+                  </Badge>
                 )}
+                {profile.userValidated ? (
+                  <Badge variant="default" className="bg-green-50 text-green-700 border-green-200">
+                    Compte vérifié
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                    Non vérifié
+                  </Badge>
+                )}
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline" className="bg-neutral-50 text-neutral-700 border-neutral-200 px-2 py-1 text-xs font-mono">
+                    ID: {profile.userId}
+                  </Badge>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="p-1 h-6 w-6 text-neutral-500 hover:text-violet-600"
+                    onClick={() => {
+                      navigator.clipboard.writeText(profile.userId);
+                      toast.success('ID copié dans le presse-papier');
+                    }}
+                    aria-label="Copier l'ID utilisateur"
+                  >
+                    <ContentCopyIcon fontSize="small" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -177,7 +225,7 @@ export default function MonCompte() {
 
         {/* Tabs */}
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-muted p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
             <TabsTrigger value="profile" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">
               <UserIcon className="w-4 h-4 mr-2" />
               Profil
@@ -186,18 +234,11 @@ export default function MonCompte() {
               <ShieldIcon className="w-4 h-4 mr-2" />
               Sécurité
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">
-              <BellIcon className="w-4 h-4 mr-2" />
-              Notifications
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
             <Card className="p-6 border-neutral-200">
               <form onSubmit={handleUpdateProfile} className="space-y-4">
-
-
-
                 <div className="space-y-2">
                   <Label htmlFor="userNickName">Pseudo</Label>
                   <Input
@@ -228,8 +269,6 @@ export default function MonCompte() {
                   />
                 </div>
 
-
-
                 <div className="space-y-2">
                   <Label htmlFor="avatar">Avatar (photo de profil)</Label>
                   <Input
@@ -240,9 +279,6 @@ export default function MonCompte() {
                     className="border-neutral-300"
                   />
                 </div>
-
-
-
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -253,8 +289,6 @@ export default function MonCompte() {
                     className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
                   />
                 </div>
-
-
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Téléphone</Label>
@@ -329,70 +363,13 @@ export default function MonCompte() {
                   />
                 </div>
 
-                <Button type="submit" className="bg-violet-600 hover:bg-violet-700 text-white">
-                  Modifier le mot de passe
+                <Button type="submit" className="bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center" disabled={changingPassword}>
+                  {changingPassword ? (
+                    <span className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  ) : null}
+                  {changingPassword ? 'Modification...' : 'Modifier le mot de passe'}
                 </Button>
               </form>
-
-              <div className="mt-6 pt-6 border-t border-neutral-200">
-                <h3 className="text-sm text-neutral-900 mb-4">Authentification à deux facteurs</h3>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-700">Activer 2FA</p>
-                    <p className="text-xs text-neutral-500">Ajoutez une couche de sécurité supplémentaire</p>
-                  </div>
-                  <Switch />
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="notifications">
-            <Card className="p-6 border-neutral-200">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-900">Notifications par email</p>
-                    <p className="text-xs text-neutral-500">Recevoir des emails pour les activités importantes</p>
-                  </div>
-                  <Switch
-                    checked={notifications.email}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, email: checked })
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-900">Alertes de transaction</p>
-                    <p className="text-xs text-neutral-500">Être notifié de chaque transaction</p>
-                  </div>
-                  <Switch
-                    checked={notifications.transactions}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, transactions: checked })
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-900">Promotions et offres</p>
-                    <p className="text-xs text-neutral-500">Recevoir des offres spéciales et promotions</p>
-                  </div>
-                  <Switch
-                    checked={notifications.promotions}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, promotions: checked })
-                    }
-                  />
-                </div>
-
-                <Button className="bg-violet-600 hover:bg-violet-700 text-white">
-                  Enregistrer les préférences
-                </Button>
-              </div>
             </Card>
           </TabsContent>
         </Tabs>

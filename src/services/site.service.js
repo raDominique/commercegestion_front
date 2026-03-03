@@ -1,5 +1,5 @@
-
 import axiosConfig from './axios.config';
+import axios from 'axios';
 
 /**
  * Crée un site (POST /sites/create)
@@ -121,4 +121,18 @@ export async function getAllSites({ search = '', limit = 10, page = 1 } = {}) {
         console.error('Erreur lors de la récupération de tous les sites:', error);
         throw error;
     }
+}
+
+/**
+ * Récupère tous les sites avec pagination et recherche (GET /sites/select/all)
+ * @param {Object} params - Les paramètres de pagination et de recherche
+ * @param {string} [params.search] - Terme de recherche optionnel
+ * @param {number} [params.limit] - Nombre d'éléments par page
+ * @param {number} [params.page] - Numéro de page
+ * @return {Promise} - Une promesse qui résout la réponse de l'API
+ */
+export async function getAllSitesSelect() {
+  const res = await axiosConfig.get('/api/v1/sites/select/all');
+  // Retourne uniquement le tableau de sites ou []
+  return res.data?.data || [];
 }

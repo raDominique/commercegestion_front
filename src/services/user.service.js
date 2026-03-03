@@ -109,5 +109,6 @@ export async function updateUser(userId, data, token) {
  */
 export async function getAllUsersSelect() {
     const res = await axiosConfig.get('/api/v1/users/select/all');
-    return res.data;
+    // Retourne uniquement le tableau d'utilisateurs ou []
+    return res.data?.data || [];
 }
