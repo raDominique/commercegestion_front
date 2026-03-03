@@ -8,7 +8,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useAuth } from '../../context/AuthContext';
-import { getProfile } from '../../services/auth.service';
+import { getProfile, changePassword } from '../../services/auth.service';
 import { updateUser } from '../../services/user.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
@@ -96,16 +96,40 @@ export default function MonCompte() {
     }
   };
 
-  const handleUpdatePassword = (e) => {
+  const [changingPassword, setChangingPassword] = useState(false);
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       toast.error('Les mots de passe ne correspondent pas');
       return;
     }
-    toast.success('Mot de passe modifié avec succès');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    setChangingPassword(true);
+    try {
+      const token = getAccessToken();
+      const res = await changePassword({
+        currentPassword,
+        newPassword,
+        confirmPassword
+      }, token);
+      if (res.status === 'success') {
+        toast.success(res.message || 'Mot de passe modifié avec succès');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        toast.error(res.message || 'Erreur lors du changement de mot de passe');
+      }
+    } catch (err) {
+      if (err?.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else if (err?.message) {
+        toast.error(err.message);
+      } else {
+        toast.error('Erreur lors du changement de mot de passe');
+      }
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   if (loading) {
@@ -182,7 +206,7 @@ export default function MonCompte() {
 
         {/* Tabs */}
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-muted p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
             <TabsTrigger value="profile" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">
               <UserIcon className="w-4 h-4 mr-2" />
               Profil
@@ -190,10 +214,6 @@ export default function MonCompte() {
             <TabsTrigger value="security" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">
               <ShieldIcon className="w-4 h-4 mr-2" />
               Sécurité
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">
-              <BellIcon className="w-4 h-4 mr-2" />
-              Notifications
             </TabsTrigger>
           </TabsList>
 
@@ -230,8 +250,6 @@ export default function MonCompte() {
                   />
                 </div>
 
-
-
                 <div className="space-y-2">
                   <Label htmlFor="avatar">Avatar (photo de profil)</Label>
                   <Input
@@ -252,8 +270,6 @@ export default function MonCompte() {
                     className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
                   />
                 </div>
-
-
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Téléphone</Label>
@@ -328,70 +344,13 @@ export default function MonCompte() {
                   />
                 </div>
 
-                <Button type="submit" className="bg-violet-600 hover:bg-violet-700 text-white">
-                  Modifier le mot de passe
+                <Button type="submit" className="bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center" disabled={changingPassword}>
+                  {changingPassword ? (
+                    <span className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  ) : null}
+                  {changingPassword ? 'Modification...' : 'Modifier le mot de passe'}
                 </Button>
               </form>
-
-              <div className="mt-6 pt-6 border-t border-neutral-200">
-                <h3 className="text-sm text-neutral-900 mb-4">Authentification à deux facteurs</h3>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-700">Activer 2FA</p>
-                    <p className="text-xs text-neutral-500">Ajoutez une couche de sécurité supplémentaire</p>
-                  </div>
-                  <Switch />
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="notifications">
-            <Card className="p-6 border-neutral-200">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-900">Notifications par email</p>
-                    <p className="text-xs text-neutral-500">Recevoir des emails pour les activités importantes</p>
-                  </div>
-                  <Switch
-                    checked={notifications.email}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, email: checked })
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-900">Alertes de transaction</p>
-                    <p className="text-xs text-neutral-500">Être notifié de chaque transaction</p>
-                  </div>
-                  <Switch
-                    checked={notifications.transactions}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, transactions: checked })
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-900">Promotions et offres</p>
-                    <p className="text-xs text-neutral-500">Recevoir des offres spéciales et promotions</p>
-                  </div>
-                  <Switch
-                    checked={notifications.promotions}
-                    onCheckedChange={(checked) =>
-                      setNotifications({ ...notifications, promotions: checked })
-                    }
-                  />
-                </div>
-
-                <Button className="bg-violet-600 hover:bg-violet-700 text-white">
-                  Enregistrer les préférences
-                </Button>
-              </div>
             </Card>
           </TabsContent>
         </Tabs>

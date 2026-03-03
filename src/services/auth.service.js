@@ -1,3 +1,23 @@
+// Changement de mot de passe : POST /auth/change-password
+/**
+ * Change le mot de passe de l'utilisateur connecté
+ * @param {Object} data - { currentPassword, newPassword, confirmPassword }
+ * @param {string} accessToken - Token JWT d'authentification
+ * @returns {Promise<Object>} Résultat de l'API
+ */
+export async function changePassword(data, accessToken) {
+  if (!data || !data.currentPassword || !data.newPassword || !data.confirmPassword) {
+    throw new Error('Tous les champs sont requis');
+  }
+  const res = await axiosInstance.post('/api/v1/auth/change-password', data, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+      'accept': '*/*',
+    },
+  });
+  return res.data;
+}
 
 import axiosInstance from './axios.config';
 import { setAccessToken, clearAccessToken, setRefreshToken, getRefreshToken, clearRefreshToken } from './token.service';
