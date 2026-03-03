@@ -160,38 +160,38 @@ const Actifs = () => {
 					</div>
 
 					{/* TABLE */}
-					<Card>
+					<Card className="border-neutral-200">
 						<div className="overflow-x-auto">
 							<table className="w-full">
-								<thead className="bg-neutral-50">
+								<thead className="bg-neutral-50 border-b border-neutral-200">
 									<tr>
-										<th className="p-4 text-left">Produit</th>
-										<th className="p-4">Image</th>
-										<th className="p-4">Site origine</th>
-										<th className="p-4">Site destination</th>
-										<th className="p-4">Qté</th>
-										<th className="p-4">PU</th>
-										<th className="p-4">Total</th>
-										<th className="p-4">Date</th>
-										<th className="p-4 text-right">Actions</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">Produit</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">Image</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">Site origine</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">Site destination</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">Qté</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">PU</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">Total</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">Actions</th>
 									</tr>
 								</thead>
 
 								<tbody>
 									{loading ? (
 										<tr>
-											<td colSpan="9" className="p-8 text-center">
+											<td colSpan="9" className="p-8 text-center text-neutral-400">
 												Chargement...
 											</td>
 										</tr>
 									) : actifs.length ? (
 										actifs.map(item => (
-											<tr key={item._id} className="border-b">
-												<td className="p-4 font-semibold">
+											<tr key={item._id} className="border-b border-neutral-100 last:border-0">
+												<td className="p-4 text-sm">
 													{item.productId?.productName || '-'}
 												</td>
 
-												<td className="p-4">
+												<td className="p-4 text-sm">
 													{item.productId?.productImage && (
 														<img
 															src={getFullMediaUrl(
@@ -202,22 +202,22 @@ const Actifs = () => {
 													)}
 												</td>
 
-												<td className="p-4">
+												<td className="p-4 text-sm">
 													{item.siteOrigineId?.siteName || '-'}
 												</td>
 
-												<td className="p-4">
+												<td className="p-4 text-sm">
 													{item.siteDestinationId?.siteName || '-'}
 												</td>
 
-												<td className="p-4">{item.quantite}</td>
-												<td className="p-4">{item.prixUnitaire}</td>
+												<td className="p-4 text-sm">{item.quantite}</td>
+												<td className="p-4 text-sm">{item.prixUnitaire}</td>
 
-												<td className="p-4">
+												<td className="p-4 text-sm">
 													{item.prixUnitaire * item.quantite}
 												</td>
 
-												<td className="p-4">
+												<td className="p-4 text-sm">
 													{item.createdAt
 														? dateFormat(item.createdAt)
 														: '-'}
@@ -246,7 +246,7 @@ const Actifs = () => {
 										))
 									) : (
 										<tr>
-											<td colSpan="9" className="p-8 text-center">
+											<td colSpan="9" className="p-8 text-center text-neutral-400">
 												Aucun actif trouvé
 											</td>
 										</tr>

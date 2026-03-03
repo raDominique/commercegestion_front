@@ -100,7 +100,7 @@ const Passifs = () => {
 									       ) : passifs.length > 0 ? (
 										       passifs.map((item, idx) => (
 											       <tr key={idx} className="border-b border-neutral-100 last:border-0">
-												       <td className="p-4 text-sm font-semibold text-neutral-900">{item.situation || '-'}</td>
+												       <td className="p-4 text-sm">{item.situation || '-'}</td>
 												       <td className="p-4 text-sm">{item.type || '-'}</td>
 												       <td className="p-4 text-sm">{item.montant !== undefined ? item.montant.toLocaleString() : '-'}</td>
 												       <td className="p-4 text-sm">{item.departDe || '-'}</td>
