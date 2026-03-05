@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Squelette } from '../../components/ui/skeleton.jsx';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getProfile } from '../../services/auth.service';
@@ -10,12 +9,15 @@ import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle';
 import LogoImage from '../../assets/logo/logo.png';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 
 export default function Login() {
   usePageTitle('Connexion');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -56,17 +58,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-linear-to-br from-neutral-50 to-neutral-100 flex flex-col items-center justify-center p-4">
-      {/* Branding above the card */}
-      <div className="flex flex-col items-center mb-8">
-        <img src={LogoImage} alt="Logo Etokisana" className="h-20 w-auto mb-4" />
-        <h1 className="text-3xl font-bold text-violet-700 mb-1">Connexion</h1>
-        <p className="text-base text-neutral-700 text-center">
-          Connectez-vous à votre compte <span className="font-bold text-violet-600">Etokisana</span>
-        </p>
-      </div>
+    <div className="min-h-screen w-full bg-linear-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center p-4">
       {/* Card with login form */}
       <Card className="w-full max-w-md p-8 rounded-xl border border-neutral-200 bg-neutral-100">
+        {/* Branding above the card */}
+        <div className="flex flex-col items-center mb-8">
+          <img src={LogoImage} alt="Logo Etokisana" className="h-20 w-auto mb-4" />
+          <h1 className="text-3xl font-bold text-violet-700 mb-1">Connexion</h1>
+          <p className="text-base text-neutral-700 text-center">
+            Connectez-vous à votre compte <span className="font-bold text-violet-600">Etokisana</span>
+          </p>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -82,15 +84,27 @@ export default function Login() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Mot de passe</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="border-neutral-300"
-            />
+            <div className="relative flex-items-center">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="border-neutral-300 pr-10"
+                placeholder="••••••••"
+                value={password}
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                tabIndex={-1}
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+              </button>
+            </div>
           </div>
           <Button
             type="submit"

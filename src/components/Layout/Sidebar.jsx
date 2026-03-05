@@ -29,17 +29,17 @@ function Sidebar({ user }) {
   );
 
   return (
-    <aside className="hidden md:block w-64 bg-white border-r border-neutral-200 sticky top-16">
+    <aside className="hidden md:block w-64 bg-gray-900 border-r border-neutral-200 sticky top-16">
       <div className="p-4 space-y-6">
         <nav className="space-y-1">
-          <p className="text-xs text-neutral-500 px-3 mb-2">NAVIGATION</p>
+          <p className="text-xs text-neutral-100 px-3 mb-2">NAVIGATION</p>
           {userNavItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path)
-                ? 'bg-violet-50 text-violet-600'
-                : 'text-neutral-700 hover:bg-neutral-100'
+                ? 'bg-violet-600 text-violet-50'
+                : 'text-neutral-100 hover:bg-neutral-100 hover:text-neutral-900'
                 }`}
             >
               {item.icon ? (
@@ -53,14 +53,14 @@ function Sidebar({ user }) {
         </nav>
         <Separator />
         <nav className="space-y-1">
-          <p className="text-xs text-neutral-500 px-3 mb-2">COMPTE</p>
+          <p className="text-xs text-neutral-100 px-3 mb-2">COMPTE</p>
           {accountNavItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path)
-                ? 'bg-violet-50 text-violet-600'
-                : 'text-neutral-700 hover:bg-neutral-100'
+                ? 'bg-violet-600 text-violet-50'
+                : 'text-neutral-100 hover:bg-neutral-100 hover:text-neutral-900'
                 }`}
             >
               {item.icon ? (
@@ -76,14 +76,14 @@ function Sidebar({ user }) {
           <>
             <Separator />
             <nav className="space-y-1">
-              <p className="text-xs text-neutral-500 px-3 mb-2">ADMINISTRATION</p>
+              <p className="text-xs text-neutral-100 px-3 mb-2">ADMINISTRATION</p>
               {adminNavItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path)
-                    ? 'bg-violet-50 text-violet-600'
-                    : 'text-neutral-700 hover:bg-neutral-100'
+                    ? 'bg-violet-600 text-violet-50'
+                    : 'text-neutral-100 hover:bg-neutral-100 hover:text-neutral-900'
                     }`}
                 >
                   {item.icon ? (

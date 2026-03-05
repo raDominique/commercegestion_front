@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/badge';
 import { Switch } from '../../components/ui/switch';
 import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
+import DeleteIcon from '@mui/icons-material/Delete';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import { toast } from 'sonner';
@@ -331,7 +332,7 @@ export default function AdminUsers() {
                           <Button variant="ghost" size="sm" onClick={() => handleShowUserDetail(user.id)}>
                             <InfoIcon className="w-5 h-5 text-violet-600" />
                           </Button>
-                          {/* <Button
+                          <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => {
@@ -340,8 +341,8 @@ export default function AdminUsers() {
                               setModalOpen(true);
                             }}
                           >
-                            <DeleteOutlineIcon className="w-4 h-4 text-red-600" />
-                          </Button> */}
+                            <DeleteIcon className="w-4 h-4 text-red-600" />
+                          </Button>
                         </div>
                       </td>
                     </tr>
