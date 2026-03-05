@@ -1,65 +1,43 @@
-# Etokisana Commerce Gestion Front
+# Etokisana — commercegestion_front
 
-Ce projet est le front-end de la plateforme Etokisana Commerce Gestion, développé avec React et Vite.
+Documentation centrale du projet frontend "commercegestion_front".
 
-## Prérequis
-- Node.js (version 18 ou supérieure recommandée)
-- npm (installé avec Node.js)
+Ce dépôt contient l'interface client d'une application de gestion commerciale (React + Vite). Cette documentation couvre : installation, structure du projet, développement, composants importants, services back-end, routes, scripts et contribution.
 
-## Installation
+Principales sections
+- Architecture & structure du projet: see docs/architecture.md
+- Développement local: see docs/development.md
+- Composants UI & Contexts: see docs/components.md
+- Services API (axios): see docs/services.md
+- Routes & navigation: see docs/routes.md
+- Scripts & commandes: see docs/commands.md
+- Contribution: see docs/contributing.md
 
-1. **Cloner le dépôt**
+Quick start (local)
 
-```
-git clone <url-du-repo>
-```
-
-2. **Se placer dans le dossier du projet**
-
-```
-cd commercegestion_front
-```
-
-3. **Installer les dépendances**
+1. Installer les dépendances:
 
 ```
 npm install
 ```
 
-4. **Lancer le serveur de développement**
+2. Démarrer le serveur de développement:
 
 ```
 npm run dev
 ```
 
-5. **Accéder à l'application**
+3. Ouvrir l'app dans le navigateur à l'URL indiquée par Vite (par défaut http://localhost:5173)
 
-Ouvrez votre navigateur et allez sur :
+Variables d'environnement
+- Voir la section "Variables d'environnement" dans docs/development.md.
 
-```
-http://localhost:3000
-```
+Fichiers importants
+- Entrée de l'app: src/main.jsx et src/App.jsx
+- Routes: src/routes/AppRoutes.jsx et src/routes/routes.js
+- Contexts: src/context/
+- Services API: src/services/
+- Composants UI réutilisables: src/components/ui/
 
-## Structure du projet
-
-- `src/` : code source React
-- `public/` : fichiers statiques
-- `components/ui/` : composants UI personnalisés
-- `services/` : appels API
-- `pages/` : pages principales
-- `styles/` : styles CSS
-
-## Personnalisation
-- Modifiez les fichiers dans `src/pages/` pour adapter les pages.
-- Ajoutez vos composants dans `src/components/ui/`.
-
-## Build pour production
-
-```
-npm run build
-```
-
-Le dossier `dist/` sera généré.
-
-## Déploiement
-Déployez le contenu du dossier `dist/` sur votre hébergement web.
+Besoin d'aide ?
+Ouvrez une issue ou une MR et suivez docs/contributing.md.
