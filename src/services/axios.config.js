@@ -67,7 +67,13 @@ axiosConfig.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    // Ne tente pas de refresh si la requête initiale est un login
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalRequest._retry &&
+      !(originalRequest.url && originalRequest.url.includes('/auth/login'))
+    ) {
       if (isBootstrapping) {
         // Pas de refresh auto pendant bootstrap
         return Promise.reject(error);
