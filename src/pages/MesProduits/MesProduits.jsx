@@ -43,7 +43,8 @@ const MesProduits = () => {
       setSites(res.data || []);
       try {
         const usersRes = await getAllUsersSelect();
-        setUsersOptions(Array.isArray(usersRes.data) ? usersRes.data : usersRes.data || []);
+        const usersArr = Array.isArray(usersRes) ? usersRes : (Array.isArray(usersRes?.data) ? usersRes.data : []);
+        setUsersOptions(usersArr);
       } catch (errUsers) {
         setUsersOptions([]);
       }
