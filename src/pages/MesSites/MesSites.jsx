@@ -275,7 +275,7 @@ const MesSites = () => {
               setPage(1);
               setSearch(e.target.value);
             }}
-            className="w-full"
+            className="w-full bg-white border-black"
           />
         </div>
         <div

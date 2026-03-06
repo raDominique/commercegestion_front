@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Badge } from '../../components/ui/badge';
 import { Switch } from '../../components/ui/switch';
 import SearchIcon from '@mui/icons-material/Search';
@@ -202,7 +203,7 @@ export default function AdminUsers() {
 
         {/* Filtres avancés + Search */}
         <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-55">
             <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
             <Input
               placeholder="Rechercher un utilisateur..."
@@ -211,36 +212,41 @@ export default function AdminUsers() {
                 setPage(1);
                 setSearchTerm(e.target.value);
               }}
-              className="pl-10 border-black"
+              className="pl-10 border-black bg-white w-full"
             />
           </div>
-          <select
-            className="border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 bg-white"
-            value={isVerified}
-            onChange={e => { setPage(1); setIsVerified(e.target.value); }}
-          >
-            <option value="">Email vérifié ?</option>
-            <option value="true">Oui</option>
-            <option value="false">Non</option>
-          </select>
-          <select
-            className="border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 bg-white"
-            value={isActive}
-            onChange={e => { setPage(1); setIsActive(e.target.value); }}
-          >
-            <option value="">Statut</option>
-            <option value="true">Actif</option>
-            <option value="false">Suspendu</option>
-          </select>
-          <select
-            className="border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 bg-white"
-            value={userType}
-            onChange={e => { setPage(1); setUserType(e.target.value); }}
-          >
-            <option value="">Type d'utilisateur</option>
-            <option value="Particulier">Particulier</option>
-            <option value="Entreprise">Entreprise</option>
-          </select>
+          <div className="flex gap-2 w-auto">
+            <Select value={isVerified === '' ? 'all' : isVerified} onValueChange={v => { setPage(1); setIsVerified(v === 'all' ? '' : v); }}>
+              <SelectTrigger className="bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 w-auto min-w-35">
+                <SelectValue placeholder="Email vérifié ?" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Email vérifié ?</SelectItem>
+                <SelectItem value="true">Oui</SelectItem>
+                <SelectItem value="false">Non</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={isActive === '' ? 'all' : isActive} onValueChange={v => { setPage(1); setIsActive(v === 'all' ? '' : v); }}>
+              <SelectTrigger className="bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 w-auto min-w-35">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Statut</SelectItem>
+                <SelectItem value="true">Actif</SelectItem>
+                <SelectItem value="false">Suspendu</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={userType === '' ? 'all' : userType} onValueChange={v => { setPage(1); setUserType(v === 'all' ? '' : v); }}>
+              <SelectTrigger className="bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 w-auto min-w-37.5">
+                <SelectValue placeholder="Type d'utilisateur" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Type d'utilisateur</SelectItem>
+                <SelectItem value="Particulier">Particulier</SelectItem>
+                <SelectItem value="Entreprise">Entreprise</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Users Table */}
