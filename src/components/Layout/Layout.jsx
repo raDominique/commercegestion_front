@@ -39,7 +39,7 @@ export function Layout({ children }) {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-300">
       <Header
         user={user}
         mobileMenuOpen={mobileMenuOpen}

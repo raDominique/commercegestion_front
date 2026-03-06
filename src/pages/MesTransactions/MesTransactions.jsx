@@ -8,13 +8,13 @@ const MesTransactions = () => {
   usePageTitle('Mes transactions');
   if (user && user.userValidated === false) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+          <div className="px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
   }
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+        <div className="px-6 mx-auto">
       <h1>Mes transactions</h1>
     </div>
   );

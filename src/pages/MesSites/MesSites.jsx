@@ -22,7 +22,7 @@ const MesSites = () => {
   const { user } = useAuth();
   if (user && user.userValidated === false) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+          <div className="px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
@@ -161,7 +161,7 @@ const MesSites = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+        <div className="px-6 mx-auto">
       {user && user.userValidated === false && (
         <UserNotValidatedBanner />
       )}

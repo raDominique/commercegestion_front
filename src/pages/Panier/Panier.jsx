@@ -32,7 +32,7 @@ export default function Panier() {
   const { user } = useAuth();
   if (user && user.userValidated === false) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+          <div className="px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
@@ -61,7 +61,7 @@ export default function Panier() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+        <div className="px-6 mx-auto">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">

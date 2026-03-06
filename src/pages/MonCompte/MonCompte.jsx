@@ -150,7 +150,7 @@ export default function MonCompte() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+        <div className="px-6 mx-auto">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl text-neutral-900 mb-2">Mon Compte</h1>

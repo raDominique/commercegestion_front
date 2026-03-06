@@ -151,7 +151,7 @@ const Actifs = () => {
 	/* ================= RENDER ================= */
 
 	return (
-		<div className="p-6 max-w-7xl mx-auto">
+		    <div className="px-6 mx-auto">
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
@@ -172,7 +172,7 @@ const Actifs = () => {
 					</div>
 
 					{/* TABLE */}
-					<Card className="border-neutral-200">
+					<Card className="border-neutral-200 bg-white">
 						<div className="overflow-x-auto">
 							<table className="w-full">
 								<thead className="bg-neutral-50 border-b border-neutral-200">

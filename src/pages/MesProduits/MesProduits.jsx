@@ -26,7 +26,7 @@ const MesProduits = () => {
   const { user } = useAuth();
   if (user && user.userValidated === false) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+          <div className="px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
@@ -387,11 +387,11 @@ const MesProduits = () => {
   }, [searchTerm, page, limit, validationFilter, isStockerFilter]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+        <div className="px-6 mx-auto">
       {user && user.userValidated === false && (
         <UserNotValidatedBanner />
       )}
-      <div className="p-6 max-w-7xl mx-auto">
+          <div className="px-6 mx-auto">
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -592,7 +592,7 @@ const MesProduits = () => {
               </select>
             </div>
           </div>
-          <Card className="border-neutral-200">
+          <Card className="border-neutral-200 bg-white">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-neutral-50 border-b border-neutral-200">
