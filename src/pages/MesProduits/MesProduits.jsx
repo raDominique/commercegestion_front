@@ -21,12 +21,15 @@ import { depositStock } from '../../services/stocks_move.service.js';
 import { getMySites } from '../../services/site.service';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import { addProductFieldControl } from '../../utils/addProductFieldControl';
 
 const MesProduits = () => {
+  // Gestion des erreurs pour le formulaire dépôt
+  const [depositErrors, setDepositErrors] = useState({});
   const { user } = useAuth();
   if (user && user.userValidated === false) {
     return (
-          <div className="px-6 mx-auto">
+      <div className="px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
@@ -57,6 +60,14 @@ const MesProduits = () => {
   // Soumission du dépôt
   const handleDepositSubmit = async (e) => {
     e.preventDefault();
+    // Validation centralisée
+    const errors = {};
+    Object.entries(addProductFieldControl).forEach(([key, ctrl]) => {
+      const err = ctrl.validate(depositForm[key]);
+      if (err) errors[key] = err;
+    });
+    setDepositErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     const token = localStorage.getItem('token');
     try {
       await depositStock({
@@ -77,6 +88,7 @@ const MesProduits = () => {
         ayant_droit: '',
         observations: '',
       });
+      setDepositErrors({});
     } catch (err) {
       toast.error('Erreur lors du dépôt');
     }
@@ -387,11 +399,11 @@ const MesProduits = () => {
   }, [searchTerm, page, limit, validationFilter, isStockerFilter]);
 
   return (
-        <div className="px-6 mx-auto">
+    <div className="px-6 mx-auto">
       {user && user.userValidated === false && (
         <UserNotValidatedBanner />
       )}
-          <div className="px-6 mx-auto">
+      <div className="px-6 mx-auto">
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -837,10 +849,13 @@ const MesProduits = () => {
           </DialogHeader>
           <form className="space-y-4" onSubmit={handleDepositSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-  y-2">
-                <Label htmlFor="siteOrigineId">Site d'origine</Label>
+              <div className="space-y-2">
+                <Label htmlFor="siteOrigineId">
+                  {addProductFieldControl.siteOrigineId.label}
+                  {addProductFieldControl.siteOrigineId.required && <span style={{ color: 'red' }}> *</span>}
+                </Label>
                 <Select value={depositForm.siteOrigineId} onValueChange={val => setDepositForm(f => ({ ...f, siteOrigineId: val }))}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-invalid={!!depositErrors.siteOrigineId}>
                     <SelectValue placeholder="Sélectionner le site d'origine" />
                   </SelectTrigger>
                   <SelectContent>
@@ -849,11 +864,15 @@ const MesProduits = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {depositErrors.siteOrigineId && <div className="text-red-600 text-xs mt-1">{depositErrors.siteOrigineId}</div>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="siteDestinationId">Site de destination</Label>
+                <Label htmlFor="siteDestinationId">
+                  {addProductFieldControl.siteDestinationId.label}
+                  {addProductFieldControl.siteDestinationId.required && <span style={{ color: 'red' }}> *</span>}
+                </Label>
                 <Select value={depositForm.siteDestinationId} onValueChange={val => setDepositForm(f => ({ ...f, siteDestinationId: val }))}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-invalid={!!depositErrors.siteDestinationId}>
                     <SelectValue placeholder="Sélectionner le site de destination" />
                   </SelectTrigger>
                   <SelectContent>
@@ -862,14 +881,23 @@ const MesProduits = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {depositErrors.siteDestinationId && <div className="text-red-600 text-xs mt-1">{depositErrors.siteDestinationId}</div>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="quantite">Quantité</Label>
-                <Input name="quantite" value={depositForm.quantite} onChange={e => setDepositForm(f => ({ ...f, quantite: e.target.value }))} required placeholder="Quantité à déposer" className="border-neutral-300" type="number" min="1" />
+                <Label htmlFor="quantite">
+                  {addProductFieldControl.quantite.label}
+                  {addProductFieldControl.quantite.required && <span style={{ color: 'red' }}> *</span>}
+                </Label>
+                <Input name="quantite" value={depositForm.quantite} onChange={e => setDepositForm(f => ({ ...f, quantite: e.target.value }))} placeholder="Quantité à déposer" className="border-neutral-300" type="number" min="1" aria-invalid={!!depositErrors.quantite} />
+                {depositErrors.quantite && <div className="text-red-600 text-xs mt-1">{depositErrors.quantite}</div>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="prixUnitaire">Prix Unitaire</Label>
-                <Input name="prixUnitaire" value={depositForm.prixUnitaire} onChange={e => setDepositForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix Unitaire du produit" className="border-neutral-300" type="number" min="0" step="0.01" />
+                <Label htmlFor="prixUnitaire">
+                  {addProductFieldControl.prixUnitaire.label}
+                  {addProductFieldControl.prixUnitaire.required && <span style={{ color: 'red' }}> *</span>}
+                </Label>
+                <Input name="prixUnitaire" value={depositForm.prixUnitaire} onChange={e => setDepositForm(f => ({ ...f, prixUnitaire: e.target.value }))} placeholder="Prix Unitaire du produit" className="border-neutral-300" type="number" min="0" step="0.01" aria-invalid={!!depositErrors.prixUnitaire} />
+                {depositErrors.prixUnitaire && <div className="text-red-600 text-xs mt-1">{depositErrors.prixUnitaire}</div>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="detentaire">Détenteur</Label>
