@@ -556,7 +556,7 @@ const MesProduits = () => {
                   setPage(1);
                   setSearchTerm(e.target.value);
                 }}
-                className="pl-10 border-neutral-300"
+                className="pl-10 border-black"
               />
             </div>
             <div className="flex items-center gap-2 mt-2 md:mt-0">

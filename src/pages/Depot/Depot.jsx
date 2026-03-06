@@ -61,7 +61,7 @@ const Depot = () => {
 					placeholder="Rechercher..."
 					value={search}
 					onChange={e => { setPage(1); setSearch(e.target.value); }}
-					className="max-w-xs border-neutral-300"
+					className="max-w-xs border-black"
 				/>
 			</div>
 			<Card className="border-neutral-200 bg-white">

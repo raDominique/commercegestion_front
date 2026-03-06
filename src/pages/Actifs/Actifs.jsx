@@ -167,7 +167,7 @@ const Actifs = () => {
 								setPage(1);
 								setSearch(e.target.value);
 							}}
-							className="max-w-xs"
+							className="max-w-xs border-black"
 						/>
 					</div>
 

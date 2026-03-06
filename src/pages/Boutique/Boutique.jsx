@@ -62,7 +62,7 @@ const Boutique = () => {
           placeholder="Rechercher par nom ou code CPC..."
           value={search}
           onChange={e => { setPage(1); setSearch(e.target.value); }}
-          className="border border-neutral-300 rounded px-3 py-2 text-sm w-full md:w-64"
+          className="border border-black rounded px-3 py-2 text-sm w-full md:w-64"
         />
         <select
           value={sort}

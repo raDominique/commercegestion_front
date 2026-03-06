@@ -211,7 +211,7 @@ export default function AdminUsers() {
                 setPage(1);
                 setSearchTerm(e.target.value);
               }}
-              className="pl-10 border-neutral-300"
+              className="pl-10 border-black"
             />
           </div>
           <select
