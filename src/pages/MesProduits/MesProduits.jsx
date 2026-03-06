@@ -504,27 +504,27 @@ const MesProduits = () => {
                       </div> */}
                       <div className="space-y-2">
                         <Label htmlFor="productVolume">Volume</Label>
-                        <Input name="productVolume" value={form.productVolume} onChange={handleInputChange} required placeholder="1000 L" className="border-neutral-300" />
+                        <Input name="productVolume" value={form.productVolume} onChange={handleInputChange} placeholder="1000 L" className="border-neutral-300" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="productLargeur">Largeur</Label>
-                        <Input name="productLargeur" value={form.productLargeur} onChange={handleInputChange} required placeholder="0.8 m" className="border-neutral-300" />
+                        <Input name="productLargeur" value={form.productLargeur} onChange={handleInputChange} placeholder="0.8 m" className="border-neutral-300" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="productPoids">Poids</Label>
-                        <Input name="productPoids" value={form.productPoids} onChange={handleInputChange} required placeholder="500 kg" className="border-neutral-300" />
+                        <Input name="productPoids" value={form.productPoids} onChange={handleInputChange} placeholder="500 kg" className="border-neutral-300" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="productLongueur">Longueur</Label>
-                        <Input name="productLongueur" value={form.productLongueur} onChange={handleInputChange} required placeholder="0.8 m" className="border-neutral-300" />
+                        <Input name="productLongueur" value={form.productLongueur} onChange={handleInputChange} placeholder="0.8 m" className="border-neutral-300" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="productHauteur">Hauteur</Label>
-                        <Input name="productHauteur" value={form.productHauteur} onChange={handleInputChange} required placeholder="1.2 m" className="border-neutral-300" />
+                        <Input name="productHauteur" value={form.productHauteur} onChange={handleInputChange} placeholder="1.2 m" className="border-neutral-300" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="productDescription">Description</Label>
-                        <Input name="productDescription" value={form.productDescription} onChange={handleInputChange} required placeholder="Blé dur récolté en 2025, teneur en humidité < 12%" className="border-neutral-300" />
+                        <Input name="productDescription" value={form.productDescription} onChange={handleInputChange} placeholder="Blé dur récolté en 2025, teneur en humidité < 12%" className="border-neutral-300" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="image">Image</Label>
