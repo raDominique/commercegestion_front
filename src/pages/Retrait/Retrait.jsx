@@ -70,7 +70,7 @@ const Retrait = () => {
 								setPage(1);
 								setSearch(e.target.value);
 							}}
-							className="max-w-xs border-black"
+							className="max-w-xs bg-white border-black"
 						/>
 					</div>
 

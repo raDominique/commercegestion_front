@@ -115,7 +115,7 @@ const AdminProducts = () => {
                 setPage(1);
                 setSearchTerm(e.target.value);
               }}
-              className="pl-10 border-black"
+              className="pl-10 border-black bg-white"
             />
           </div>
         </div>

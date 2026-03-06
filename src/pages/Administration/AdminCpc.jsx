@@ -268,7 +268,7 @@ const AdminCpc = () => {
                                 setPage(1);
                                 setSearchTerm(e.target.value);
                             }}
-                            className="border-black pl-10"
+                            className="border-black pl-10 bg-white"
                         />
                     </div>
                     <div className="relative w-56">
