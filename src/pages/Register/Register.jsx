@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -37,6 +37,7 @@ import { Label } from '../../components/ui/label.jsx';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import LogoImage from '../../assets/logo/logo.png';
 import { createUser } from '../../services/auth.service.js';
+import { getAllUsersSelect } from '../../services/user.service';
 
 const steps = [
   "Type d'utilisateur",
@@ -80,13 +81,15 @@ const Register = () => {
       navigate('/login');
     } catch (error) {
       toast.error(error?.response?.data?.message || "Erreur lors de l'inscription.");
-      console.log('[REGISTER] Erreur lors de la création du compte:', error);
     } finally {
       setLoading(false);
     }
   };
   // Step navigation handlers
   const [fieldErrors, setFieldErrors] = useState({});
+
+  // mapping userId -> name for parrain lookup
+  const [usersMap, setUsersMap] = useState({});
 
   const nextStep = () => {
     if (step === 0) {
@@ -148,6 +151,21 @@ const Register = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
+  // Load users map once for parrain lookup
+  useEffect(() => {
+    let mounted = true;
+    getAllUsersSelect().then(res => {
+      if (!mounted) return;
+      const arr = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      const map = arr.reduce((acc, u) => {
+        if (u && u.userId) acc[u.userId] = u.name || u.userNickName || '';
+        return acc;
+      }, {});
+      setUsersMap(map);
+    }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
   // État global du formulaire
   const [form, setForm] = useState({
     userName: '',
@@ -171,7 +189,9 @@ const Register = () => {
     managerName: '',
     managerEmail: '',
     parrain1ID: '',
+    parrain1Name: '',
     parrain2ID: '',
+    parrain2Name: '',
   });
   // Handle input changes for both text and file inputs
   const handleChange = (e) => {
@@ -196,11 +216,47 @@ const Register = () => {
       });
       return;
     }
+    // Update value
     setForm((prev) => ({
       ...prev,
       [name]: type === 'file' ? files[0] : maskedValue,
     }));
+
+    // If user types a parrain ID of exactly 8 chars, lookup name from usersMap
+    if ((name === 'parrain1ID' || name === 'parrain2ID')) {
+      const code = (maskedValue || '').trim();
+      if (code.length === 8) {
+        const found = usersMap[code];
+        if (name === 'parrain1ID') {
+          setForm(prev => ({ ...prev, parrain1Name: found || '' }));
+        } else {
+          setForm(prev => ({ ...prev, parrain2Name: found || '' }));
+        }
+      } else {
+        if (name === 'parrain1ID') {
+          setForm(prev => ({ ...prev, parrain1Name: '' }));
+        } else {
+          setForm(prev => ({ ...prev, parrain2Name: '' }));
+        }
+      }
+    }
   };
+
+  // Populate parrain names when parrain ID is provided (on load or programmatic set)
+  useEffect(() => {
+    if (!usersMap) return;
+    setForm(prev => {
+      const p1 = (prev.parrain1ID || '').trim();
+      const p2 = (prev.parrain2ID || '').trim();
+      const newP1 = p1.length === 8 ? (usersMap[p1] || '') : '';
+      const newP2 = p2.length === 8 ? (usersMap[p2] || '') : '';
+      // Log when parrain codes are provided for debugging
+      if (p1.length === 8 || p2.length === 8) {
+      }
+      if (prev.parrain1Name === newP1 && prev.parrain2Name === newP2) return prev;
+      return { ...prev, parrain1Name: newP1, parrain2Name: newP2 };
+    });
+  }, [usersMap, form.parrain1ID, form.parrain2ID]);
 
   // Add/remove file input for carteFiscal/documents
   const handleAddFile = (field) => {
@@ -275,10 +331,14 @@ const Register = () => {
                       Code Parrain 1
                     </Label>
                     <Input id="parrain1ID" name="parrain1ID" type="text" placeholder="Code Parrain 1" value={form.parrain1ID} onChange={handleChange} required className="border-neutral-300" />
+                    {/* Read-only display for parrain1 name when code is resolved */}
+                    <Input id="parrain1Name" name="parrain1Name" type="text" placeholder="Nom du parrain 1" value={form.parrain1Name} readOnly className="border-neutral-300 bg-neutral-100 text-neutral-700" />
                     <Label htmlFor="parrain2ID" className="text-sm text-muted-foreground">
                       Code Parrain 2
                     </Label>
                     <Input id="parrain2ID" name="parrain2ID" type="text" placeholder="Code Parrain 2" value={form.parrain2ID} onChange={handleChange} required className="border-neutral-300" />
+                    {/* Read-only display for parrain2 name when code is resolved */}
+                    <Input id="parrain2Name" name="parrain2Name" type="text" placeholder="Nom du parrain 2" value={form.parrain2Name} readOnly className="border-neutral-300 bg-neutral-100 text-neutral-700" />
                   </div>
                 </div>
               )}
