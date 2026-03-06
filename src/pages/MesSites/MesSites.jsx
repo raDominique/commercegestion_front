@@ -22,7 +22,7 @@ const MesSites = () => {
   const { user } = useAuth();
   if (user && user.userValidated === false) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+          <div className="px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
@@ -161,7 +161,7 @@ const MesSites = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+        <div className="px-6 mx-auto">
       {user && user.userValidated === false && (
         <UserNotValidatedBanner />
       )}
@@ -252,7 +252,7 @@ const MesSites = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-4 border-neutral-200">
+          <Card className="p-4 border-neutral-200 bg-white">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center">
                 <PublicIcon className="w-5 h-5 text-violet-600" />
@@ -286,7 +286,7 @@ const MesSites = () => {
           }
         >
           {sites.map((site) => (
-            <Card key={site.id} className="p-6 border-neutral-200 hover:border-violet-200 transition-colors">
+            <Card key={site.id} className="p-6 border-neutral-200 bg-white hover:border-violet-200 transition-colors">
               <div className="space-y-4">
                 <div>
                   <h3 className="text-lg text-neutral-900 mb-1 flex items-center gap-2">
@@ -447,7 +447,7 @@ const MesSites = () => {
         </div>
 
         {sites.length === 0 && (
-          <Card className="p-12 text-center border-neutral-200">
+          <Card className="p-12 text-center border-neutral-200 bg-white">
             <PublicIcon className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
             <p className="text-neutral-500 mb-4">Aucun site enregistré</p>
             <Button

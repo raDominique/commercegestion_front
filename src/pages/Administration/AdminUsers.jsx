@@ -150,7 +150,7 @@ export default function AdminUsers() {
   const adminUsers = users.filter((u) => u.role === 'admin').length;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="px-6 mx-auto">
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -163,7 +163,7 @@ export default function AdminUsers() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-4 border-neutral-200">
+          <Card className="p-4 border-neutral-200 bg-white">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center">
                 <PersonIcon className="w-5 h-5 text-violet-600" />
@@ -175,7 +175,7 @@ export default function AdminUsers() {
             </div>
           </Card>
 
-          <Card className="p-4 border-neutral-200">
+          <Card className="p-4 border-neutral-200 bg-white">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
                 <PersonIcon className="w-5 h-5 text-green-600" />
@@ -187,7 +187,7 @@ export default function AdminUsers() {
             </div>
           </Card>
 
-          <Card className="p-4 border-neutral-200">
+          <Card className="p-4 border-neutral-200 bg-white">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
                 <ShieldOutlinedIcon className="w-5 h-5 text-amber-600" />
@@ -211,7 +211,7 @@ export default function AdminUsers() {
                 setPage(1);
                 setSearchTerm(e.target.value);
               }}
-              className="pl-10 border-neutral-300"
+              className="pl-10 border-black"
             />
           </div>
           <select
@@ -244,17 +244,17 @@ export default function AdminUsers() {
         </div>
 
         {/* Users Table */}
-        <Card className="border-neutral-200">
+        <Card className="border-neutral-200 bg-white">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
+                  <th className='text-left p-4 text-xs text-neutral-600'>N° membre</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Utilisateur</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Email</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Solde</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Vérification e-mail</th>
                   {/* <th className="text-left p-4 text-xs text-neutral-600">Date création</th> */}
-                  <th className='text-left p-4 text-xs text-neutral-600'>Code Parrainage</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Rôle</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Statut</th>
                   <th className="text-right p-4 text-xs text-neutral-600" colSpan="2">Actions</th>
@@ -268,6 +268,28 @@ export default function AdminUsers() {
                 ) : filteredUsers.length > 0 ? (
                   filteredUsers.map((user) => (
                     <tr key={user.id} className="border-b border-neutral-200 last:border-0">
+                      <td className='p-4'>
+                        <div className="flex items-center gap-2">
+                          <Badge variant='outline' className='text-xs'>
+                            {user.referralCode || 'N/A'}
+                          </Badge>
+                          {user.referralCode && (
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="p-1 h-6 w-6 text-neutral-500 hover:text-violet-600"
+                              onClick={() => {
+                                navigator.clipboard.writeText(user.referralCode);
+                                toast.success('ID copié dans le presse-papier');
+                              }}
+                              aria-label="Copier l'ID utilisateur"
+                            >
+                              <ContentCopyIcon fontSize="small" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           {/* <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user.status === 'Actif' ? 'bg-violet-600' : 'bg-neutral-300'}`}>
@@ -294,28 +316,6 @@ export default function AdminUsers() {
                       {/* <td className="p-4 text-sm text-neutral-600">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td> */}
-                      <td className='p-4'>
-                        <div className="flex items-center gap-2">
-                          <Badge variant='outline' className='text-xs'>
-                            {user.referralCode || 'N/A'}
-                          </Badge>
-                          {user.referralCode && (
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="p-1 h-6 w-6 text-neutral-500 hover:text-violet-600"
-                              onClick={() => {
-                                navigator.clipboard.writeText(user.referralCode);
-                                toast.success('ID copié dans le presse-papier');
-                              }}
-                              aria-label="Copier l'ID utilisateur"
-                            >
-                              <ContentCopyIcon fontSize="small" />
-                            </Button>
-                          )}
-                        </div>
-                      </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           <Switch

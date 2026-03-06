@@ -48,13 +48,13 @@ const Boutique = () => {
 
   if (user && user.userValidated === false) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+          <div className="px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
   }
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+        <div className="px-6 mx-auto">
       <h1 className="text-2xl font-bold mb-6 text-neutral-900">Boutique</h1>
       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
         <input
@@ -62,7 +62,7 @@ const Boutique = () => {
           placeholder="Rechercher par nom ou code CPC..."
           value={search}
           onChange={e => { setPage(1); setSearch(e.target.value); }}
-          className="border border-neutral-300 rounded px-3 py-2 text-sm w-full md:w-64"
+          className="border border-black rounded px-3 py-2 text-sm w-full md:w-64"
         />
         <select
           value={sort}
@@ -98,7 +98,7 @@ const Boutique = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map(product => (
-            <Card key={product._id} className="border-neutral-200">
+            <Card key={product._id} className="border-neutral-200 bg-white">
               <CardHeader>
                 <img src={getFullMediaUrl(product.image)} alt={product.name} className="w-full h-40 object-cover rounded-xl mb-2" />
                 <CardTitle className="text-lg font-bold text-neutral-900 truncate">{product.name}</CardTitle>

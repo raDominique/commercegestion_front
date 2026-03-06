@@ -97,6 +97,24 @@ export async function loginUser(userEmail, userPassword) {
   }
 }
 
+// Demande de réinitialisation du mot de passe : POST /auth/forgot-password
+export async function forgotPassword(payload) {
+  if (!payload) throw new Error('payload est requis');
+  const response = await axiosInstance.post('/api/v1/auth/forgot-password', payload, {
+    headers: { 'Content-Type': 'application/json', 'accept': 'application/json' },
+  });
+  return response.data;
+}
+
+// Réinitialisation du mot de passe : POST /auth/reset-password
+export async function resetPassword(payload) {
+  if (!payload) throw new Error('payload est requis');
+  const response = await axiosInstance.post('/api/v1/auth/reset-password', payload, {
+    headers: { 'Content-Type': 'application/json', 'accept': 'application/json' },
+  });
+  return response.data;
+}
+
 // Refresh accessToken : POST /auth/refresh (refreshToken envoyé via cookie JS)
 export async function refreshToken() {
   try {

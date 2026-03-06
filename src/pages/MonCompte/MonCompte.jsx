@@ -150,7 +150,7 @@ export default function MonCompte() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="px-6 mx-auto">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl text-neutral-900 mb-2">Mon Compte</h1>
@@ -160,7 +160,7 @@ export default function MonCompte() {
         </div>
 
         {/* Profile Card */}
-        <Card className="p-6 border-neutral-200">
+        <Card className="p-6 border-neutral-200 bg-white">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full flex items-center justify-center bg-neutral-100 overflow-hidden border border-neutral-200">
               {profile.userImage ? (
@@ -201,7 +201,7 @@ export default function MonCompte() {
                   </Badge>
                 )}
                 <div className="flex items-center gap-1">
-                  <Badge variant="outline" className="bg-neutral-50 text-neutral-700 border-neutral-200 px-2 py-1 text-xs font-mono">
+                  <Badge variant="outline" className="bg-neutral-50 text-neutral-700 border-neutral-700 px-2 py-1 text-xs font-mono">
                     ID: {profile.userId}
                   </Badge>
                   <Button
@@ -237,7 +237,7 @@ export default function MonCompte() {
           </TabsList>
 
           <TabsContent value="profile">
-            <Card className="p-6 border-neutral-200">
+            <Card className="p-6 border-neutral-200 bg-white">
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="userNickName">Pseudo</Label>
@@ -328,7 +328,7 @@ export default function MonCompte() {
           </TabsContent>
 
           <TabsContent value="security">
-            <Card className="p-6 border-neutral-200">
+            <Card className="p-6 border-neutral-200 bg-white">
               <form onSubmit={handleUpdatePassword} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="currentPassword">Mot de passe actuel</Label>

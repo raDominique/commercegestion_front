@@ -26,7 +26,7 @@ const MesProduits = () => {
   const { user } = useAuth();
   if (user && user.userValidated === false) {
     return (
-      <div className="p-6 max-w-7xl mx-auto">
+          <div className="px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
@@ -387,11 +387,11 @@ const MesProduits = () => {
   }, [searchTerm, page, limit, validationFilter, isStockerFilter]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+        <div className="px-6 mx-auto">
       {user && user.userValidated === false && (
         <UserNotValidatedBanner />
       )}
-      <div className="p-6 max-w-7xl mx-auto">
+          <div className="px-6 mx-auto">
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -419,7 +419,7 @@ const MesProduits = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Catégorie CPC et Code CPC côte à côte */}
                       <div className="col-span-1 md:col-span-2 flex gap-4">
-                        <div className="space-y-2 flex-1">
+                        <div className="space-y-2 flex-2">
                           <Label htmlFor="productCategory">Catégorie CPC</Label>
                           <div className="relative">
                             <Input
@@ -480,12 +480,11 @@ const MesProduits = () => {
                             )}
                           </div>
                         </div>
-                        <div className="space-y-2 flex-1">
+                        <div className="space-y-2 flex-[0.7] min-w-30">
                           <Label htmlFor="codeCPC">Code CPC</Label>
                           <Input name="codeCPC" value={form.codeCPC} onChange={handleInputChange} required placeholder="01111" className="border-neutral-300" readOnly />
                         </div>
                       </div>
-                      {/* ...autres champs... */}
                       <div className="space-y-2">
                         <Label htmlFor="productName">Nom du produit</Label>
                         <Input name="productName" value={form.productName} onChange={handleInputChange} required placeholder="Blé dur de qualité supérieure" className="border-neutral-300" />
@@ -556,7 +555,7 @@ const MesProduits = () => {
                   setPage(1);
                   setSearchTerm(e.target.value);
                 }}
-                className="pl-10 border-neutral-300"
+                className="pl-10 border-black"
               />
             </div>
             <div className="flex items-center gap-2 mt-2 md:mt-0">
@@ -592,7 +591,7 @@ const MesProduits = () => {
               </select>
             </div>
           </div>
-          <Card className="border-neutral-200">
+          <Card className="border-neutral-200 bg-white">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-neutral-50 border-b border-neutral-200">

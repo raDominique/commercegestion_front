@@ -128,7 +128,7 @@ const Passifs = () => {
 	};
 
 	return (
-		<div className="p-6 max-w-7xl mx-auto">
+		    <div className="px-6 mx-auto">
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
@@ -139,10 +139,10 @@ const Passifs = () => {
 							placeholder="Rechercher..."
 							value={search}
 							onChange={e => { setPage(1); setSearch(e.target.value); }}
-							className="max-w-xs border-neutral-300"
+							className="max-w-xs border-black"
 						/>
 					</div>
-					<Card className="border-neutral-200">
+					<Card className="border-neutral-200 bg-white">
 						<div className="overflow-x-auto">
 							<table className="w-full">
 								<thead className="bg-neutral-50 border-b border-neutral-200">

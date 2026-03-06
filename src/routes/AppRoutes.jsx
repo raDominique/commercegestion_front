@@ -28,7 +28,8 @@ const AppRoutes = () => {
                 />
                 {/* Routes publiques (login/register sans layout, autres avec layout) */}
                 {publicRoutes.map(({ path, element }, idx) => {
-                    if (path === '/login' || path === '/register') {
+                    // Keep login, register and forgot-password outside the main Layout (no header/footer)
+                    if (path === '/login' || path === '/register' || path === '/forgot-password' || path === '/reset-password') {
                         return (
                             <Route
                                 key={idx}

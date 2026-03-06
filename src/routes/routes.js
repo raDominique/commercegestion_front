@@ -17,6 +17,8 @@ import QrCodeIcon from '@mui/icons-material/QrCode';
 
 import Login from '../pages/Login/Login.jsx';
 import Register from '../pages/Register/Register.jsx';
+import ForgotPassword from '../pages/ForgotPassword/ForgotPassword.jsx';
+import ResetPassword from '../pages/ResetPassword/ResetPassword.jsx';
 import Depot from '../pages/Depot/Depot.jsx';
 import Retrait from '../pages/Retrait/Retrait.jsx';
 import Boutique from '../pages/Boutique/Boutique.jsx';
@@ -36,6 +38,8 @@ import MesSites from '../pages/MesSites/MesSites.jsx';
 export const publicRoutes = [
     { path: '/login', element: Login },
     { path: '/register', element: Register },
+    { path: '/forgot-password', element: ForgotPassword },
+    { path: '/reset-password', element: ResetPassword },
 ];
 
 export const privateRoutes = [

@@ -95,7 +95,7 @@ const AdminProducts = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="px-6 mx-auto">
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -115,11 +115,11 @@ const AdminProducts = () => {
                 setPage(1);
                 setSearchTerm(e.target.value);
               }}
-              className="pl-10 border-neutral-300"
+              className="pl-10 border-black"
             />
           </div>
         </div>
-        <Card className="border-neutral-200">
+        <Card className="border-neutral-200 bg-white">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-neutral-50 border-b border-neutral-200">

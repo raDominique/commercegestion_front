@@ -105,6 +105,9 @@ export default function Login() {
                 {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
               </button>
             </div>
+            <div className="flex justify-end mt-2 text-sm">
+              <Link to="/forgot-password" className="text-violet-600 hover:text-violet-700">Mot de passe oublié ?</Link>
+            </div>
           </div>
           <Button
             type="submit"
