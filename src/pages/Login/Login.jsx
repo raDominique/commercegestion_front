@@ -36,17 +36,18 @@ export default function Login() {
         toast.error("Votre rôle ne permet pas d'accéder à cette application.");
       }
     } catch (error) {
-      // Si la requête est bien celle du login (et pas du refresh)
-      if (error?.config?.url?.includes('/auth/login')) {
-        const apiMessage = error?.response?.data?.message;
+      // Gestion précise des erreurs API
+      console.error('Erreur de connexion:', error);
+      const apiMessage = error?.response?.data?.message;
+      const url = error?.config?.url;
+      if (url?.includes('/auth/login')) {
         if (apiMessage) {
           toast.error(apiMessage);
         } else {
           toast.error('Identifiants invalides. Veuillez vérifier votre e-mail et votre mot de passe puis réessayer.');
         }
-      } else if (error?.config?.url?.includes('/auth/refresh')) {
-        // Erreur de refresh, ne pas afficher le message login
-        toast.error('Session expirée, veuillez vous reconnecter.');
+      } else if (apiMessage) {
+        toast.error(apiMessage);
       } else if (error?.message && error?.message !== 'Session expirée') {
         toast.error(error.message);
       } else {

@@ -6,7 +6,8 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+    if (loading) return null; // ou un composant de chargement si souhaité
     if (!user) return <Navigate to="/login" />;
     if (allowedRoles && !allowedRoles.includes(user.userAccess)) {
         return <Navigate to="/actifs" replace />;
