@@ -5,6 +5,7 @@ import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { Switch } from '../../components/ui/switch';
 import SearchIcon from '@mui/icons-material/Search';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import InfoIcon from '@mui/icons-material/Info';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
@@ -22,9 +23,9 @@ export default function AdminUsers() {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   // Filtres avancés
-  const [isVerified, setIsVerified] = useState(''); // '', 'true', 'false'
-  const [isActive, setIsActive] = useState(''); // '', 'true', 'false'
-  const [userType, setUserType] = useState(''); // '', 'Particulier', 'Entreprise', etc.
+  const [isVerified, setIsVerified] = useState('');
+  const [isActive, setIsActive] = useState('');
+  const [userType, setUserType] = useState('');
 
   // Mappe les données API vers le format attendu par le tableau
   const mapApiUser = (apiUser) => ({
@@ -37,6 +38,7 @@ export default function AdminUsers() {
     createdAt: apiUser.createdAt,
     emailVerified: apiUser.userEmailVerified,
     raw: apiUser,
+    referralCode: apiUser.userId, // code de parrainage / identifiant court
   });
 
   // Récupère les utilisateurs depuis l'API
@@ -252,6 +254,7 @@ export default function AdminUsers() {
                   <th className="text-left p-4 text-xs text-neutral-600">Solde</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Vérification e-mail</th>
                   {/* <th className="text-left p-4 text-xs text-neutral-600">Date création</th> */}
+                  <th className='text-left p-4 text-xs text-neutral-600'>Code Parrainage</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Rôle</th>
                   <th className="text-left p-4 text-xs text-neutral-600">Statut</th>
                   <th className="text-right p-4 text-xs text-neutral-600" colSpan="2">Actions</th>
@@ -267,11 +270,11 @@ export default function AdminUsers() {
                     <tr key={user.id} className="border-b border-neutral-200 last:border-0">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user.status === 'Actif' ? 'bg-violet-600' : 'bg-neutral-300'}`}>
+                          {/* <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user.status === 'Actif' ? 'bg-violet-600' : 'bg-neutral-300'}`}>
                             <span className="text-white text-sm">
                               {user.name.charAt(0).toUpperCase()}
                             </span>
-                          </div>
+                          </div> */}
                           <p className={`text-sm ${user.status === 'Actif' ? 'text-neutral-900' : 'text-neutral-400'}`}>{user.name}</p>
                         </div>
                       </td>
@@ -291,6 +294,28 @@ export default function AdminUsers() {
                       {/* <td className="p-4 text-sm text-neutral-600">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td> */}
+                      <td className='p-4'>
+                        <div className="flex items-center gap-2">
+                          <Badge variant='outline' className='text-xs'>
+                            {user.referralCode || 'N/A'}
+                          </Badge>
+                          {user.referralCode && (
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              className="p-1 h-6 w-6 text-neutral-500 hover:text-violet-600"
+                              onClick={() => {
+                                navigator.clipboard.writeText(user.referralCode);
+                                toast.success('ID copié dans le presse-papier');
+                              }}
+                              aria-label="Copier l'ID utilisateur"
+                            >
+                              <ContentCopyIcon fontSize="small" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           <Switch
