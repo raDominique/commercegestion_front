@@ -39,7 +39,7 @@ const MesProduits = () => {
   // Ouvrir le modal dépôt
   const handleOpenDepositModal = async (productId) => {
     setDepositProductId(productId);
-    setDepositForm(f => ({ ...f, productId }));
+    setDepositForm(f => ({ ...f, productId: productId || '' }));
     setDepositModalOpen(true);
     try {
       const res = await getMySites({ limit: 100, page: 1 });
@@ -72,7 +72,7 @@ const MesProduits = () => {
     try {
       await depositStock({
         ...depositForm,
-        productId: depositProductId,
+        productId: depositProductId || depositForm.productId,
         quantite: Number(depositForm.quantite),
         prixUnitaire: Number(depositForm.prixUnitaire),
       }, token);
@@ -940,40 +940,136 @@ const MesProduits = () => {
 
       {/* Modal détail produit */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent aria-describedby="product-detail-desc">
+        <DialogContent aria-describedby="product-detail-desc" className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Détail du produit</DialogTitle>
             <DialogDescription id="product-detail-desc">
               Informations détaillées sur le produit sélectionné.
             </DialogDescription>
           </DialogHeader>
+
           {loadingDetail ? (
             <div className="p-8 text-center text-neutral-400">Chargement...</div>
           ) : detailProduct ? (
-            <Card className="p-4 border-violet-200 bg-violet-50">
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-1 space-y-2">
-                  <div className="text-lg font-bold text-violet-700">{detailProduct.productName}</div>
-                  <Badge variant="secondary" className="text-xs capitalize mb-2">{detailProduct.productCategory}</Badge>
-                  <div className="text-neutral-900 font-semibold mb-2">{detailProduct.productDescription}</div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-neutral-700">
-                    <div><b>Code CPC :</b> {detailProduct.codeCPC || '-'}</div>
-                    {/* <div><b>État :</b> {detailProduct.productState || '-'}</div> */}
-                    <div><b>Volume :</b> {detailProduct.productVolume || '-'}</div>
-                    <div><b>Poids :</b> {detailProduct.productPoids || '-'}</div>
-                    <div><b>Dimensions :</b> {detailProduct.productLongueur || '-'} x {detailProduct.productLargeur || '-'} x {detailProduct.productHauteur || '-'}</div>
-                    <div><b>Stocké :</b> <Badge variant={detailProduct.isStocker ? 'default' : 'secondary'} className={detailProduct.isStocker ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{detailProduct.isStocker ? 'Oui' : 'Non'}</Badge></div>
-                    <div><b>Validé :</b> <Badge variant={detailProduct.productValidation ? 'default' : 'secondary'} className={detailProduct.productValidation ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{detailProduct.productValidation ? 'Oui' : 'Non'}</Badge></div>
-                    <div><b>Date création :</b> {detailProduct.createdAt ? new Date(detailProduct.createdAt).toLocaleString() : '-'}</div>
-                    <div><b>Date modification :</b> {detailProduct.updatedAt ? new Date(detailProduct.updatedAt).toLocaleString() : '-'}</div>
+            <Card className="border-violet-200 bg-violet-50 p-6 space-y-6">
+
+              {/* HEADER PRODUIT */}
+              <div className="flex gap-6 items-center">
+                {detailProduct.productImage ? (
+                  <img
+                    src={getFullMediaUrl(detailProduct.productImage)}
+                    alt={detailProduct.productName}
+                    className="w-24 h-24 object-cover rounded shadow"
+                  />
+                ) : (
+                  <div className="w-24 h-24 flex items-center justify-center bg-neutral-200 rounded text-neutral-400">
+                    -
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2">
+                  <div className="text-xl font-bold text-violet-700">
+                    {detailProduct.productName}
+                  </div>
+
+                  <Badge
+                    variant="secondary"
+                    className="text-xs capitalize w-fit"
+                  >
+                    {detailProduct.productCategory}
+                  </Badge>
+
+                  <div className="flex gap-2 mt-1">
+                    <Badge
+                      variant={detailProduct.isStocker ? 'default' : 'secondary'}
+                      className={
+                        detailProduct.isStocker
+                          ? 'bg-green-100 text-green-700 border-green-200'
+                          : 'bg-neutral-200 text-neutral-500 border-neutral-200'
+                      }
+                    >
+                      Stocké : {detailProduct.isStocker ? 'Oui' : 'Non'}
+                    </Badge>
+
+                    <Badge
+                      variant={detailProduct.productValidation ? 'default' : 'secondary'}
+                      className={
+                        detailProduct.productValidation
+                          ? 'bg-green-100 text-green-700 border-green-200'
+                          : 'bg-neutral-200 text-neutral-500 border-neutral-200'
+                      }
+                    >
+                      Validé : {detailProduct.productValidation ? 'Oui' : 'Non'}
+                    </Badge>
                   </div>
                 </div>
-                <div className="flex-1 flex flex-col items-center justify-center">
-                  {detailProduct.productImage && (
-                    <img src={getFullMediaUrl(detailProduct.productImage)} alt={detailProduct.productName} className="w-40 h-40 object-cover rounded mb-2" />
-                  )}
+              </div>
+
+              {/* DESCRIPTION */}
+              <div>
+                <div className="text-sm font-semibold text-neutral-700 mb-1">
+                  Description
+                </div>
+                <div className="text-sm text-neutral-900">
+                  {detailProduct.productDescription || '-'}
                 </div>
               </div>
+
+              {/* INFOS TECHNIQUES */}
+              <div>
+                <div className="text-sm font-semibold text-neutral-700 mb-3">
+                  Informations techniques
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <div className="text-neutral-500">Code CPC</div>
+                    <div className="font-medium">{detailProduct.codeCPC || '-'}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-neutral-500">État</div>
+                    <div className="font-medium">{detailProduct.productState || '-'}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-neutral-500">Volume</div>
+                    <div className="font-medium">{detailProduct.productVolume || '-'}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-neutral-500">Poids</div>
+                    <div className="font-medium">{detailProduct.productPoids || '-'}</div>
+                  </div>
+
+                  <div className="col-span-2">
+                    <div className="text-neutral-500">Dimensions</div>
+                    <div className="font-medium">
+                      {detailProduct.productLongueur || '-'} ×{' '}
+                      {detailProduct.productLargeur || '-'} ×{' '}
+                      {detailProduct.productHauteur || '-'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* META */}
+              <div className="border-t border-violet-200 pt-4 text-xs text-neutral-500 flex flex-col md:flex-row md:justify-between gap-2">
+                <div>
+                  <span className="font-semibold">Créé le :</span>{' '}
+                  {detailProduct.createdAt
+                    ? new Date(detailProduct.createdAt).toLocaleString()
+                    : '-'}
+                </div>
+
+                <div>
+                  <span className="font-semibold">Modifié le :</span>{' '}
+                  {detailProduct.updatedAt
+                    ? new Date(detailProduct.updatedAt).toLocaleString()
+                    : '-'}
+                </div>
+              </div>
+
             </Card>
           ) : (
             <div className="p-8 text-center text-neutral-400">Aucune donnée</div>

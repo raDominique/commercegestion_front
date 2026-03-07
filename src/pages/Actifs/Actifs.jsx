@@ -110,6 +110,7 @@ const Actifs = () => {
 	const handleOpenTransferModal = item => {
 		setTransferForm({
 			actifId: item._id,
+			productId: item.productId?._id || '',
 			siteOrigineId: item.siteOrigineId?._id || '', // Correction ici
 			siteDestinationId: '',
 			quantite: '',
@@ -151,7 +152,7 @@ const Actifs = () => {
 	/* ================= RENDER ================= */
 
 	return (
-		    <div className="px-6 mx-auto">
+		<div className="px-6 mx-auto">
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
