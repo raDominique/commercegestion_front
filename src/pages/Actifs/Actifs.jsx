@@ -28,6 +28,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import MoveUpIcon from '@mui/icons-material/MoveUp';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
+import { formatThousands } from '../../utils/formatNumber';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { getAllUsersSelect } from '../../services/user.service';
 import { getAllSitesSelect } from '../../services/site.service';
@@ -223,11 +224,11 @@ const Actifs = () => {
 													{item.siteDestinationId?.siteName || '-'}
 												</td>
 
-												<td className="p-4 text-sm">{item.quantite}</td>
-												<td className="p-4 text-sm">{item.prixUnitaire}</td>
+												<td className="p-4 text-sm">{formatThousands(item.quantite)}</td>
+												<td className="p-4 text-sm">{formatThousands(item.prixUnitaire)}</td>
 
 												<td className="p-4 text-sm">
-													{item.prixUnitaire * item.quantite}
+													{formatThousands(item.prixUnitaire * item.quantite)}
 												</td>
 
 												<td className="p-4 text-sm">
@@ -400,7 +401,13 @@ const Actifs = () => {
 										{detailActif.productId?.productName}
 									</div>
 									<div>
-										<b>Quantité :</b> {detailActif.quantite}
+										<b>Quantité :</b> {formatThousands(detailActif.quantite)}
+									</div>
+									<div>
+										<b>Prix unitaire :</b> {formatThousands(detailActif.prixUnitaire)}
+									</div>
+									<div>
+										<b>Total :</b> {formatThousands(detailActif.prixUnitaire * detailActif.quantite)}
 									</div>
 								</div>
 							)}
