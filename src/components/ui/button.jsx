@@ -5,7 +5,7 @@ import { cn } from "./utils";
 // buttonVariants utilitaire simple (remplace cva)
 function buttonVariants({ variant = "default", size = "default", className = "" } = {}) {
     const base =
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]";
+        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:cursor-pointer data-[state=open]:bg-accent";
     const variants = {
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive:

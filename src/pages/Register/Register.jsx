@@ -73,6 +73,9 @@ const Register = () => {
       if (Array.isArray(dataToSend.carteFiscal)) {
         dataToSend.carteFiscal = dataToSend.carteFiscal.filter(f => f);
       }
+      if (Array.isArray(dataToSend.carteStat)) {
+        dataToSend.carteStat = dataToSend.carteStat.filter(f => f);
+      }
       if (Array.isArray(dataToSend.documents)) {
         dataToSend.documents = dataToSend.documents.filter(f => f);
       }
@@ -80,6 +83,7 @@ const Register = () => {
       toast.success('Inscription réussie !');
       navigate('/login');
     } catch (error) {
+      console.log('Erreur lors de l\'inscription :', error);
       toast.error(error?.response?.data?.message || "Erreur lors de l'inscription.");
     } finally {
       setLoading(false);
@@ -162,7 +166,7 @@ const Register = () => {
         return acc;
       }, {});
       setUsersMap(map);
-    }).catch(() => {});
+    }).catch(() => { });
     return () => { mounted = false; };
   }, []);
 
@@ -182,7 +186,7 @@ const Register = () => {
     documentType: '',
     identityCardNumber: '',
     carteFiscal: [null],
-    carteStat: null,
+    carteStat: [null],
     logo: null,
     avatar: null,
     documents: [null],
@@ -206,8 +210,8 @@ const Register = () => {
     }
     // Masquer l'erreur du champ concerné dès la saisie
     setFieldErrors(prev => ({ ...prev, [name]: undefined }));
-    // For dynamic file arrays (carteFiscal, documents)
-    if ((name === 'carteFiscal' || name === 'documents') && dataset.idx !== undefined) {
+    // For dynamic file arrays (carteFiscal, documents, carteStat)
+    if ((name === 'carteFiscal' || name === 'documents' || name === 'carteStat') && dataset.idx !== undefined) {
       const idx = parseInt(dataset.idx, 10);
       setForm((prev) => {
         const arr = [...prev[name]];
@@ -436,10 +440,10 @@ const Register = () => {
                           }}
                           enableSearch
                           containerClass="w-full"
-                          inputClass="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border px-3 py-1 text-base bg-input-background transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive"
+                          inputClass="border-neutral-300 w-full h-9 rounded-md px-3 py-1 text-base"
                           buttonClass="border-none bg-transparent px-2 flex items-center"
-                          dropdownClass="rounded-md border bg-input-background text-base shadow-lg z-50"
-                          searchClass="rounded-md border px-2 py-1 mb-2 w-full"
+                          dropdownClass="rounded-md bg-input-background text-base shadow-lg z-50"
+                          searchClass="rounded-md px-2 py-1 mb-2 w-full"
                           disableCountryCode={false}
                           disableDropdown={false}
                           masks={{ mg: '.. .. ... ..' }}
@@ -625,27 +629,34 @@ const Register = () => {
                         )}
                       </div>
 
-                      {/* Carte Stat */}
-                      <div className="p-4 bg-neutral-50 rounded-lg flex items-center gap-6">
-                        <div className="flex flex-col gap-2">
-                          <Label htmlFor="carteStat">Carte Stat (PNG recto-verso)</Label>
-                          <Input
-                            id="carteStat"
-                            name="carteStat"
-                            type="file"
-                            accept="image/png"
-                            onChange={handleChange}
-                            className="border-neutral-300"
-                          />
-                          {fieldErrors.carteStat && (
-                            <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.carteStat}</span>
-                          )}
+                      {/* Carte Stat (recto + verso) */}
+                      <div className="p-4 bg-neutral-50 rounded-lg space-y-3">
+                        <Label>Carte Stat (PNG recto-verso)</Label>
+                        <div className="grid grid-cols-2 gap-4">
+                          {[0, 1].map((idx) => (
+                            <div key={idx} className="relative border rounded-lg p-2 flex flex-col items-center justify-center bg-white shadow-sm">
+                              <Input
+                                id={`carteStat-${idx}`}
+                                name="carteStat"
+                                type="file"
+                                accept="image/png"
+                                data-idx={idx}
+                                onChange={handleChange}
+                                className="border-neutral-300 w-full"
+                              />
+                              {fieldErrors.carteStat && Array.isArray(fieldErrors.carteStat) && fieldErrors.carteStat.includes(`carte stat ${idx + 1}`) && (
+                                <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.carteStat}</span>
+                              )}
+                              {form.carteStat && form.carteStat[idx] && (
+                                <img
+                                  src={URL.createObjectURL(form.carteStat[idx])}
+                                  alt={`Carte Stat ${idx + 1}`}
+                                  className="w-20 h-20 object-cover mt-2 rounded border"
+                                />
+                              )}
+                            </div>
+                          ))}
                         </div>
-                        {form.carteStat && (
-                          <div className="w-24 h-24 rounded-lg overflow-hidden border-2 border-violet-400 shadow-lg">
-                            <img src={URL.createObjectURL(form.carteStat)} alt="Carte Stat" className="w-full h-full object-cover" />
-                          </div>
-                        )}
                       </div>
 
                       {/* Carte Fiscale (fixe: 2 inputs) */}
@@ -663,7 +674,7 @@ const Register = () => {
                                 onChange={handleChange}
                                 className="border-neutral-300 w-full"
                               />
-                              {fieldErrors.carteFiscal && fieldErrors.carteFiscal.includes(`carte fiscale ${idx+1}`) && (
+                              {fieldErrors.carteFiscal && fieldErrors.carteFiscal.includes(`carte fiscale ${idx + 1}`) && (
                                 <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.carteFiscal}</span>
                               )}
                               {form.carteFiscal[idx] && (

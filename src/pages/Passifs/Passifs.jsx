@@ -15,6 +15,7 @@ import { getAllUsersSelect } from '../../services/user.service';
 import { getAllSitesSelect } from '../../services/site.service';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import MoveUpIcon from '@mui/icons-material/MoveUp';
+import { formatThousands } from '../../utils/formatNumber.js';
 
 const Passifs = () => {
 	const dateFormat = useDateFormat();
@@ -84,19 +85,25 @@ const Passifs = () => {
 		getAllSitesSelect().then(res => setAllSites(Array.isArray(res) ? res : []));
 	}, []);
 
+	const getSiteName = id => {
+		if (!id) return '-';
+		const s = sites.find(st => st._id === id);
+		return s ? s.siteName : id;
+	};
+
 	const handleOpenWithdrawModal = item => {
 		setWithdrawalForm({
-			actifId: item.actifId?._id,
-			siteOrigineId: item.siteOriginId?._id || '',
+			actifId: item.productId || item.actifId?._id || '',
+			siteOrigineId: item.departDeId || item.siteOriginId?._id || '',
 			siteDestinationId: '',
 			quantite: '',
-			prixUnitaire: item.prixUnitaire || '',
+			prixUnitaire: item.montant || item.prixUnitaire || '',
 			detentaire: '',
 			ayant_droit: '',
 			observations: ''
 		});
 
-		setMaxWithdrawalQty(item.quantite);
+		setMaxWithdrawalQty(item.quantite || item.solde || undefined);
 		setWithdrawalModalOpen(true);
 	};
 
@@ -104,7 +111,19 @@ const Passifs = () => {
 		e.preventDefault();
 
 		try {
-			await withdrawStock(withdrawalForm);
+			const token = localStorage.getItem('token');
+			const payload = {
+				siteOrigineId: withdrawalForm.siteOrigineId,
+				siteDestinationId: withdrawalForm.siteDestinationId,
+				productId: withdrawalForm.actifId || withdrawalForm.productId,
+				quantite: Number(withdrawalForm.quantite),
+				prixUnitaire: withdrawalForm.prixUnitaire !== '' ? Number(withdrawalForm.prixUnitaire) : null,
+				detentaireId: withdrawalForm.detentaire || withdrawalForm.detentaireId,
+				ayant_droit: withdrawalForm.ayant_droit,
+				observations: withdrawalForm.observations || '',
+			};
+
+			await withdrawStock(payload, token);
 			setWithdrawalModalOpen(false);
 			fetchPassifs();
 		} catch {
@@ -128,7 +147,7 @@ const Passifs = () => {
 	};
 
 	return (
-		    <div className="px-6 mx-auto">
+		<div className="px-6 mx-auto">
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
@@ -159,15 +178,15 @@ const Passifs = () => {
 								</thead>
 								<tbody>
 									{loading ? (
-										<tr><td colSpan="7" className="p-8 text-center text-neutral-400">Chargement...</td></tr>
+										<tr><td colSpan="8" className="p-8 text-center text-neutral-400">Chargement...</td></tr>
 									) : passifs.length > 0 ? (
 										passifs.map((item, idx) => (
 											<tr key={idx} className="border-b border-neutral-100 last:border-0">
 												<td className="p-4 text-sm">{item.situation || '-'}</td>
 												<td className="p-4 text-sm">{item.type || '-'}</td>
-												<td className="p-4 text-sm">{item.montant !== undefined ? item.montant.toLocaleString() : '-'}</td>
-												<td className="p-4 text-sm">{item.departDe || '-'}</td>
-												<td className="p-4 text-sm">{item.arrivee || '-'}</td>
+												<td className="p-4 text-sm">{item.montant != null ? formatThousands(item.montant) : '-'}</td>
+												<td className="p-4 text-sm">{getSiteName(item.departDeId)}</td>
+												<td className="p-4 text-sm">{getSiteName(item.arriveeId)}</td>
 												<td className="p-4 text-sm">{item.action || '-'}</td>
 												<td className="p-4 text-sm">{item.date ? dateFormat(item.date) : '-'}</td>
 												<td className="p-4 text-sm">
@@ -182,7 +201,7 @@ const Passifs = () => {
 											</tr>
 										))
 									) : (
-										<tr><td colSpan="7" className="p-8 text-center text-neutral-400">Aucun passif trouvé</td></tr>
+										<tr><td colSpan="8" className="p-8 text-center text-neutral-400">Aucun passif trouvé</td></tr>
 									)}
 								</tbody>
 							</table>

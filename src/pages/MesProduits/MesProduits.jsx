@@ -21,12 +21,15 @@ import { depositStock } from '../../services/stocks_move.service.js';
 import { getMySites } from '../../services/site.service';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import { addProductFieldControl } from '../../utils/addProductFieldControl';
 
 const MesProduits = () => {
+  // Gestion des erreurs pour le formulaire dépôt
+  const [depositErrors, setDepositErrors] = useState({});
   const { user } = useAuth();
   if (user && user.userValidated === false) {
     return (
-          <div className="px-6 mx-auto">
+      <div className="px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
@@ -36,7 +39,7 @@ const MesProduits = () => {
   // Ouvrir le modal dépôt
   const handleOpenDepositModal = async (productId) => {
     setDepositProductId(productId);
-    setDepositForm(f => ({ ...f, productId }));
+    setDepositForm(f => ({ ...f, productId: productId || '' }));
     setDepositModalOpen(true);
     try {
       const res = await getMySites({ limit: 100, page: 1 });
@@ -57,11 +60,19 @@ const MesProduits = () => {
   // Soumission du dépôt
   const handleDepositSubmit = async (e) => {
     e.preventDefault();
+    // Validation centralisée
+    const errors = {};
+    Object.entries(addProductFieldControl).forEach(([key, ctrl]) => {
+      const err = ctrl.validate(depositForm[key]);
+      if (err) errors[key] = err;
+    });
+    setDepositErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     const token = localStorage.getItem('token');
     try {
       await depositStock({
         ...depositForm,
-        productId: depositProductId,
+        productId: depositProductId || depositForm.productId,
         quantite: Number(depositForm.quantite),
         prixUnitaire: Number(depositForm.prixUnitaire),
       }, token);
@@ -77,6 +88,7 @@ const MesProduits = () => {
         ayant_droit: '',
         observations: '',
       });
+      setDepositErrors({});
     } catch (err) {
       toast.error('Erreur lors du dépôt');
     }
@@ -387,11 +399,11 @@ const MesProduits = () => {
   }, [searchTerm, page, limit, validationFilter, isStockerFilter]);
 
   return (
-        <div className="px-6 mx-auto">
+    <div className="px-6 mx-auto">
       {user && user.userValidated === false && (
         <UserNotValidatedBanner />
       )}
-          <div className="px-6 mx-auto">
+      <div className="px-6 mx-auto">
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -633,19 +645,42 @@ const MesProduits = () => {
                         </td>
                         <td className="p-4 text-sm text-neutral-600">{product.codeCPC || '-'}</td>
                         <td className="p-4 text-sm">
-                          <Button onClick={() => handleOpenDepositModal(product._id)} variant="outline" size="sm">
+                          <Button
+                            onClick={() => handleOpenDepositModal(product._id)}
+                            variant="outline"
+                            size="sm"
+                            disabled={product.isStocker}
+                            className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
+                          >
                             Ajouter à un dépôt
                           </Button>
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleShowDetail(product._id)}
+                            // Le bouton détail reste toujours actif
+                            >
                               <InfoIcon className="w-5 h-5 text-violet-600" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleOpenEditModal(product._id)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenEditModal(product._id)}
+                              disabled={product.isStocker}
+                              className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
+                            >
                               <EditIcon className="w-5 h-5 text-amber-600" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product._id)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteProduct(product._id)}
+                              disabled={product.isStocker}
+                              className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
+                            >
                               <DeleteIcon className="w-5 h-5 text-red-600" />
                             </Button>
                           </div>
@@ -837,10 +872,13 @@ const MesProduits = () => {
           </DialogHeader>
           <form className="space-y-4" onSubmit={handleDepositSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-  y-2">
-                <Label htmlFor="siteOrigineId">Site d'origine</Label>
+              <div className="space-y-2">
+                <Label htmlFor="siteOrigineId">
+                  {addProductFieldControl.siteOrigineId.label}
+                  {addProductFieldControl.siteOrigineId.required && <span style={{ color: 'red' }}> *</span>}
+                </Label>
                 <Select value={depositForm.siteOrigineId} onValueChange={val => setDepositForm(f => ({ ...f, siteOrigineId: val }))}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-invalid={!!depositErrors.siteOrigineId}>
                     <SelectValue placeholder="Sélectionner le site d'origine" />
                   </SelectTrigger>
                   <SelectContent>
@@ -849,11 +887,15 @@ const MesProduits = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {depositErrors.siteOrigineId && <div className="text-red-600 text-xs mt-1">{depositErrors.siteOrigineId}</div>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="siteDestinationId">Site de destination</Label>
+                <Label htmlFor="siteDestinationId">
+                  {addProductFieldControl.siteDestinationId.label}
+                  {addProductFieldControl.siteDestinationId.required && <span style={{ color: 'red' }}> *</span>}
+                </Label>
                 <Select value={depositForm.siteDestinationId} onValueChange={val => setDepositForm(f => ({ ...f, siteDestinationId: val }))}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-invalid={!!depositErrors.siteDestinationId}>
                     <SelectValue placeholder="Sélectionner le site de destination" />
                   </SelectTrigger>
                   <SelectContent>
@@ -862,14 +904,23 @@ const MesProduits = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {depositErrors.siteDestinationId && <div className="text-red-600 text-xs mt-1">{depositErrors.siteDestinationId}</div>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="quantite">Quantité</Label>
-                <Input name="quantite" value={depositForm.quantite} onChange={e => setDepositForm(f => ({ ...f, quantite: e.target.value }))} required placeholder="Quantité à déposer" className="border-neutral-300" type="number" min="1" />
+                <Label htmlFor="quantite">
+                  {addProductFieldControl.quantite.label}
+                  {addProductFieldControl.quantite.required && <span style={{ color: 'red' }}> *</span>}
+                </Label>
+                <Input name="quantite" value={depositForm.quantite} onChange={e => setDepositForm(f => ({ ...f, quantite: e.target.value }))} placeholder="Quantité à déposer" className="border-neutral-300" type="number" min="1" aria-invalid={!!depositErrors.quantite} />
+                {depositErrors.quantite && <div className="text-red-600 text-xs mt-1">{depositErrors.quantite}</div>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="prixUnitaire">Prix Unitaire</Label>
-                <Input name="prixUnitaire" value={depositForm.prixUnitaire} onChange={e => setDepositForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix Unitaire du produit" className="border-neutral-300" type="number" min="0" step="0.01" />
+                <Label htmlFor="prixUnitaire">
+                  {addProductFieldControl.prixUnitaire.label}
+                  {addProductFieldControl.prixUnitaire.required && <span style={{ color: 'red' }}> *</span>}
+                </Label>
+                <Input name="prixUnitaire" value={depositForm.prixUnitaire} onChange={e => setDepositForm(f => ({ ...f, prixUnitaire: e.target.value }))} placeholder="Prix Unitaire du produit" className="border-neutral-300" type="number" min="0" step="0.01" aria-invalid={!!depositErrors.prixUnitaire} />
+                {depositErrors.prixUnitaire && <div className="text-red-600 text-xs mt-1">{depositErrors.prixUnitaire}</div>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="detentaire">Détenteur</Label>
@@ -912,40 +963,136 @@ const MesProduits = () => {
 
       {/* Modal détail produit */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent aria-describedby="product-detail-desc">
+        <DialogContent aria-describedby="product-detail-desc" className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Détail du produit</DialogTitle>
             <DialogDescription id="product-detail-desc">
               Informations détaillées sur le produit sélectionné.
             </DialogDescription>
           </DialogHeader>
+
           {loadingDetail ? (
             <div className="p-8 text-center text-neutral-400">Chargement...</div>
           ) : detailProduct ? (
-            <Card className="p-4 border-violet-200 bg-violet-50">
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-1 space-y-2">
-                  <div className="text-lg font-bold text-violet-700">{detailProduct.productName}</div>
-                  <Badge variant="secondary" className="text-xs capitalize mb-2">{detailProduct.productCategory}</Badge>
-                  <div className="text-neutral-900 font-semibold mb-2">{detailProduct.productDescription}</div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-neutral-700">
-                    <div><b>Code CPC :</b> {detailProduct.codeCPC || '-'}</div>
-                    {/* <div><b>État :</b> {detailProduct.productState || '-'}</div> */}
-                    <div><b>Volume :</b> {detailProduct.productVolume || '-'}</div>
-                    <div><b>Poids :</b> {detailProduct.productPoids || '-'}</div>
-                    <div><b>Dimensions :</b> {detailProduct.productLongueur || '-'} x {detailProduct.productLargeur || '-'} x {detailProduct.productHauteur || '-'}</div>
-                    <div><b>Stocké :</b> <Badge variant={detailProduct.isStocker ? 'default' : 'secondary'} className={detailProduct.isStocker ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{detailProduct.isStocker ? 'Oui' : 'Non'}</Badge></div>
-                    <div><b>Validé :</b> <Badge variant={detailProduct.productValidation ? 'default' : 'secondary'} className={detailProduct.productValidation ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{detailProduct.productValidation ? 'Oui' : 'Non'}</Badge></div>
-                    <div><b>Date création :</b> {detailProduct.createdAt ? new Date(detailProduct.createdAt).toLocaleString() : '-'}</div>
-                    <div><b>Date modification :</b> {detailProduct.updatedAt ? new Date(detailProduct.updatedAt).toLocaleString() : '-'}</div>
+            <Card className="border-violet-200 bg-violet-50 p-6 space-y-6">
+
+              {/* HEADER PRODUIT */}
+              <div className="flex gap-6 items-center">
+                {detailProduct.productImage ? (
+                  <img
+                    src={getFullMediaUrl(detailProduct.productImage)}
+                    alt={detailProduct.productName}
+                    className="w-24 h-24 object-cover rounded shadow"
+                  />
+                ) : (
+                  <div className="w-24 h-24 flex items-center justify-center bg-neutral-200 rounded text-neutral-400">
+                    -
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2">
+                  <div className="text-xl font-bold text-violet-700">
+                    {detailProduct.productName}
+                  </div>
+
+                  <Badge
+                    variant="secondary"
+                    className="text-xs capitalize w-fit"
+                  >
+                    {detailProduct.productCategory}
+                  </Badge>
+
+                  <div className="flex gap-2 mt-1">
+                    <Badge
+                      variant={detailProduct.isStocker ? 'default' : 'secondary'}
+                      className={
+                        detailProduct.isStocker
+                          ? 'bg-green-100 text-green-700 border-green-200'
+                          : 'bg-neutral-200 text-neutral-500 border-neutral-200'
+                      }
+                    >
+                      Stocké : {detailProduct.isStocker ? 'Oui' : 'Non'}
+                    </Badge>
+
+                    <Badge
+                      variant={detailProduct.productValidation ? 'default' : 'secondary'}
+                      className={
+                        detailProduct.productValidation
+                          ? 'bg-green-100 text-green-700 border-green-200'
+                          : 'bg-neutral-200 text-neutral-500 border-neutral-200'
+                      }
+                    >
+                      Validé : {detailProduct.productValidation ? 'Oui' : 'Non'}
+                    </Badge>
                   </div>
                 </div>
-                <div className="flex-1 flex flex-col items-center justify-center">
-                  {detailProduct.productImage && (
-                    <img src={getFullMediaUrl(detailProduct.productImage)} alt={detailProduct.productName} className="w-40 h-40 object-cover rounded mb-2" />
-                  )}
+              </div>
+
+              {/* DESCRIPTION */}
+              <div>
+                <div className="text-sm font-semibold text-neutral-700 mb-1">
+                  Description
+                </div>
+                <div className="text-sm text-neutral-900">
+                  {detailProduct.productDescription || '-'}
                 </div>
               </div>
+
+              {/* INFOS TECHNIQUES */}
+              <div>
+                <div className="text-sm font-semibold text-neutral-700 mb-3">
+                  Informations techniques
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <div className="text-neutral-500">Code CPC</div>
+                    <div className="font-medium">{detailProduct.codeCPC || '-'}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-neutral-500">État</div>
+                    <div className="font-medium">{detailProduct.productState || '-'}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-neutral-500">Volume</div>
+                    <div className="font-medium">{detailProduct.productVolume || '-'}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-neutral-500">Poids</div>
+                    <div className="font-medium">{detailProduct.productPoids || '-'}</div>
+                  </div>
+
+                  <div className="col-span-2">
+                    <div className="text-neutral-500">Dimensions</div>
+                    <div className="font-medium">
+                      {detailProduct.productLongueur || '-'} ×{' '}
+                      {detailProduct.productLargeur || '-'} ×{' '}
+                      {detailProduct.productHauteur || '-'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* META */}
+              <div className="border-t border-violet-200 pt-4 text-xs text-neutral-500 flex flex-col md:flex-row md:justify-between gap-2">
+                <div>
+                  <span className="font-semibold">Créé le :</span>{' '}
+                  {detailProduct.createdAt
+                    ? new Date(detailProduct.createdAt).toLocaleString()
+                    : '-'}
+                </div>
+
+                <div>
+                  <span className="font-semibold">Modifié le :</span>{' '}
+                  {detailProduct.updatedAt
+                    ? new Date(detailProduct.updatedAt).toLocaleString()
+                    : '-'}
+                </div>
+              </div>
+
             </Card>
           ) : (
             <div className="p-8 text-center text-neutral-400">Aucune donnée</div>

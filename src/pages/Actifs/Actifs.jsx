@@ -28,6 +28,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import MoveUpIcon from '@mui/icons-material/MoveUp';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
+import { formatThousands } from '../../utils/formatNumber';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { getAllUsersSelect } from '../../services/user.service';
 import { getAllSitesSelect } from '../../services/site.service';
@@ -110,6 +111,7 @@ const Actifs = () => {
 	const handleOpenTransferModal = item => {
 		setTransferForm({
 			actifId: item._id,
+			productId: item.productId?._id || '',
 			siteOrigineId: item.siteOrigineId?._id || '', // Correction ici
 			siteDestinationId: '',
 			quantite: '',
@@ -127,7 +129,13 @@ const Actifs = () => {
 		e.preventDefault();
 
 		try {
-			await withdrawStock(transferForm);
+			const payload = {
+				...transferForm,
+				quantite: Number(transferForm.quantite),
+				prixUnitaire: Number(transferForm.prixUnitaire),
+			};
+
+			await withdrawStock(payload);
 
 			toast.success('Transfert effectué');
 			setTransferModalOpen(false);
@@ -151,7 +159,7 @@ const Actifs = () => {
 	/* ================= RENDER ================= */
 
 	return (
-		    <div className="px-6 mx-auto">
+		<div className="px-6 mx-auto">
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
@@ -181,9 +189,11 @@ const Actifs = () => {
 										<th className="p-4 text-xs text-neutral-600 text-left">Image</th>
 										<th className="p-4 text-xs text-neutral-600 text-left">Site origine</th>
 										<th className="p-4 text-xs text-neutral-600 text-left">Site destination</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Qté</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">PU</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Total</th>
+										<th className="p-4 text-xs text-neutral-600 text-right">Qté</th>
+										<th className="p-4 text-xs text-neutral-600 text-right">PU (Ar)</th>
+										<th className="p-4 text-xs text-neutral-600 text-right">Total (Ar)</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">Détenteur</th>
+										<th className="p-4 text-xs text-neutral-600 text-left">Ayant droit</th>
 										<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
 										<th className="p-4 text-xs text-neutral-600 text-right">Actions</th>
 									</tr>
@@ -222,11 +232,17 @@ const Actifs = () => {
 													{item.siteDestinationId?.siteName || '-'}
 												</td>
 
-												<td className="p-4 text-sm">{item.quantite}</td>
-												<td className="p-4 text-sm">{item.prixUnitaire}</td>
+												<td className="p-4 text-sm text-right">{formatThousands(item.quantite)}</td>
+												<td className="p-4 text-sm text-right">{formatThousands(item.prixUnitaire)}</td>
 
-												<td className="p-4 text-sm">
-													{item.prixUnitaire * item.quantite}
+												<td className="p-4 text-sm text-right">
+													{formatThousands(item.prixUnitaire * item.quantite)}
+												</td>
+												<td>
+													{item.détenteurId?.userName || '-'}
+												</td>
+												<td>
+													{item.ayant_droitId?.userName || '-'}
 												</td>
 
 												<td className="p-4 text-sm">
@@ -399,7 +415,13 @@ const Actifs = () => {
 										{detailActif.productId?.productName}
 									</div>
 									<div>
-										<b>Quantité :</b> {detailActif.quantite}
+										<b>Quantité :</b> {formatThousands(detailActif.quantite)}
+									</div>
+									<div>
+										<b>Prix unitaire :</b> {formatThousands(detailActif.prixUnitaire)}
+									</div>
+									<div>
+										<b>Total :</b> {formatThousands(detailActif.prixUnitaire * detailActif.quantite)}
 									</div>
 								</div>
 							)}

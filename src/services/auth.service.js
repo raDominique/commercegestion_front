@@ -45,8 +45,9 @@ export async function createUser(data) {
     }
   });
 
-  // Fichiers multiples ou uniques
-  const fileFields = ['carteFiscal', 'documents'];
+  // Fichiers multiples (tableaux) ou uniques
+  // `carteStat` can be an array (recto/verso) as well, handle it with other multi-file fields
+  const fileFields = ['carteFiscal', 'documents', 'carteStat'];
   fileFields.forEach(field => {
     if (data[field]) {
       if (Array.isArray(data[field])) {
@@ -59,7 +60,7 @@ export async function createUser(data) {
     }
   });
   // Fichiers uniques
-  ['logo', 'carteStat', 'avatar'].forEach(field => {
+  ['logo', 'avatar'].forEach(field => {
     if (data[field]) {
       formData.append(field, data[field], data[field].name);
     }

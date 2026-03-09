@@ -203,7 +203,7 @@ export const getMyProducts = async (params = {}, token) => {
  * @returns {Promise<Object>} Résultat de l'API
  */
 export const getShopProducts = async (params = {}) => {
-    const response = await axiosInstance.get('/api/v1/products/shop', {
+    const response = await axiosInstance.get('/api/v1/actifs/shop-available', {
         params,
         headers: {
             'accept': '*/*',
