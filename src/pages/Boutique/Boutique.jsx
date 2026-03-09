@@ -7,12 +7,21 @@ import { Badge } from '../../components/ui/badge.jsx';
 import { Button } from '../../components/ui/button.jsx';
 import { useAuth } from '../../context/AuthContext';
 import { formatThousands } from '../../utils/formatNumber.js';
+import { Input } from '../../components/ui/input.jsx';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '../../components/ui/select.jsx';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 
 const sortOptions = [
   { value: 'createdAt', label: 'Date de création' },
   { value: 'productName', label: 'Nom du produit' },
   { value: 'codeCPC', label: 'Code CPC' },
+  { value: 'prixUnitaire', label: 'Prix unitaire' },
 ];
 const orderOptions = [
   { value: 1, label: 'Ascendant' },
@@ -26,6 +35,7 @@ const Boutique = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [fournisseurId, setFournisseurId] = useState('all');
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('createdAt');
@@ -35,7 +45,9 @@ const Boutique = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const res = await getShopProducts({ page, limit, search, sort, order });
+        const params = { page, limit, search, sort, order };
+        if (fournisseurId && fournisseurId !== 'all') params.fournisseurId = fournisseurId;
+        const res = await getShopProducts(params);
         setProducts(res.data || []);
         setTotal(res.total || 0);
       } catch (err) {
@@ -45,7 +57,14 @@ const Boutique = () => {
       }
     };
     fetchProducts();
-  }, [page, limit, search, sort, order]);
+  }, [page, limit, search, sort, order, fournisseurId]);
+
+  const vendors = Array.from(new Map(
+    products
+      .map(i => i.vendeur)
+      .filter(Boolean)
+      .map(v => [v._id, v])
+  ).values());
 
   if (user && user.userValidated === false) {
     return (
@@ -58,39 +77,67 @@ const Boutique = () => {
     <div className="px-6 mx-auto">
       <h1 className="text-2xl font-bold mb-6 text-neutral-900">Boutique</h1>
       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Rechercher par nom ou code CPC..."
-          value={search}
-          onChange={e => { setPage(1); setSearch(e.target.value); }}
-          className="border border-black rounded px-3 py-2 text-sm w-full md:w-64 bg-white"
-        />
-        <select
-          value={sort}
-          onChange={e => { setPage(1); setSort(e.target.value); }}
-          className="border border-neutral-300 rounded px-3 py-2 text-sm w-full md:w-48 bg-white"
-        >
-          {sortOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-        <select
-          value={order}
-          onChange={e => { setPage(1); setOrder(Number(e.target.value)); }}
-          className="border border-neutral-300 rounded px-3 py-2 text-sm w-full md:w-40"
-        >
-          {orderOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-        {/* <input
-          type="number"
-          min={1}
-          value={limit}
-          onChange={e => { setPage(1); setLimit(Number(e.target.value)); }}
-          className="border border-neutral-300 rounded px-3 py-2 text-sm w-full md:w-24"
-          placeholder="Limite"
-        /> */}
+        <div className="w-full md:w-64">
+          <Input
+            type="text"
+            placeholder="Rechercher par nom ou code CPC..."
+            className="bg-white"
+            value={search}
+            onChange={e => { setPage(1); setSearch(e.target.value); }}
+          />
+        </div>
+
+        <div className="w-full md:w-48">
+          <Select value={sort} onValueChange={v => { setPage(1); setSort(v); }}>
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Trier par" />
+            </SelectTrigger>
+            <SelectContent>
+              {sortOptions.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-full md:w-40">
+          <Select value={String(order)} onValueChange={v => { setPage(1); setOrder(Number(v)); }}>
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Ordre" />
+            </SelectTrigger>
+            <SelectContent>
+              {orderOptions.map(opt => (
+                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-full md:w-24">
+          <Select value={String(limit)} onValueChange={v => { setPage(1); setLimit(Number(v)); }}>
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Limite" />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 50].map(n => (
+                <SelectItem key={n} value={String(n)}>{n} / page</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-full md:w-56">
+          <Select value={fournisseurId} onValueChange={v => { setPage(1); setFournisseurId(v); }}>
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Tous les fournisseurs" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les fournisseurs</SelectItem>
+              {vendors.map(v => (
+                <SelectItem key={v._id} value={v._id}>{v.userNickName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       {loading ? (
         <div className="text-center text-neutral-400 py-12">Chargement...</div>
