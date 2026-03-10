@@ -111,6 +111,7 @@ const MesProduits = () => {
   const [loadingDetail, setLoadingDetail] = useState(false);
   // Ajout pour le modal d'ajout de produit
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
   // Modal modification produit
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editProductId, setEditProductId] = useState(null);
@@ -258,6 +259,7 @@ const MesProduits = () => {
   const handleAddProduct = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
+    setAdding(true);
     try {
       await createProduct({
         // productState: form.productState,
@@ -291,6 +293,9 @@ const MesProduits = () => {
       fetchProducts();
     } catch (err) {
       toast.error('Erreur lors de l\'ajout du produit');
+    }
+    finally {
+      setAdding(false);
     }
   };
   useEffect(() => {
@@ -709,8 +714,10 @@ const MesProduits = () => {
                       </div> */}
                   </div>
                   <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" type="button" onClick={() => setAddModalOpen(false)}>Annuler</Button>
-                    <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Ajouter</Button>
+                    <Button variant="outline" type="button" onClick={() => setAddModalOpen(false)} disabled={adding}>Annuler</Button>
+                    <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit" disabled={adding}>
+                      {adding ? 'Ajout...' : 'Ajouter'}
+                    </Button>
                   </div>
                 </form>
               </DialogContent>
