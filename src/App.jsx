@@ -6,7 +6,7 @@ import { CartProvider } from './context/CartContext';
 function App() {
   return (
     <>
-      <Toaster position="top-right" />
+      <Toaster position="top-center" />
       <CartProvider>
         <AppRoutes />
       </CartProvider>
