@@ -6,8 +6,10 @@ import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import useScreenType from '../../utils/useScreenType';
+import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
 import { getMyStocksPassifs } from '../../services/stocks_move.service';
+import { getFullMediaUrl } from '../../services/media.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
@@ -130,12 +132,12 @@ function RetraitTableOrList({ loading, passifs, dateFormat }) {
 					<TableHeader>
 						<TableRow>
 							<TableHead className="text-xs text-neutral-600">Produit</TableHead>
-							<TableHead className="text-xs text-neutral-600">Type</TableHead>
-							<TableHead className="text-xs text-neutral-600">Quantité</TableHead>
-							<TableHead className="text-xs text-neutral-600">Prix unitaire (Ar)</TableHead>
-							<TableHead className="text-xs text-neutral-600">Total (Ar)</TableHead>
+							<TableHead className="text-xs text-neutral-600">Image</TableHead>
 							<TableHead className="text-xs text-neutral-600">Départ</TableHead>
 							<TableHead className="text-xs text-neutral-600">Arrivée</TableHead>
+							<TableHead className="text-xs text-neutral-600">Quantité</TableHead>
+							<TableHead className="text-xs text-neutral-600">Prix unitaire</TableHead>
+							<TableHead className="text-xs text-neutral-600">Type</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
@@ -147,21 +149,28 @@ function RetraitTableOrList({ loading, passifs, dateFormat }) {
 							const quantite = item.quantite ?? '-';
 							const prixUnitaire = item.prixUnitaire ?? null;
 							const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
-							const depart = item.siteOrigineId?.siteName || '-';
-							const arrivee = item.siteDestinationId?.siteName || '-';
+							const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
+							const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
 							const detenteur = item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
 							const ayantDroit = item.ayant_droit?.userNickName || '-';
 							const date = item.createdAt;
+							const typeVariant = item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default';
 
 							return (
 								<TableRow key={idx}>
 									<TableCell className="text-sm font-semibold text-neutral-900">{produit}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{item.type || '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{quantite}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{montant !== null ? formatThousands(montant) : '-'}</TableCell>
+									<TableCell>
+										{item.productId?.productImage ? (
+											<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
+										) : (
+											<span className="text-neutral-400">-</span>
+										)}
+									</TableCell>
 									<TableCell className="text-sm text-neutral-600">{depart}</TableCell>
 									<TableCell className="text-sm text-neutral-600">{arrivee}</TableCell>
+									<TableCell className="text-sm text-neutral-600">{quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</TableCell>
+									<TableCell className="text-sm text-neutral-600">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
+									<TableCell className="text-sm text-neutral-600"><Badge variant={typeVariant}>{item.type || '-'}</Badge></TableCell>
 									<TableCell className="text-sm text-neutral-600">{detenteur}</TableCell>
 									<TableCell className="text-sm text-neutral-600">{ayantDroit}</TableCell>
 									<TableCell className="text-sm text-neutral-600">{date ? dateFormat(date) : '-'}</TableCell>
@@ -181,28 +190,36 @@ function RetraitTableOrList({ loading, passifs, dateFormat }) {
 				const quantite = item.quantite ?? '-';
 				const prixUnitaire = item.prixUnitaire ?? null;
 				const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
-				const depart = item.siteOrigineId?.siteName || '-';
-				const arrivee = item.siteDestinationId?.siteName || '-';
+				const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
+				const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
 				const detenteur = item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
 				const ayantDroit = item.ayant_droit?.userNickName || '-';
 				const date = item.createdAt;
+				const typeVariant = item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default';
 
 				return (
 					<Card key={idx} className="p-4">
 						<div className="flex items-start justify-between gap-4">
 							<div className="flex-1 min-w-0">
 								<div className="flex items-center gap-3">
+									<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
+										{item.productId?.productImage ? (
+											<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-full h-full object-cover" />
+										) : (
+											<span className="text-neutral-400">-</span>
+										)}
+									</div>
 									<div className="min-w-0">
 										<div className="font-medium text-neutral-900 truncate">{produit}</div>
-										<div className="text-xs text-neutral-500 truncate">{item.type || '-'}</div>
+										<div className="text-xs text-neutral-500 truncate">{depart}</div>
+										<div className="text-xs text-neutral-500 truncate">{arrivee}</div>
 									</div>
 								</div>
 								<div className="mt-3 flex flex-wrap items-center gap-2">
-									<div className="text-sm text-neutral-900">Quantité: {quantite}</div>
-									<div className="text-sm text-neutral-600">Prix unitaire: {prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</div>
+									<div className="text-sm text-neutral-900">Quantité: {quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</div>
+									<div className="text-sm text-neutral-600">Prix: {prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</div>
+									<div className="text-sm text-neutral-600"><Badge variant={typeVariant}>{item.type || '-'}</Badge></div>
 									<div className="text-sm text-neutral-600">Montant: {montant !== null ? formatThousands(montant) : '-'}</div>
-									<div className="text-sm text-neutral-600">Départ: {depart}</div>
-									<div className="text-sm text-neutral-600">Arrivée: {arrivee}</div>
 									<div className="text-sm text-neutral-600">Détenteur: {detenteur}</div>
 									<div className="text-sm text-neutral-600">Ayant droit: {ayantDroit}</div>
 									<div className="text-sm text-neutral-600">{date ? dateFormat(date) : '-'}</div>
