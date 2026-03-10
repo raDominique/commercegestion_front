@@ -172,7 +172,7 @@ const Boutique = () => {
                 <CardContent className="px-4 py-3">
                   <div className="flex flex-col gap-2">
                     <div className="text-sm text-neutral-700"><span className="font-medium">Code CPC:</span> {product.codeCPC || '-'}</div>
-                    <div className="text-sm text-neutral-700"><span className="font-medium">Propriétaire:</span> {vendeur?.userNickName || product.productOwnerId || '-'}</div>
+                    <div className="text-sm text-neutral-700"><span className="font-medium">Créateur:</span> {vendeur?.userNickName || product.productOwnerId || '-'}</div>
                   </div>
                 </CardContent>
               </Card>

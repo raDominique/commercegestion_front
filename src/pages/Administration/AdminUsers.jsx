@@ -318,6 +318,8 @@ export default function AdminUsers() {
                                 <div><b>Email :</b> {detailUser.userEmail}</div>
                                 <div><b>Téléphone :</b> {detailUser.userPhone}</div>
                                 <div><b>Adresse :</b> {detailUser.userAddress}</div>
+                                <div><b>Longitude :</b> {detailUser.userMainLng}</div>
+                                <div><b>Latitude :</b> {detailUser.userMainLat}</div>
                                 <div><b>Solde :</b> {detailUser.userTotalSolde} Ariary</div>
                                 <div><b>Validé :</b> {detailUser.userValidated ? 'Oui' : 'Non'}</div>
                                 <div><b>Email vérifié :</b> {detailUser.userEmailVerified ? 'Oui' : 'Non'}</div>
@@ -325,6 +327,7 @@ export default function AdminUsers() {
                                 <div><b>Numéro CIN :</b> {detailUser.identityCardNumber}</div>
                                 <div><b>Manager :</b> {detailUser.managerName} ({detailUser.managerEmail})</div>
                                 <div><b>Date création :</b> {new Date(detailUser.createdAt).toLocaleString()}</div>
+
                                 {/* Téléchargement carteStat */}
                                 {Array.isArray(detailUser.carteStat) && detailUser.carteStat.length > 0 && (
                                     <div className="mt-2">

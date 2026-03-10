@@ -411,12 +411,12 @@ const MesProduits = () => {
     if (isDesktop) {
       return (
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
                 <TableHead className="text-left p-4 text-xs text-neutral-600">Aperçu</TableHead>
                 <TableHead className="text-left p-4 text-xs text-neutral-600">Nom</TableHead>
-                <TableHead className="text-left p-4 text-xs text-neutral-600">Catégorie</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600 w-48">Catégorie</TableHead>
                 <TableHead className="text-left p-4 text-xs text-neutral-600">Validé</TableHead>
                 <TableHead className="text-left p-4 text-xs text-neutral-600">Code CPC</TableHead>
                 <TableHead className="text-left p-4 text-xs text-neutral-600">Déposer</TableHead>
@@ -439,7 +439,9 @@ const MesProduits = () => {
                       )}
                     </TableCell>
                     <TableCell className="p-4 text-sm text-neutral-900">{product.name}</TableCell>
-                    <TableCell className="p-4 text-sm text-neutral-600">{product.categoryNom || '-'}</TableCell>
+                    <TableCell className="p-4 text-sm text-neutral-600 w-48">
+                      <div className="w-48 truncate">{product.categoryNom || '-'}</div>
+                    </TableCell>
                     <TableCell className="p-4 text-sm">
                       <Badge
                         variant={product.validation ? 'default' : 'secondary'}
@@ -524,7 +526,7 @@ const MesProduits = () => {
                     <div className="text-sm font-medium text-neutral-900 truncate">{product.name}</div>
                     <div className="text-sm text-neutral-600">{product.codeCPC || '-'}</div>
                   </div>
-                  <div className="text-sm text-neutral-600 truncate">{product.categoryNom || '-'}</div>
+                  <div className="text-sm text-neutral-600 max-w-full wrap-wrap-break-words whitespace-normal">{product.categoryNom || '-'}</div>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge
                       variant={product.validation ? 'default' : 'secondary'}
@@ -1067,14 +1069,14 @@ const MesProduits = () => {
                   </div>
                 )}
 
-                <div className="flex flex-col gap-2">
-                  <div className="text-xl font-bold text-violet-700">
+                <div className="flex flex-col gap-2 min-w-0 flex-1">
+                  <div className="text-xl font-bold text-violet-700 wrap-break-words">
                     {detailProduct.productName}
                   </div>
 
                   <Badge
                     variant="secondary"
-                    className="text-xs capitalize w-fit"
+                    className="text-xs capitalize w-fit max-w-full wrap-break-words whitespace-normal"
                   >
                     {detailProduct.productCategory}
                   </Badge>
@@ -1110,7 +1112,7 @@ const MesProduits = () => {
                 <div className="text-sm font-semibold text-neutral-700 mb-1">
                   Description
                 </div>
-                <div className="text-sm text-neutral-900">
+                <div className="text-sm text-neutral-900 wrap-break-words">
                   {detailProduct.productDescription || '-'}
                 </div>
               </div>

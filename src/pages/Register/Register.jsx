@@ -80,8 +80,9 @@ const Register = () => {
       if (Array.isArray(dataToSend.documents)) {
         dataToSend.documents = dataToSend.documents.filter(f => f);
       }
-      await createUser(dataToSend);
-      toast.success('Inscription réussie !');
+      const res = await createUser(dataToSend);
+      const successMessage = res?.data?.message || res?.message || 'Inscription réussie !';
+      toast.success(successMessage);
       navigate('/login');
     } catch (error) {
       console.log('Erreur lors de l\'inscription :', error);
@@ -403,17 +404,17 @@ const Register = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="userName">
-                      Nom
+                      {form.userType === 'Entreprise' ? 'Raison sociale' : 'Nom'}
                       <span className='text-red-400'>*</span>
                     </Label>
-                    <Input id="userName" name="userName" type="text" placeholder="Nom" value={form.userName} onChange={handleChange} required className="border-neutral-300" aria-invalid={!!fieldErrors.userName} />
+                    <Input id="userName" name="userName" type="text" placeholder={form.userType === 'Entreprise' ? 'Raison sociale' : 'Nom'} value={form.userName} onChange={handleChange} required className="border-neutral-300" aria-invalid={!!fieldErrors.userName} />
                     {fieldErrors.userName && (
                       <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userName}</span>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="userFirstname">Prénom</Label>
-                    <Input id="userFirstname" name="userFirstname" type="text" placeholder="Prénom" value={form.userFirstname} onChange={handleChange} required className="border-neutral-300" />
+                    <Label htmlFor="userFirstname">{form.userType === 'Entreprise' ? 'Nom commercial' : 'Prénom'}</Label>
+                    <Input id="userFirstname" name="userFirstname" type="text" placeholder={form.userType === 'Entreprise' ? 'Nom commercial' : 'Prénom'} value={form.userFirstname} onChange={handleChange} required className="border-neutral-300" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="userEmail">
@@ -547,7 +548,7 @@ const Register = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="documentType">
-                      Pièce d'identité
+                      {form.userType === 'Entreprise' ? "Pièce d'identité du gérant" : "Pièce d'identité"}
                       <span className='text-red-400'>*</span>
                     </Label>
                     <Select value={form.documentType} onValueChange={val => { setForm(f => ({ ...f, documentType: val })); setFieldErrors({ ...fieldErrors, documentType: undefined }); }}>

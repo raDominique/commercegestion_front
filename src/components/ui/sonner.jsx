@@ -13,7 +13,7 @@ const Toaster = ({ ...props }) => {
       style={{
         '--normal-bg': '#fff',
         '--normal-text': '#18181b',
-        '--normal-border': '#a78bfa', // violet-400
+        '--normal-border': '#a78bfa',
         '--success-bg': '#f0fdf4',
         '--success-text': '#166534',
         '--success-border': '#4ade80',

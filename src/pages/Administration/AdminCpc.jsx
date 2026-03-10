@@ -439,22 +439,24 @@ function CpcTableOrList({ loading, items, handleShowInfo, handleEditCpc, handleD
     if (isDesktop) {
         return (
             <div className="overflow-x-auto">
-                <Table>
+                <Table className="table-fixed">
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="text-xs text-neutral-600">Code</TableHead>
-                            <TableHead className="text-xs text-neutral-600">Nom</TableHead>
-                            <TableHead className="text-xs text-neutral-600">Niveau</TableHead>
-                            <TableHead className="text-xs text-neutral-600 text-right">Actions</TableHead>
+                            <TableHead className="text-xs text-neutral-600 w-28">Code</TableHead>
+                            <TableHead className="text-xs text-neutral-600 w-64">Nom</TableHead>
+                            <TableHead className="text-xs text-neutral-600 w-40">Niveau</TableHead>
+                            <TableHead className="text-xs text-neutral-600 text-right w-32">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {items.map((item, idx) => (
                             <TableRow key={idx}>
-                                <TableCell className="text-sm text-neutral-900">{item.code}</TableCell>
-                                <TableCell className="text-sm text-neutral-600">{item.nom}</TableCell>
-                                <TableCell className="text-sm text-neutral-600"><Badge variant="secondary" className="text-xs">{item.niveau}</Badge></TableCell>
-                                <TableCell>
+                                <TableCell className="text-sm text-neutral-900 w-28">{item.code}</TableCell>
+                                <TableCell className="text-sm text-neutral-600 w-64">
+                                    <div className="w-64 truncate">{item.nom}</div>
+                                </TableCell>
+                                <TableCell className="text-sm text-neutral-600 w-40"><Badge variant="secondary" className="text-xs">{item.niveau}</Badge></TableCell>
+                                <TableCell className="w-32">
                                     <div className="flex items-center justify-end gap-2">
                                         <Button variant="ghost" size="sm" aria-label={`Voir ${item.code}`} onClick={() => handleShowInfo(item.code)}><InfoIcon className="w-5 h-5 text-violet-600" /></Button>
                                         <Button variant="ghost" size="sm" aria-label={`Modifier ${item.code}`} onClick={() => handleEditCpc(item.code)}><EditIcon className="w-5 h-5 text-amber-600" /></Button>
@@ -479,7 +481,7 @@ function CpcTableOrList({ loading, items, handleShowInfo, handleEditCpc, handleD
                             <div className="flex items-center gap-3">
                                 <div className="flex flex-col">
                                     <span className="font-bold text-neutral-900">{item.code}</span>
-                                    <span className="text-xs text-neutral-500 truncate">{item.nom}</span>
+                                    <span className="text-xs text-neutral-500 max-w-full wrap-break-words whitespace-normal">{item.nom}</span>
                                 </div>
                             </div>
                             <div className="mt-3 flex items-center gap-2 flex-wrap">
