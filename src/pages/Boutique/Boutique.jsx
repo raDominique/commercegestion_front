@@ -75,7 +75,7 @@ const Boutique = () => {
   }
   return (
     <div className="px-6 mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-neutral-900">Boutique</h1>
+      <h1 className="text-2xl mb-6 text-neutral-900">Boutique</h1>
       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
         <div className="w-full md:w-64">
           <Input

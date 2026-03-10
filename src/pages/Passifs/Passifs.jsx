@@ -14,8 +14,10 @@ import { useAuth } from '../../context/AuthContext';
 import { getAllUsersSelect } from '../../services/user.service';
 import { getAllSitesSelect } from '../../services/site.service';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import MoveUpIcon from '@mui/icons-material/MoveUp';
 import { formatThousands } from '../../utils/formatNumber.js';
+import { Badge } from '../../components/ui/badge';
 
 const Passifs = () => {
 	const dateFormat = useDateFormat();
@@ -163,48 +165,71 @@ const Passifs = () => {
 					</div>
 					<Card className="border-neutral-200 bg-white">
 						<div className="overflow-x-auto">
-							<table className="w-full">
-								<thead className="bg-neutral-50 border-b border-neutral-200">
-									<tr>
-										<th className="p-4 text-xs text-neutral-600 text-left">Situation</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Type</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Montant</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Départ</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Arrivée</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Action</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Transférer</th>
-									</tr>
-								</thead>
-								<tbody>
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead className="text-xs text-neutral-600">Produit</TableHead>
+										<TableHead className="text-xs text-neutral-600">Type</TableHead>
+										<TableHead className="text-xs text-neutral-600">Quantité</TableHead>
+										<TableHead className="text-xs text-neutral-600">Prix unitaire</TableHead>
+										<TableHead className="text-xs text-neutral-600">Montant</TableHead>
+										<TableHead className="text-xs text-neutral-600">Départ</TableHead>
+										<TableHead className="text-xs text-neutral-600">Arrivée</TableHead>
+										<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
+										<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
+										<TableHead className="text-xs text-neutral-600">Date</TableHead>
+										<TableHead className="text-xs text-neutral-600 text-right p-4">Action</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
 									{loading ? (
-										<tr><td colSpan="8" className="p-8 text-center text-neutral-400">Chargement...</td></tr>
+										<TableRow>
+											<TableCell colSpan={11} className="p-8 text-center text-neutral-400">Chargement...</TableCell>
+										</TableRow>
 									) : passifs.length > 0 ? (
-										passifs.map((item, idx) => (
-											<tr key={idx} className="border-b border-neutral-100 last:border-0">
-												<td className="p-4 text-sm">{item.situation || '-'}</td>
-												<td className="p-4 text-sm">{item.type || '-'}</td>
-												<td className="p-4 text-sm">{item.montant != null ? formatThousands(item.montant) : '-'}</td>
-												<td className="p-4 text-sm">{getSiteName(item.departDeId)}</td>
-												<td className="p-4 text-sm">{getSiteName(item.arriveeId)}</td>
-												<td className="p-4 text-sm">{item.action || '-'}</td>
-												<td className="p-4 text-sm">{item.date ? dateFormat(item.date) : '-'}</td>
-												<td className="p-4 text-sm">
-													<Button
-														onClick={() => handleOpenWithdrawModal(item)}
-														variant="outline"
-													>
-														<MoveUpIcon fontSize="small" className="mr-1" />
-														Retirer
-													</Button>
-												</td>
-											</tr>
-										))
+										passifs.map((item, idx) => {
+											const produit = item.productId?.productName || item.productId?.codeCPC || '-';
+											const quantite = item.quantite ?? '-';
+											const prixUnitaire = item.prixUnitaire ?? null;
+											const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
+											const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
+											const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
+											const detenteur = item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
+											const ayantDroit = item.ayant_droit?.userNickName || '-';
+											const date = item.createdAt;
+											const typeVariant = item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default';
+
+											return (
+												<TableRow key={idx}>
+													<TableCell className="text-sm">{produit}</TableCell>
+													<TableCell className="text-sm"><Badge variant={typeVariant}>{item.type || '-'}</Badge></TableCell>
+													<TableCell className="text-sm">{quantite}</TableCell>
+													<TableCell className="text-sm">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
+													<TableCell className="text-sm">{montant !== null ? formatThousands(montant) : '-'}</TableCell>
+													<TableCell className="text-sm">{depart}</TableCell>
+													<TableCell className="text-sm">{arrivee}</TableCell>
+													<TableCell className="text-sm">{detenteur}</TableCell>
+													<TableCell className="text-sm">{ayantDroit}</TableCell>
+													<TableCell className="text-sm">{date ? dateFormat(date) : '-'}</TableCell>
+													<TableCell className="text-sm text-right">
+														<Button
+															onClick={() => handleOpenWithdrawModal(item)}
+															variant="outline"
+														>
+															<MoveUpIcon fontSize="small" className="mr-1" />
+															Retirer
+														</Button>
+													</TableCell>
+												</TableRow>
+											);
+										})
 									) : (
-										<tr><td colSpan="8" className="p-8 text-center text-neutral-400">Aucun passif trouvé</td></tr>
+										<TableRow>
+											<TableCell colSpan={11} className="p-8 text-center text-neutral-400">Aucun passif trouvé</TableCell>
+										</TableRow>
 									)}
-								</tbody>
-							</table>
+								</TableBody>
+							</Table>
 						</div>
 					</Card>
 					<div className="flex justify-end items-center gap-4 mt-4">
