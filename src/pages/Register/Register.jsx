@@ -624,7 +624,7 @@ const Register = () => {
                               id={`documents-${idx}`}
                               name="documents"
                               type="file"
-                              accept="image/png"
+                              accept="image/*,.pdf"
                               data-idx={idx}
                               onChange={handleChange}
                               className="border-neutral-300 w-full"
@@ -681,7 +681,7 @@ const Register = () => {
                                 id={`carteStat-${idx}`}
                                 name="carteStat"
                                 type="file"
-                                accept="image/png"
+                                accept="image/*,.pdf"
                                 data-idx={idx}
                                 onChange={handleChange}
                                 className="border-neutral-300 w-full"
@@ -711,7 +711,7 @@ const Register = () => {
                                 id={`carteFiscal-${idx}`}
                                 name="carteFiscal"
                                 type="file"
-                                accept="image/png"
+                                accept="image/*,.pdf"
                                 data-idx={idx}
                                 onChange={handleChange}
                                 className="border-neutral-300 w-full"
