@@ -170,6 +170,7 @@ const AdminProducts = () => {
           </div>
         </DialogContent>
       </Dialog>
+
       {/* Modal détail produit */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent aria-describedby="product-detail-desc" className="max-w-3xl">
@@ -199,14 +200,14 @@ const AdminProducts = () => {
                   </div>
                 )}
 
-                <div className="flex flex-col gap-2">
-                  <div className="text-xl font-bold text-violet-700">
+                <div className="flex flex-col gap-2 min-w-0 flex-1">
+                  <div className="text-xl font-bold text-violet-700 wrap-break-words">
                     {detailProduct.productName}
                   </div>
 
                   <Badge
                     variant="secondary"
-                    className="text-xs capitalize w-fit"
+                    className="text-xs capitalize w-fit max-w-full wrap-break-words whitespace-normal"
                   >
                     {detailProduct.productCategory}
                   </Badge>
@@ -242,7 +243,7 @@ const AdminProducts = () => {
                 <div className="text-sm font-semibold text-neutral-700 mb-1">
                   Description
                 </div>
-                <div className="text-sm text-neutral-900">
+                <div className="text-sm text-neutral-900 wrap-break-words">
                   {detailProduct.productDescription || '-'}
                 </div>
               </div>
@@ -347,7 +348,9 @@ function ProductTableOrList({ loading, products, handleAskValidate, handleShowDe
                   )}
                 </TableCell>
                 <TableCell className="text-sm text-neutral-900">{product.name}</TableCell>
-                <TableCell className="text-sm text-neutral-600">{product.categoryNom || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-600">
+                  <div className="w-48 truncate">{product.categoryNom || '-'}</div>
+                </TableCell>
                 <TableCell className="text-sm text-neutral-600">{product.ownerName || product.ownerNickName || '-'}</TableCell>
                 <TableCell>
                   <Badge variant={product.isStocker ? 'default' : 'secondary'} className={product.isStocker ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
