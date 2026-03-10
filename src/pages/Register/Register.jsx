@@ -285,21 +285,21 @@ const Register = () => {
       <Card className="w-full h-full max-w-none rounded-none p-0 border-none shadow-none overflow-hidden">
         <div className="flex flex-col md:flex-row w-full h-screen">
           {/* Left column: Branding and steps */}
-          <div className="md:w-1/2 bg-violet-50 flex flex-col items-center justify-center p-8 border-b md:border-b-0 md:border-r border-neutral-200">
-            <img src={LogoImage} alt="Logo Etokisana" className="h-20 w-auto mb-6" />
-            <h1 className="text-3xl font-bold text-violet-700 mb-2">Créer un compte</h1>
-            <p className="text-base text-neutral-700 mb-6 text-center">
+          <div className="md:w-1/2 bg-violet-50 flex flex-col items-center justify-center p-6 md:p-8 border-b md:border-b-0 md:border-r border-neutral-200 h-56 md:h-auto">
+            <img src={LogoImage} alt="Logo Etokisana" className="h-14 md:h-20 w-auto mb-4 md:mb-6" />
+            <h1 className="text-2xl md:text-3xl font-bold text-violet-700 mb-2">Créer un compte</h1>
+            <p className="text-sm md:text-base text-neutral-700 mb-6 text-center">
               Rejoignez <span className="font-bold text-violet-600">Etokisana</span> dès aujourd'hui
             </p>
-            <div className="flex justify-center gap-2 mb-4">
+            <div className="flex justify-center gap-2 mb-4 md:mb-6">
               {steps.map((label, idx) => (
                 <div
                   key={label}
-                  className={`h-2 w-8 rounded-full transition-all ${step >= idx ? 'bg-violet-600' : 'bg-neutral-200'}`}
+                  className={`h-2 w-6 md:w-8 rounded-full transition-all ${step >= idx ? 'bg-violet-600' : 'bg-neutral-200'}`}
                 />
               ))}
             </div>
-            <div className="flex flex-col gap-1 w-full max-w-xs mx-auto">
+            <div className="flex flex-col gap-1 w-full max-w-xs md:max-w-xs mx-auto px-2 md:px-0">
               {steps.map((label, idx) => (
                 <div key={label} className="flex items-center gap-2">
                   <div className={`h-3 w-3 rounded-full ${step === idx ? 'bg-violet-600' : 'bg-neutral-300'}`}></div>
@@ -309,7 +309,7 @@ const Register = () => {
             </div>
           </div>
           {/* Right column: Form */}
-          <div className="md:w-1/2 p-8 flex flex-col justify-center">
+          <div className="md:w-1/2 p-4 md:p-8 flex flex-col justify-center overflow-auto max-h-screen">
             <form onSubmit={step === steps.length - 1 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }} className="space-y-4">
               {/* ÉTAPE 1 : Choix du type d'utilisateur */}
               {step === 0 && (
@@ -555,7 +555,7 @@ const Register = () => {
                       )}
                     </div>
                     {form.avatar && (
-                      <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-violet-400 shadow-lg">
+                      <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-violet-400 shadow-lg">
                         <img src={URL.createObjectURL(form.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                       </div>
                     )}
@@ -594,7 +594,7 @@ const Register = () => {
                               <img
                                 src={URL.createObjectURL(form.documents[idx])}
                                 alt={`Document ${idx + 1}`}
-                                className="w-20 h-20 object-cover mt-2 rounded border"
+                                className="w-20 h-20 md:w-24 md:h-24 object-cover mt-2 rounded border"
                               />
                             )}
                           </div>
@@ -623,7 +623,7 @@ const Register = () => {
                           )}
                         </div>
                         {form.logo && (
-                          <div className="w-24 h-24 rounded-lg overflow-hidden border-2 border-violet-400 shadow-lg">
+                          <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 border-violet-400 shadow-lg">
                             <img src={URL.createObjectURL(form.logo)} alt="Logo" className="w-full h-full object-cover" />
                           </div>
                         )}
@@ -651,7 +651,7 @@ const Register = () => {
                                 <img
                                   src={URL.createObjectURL(form.carteStat[idx])}
                                   alt={`Carte Stat ${idx + 1}`}
-                                  className="w-20 h-20 object-cover mt-2 rounded border"
+                                  className="w-20 h-20 md:w-24 md:h-24 object-cover mt-2 rounded border"
                                 />
                               )}
                             </div>
@@ -681,7 +681,7 @@ const Register = () => {
                                 <img
                                   src={URL.createObjectURL(form.carteFiscal[idx])}
                                   alt={`Carte fiscale ${idx + 1}`}
-                                  className="w-20 h-20 object-cover mt-2 rounded border"
+                                  className="w-20 h-20 md:w-24 md:h-24 object-cover mt-2 rounded border"
                                 />
                               )}
                             </div>
@@ -692,7 +692,7 @@ const Register = () => {
                   )}
                 </div>
               )}
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-2 flex-wrap">
                 {step > 0 && (
                   <Button type="button" variant="outline" onClick={prevStep}>
                     Précédent
