@@ -6,6 +6,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import useScreenType from '../../utils/useScreenType';
+import { Badge } from '../../components/ui/badge';
+import { formatThousands } from '../../utils/formatNumber';
 import { getMyStocksActifs } from '../../services/stocks_move.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
@@ -133,24 +135,27 @@ export default Depot;
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{actifs.map((item) => (
-								<TableRow key={item._id}>
-									<TableCell className="text-sm font-semibold text-neutral-900">{item.productId?.productName || '-'}</TableCell>
-									<TableCell>
-										{item.productId?.productImage ? (
-											<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
-										) : (
-											<span className="text-neutral-400">-</span>
-										)}
-									</TableCell>
-									<TableCell className="text-sm text-neutral-600">{item.siteOrigineId?.siteName || '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{item.siteDestinationId?.siteName || '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{item.quantite || '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{item.prixUnitaire || '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{item.type || '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{item.createdAt ? dateFormat(item.createdAt) : '-'}</TableCell>
-								</TableRow>
-							))}
+							{actifs.map((item) => {
+								const typeVariant = item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default';
+								return (
+									<TableRow key={item._id}>
+										<TableCell className="text-sm font-semibold text-neutral-900">{item.productId?.productName || '-'}</TableCell>
+										<TableCell>
+											{item.productId?.productImage ? (
+												<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
+											) : (
+												<span className="text-neutral-400">-</span>
+											)}
+										</TableCell>
+										<TableCell className="text-sm text-neutral-600">{item.siteOrigineId?.siteName || '-'}</TableCell>
+										<TableCell className="text-sm text-neutral-600">{item.siteDestinationId?.siteName || '-'}</TableCell>
+										<TableCell className="text-sm text-neutral-600">{item.quantite !== undefined && item.quantite !== null ? formatThousands(item.quantite) : '-'}</TableCell>
+										<TableCell className="text-sm text-neutral-600">{item.prixUnitaire !== undefined && item.prixUnitaire !== null ? formatThousands(item.prixUnitaire) : '-'}</TableCell>
+										<TableCell className="text-sm text-neutral-600"><Badge variant={typeVariant}>{item.type || '-'}</Badge></TableCell>
+										<TableCell className="text-sm text-neutral-600">{item.createdAt ? dateFormat(item.createdAt) : '-'}</TableCell>
+									</TableRow>
+								);
+							})}
 						</TableBody>
 					</Table>
 				</div>
@@ -160,39 +165,42 @@ export default Depot;
 		// Mobile cards
 		return (
 			<div className="space-y-3 p-4">
-				{actifs.map((item) => (
-					<Card key={item._id} className="p-4">
-						<div className="flex items-start justify-between gap-4">
-							<div className="flex-1 min-w-0">
-								<div className="flex items-center gap-3">
-									<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
-										{item.productId?.productImage ? (
-											<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-full h-full object-cover" />
-										) : (
-											<span className="text-neutral-400">-</span>
-										)}
+				{actifs.map((item) => {
+					const typeVariant = item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default';
+					return (
+						<Card key={item._id} className="p-4">
+							<div className="flex items-start justify-between gap-4">
+								<div className="flex-1 min-w-0">
+									<div className="flex items-center gap-3">
+										<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
+											{item.productId?.productImage ? (
+												<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-full h-full object-cover" />
+											) : (
+												<span className="text-neutral-400">-</span>
+											)}
+										</div>
+										<div className="min-w-0">
+											<div className="font-medium text-neutral-900 truncate">{item.productId?.productName || '-'}</div>
+											<div className="text-xs text-neutral-500 truncate">{item.siteOrigineId?.siteName || '-'}</div>
+											<div className="text-xs text-neutral-500 truncate">{item.siteDestinationId?.siteName || '-'}</div>
+										</div>
 									</div>
-									<div className="min-w-0">
-										<div className="font-medium text-neutral-900 truncate">{item.productId?.productName || '-'}</div>
-										<div className="text-xs text-neutral-500 truncate">{item.siteOrigineId?.siteName || '-'}</div>
-										<div className="text-xs text-neutral-500 truncate">{item.siteDestinationId?.siteName || '-'}</div>
+									<div className="mt-3 flex flex-wrap items-center gap-2">
+										<div className="text-sm text-neutral-900">Qty: {item.quantite !== undefined && item.quantite !== null ? formatThousands(item.quantite) : '-'}</div>
+										<div className="text-sm text-neutral-600">Prix: {item.prixUnitaire !== undefined && item.prixUnitaire !== null ? formatThousands(item.prixUnitaire) : '-'}</div>
+										<div className="text-sm text-neutral-600"><Badge variant={typeVariant}>{item.type || '-'}</Badge></div>
+										<div className="text-sm text-neutral-600">{item.createdAt ? dateFormat(item.createdAt) : '-'}</div>
 									</div>
 								</div>
-								<div className="mt-3 flex flex-wrap items-center gap-2">
-									<div className="text-sm text-neutral-900">Qty: {item.quantite || '-'}</div>
-									<div className="text-sm text-neutral-600">Prix: {item.prixUnitaire || '-'}</div>
-									<div className="text-sm text-neutral-600">{item.type || '-'}</div>
-									<div className="text-sm text-neutral-600">{item.createdAt ? dateFormat(item.createdAt) : '-'}</div>
+								<div className="flex flex-col items-end gap-2">
+									<Button variant="ghost" size="sm" aria-label={`Détail ${item._id}`} onClick={() => handleShowDetail(item._id)}>
+										<InfoIcon className="w-5 h-5 text-violet-600" />
+									</Button>
 								</div>
 							</div>
-							<div className="flex flex-col items-end gap-2">
-								<Button variant="ghost" size="sm" aria-label={`Détail ${item._id}`} onClick={() => handleShowDetail(item._id)}>
-									<InfoIcon className="w-5 h-5 text-violet-600" />
-								</Button>
-							</div>
-						</div>
-					</Card>
-				))}
+						</Card>
+					);
+				})}
 			</div>
 		);
 	}
