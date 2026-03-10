@@ -3,6 +3,8 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
+import useScreenType from '../../utils/useScreenType';
 import SearchIcon from '@mui/icons-material/Search';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle.jsx';
@@ -259,7 +261,7 @@ const AdminCpc = () => {
 
                 {/* Filtres + Search */}
                 <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
-                    <div className="relative flex-1">
+                    <div className="relative flex-1 min-w-0">
                         <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
                         <Input
                             placeholder="Rechercher un code ou libellé..."
@@ -268,12 +270,12 @@ const AdminCpc = () => {
                                 setPage(1);
                                 setSearchTerm(e.target.value);
                             }}
-                            className="border-black pl-10 bg-white"
+                            className="border-black pl-10 bg-white w-full"
                         />
                     </div>
-                    <div className="relative w-56">
+                    <div className="relative w-full md:w-56 min-w-0">
                         <Select value={niveau} onValueChange={value => { setPage(1); setNiveau(value); }}>
-                            <SelectTrigger id="niveau" className="w-full border-neutral-300 bg-white">
+                            <SelectTrigger id="niveau" className="w-full border-neutral-300 bg-white min-w-0">
                                 <SelectValue placeholder="Choisir un niveau" />
                             </SelectTrigger>
                             <SelectContent className="z-10000">
@@ -287,54 +289,15 @@ const AdminCpc = () => {
                     </div>
                 </div>
 
-                {/* CPC Table */}
+                {/* CPC Table / List (responsive) */}
                 <Card className="border-neutral-200 bg-white">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-neutral-50 border-b border-neutral-200">
-                                <tr>
-                                    <th className="text-left p-4 text-xs text-neutral-600">Code</th>
-                                    <th className="text-left p-4 text-xs text-neutral-600">Nom</th>
-                                    <th className="text-left p-4 text-xs text-neutral-600">Niveau</th>
-                                    <th className="text-right p-4 text-xs text-neutral-600">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan="4" className="p-8 text-center text-neutral-400">Chargement...</td>
-                                    </tr>
-                                ) : cpcList.length > 0 ? (
-                                    cpcList.map((item, idx) => (
-                                        <tr key={idx} className="border-b border-neutral-200 last:border-0">
-                                            <td className="p-4 text-sm text-neutral-900">{item.code}</td>
-                                            <td className="p-4 text-sm text-neutral-600">{item.nom}</td>
-                                            <td className="p-4 text-sm text-neutral-600">
-                                                <Badge variant="secondary" className="text-xs">{item.niveau}</Badge>
-                                            </td>
-                                            <td className="p-4 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button variant="ghost" size="sm" onClick={() => handleShowInfo(item.code)}>
-                                                        <InfoIcon className="w-5 h-5 text-violet-600" />
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => handleEditCpc(item.code)}>
-                                                        <EditIcon className="w-5 h-5 text-amber-600" />
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteCpc(item.code)}>
-                                                        <DeleteIcon className="w-5 h-5 text-red-600" />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="4" className="p-8 text-center text-neutral-400">Aucun code trouvé</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <CpcTableOrList
+                        loading={loading}
+                        items={cpcList}
+                        handleShowInfo={handleShowInfo}
+                        handleEditCpc={handleEditCpc}
+                        handleDeleteCpc={handleDeleteCpc}
+                    />
                 </Card>
 
                 {/* Pagination simple */}
@@ -466,3 +429,73 @@ const AdminCpc = () => {
 };
 
 export default AdminCpc;
+
+function CpcTableOrList({ loading, items, handleShowInfo, handleEditCpc, handleDeleteCpc }) {
+    const { isDesktop } = useScreenType();
+
+    if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+    if (!items || items.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun code trouvé</div>;
+
+    if (isDesktop) {
+        return (
+            <div className="overflow-x-auto">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="text-xs text-neutral-600">Code</TableHead>
+                            <TableHead className="text-xs text-neutral-600">Nom</TableHead>
+                            <TableHead className="text-xs text-neutral-600">Niveau</TableHead>
+                            <TableHead className="text-xs text-neutral-600 text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {items.map((item, idx) => (
+                            <TableRow key={idx}>
+                                <TableCell className="text-sm text-neutral-900">{item.code}</TableCell>
+                                <TableCell className="text-sm text-neutral-600">{item.nom}</TableCell>
+                                <TableCell className="text-sm text-neutral-600"><Badge variant="secondary" className="text-xs">{item.niveau}</Badge></TableCell>
+                                <TableCell>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <Button variant="ghost" size="sm" aria-label={`Voir ${item.code}`} onClick={() => handleShowInfo(item.code)}><InfoIcon className="w-5 h-5 text-violet-600" /></Button>
+                                        <Button variant="ghost" size="sm" aria-label={`Modifier ${item.code}`} onClick={() => handleEditCpc(item.code)}><EditIcon className="w-5 h-5 text-amber-600" /></Button>
+                                        <Button variant="ghost" size="sm" aria-label={`Supprimer ${item.code}`} onClick={() => handleDeleteCpc(item.code)}><DeleteIcon className="w-5 h-5 text-red-600" /></Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        );
+    }
+
+    // Mobile cards
+    return (
+        <div className="space-y-3 p-4">
+            {items.map((item, idx) => (
+                <Card key={idx} className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3">
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-neutral-900">{item.code}</span>
+                                    <span className="text-xs text-neutral-500 truncate">{item.nom}</span>
+                                </div>
+                            </div>
+                            <div className="mt-3 flex items-center gap-2 flex-wrap">
+                                <Badge variant="secondary" className="text-xs">{item.niveau}</Badge>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="sm" aria-label={`Voir ${item.code}`} onClick={() => handleShowInfo(item.code)}><InfoIcon className="w-5 h-5 text-violet-600" /></Button>
+                                <Button variant="ghost" size="sm" aria-label={`Modifier ${item.code}`} onClick={() => handleEditCpc(item.code)}><EditIcon className="w-5 h-5 text-amber-600" /></Button>
+                                <Button variant="ghost" size="sm" aria-label={`Supprimer ${item.code}`} onClick={() => handleDeleteCpc(item.code)}><DeleteIcon className="w-5 h-5 text-red-600" /></Button>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            ))}
+        </div>
+    );
+}
