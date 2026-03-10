@@ -150,7 +150,7 @@ export default function MonCompte() {
   }
 
   return (
-    <div className="px-6 mx-auto">
+    <div className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl text-neutral-900 mb-2">Mon Compte</h1>
@@ -161,8 +161,8 @@ export default function MonCompte() {
 
         {/* Profile Card */}
         <Card className="p-6 border-neutral-200 bg-white">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center bg-neutral-100 overflow-hidden border border-neutral-200">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center bg-neutral-100 overflow-hidden border border-neutral-200">
               {profile.userImage ? (
                 <img
                   src={getFullMediaUrl(profile.userImage)}
@@ -175,10 +175,10 @@ export default function MonCompte() {
                 </span>
               )}
             </div>
-            <div className="flex-1">
-              <h2 className="text-lg text-neutral-900">{profile.userName} {profile.userFirstname}</h2>
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-lg text-neutral-900 wrap-break-words">{profile.userName} {profile.userFirstname}</h2>
               <p className="text-sm text-neutral-600">{profile.userEmail}</p>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex flex-wrap items-center gap-2 mt-2">
                 <Badge variant="secondary" className="capitalize bg-violet-50 text-violet-700 border-violet-200">
                   {profile.userAccess === 'Admin' ? 'Administrateur' : (profile.userAccess || 'Utilisateur')}
                 </Badge>
@@ -200,7 +200,7 @@ export default function MonCompte() {
                     Non vérifié
                   </Badge>
                 )}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 mt-2 sm:mt-0">
                   <Badge variant="outline" className="bg-neutral-50 text-neutral-700 border-neutral-700 px-2 py-1 text-xs font-mono">
                     ID: {profile.userId}
                   </Badge>
@@ -301,7 +301,7 @@ export default function MonCompte() {
                   />
                 </div>
 
-                <Button type="submit" className="bg-violet-600 hover:bg-violet-700 text-white" disabled={updating}>
+                <Button type="submit" className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white" disabled={updating}>
                   {updating ? 'Enregistrement...' : 'Enregistrer les modifications'}
                 </Button>
                 {/* Modal de confirmation */}
@@ -314,10 +314,10 @@ export default function MonCompte() {
                       </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={updating}>
+                      <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={updating} className="w-full sm:w-auto">
                         Annuler
                       </Button>
-                      <Button onClick={handleConfirmUpdate} className="bg-violet-600 text-white" disabled={updating}>
+                      <Button onClick={handleConfirmUpdate} className="bg-violet-600 text-white w-full sm:w-auto" disabled={updating}>
                         Confirmer
                       </Button>
                     </DialogFooter>
@@ -363,7 +363,7 @@ export default function MonCompte() {
                   />
                 </div>
 
-                <Button type="submit" className="bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center" disabled={changingPassword}>
+                <Button type="submit" className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center" disabled={changingPassword}>
                   {changingPassword ? (
                     <span className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   ) : null}
