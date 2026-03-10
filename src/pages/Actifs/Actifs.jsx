@@ -27,7 +27,9 @@ import { useAuth } from '../../context/AuthContext';
 import InfoIcon from '@mui/icons-material/Info';
 import MoveUpIcon from '@mui/icons-material/MoveUp';
 import usePageTitle from '../../utils/usePageTitle.jsx';
+import useScreenType from '../../utils/useScreenType';
 import { getFullMediaUrl } from '../../services/media.service';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { formatThousands } from '../../utils/formatNumber';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { getAllUsersSelect } from '../../services/user.service';
@@ -39,6 +41,8 @@ const Actifs = () => {
 
 	const { user } = useAuth();
 	const dateFormat = useDateFormat();
+
+	const { isDesktop } = useScreenType();
 
 	const [actifs, setActifs] = useState([]);
 	const [sites, setSites] = useState([]);
@@ -181,109 +185,7 @@ const Actifs = () => {
 
 					{/* TABLE */}
 					<Card className="border-neutral-200 bg-white">
-						<div className="overflow-x-auto">
-							<table className="w-full">
-								<thead className="bg-neutral-50 border-b border-neutral-200">
-									<tr>
-										<th className="p-4 text-xs text-neutral-600 text-left">Produit</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Image</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Site origine</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Site destination</th>
-										<th className="p-4 text-xs text-neutral-600 text-right">Qté</th>
-										<th className="p-4 text-xs text-neutral-600 text-right">PU (Ar)</th>
-										<th className="p-4 text-xs text-neutral-600 text-right">Total (Ar)</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Détenteur</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Ayant droit</th>
-										<th className="p-4 text-xs text-neutral-600 text-left">Date</th>
-										<th className="p-4 text-xs text-neutral-600 text-right">Actions</th>
-									</tr>
-								</thead>
-
-								<tbody>
-									{loading ? (
-										<tr>
-											<td colSpan="9" className="p-8 text-center text-neutral-400">
-												Chargement...
-											</td>
-										</tr>
-									) : actifs.length ? (
-										actifs.map(item => (
-											<tr key={item._id} className="border-b border-neutral-100 last:border-0">
-												<td className="p-4 text-sm">
-													{item.productId?.productName || '-'}
-												</td>
-
-												<td className="p-4 text-sm">
-													{item.productId?.productImage && (
-														<img
-															src={getFullMediaUrl(
-																item.productId.productImage
-															)}
-															className="w-12 h-12 rounded object-cover"
-														/>
-													)}
-												</td>
-
-												<td className="p-4 text-sm">
-													{item.siteOrigineId?.siteName || '-'}
-												</td>
-
-												<td className="p-4 text-sm">
-													{item.siteDestinationId?.siteName || '-'}
-												</td>
-
-												<td className="p-4 text-sm text-right">{formatThousands(item.quantite)}</td>
-												<td className="p-4 text-sm text-right">{formatThousands(item.prixUnitaire)}</td>
-
-												<td className="p-4 text-sm text-right">
-													{formatThousands(item.prixUnitaire * item.quantite)}
-												</td>
-												<td>
-													{item.détenteurId?.userName || '-'}
-												</td>
-												<td>
-													{item.ayant_droitId?.userName || '-'}
-												</td>
-
-												<td className="p-4 text-sm">
-													{item.createdAt
-														? dateFormat(item.createdAt)
-														: '-'}
-												</td>
-
-												<td className="p-4 text-right space-x-2">
-													<Button
-														onClick={() =>
-															handleOpenTransferModal(item)
-														}
-														variant="outline"
-													>
-														<MoveUpIcon className="w-5 h-5" />
-														Transférer
-													</Button>
-
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() =>
-															handleShowDetail(item._id)
-														}
-													>
-														<InfoIcon className="w-5 h-5 text-violet-600" />
-													</Button>
-												</td>
-											</tr>
-										))
-									) : (
-										<tr>
-											<td colSpan="9" className="p-8 text-center text-neutral-400">
-												Aucun actif trouvé
-											</td>
-										</tr>
-									)}
-								</tbody>
-							</table>
-						</div>
+						<ActifsTableOrList loading={loading} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onTransfer={handleOpenTransferModal} onShowDetail={handleShowDetail} />
 					</Card>
 
 					{/* PAGINATION */}
@@ -434,3 +336,96 @@ const Actifs = () => {
 };
 
 export default Actifs;
+
+function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onTransfer, onShowDetail }) {
+	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
+
+	if (isDesktop) {
+		return (
+			<div className="overflow-x-auto">
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead className="text-xs text-neutral-600">Produit</TableHead>
+							<TableHead className="text-xs text-neutral-600">Image</TableHead>
+							<TableHead className="text-xs text-neutral-600">Site origine</TableHead>
+							<TableHead className="text-xs text-neutral-600">Site destination</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right">Total (Ar)</TableHead>
+							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
+							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
+							<TableHead className="text-xs text-neutral-600">Date</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{actifs.map(item => (
+							<TableRow key={item._id}>
+								<TableCell className="text-sm">{item.productId?.productName || '-'}</TableCell>
+								<TableCell>
+									{item.productId?.productImage ? (
+										<img src={getFullMediaUrl(item.productId.productImage)} className="w-12 h-12 rounded object-cover" />
+									) : (
+										<span className="text-neutral-400">-</span>
+									)}
+								</TableCell>
+								<TableCell className="text-sm">{item.siteOrigineId?.siteName || '-'}</TableCell>
+								<TableCell className="text-sm">{item.siteDestinationId?.siteName || '-'}</TableCell>
+								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
+								<TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
+								<TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire * item.quantite)}</TableCell>
+								<TableCell className="text-sm">{item.detentaire?.userName || '-'}</TableCell>
+								<TableCell className="text-sm">{item.ayant_droit?.userName || '-'}</TableCell>
+								<TableCell className="text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</TableCell>
+								<TableCell className="text-sm text-right">
+									<Button onClick={() => onTransfer(item)} variant="outline">
+										<MoveUpIcon className="w-5 h-5" />
+										Transférer
+									</Button>
+									<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}>
+										<InfoIcon className="w-5 h-5 text-violet-600" />
+									</Button>
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-3 p-4">
+			{actifs.map(item => (
+				<Card key={item._id} className="p-4">
+					<div className="flex items-start justify-between gap-4">
+						<div className="flex items-center gap-3">
+							<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
+								{item.productId?.productImage ? (
+									<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-full h-full object-cover" />
+								) : (
+									<span className="text-neutral-400">-</span>
+								)}
+							</div>
+							<div className="min-w-0">
+								<div className="font-medium text-neutral-900 truncate">{item.productId?.productName || '-'}</div>
+								<div className="text-xs text-neutral-500">{item.siteOrigineId?.siteName || '-'} → {item.siteDestinationId?.siteName || '-'}</div>
+							</div>
+						</div>
+						<div className="flex flex-col items-end gap-2">
+							<div className="text-sm text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
+							<div className="text-sm text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
+							<div className="text-sm text-neutral-600">Total: {formatThousands(item.prixUnitaire * item.quantite)}</div>
+							<div className="flex gap-2 mt-2">
+								<Button onClick={() => onTransfer(item)} variant="outline" size="sm"><MoveUpIcon className="w-4 h-4" /> Transférer</Button>
+								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
+							</div>
+						</div>
+					</div>
+				</Card>
+			))}
+		</div>
+	);
+}

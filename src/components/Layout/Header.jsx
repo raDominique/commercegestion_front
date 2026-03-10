@@ -15,20 +15,19 @@ import { Logout, Menu, Close, AccountBalanceWallet, ShoppingCart, Notifications 
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { privateRoutes } from '../../routes/routes';
 import LogoImage from '../../assets/logo/logo.png';
-// import { CartSheet } from '../commons/CartSheet';
-// import { useCart } from '../../context/CartContext';
 import { useEffect, useState, useRef } from 'react';
 import { initSocket, onSocketEvent, offSocketEvent, disconnectSocket } from '../../services/socket.service';
 import { getProfile } from '../../services/auth.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { toast } from 'sonner';
-
+import { Sheet, SheetContent, SheetHeader } from '../ui/sheet';
 
 function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
-    // Notifications temps réel via socket
     const [notifications, setNotifications] = useState([]);
     const [profile, setProfile] = useState(null);
     const socketInitialized = useRef(false);
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+    const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
 
     useEffect(() => {
         let mounted = true;
@@ -38,48 +37,57 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
         return () => { mounted = false; };
     }, []);
 
-    // Connexion socket.io et écoute des notifications
     useEffect(() => {
         if (!profile || socketInitialized.current) return;
-        // Remplacez l'URL par celle de votre backend
         const socketUrl = import.meta.env.VITE_API_BASE_URL?.replace(/^http/, 'ws');
         if (!socketUrl || !profile._id || !profile.userAccess) return;
         initSocket(socketUrl, { userId: profile._id, userAccess: profile.userAccess });
         socketInitialized.current = true;
 
-        // Notifications personnelles
         const notifHandler = (data) => {
             setNotifications((prev) => [
                 { id: Date.now(), message: data.message, date: new Date().toLocaleDateString() },
-                ...prev
+                ...prev,
             ]);
         };
-        // Alertes admin globales
         const adminHandler = (data) => {
             setNotifications((prev) => [
                 { id: Date.now(), message: data.message, date: new Date().toLocaleDateString() },
-                ...prev
+                ...prev,
             ]);
         };
-        onSocketEvent(`notification`, notifHandler);
-        if (profile.userAccess === 'Admin') {
-            onSocketEvent('admin_event', adminHandler);
-        }
+
+        onSocketEvent('notification', notifHandler);
+        if (profile.userAccess === 'Admin') onSocketEvent('admin_event', adminHandler);
+
         return () => {
             offSocketEvent('notification', notifHandler);
-            if (profile.userAccess === 'Admin') {
-                offSocketEvent('admin_event', adminHandler);
-            }
+            if (profile.userAccess === 'Admin') offSocketEvent('admin_event', adminHandler);
             disconnectSocket();
             socketInitialized.current = false;
         };
     }, [profile]);
 
-    // Modal state for logout confirmation
-    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-    // const [cartOpen, setCartOpen] = useState(false);
     const user = profile;
-    // const { items } = useCart ? useCart() : { items: [] };
+
+    // build nav lists (same logic as Sidebar)
+    const userNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
+        '/actifs', '/passifs', '/boutique', '/depot', '/retrait'
+    ].includes(r.path));
+
+    const accountNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
+        '/mon-compte', '/mes-produits', '/mes-transactions', '/mes-sites'
+    ].includes(r.path));
+
+    const adminNavItems = privateRoutes.filter(
+        r => r.role && r.role.includes('Admin') && [
+            '/admin/dashboard',
+            '/admin/produits',
+            '/admin/utilisateurs',
+            '/admin/cpc'
+        ].includes(r.path)
+    );
+
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -89,23 +97,25 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                             <img src={LogoImage} alt="Logo" className="h-8 w-auto" />
                         </Link>
                     </div>
+
                     {user && (
                         <>
                             <button
                                 className="md:hidden p-2"
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                aria-label="Open mobile menu"
                             >
                                 {mobileMenuOpen ? <Close className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                             </button>
+
                             <div className="hidden md:flex items-center gap-4">
-                                {/* Solde */}
                                 <div className="flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg">
                                     <AccountBalanceWallet className="w-4 h-4 text-neutral-600" />
                                     <span className="text-sm text-neutral-900">
                                         {typeof user.userTotalSolde === 'number' ? user.userTotalSolde.toLocaleString('fr-MG') : '0'} Ariary
                                     </span>
                                 </div>
-                                {/* Notifications Dropdown */}
+
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
@@ -136,22 +146,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                         </div>
                                     </PopoverContent>
                                 </Popover>
-                                {/* Panier 
-                                <button
-                                    className="relative flex items-center justify-center p-2 hover:bg-violet-50 rounded-lg transition-colors"
-                                    onClick={() => setCartOpen(true)}
-                                    aria-label="Ouvrir le panier"
-                                >
-                                    <ShoppingCart className="w-6 h-6 text-violet-600" />
-                                    {items && items.length > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-violet-600 text-white text-xs rounded-full px-1.5 py-0.5">
-                                            {items.length}
-                                        </span>
-                                    )}
-                                </button>
-                                <CartSheet open={cartOpen} onOpenChange={setCartOpen} />
-                                */}
-                                {/* Profil */}
+
                                 <div className="flex items-center gap-2">
                                     {user.userType === 'Entreprise' && user.logo ? (
                                         <img
@@ -174,7 +169,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                     )}
                                     <span className="text-sm text-neutral-700">{typeof user.userName === 'string' ? user.userName : 'Utilisateur'}</span>
                                 </div>
-                                {/* Déconnexion */}
+
                                 <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button
@@ -218,136 +213,112 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                     )}
                 </div>
             </div>
-            {/* Mobile menu */}
-            {mobileMenuOpen && user && (
-                <div className="md:hidden border-t border-neutral-200 bg-white">
-                    <div className="px-4 py-4 space-y-4">
-                        <div className="flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg">
-                            <AccountBalanceWallet className="w-4 h-4 text-neutral-600" />
-                            <span className="text-sm text-neutral-900">
-                                {typeof user.balance === 'number' ? user.balance.toLocaleString() : '0'} Ariary
-                            </span>
+
+            {/* Mobile menu as right sheet */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetContent side="right" className="bg-white text-neutral-900">
+                    <SheetHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {user && (user.userType === 'Entreprise' && user.logo ? (
+                                    <img src={getFullMediaUrl(user.logo)} alt="Logo" className="w-10 h-10 rounded-full object-cover" />
+                                ) : user.userType === 'Particulier' && user.userImage ? (
+                                    <img src={getFullMediaUrl(user.userImage)} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
+                                ) : (
+                                    <div className="w-10 h-10 bg-violet-600 rounded-full flex items-center justify-center">
+                                        <span className="text-sm text-white">{user && typeof user.userName === 'string' && user.userName.length > 0 ? user.userName.charAt(0).toUpperCase() : '?'}</span>
+                                    </div>
+                                ))}
+                                <div className="ml-2">
+                                    <div className="font-semibold text-neutral-900">{user ? (typeof user.userName === 'string' ? user.userName : 'Utilisateur') : ''}</div>
+                                    <div className="text-xs text-neutral-500">{user?.userType || ''}</div>
+                                </div>
+                            </div>
+                            {/* mobile: balance moved into scrollable content - top-right duplicate removed */}
                         </div>
-                        {/* NAVIGATION */}
-                        <nav className="space-y-1">
-                            <p className="text-xs text-neutral-500 px-3 mb-2">NAVIGATION</p>
-                            {privateRoutes.filter(r => ['user', 'admin'].some(role => r.role && r.role.includes(role)) && [
-                                '/actifs', '/passifs', '/boutique', '/depot', '/retrait'
-                            ].includes(r.path)).map((item) => (
-                                <Link
-                                    key={item.path}
-                                    to={item.path}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path)
-                                        ? 'bg-violet-50 text-violet-600'
-                                        : 'text-neutral-700 hover:bg-neutral-100'
-                                        }`}
-                                >
-                                    {item.icon ? (
-                                        <item.icon className="w-5 h-5" />
-                                    ) : (
-                                        <span className="material-icons">menu</span>
-                                    )}
-                                    <span className="text-sm">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                                </Link>
-                            ))}
-                        </nav>
-                        <Separator />
-                        {/* COMPTE */}
-                        <nav className="space-y-1">
-                            <p className="text-xs text-neutral-500 px-3 mb-2">COMPTE</p>
-                            {privateRoutes.filter(r => ['user', 'admin'].some(role => r.role && r.role.includes(role)) && [
-                                '/mon-compte', '/mes-produits', '/mes-transactions', '/mes-sites'
-                            ].includes(r.path)).map((item) => (
-                                <Link
-                                    key={item.path}
-                                    to={item.path}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path)
-                                        ? 'bg-violet-50 text-violet-600'
-                                        : 'text-neutral-700 hover:bg-neutral-100'
-                                        }`}
-                                >
-                                    {item.icon ? (
-                                        <item.icon className="w-5 h-5" />
-                                    ) : (
-                                        <span className="material-icons">menu</span>
-                                    )}
-                                    <span className="text-sm">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                                </Link>
-                            ))}
-                        </nav>
-                        {/* ADMINISTRATION */}
-                        {user.userAccess === 'Admin' && (
-                            <>
-                                <Separator />
-                                <nav className="space-y-1">
-                                    <p className="text-xs text-neutral-500 px-3 mb-2">ADMINISTRATION</p>
-                                    {privateRoutes.filter(r => r.role && r.role.includes('admin') && [
-                                        '/admin/dashboard', '/admin/produits', '/admin/utilisateurs', '/admin/categories'
-                                    ].includes(r.path)).map((item) => (
-                                        <Link
-                                            key={item.path}
-                                            to={item.path}
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path)
-                                                ? 'bg-violet-50 text-violet-600'
-                                                : 'text-neutral-700 hover:bg-neutral-100'
-                                                }`}
-                                        >
-                                            {item.icon ? (
-                                                <item.icon className="w-5 h-5" />
-                                            ) : (
-                                                <span className="material-icons">menu</span>
-                                            )}
-                                            <span className="text-sm">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                                        </Link>
-                                    ))}
-                                </nav>
-                            </>
-                        )}
-                        <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => setLogoutDialogOpen(true)}
-                                    className="w-full justify-start text-neutral-600"
-                                >
-                                    <Logout className="w-4 h-4 mr-2" />
-                                    Déconnexion
+                    </SheetHeader>
+
+                    <div className="px-4 py-3 flex-1 overflow-y-auto">
+                        <div className="space-y-3">
+                            {/* Balance at top, left aligned */}
+                            <div className="px-3 py-2 rounded-lg text-sm text-neutral-700 flex items-center gap-2">
+                                <AccountBalanceWallet className="w-5 h-5 text-neutral-600" />
+                                <span>{user && typeof user.userTotalSolde === 'number' ? user.userTotalSolde.toLocaleString('fr-MG') : '0'} Ariary</span>
+                            </div>
+
+                            {/* Notifications */}
+                            <div>
+                                <button aria-label="Notifications" onClick={() => setMobileNotifOpen(v => !v)} className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <BellIcon className="w-5 h-5 text-neutral-700" />
+                                        <span className="text-sm">Notifications</span>
+                                    </div>
+                                    {notifications.length > 0 && <span className="text-xs bg-red-600 text-white rounded-full px-2 py-0.5">{notifications.length}</span>}
+                                </button>
+                                {mobileNotifOpen && (
+                                    <div className="mt-2 bg-white border border-neutral-100 rounded-lg divide-y divide-neutral-100 max-h-48 overflow-y-auto">
+                                        {notifications.length === 0 ? (
+                                            <div className="p-3 text-sm text-neutral-500">Aucune notification</div>
+                                        ) : (
+                                            notifications.map(n => (
+                                                <div key={n.id} className="p-3 text-sm">
+                                                    <div className="text-neutral-800">{n.message}</div>
+                                                    <div className="text-xs text-neutral-400">{n.date}</div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <Separator />
+
+                            <nav className="space-y-1">
+                                <p className="text-xs text-neutral-500 px-3 mb-2">NAVIGATION</p>
+                                {userNavItems.map((item) => (
+                                    <Link key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path) ? 'bg-violet-50 text-violet-600' : 'text-neutral-700 hover:bg-neutral-100'}`}>
+                                        {item.icon ? <item.icon className="w-5 h-5" /> : <span className="material-icons">menu</span>}
+                                        <span className="text-sm">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                    </Link>
+                                ))}
+                            </nav>
+
+                            <Separator />
+
+                            <nav className="space-y-1">
+                                <p className="text-xs text-neutral-500 px-3 mb-2">COMPTE</p>
+                                {accountNavItems.map((item) => (
+                                    <Link key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path) ? 'bg-violet-50 text-violet-600' : 'text-neutral-700 hover:bg-neutral-100'}`}>
+                                        {item.icon ? <item.icon className="w-5 h-5" /> : <span className="material-icons">menu</span>}
+                                        <span className="text-sm">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                    </Link>
+                                ))}
+                            </nav>
+
+                            {user?.userAccess === 'Admin' && (
+                                <>
+                                    <Separator />
+                                    <nav className="space-y-1">
+                                        <p className="text-xs text-neutral-500 px-3 mb-2">ADMINISTRATION</p>
+                                        {adminNavItems.map((item) => (
+                                            <Link key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path) ? 'bg-violet-50 text-violet-600' : 'text-neutral-700 hover:bg-neutral-100'}`}>
+                                                {item.icon ? <item.icon className="w-5 h-5" /> : <span className="material-icons">menu</span>}
+                                                <span className="text-sm">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                            </Link>
+                                        ))}
+                                    </nav>
+                                </>
+                            )}
+
+                            <div className="mt-4">
+                                <Button variant="ghost" onClick={() => setLogoutDialogOpen(true)} className="w-full justify-start text-neutral-600">
+                                    <Logout className="w-4 h-4 mr-2" /> Déconnexion
                                 </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Confirmer la déconnexion</DialogTitle>
-                                    <DialogDescription>
-                                        Êtes-vous sûr de vouloir vous déconnecter&nbsp;?
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <DialogFooter>
-                                    <DialogClose asChild>
-                                        <Button variant="outline" onClick={() => setLogoutDialogOpen(false)}>
-                                            Annuler
-                                        </Button>
-                                    </DialogClose>
-                                    <Button
-                                        variant="destructive"
-                                        className="bg-red-600 hover:bg-red-700 text-white font-semibold"
-                                        onClick={() => {
-                                            setLogoutDialogOpen(false);
-                                            handleLogout();
-                                            setMobileMenuOpen(false);
-                                            toast.success('Déconnecté avec succès');
-                                        }}
-                                    >
-                                        Se déconnecter
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
+                </SheetContent>
+            </Sheet>
         </header>
     );
 }

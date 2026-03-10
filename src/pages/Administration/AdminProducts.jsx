@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDe
 import { Badge } from '../../components/ui/badge';
 import { Switch } from '../../components/ui/switch';
 import { getFullMediaUrl } from '../../services/media.service';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
+import useScreenType from '../../utils/useScreenType';
 
 const AdminProducts = () => {
   usePageTitle('Produits');
@@ -106,7 +108,7 @@ const AdminProducts = () => {
           </div>
         </div>
         <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-0">
             <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
             <Input
               placeholder="Rechercher un produit..."
@@ -115,79 +117,17 @@ const AdminProducts = () => {
                 setPage(1);
                 setSearchTerm(e.target.value);
               }}
-              className="pl-10 border-black bg-white"
+              className="pl-10 border-black bg-white w-full"
             />
           </div>
         </div>
         <Card className="border-neutral-200 bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-neutral-50 border-b border-neutral-200">
-                <tr>
-                  <th className="text-left p-4 text-xs text-neutral-600">Aperçu</th>
-                  <th className="text-left p-4 text-xs text-neutral-600">Nom</th>
-                  <th className="text-left p-4 text-xs text-neutral-600">Catégorie</th>
-                  <th className="text-left p-4 text-xs text-neutral-600">Propriétaire</th>
-                  <th className="text-left p-4 text-xs text-neutral-600">Stocké</th>
-                  <th className="text-left p-4 text-xs text-neutral-600">Validé</th>
-                  <th className="text-left p-4 text-xs text-neutral-600">Code CPC</th>
-                  <th className="text-left p-4 text-xs text-neutral-600">Détail</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan="6" className="p-8 text-center text-neutral-400">Chargement...</td>
-                  </tr>
-                ) : products.length > 0 ? (
-                  products.map((product) => (
-                    <tr key={product._id} className="border-b border-neutral-200 last:border-0">
-                      <td className="p-4 text-sm">
-                        {product.image ? (
-                          <img src={getFullMediaUrl(product.image)} alt={product.name} className="w-12 h-12 object-cover rounded" />
-                        ) : (
-                          <span className="text-neutral-400">-</span>
-                        )}
-                      </td>
-                      <td className="p-4 text-sm text-neutral-900">{product.name}</td>
-                      <td className="p-4 text-sm text-neutral-600">{product.categoryNom || '-'}</td>
-                      <td className="p-4 text-sm text-neutral-600">{product.ownerName || product.ownerNickName || '-'}</td>
-                      <td className="p-4 text-sm">
-                        <Badge
-                          variant={product.isStocker ? 'default' : 'secondary'}
-                          className={product.isStocker ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}
-                        >
-                          {product.isStocker ? 'Oui' : 'Non'}
-                        </Badge>
-                      </td>
-                      <td className="p-4 text-sm">
-                        <Switch
-                          checked={product.validation}
-                          onCheckedChange={() => handleAskValidate(product._id)}
-                        />
-                        <Badge
-                          variant={product.validation ? 'default' : 'secondary'}
-                          className={product.validation ? 'bg-green-100 text-green-700 border-green-200 ml-2' : 'bg-neutral-200 text-neutral-500 border-neutral-200 ml-2'}
-                        >
-                          {product.validation ? 'Oui' : 'Non'}
-                        </Badge>
-                      </td>
-                      <td className="p-4 text-sm text-neutral-600">{product.codeCPC || '-'}</td>
-                      <td className="p-4 text-sm">
-                        <Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)}>
-                          <InfoIcon className="w-5 h-5 text-violet-600" />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="p-8 text-center text-neutral-400">Aucun produit trouvé</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <ProductTableOrList
+            loading={loading}
+            products={products}
+            handleAskValidate={handleAskValidate}
+            handleShowDetail={handleShowDetail}
+          />
         </Card>
         <div className="flex justify-end items-center gap-4 mt-4">
           <Button
@@ -373,3 +313,107 @@ const AdminProducts = () => {
 };
 
 export default AdminProducts;
+
+function ProductTableOrList({ loading, products, handleAskValidate, handleShowDetail }) {
+  const { isDesktop } = useScreenType();
+
+  if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+  if (!products || products.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun produit trouvé</div>;
+
+  if (isDesktop) {
+    return (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-xs text-neutral-600">Aperçu</TableHead>
+              <TableHead className="text-xs text-neutral-600">Nom</TableHead>
+              <TableHead className="text-xs text-neutral-600">Catégorie</TableHead>
+              <TableHead className="text-xs text-neutral-600">Propriétaire</TableHead>
+              <TableHead className="text-xs text-neutral-600">Stocké</TableHead>
+              <TableHead className="text-xs text-neutral-600">Validé</TableHead>
+              <TableHead className="text-xs text-neutral-600">Code CPC</TableHead>
+              <TableHead className="text-xs text-neutral-600">Détail</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {products.map((product) => (
+              <TableRow key={product._id}>
+                <TableCell>
+                  {product.image ? (
+                    <img src={getFullMediaUrl(product.image)} alt={product.name} className="w-12 h-12 object-cover rounded" />
+                  ) : (
+                    <span className="text-neutral-400">-</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-sm text-neutral-900">{product.name}</TableCell>
+                <TableCell className="text-sm text-neutral-600">{product.categoryNom || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-600">{product.ownerName || product.ownerNickName || '-'}</TableCell>
+                <TableCell>
+                  <Badge variant={product.isStocker ? 'default' : 'secondary'} className={product.isStocker ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
+                    {product.isStocker ? 'Oui' : 'Non'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Switch aria-label="Basculer validation produit" checked={product.validation} onCheckedChange={() => handleAskValidate(product._id)} />
+                    <Badge variant={product.validation ? 'default' : 'secondary'} className={product.validation ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
+                      {product.validation ? 'Oui' : 'Non'}
+                    </Badge>
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm text-neutral-600">{product.codeCPC || '-'}</TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="sm" aria-label={`Détail ${product._id}`} onClick={() => handleShowDetail(product._id)}>
+                    <InfoIcon className="w-5 h-5 text-violet-600" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
+
+  // Mobile cards
+  return (
+    <div className="space-y-3 p-4">
+      {products.map((product) => (
+        <Card key={product._id} className="p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
+                  {product.image ? (
+                    <img src={getFullMediaUrl(product.image)} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-neutral-400">-</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-medium text-neutral-900 truncate">{product.name}</div>
+                  <div className="text-xs text-neutral-500 truncate">{product.categoryNom || '-'}</div>
+                  <div className="text-xs text-neutral-500 truncate">{product.ownerName || product.ownerNickName || '-'}</div>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Badge variant={product.isStocker ? 'default' : 'secondary'} className="text-xs">{product.isStocker ? 'Stocké' : 'Non stocké'}</Badge>
+                <div className="flex items-center gap-2">
+                  <Switch aria-label="Basculer validation produit" checked={product.validation} onCheckedChange={() => handleAskValidate(product._id)} />
+                  <span className="text-xs text-neutral-600">{product.validation ? 'Validé' : 'Non validé'}</span>
+                </div>
+                <div className="text-sm text-neutral-900">{product.codeCPC || '-'}</div>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <Button variant="ghost" size="sm" aria-label={`Détail ${product._id}`} onClick={() => handleShowDetail(product._id)}>
+                <InfoIcon className="w-5 h-5 text-violet-600" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}

@@ -10,6 +10,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle.jsx';
+import useScreenType from '../../utils/useScreenType.jsx';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { getMyProducts, toggleProductStocker, getProductById, createProduct, updateProduct, deleteProduct } from '../../services/product.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '../../components/ui/dialog';
@@ -109,6 +111,7 @@ const MesProduits = () => {
   const [loadingDetail, setLoadingDetail] = useState(false);
   // Ajout pour le modal d'ajout de produit
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
   // Modal modification produit
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editProductId, setEditProductId] = useState(null);
@@ -256,6 +259,7 @@ const MesProduits = () => {
   const handleAddProduct = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
+    setAdding(true);
     try {
       await createProduct({
         // productState: form.productState,
@@ -289,6 +293,9 @@ const MesProduits = () => {
       fetchProducts();
     } catch (err) {
       toast.error('Erreur lors de l\'ajout du produit');
+    }
+    finally {
+      setAdding(false);
     }
   };
   useEffect(() => {
@@ -398,110 +405,268 @@ const MesProduits = () => {
     fetchProducts();
   }, [searchTerm, page, limit, validationFilter, isStockerFilter]);
 
+  const { isDesktop } = useScreenType();
+
+  const ProductsTableOrList = () => {
+    if (isDesktop) {
+      return (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left p-4 text-xs text-neutral-600">Aperçu</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600">Nom</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600">Catégorie</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600">Validé</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600">Code CPC</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600">Déposer</TableHead>
+                <TableHead className="text-right p-4 text-xs text-neutral-600">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="p-8 text-center text-neutral-400">Chargement...</TableCell>
+                </TableRow>
+              ) : products.length > 0 ? (
+                products.map((product) => (
+                  <TableRow key={product._id} className="border-b border-neutral-200 last:border-0">
+                    <TableCell className="p-4 text-sm">
+                      {product.image ? (
+                        <img src={getFullMediaUrl(product.image)} alt={product.name} className="w-12 h-12 object-cover rounded" />
+                      ) : (
+                        <span className="text-neutral-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="p-4 text-sm text-neutral-900">{product.name}</TableCell>
+                    <TableCell className="p-4 text-sm text-neutral-600">{product.categoryNom || '-'}</TableCell>
+                    <TableCell className="p-4 text-sm">
+                      <Badge
+                        variant={product.validation ? 'default' : 'secondary'}
+                        className={product.validation ? 'bg-green-100 text-green-700 border-green-200 ml-2' : 'bg-neutral-200 text-neutral-500 border-neutral-200 ml-2'}
+                      >
+                        {product.validation ? 'Oui' : 'Non'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="p-4 text-sm text-neutral-600">{product.codeCPC || '-'}</TableCell>
+                    <TableCell className="p-4 text-sm">
+                      <Button
+                        onClick={() => handleOpenDepositModal(product._id)}
+                        variant="outline"
+                        size="sm"
+                        disabled={product.isStocker}
+                        className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
+                      >
+                        Ajouter à un dépôt
+                      </Button>
+                    </TableCell>
+                    <TableCell className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleShowDetail(product._id)}
+                          aria-label={`Voir détails ${product.name}`}
+                        >
+                          <InfoIcon className="w-5 h-5 text-violet-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenEditModal(product._id)}
+                          disabled={product.isStocker}
+                          className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
+                          aria-label={`Modifier ${product.name}`}
+                        >
+                          <EditIcon className="w-5 h-5 text-amber-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteProduct(product._id)}
+                          disabled={product.isStocker}
+                          className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
+                          aria-label={`Supprimer ${product.name}`}
+                        >
+                          <DeleteIcon className="w-5 h-5 text-red-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="p-8 text-center text-neutral-400">Aucun produit trouvé</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      );
+    }
+
+    // Mobile list view
+    return (
+      <div className="space-y-3">
+        {loading ? (
+          <div className="p-8 text-center text-neutral-400">Chargement...</div>
+        ) : products.length > 0 ? (
+          products.map((product) => (
+            <Card key={product._id} className="p-4">
+              <div className="flex items-start gap-4">
+                {product.image ? (
+                  <img src={getFullMediaUrl(product.image)} alt={product.name} className="w-16 h-16 object-cover rounded" />
+                ) : (
+                  <div className="w-16 h-16 flex items-center justify-center bg-neutral-200 rounded text-neutral-400">-</div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start">
+                    <div className="text-sm font-medium text-neutral-900 truncate">{product.name}</div>
+                    <div className="text-sm text-neutral-600">{product.codeCPC || '-'}</div>
+                  </div>
+                  <div className="text-sm text-neutral-600 truncate">{product.categoryNom || '-'}</div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge
+                      variant={product.validation ? 'default' : 'secondary'}
+                      className={product.validation ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}
+                    >
+                      {product.validation ? 'Oui' : 'Non'}
+                    </Badge>
+                    <Button
+                      onClick={() => handleOpenDepositModal(product._id)}
+                      variant="outline"
+                      size="sm"
+                      disabled={product.isStocker}
+                      className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
+                    >
+                      Ajouter
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-3 justify-end">
+                <Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)} aria-label={`Voir détails ${product.name}`}>
+                  <InfoIcon className="w-5 h-5 mr-2" />Détails
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleOpenEditModal(product._id)} disabled={product.isStocker} className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''} aria-label={`Modifier ${product.name}`}>
+                  <EditIcon className="w-5 h-5 mr-2" />Modifier
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product._id)} disabled={product.isStocker} className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''} aria-label={`Supprimer ${product.name}`}>
+                  <DeleteIcon className="w-5 h-5 mr-2" />Supprimer
+                </Button>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <div className="p-8 text-center text-neutral-400">Aucun produit trouvé</div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="px-6 mx-auto">
       {user && user.userValidated === false && (
         <UserNotValidatedBanner />
       )}
-      <div className="px-6 mx-auto">
-        <div className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl text-neutral-900 mb-2">Mes Produits</h1>
-              <p className="text-sm text-neutral-600">
-                Liste de vos produits
-              </p>
-            </div>
-            <div>
-              <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    className="bg-violet-600 hover:bg-violet-700 text-white"
-                    onClick={() => setAddModalOpen(true)}
-                  >
-                    <AddIcon className="w-5 h-5 mr-2" />
-                    Ajouter un produit
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Ajouter un produit</DialogTitle>
-                  </DialogHeader>
-                  <form className="space-y-4" onSubmit={handleAddProduct}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Catégorie CPC et Code CPC côte à côte */}
-                      <div className="col-span-1 md:col-span-2 flex gap-4">
-                        <div className="space-y-2 flex-2">
-                          <Label htmlFor="productCategory">Catégorie CPC</Label>
-                          <div className="relative">
-                            <Input
-                              placeholder="Rechercher / Choisir une catégorie..."
-                              value={cpcSearch}
-                              onChange={e => { setCpcSearch(e.target.value); setCpcHighlighted(0); }}
-                              onFocus={() => { setCpcOpen(true); setCpcHighlighted(0); }}
-                              onBlur={() => setTimeout(() => setCpcOpen(false), 150)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Escape') return setCpcOpen(false);
-                                if (!cpcOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-                                  setCpcOpen(true);
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl text-neutral-900 mb-2">Mes Produits</h1>
+            <p className="text-sm text-neutral-600">
+              Liste de vos produits
+            </p>
+          </div>
+          <div>
+            <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-violet-600 hover:bg-violet-700 text-white"
+                  onClick={() => setAddModalOpen(true)}
+                >
+                  <AddIcon className="w-5 h-5 mr-2" />
+                  Ajouter un produit
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter un produit</DialogTitle>
+                </DialogHeader>
+                <form className="space-y-4" onSubmit={handleAddProduct}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Catégorie CPC et Code CPC côte à côte */}
+                    <div className="col-span-1 md:col-span-2 flex gap-4">
+                      <div className="space-y-2 flex-2">
+                        <Label htmlFor="productCategory">Catégorie CPC</Label>
+                        <div className="relative">
+                          <Input
+                            placeholder="Rechercher / Choisir une catégorie..."
+                            value={cpcSearch}
+                            onChange={e => { setCpcSearch(e.target.value); setCpcHighlighted(0); }}
+                            onFocus={() => { setCpcOpen(true); setCpcHighlighted(0); }}
+                            onBlur={() => setTimeout(() => setCpcOpen(false), 150)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') return setCpcOpen(false);
+                              if (!cpcOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                                setCpcOpen(true);
+                                e.preventDefault();
+                                return;
+                              }
+                              if (cpcOpen) {
+                                if (e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  return;
+                                  setCpcHighlighted(i => Math.min(i + 1, Math.max(filteredCpcOptions.length - 1, 0)));
+                                } else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  setCpcHighlighted(i => Math.max(i - 1, 0));
+                                } else if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const opt = filteredCpcOptions[cpcHighlighted];
+                                  if (opt) {
+                                    handleCpcSelect(opt.id, opt.nom, opt.code);
+                                    setCpcSearch(opt.nom);
+                                    setCpcOpen(false);
+                                  }
                                 }
-                                if (cpcOpen) {
-                                  if (e.key === 'ArrowDown') {
-                                    e.preventDefault();
-                                    setCpcHighlighted(i => Math.min(i + 1, Math.max(filteredCpcOptions.length - 1, 0)));
-                                  } else if (e.key === 'ArrowUp') {
-                                    e.preventDefault();
-                                    setCpcHighlighted(i => Math.max(i - 1, 0));
-                                  } else if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    const opt = filteredCpcOptions[cpcHighlighted];
-                                    if (opt) {
+                              }
+                            }}
+                            className="w-full"
+                          />
+                          {cpcOpen && (
+                            <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                              {filteredCpcOptions.length > 0 ? (
+                                filteredCpcOptions.map((opt, idx) => (
+                                  <button
+                                    type="button"
+                                    key={opt.id}
+                                    onMouseEnter={() => setCpcHighlighted(idx)}
+                                    onClick={() => {
                                       handleCpcSelect(opt.id, opt.nom, opt.code);
                                       setCpcSearch(opt.nom);
                                       setCpcOpen(false);
-                                    }
-                                  }
-                                }
-                              }}
-                              className="w-full"
-                            />
-                            {cpcOpen && (
-                              <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-                                {filteredCpcOptions.length > 0 ? (
-                                  filteredCpcOptions.map((opt, idx) => (
-                                    <button
-                                      type="button"
-                                      key={opt.id}
-                                      onMouseEnter={() => setCpcHighlighted(idx)}
-                                      onClick={() => {
-                                        handleCpcSelect(opt.id, opt.nom, opt.code);
-                                        setCpcSearch(opt.nom);
-                                        setCpcOpen(false);
-                                      }}
-                                      className={`w-full text-left px-3 py-2 text-sm ${idx === cpcHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
-                                    >
-                                      {opt.nom}
-                                    </button>
-                                  ))
-                                ) : (
-                                  <div className="px-3 py-2 text-sm text-neutral-500">Aucune catégorie</div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="space-y-2 flex-[0.7] min-w-30">
-                          <Label htmlFor="codeCPC">Code CPC</Label>
-                          <Input name="codeCPC" value={form.codeCPC} onChange={handleInputChange} required placeholder="01111" className="border-neutral-300" readOnly />
+                                    }}
+                                    className={`w-full text-left px-3 py-2 text-sm ${idx === cpcHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+                                  >
+                                    {opt.nom}
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="px-3 py-2 text-sm text-neutral-500">Aucune catégorie</div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productName">Nom du produit</Label>
-                        <Input name="productName" value={form.productName} onChange={handleInputChange} required placeholder="Blé dur de qualité supérieure" className="border-neutral-300" />
+                      <div className="space-y-2 flex-[0.7] min-w-30">
+                        <Label htmlFor="codeCPC">Code CPC</Label>
+                        <Input name="codeCPC" value={form.codeCPC} onChange={handleInputChange} required placeholder="01111" className="border-neutral-300" readOnly />
                       </div>
-                      {/* <div className="space-y-2">
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productName">Nom du produit</Label>
+                      <Input name="productName" value={form.productName} onChange={handleInputChange} required placeholder="Blé dur de qualité supérieure" className="border-neutral-300" />
+                    </div>
+                    {/* <div className="space-y-2">
                         <Label htmlFor="productState">État</Label>
                         <Select value={form.productState} onValueChange={val => setForm(f => ({ ...f, productState: val }))}>
                           <SelectTrigger>
@@ -514,211 +679,123 @@ const MesProduits = () => {
                           </SelectContent>
                         </Select>
                       </div> */}
-                      <div className="space-y-2">
-                        <Label htmlFor="productVolume">Volume</Label>
-                        <Input name="productVolume" value={form.productVolume} onChange={handleInputChange} placeholder="1000 L" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productLargeur">Largeur</Label>
-                        <Input name="productLargeur" value={form.productLargeur} onChange={handleInputChange} placeholder="0.8 m" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productPoids">Poids</Label>
-                        <Input name="productPoids" value={form.productPoids} onChange={handleInputChange} placeholder="500 kg" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productLongueur">Longueur</Label>
-                        <Input name="productLongueur" value={form.productLongueur} onChange={handleInputChange} placeholder="0.8 m" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productHauteur">Hauteur</Label>
-                        <Input name="productHauteur" value={form.productHauteur} onChange={handleInputChange} placeholder="1.2 m" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productDescription">Description</Label>
-                        <Input name="productDescription" value={form.productDescription} onChange={handleInputChange} placeholder="Blé dur récolté en 2025, teneur en humidité < 12%" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="image">Image</Label>
-                        <Input name="image" type="file" accept="image/*" onChange={handleInputChange} required className="border-neutral-300" />
-                      </div>
-                      {/* Champ ID Catégorie masqué */}
-                      {/* <div className="space-y-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="productVolume">Volume</Label>
+                      <Input name="productVolume" value={form.productVolume} onChange={handleInputChange} placeholder="1000 L" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productLargeur">Largeur</Label>
+                      <Input name="productLargeur" value={form.productLargeur} onChange={handleInputChange} placeholder="0.8 m" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productPoids">Poids</Label>
+                      <Input name="productPoids" value={form.productPoids} onChange={handleInputChange} placeholder="500 kg" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productLongueur">Longueur</Label>
+                      <Input name="productLongueur" value={form.productLongueur} onChange={handleInputChange} placeholder="0.8 m" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productHauteur">Hauteur</Label>
+                      <Input name="productHauteur" value={form.productHauteur} onChange={handleInputChange} placeholder="1.2 m" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productDescription">Description</Label>
+                      <Input name="productDescription" value={form.productDescription} onChange={handleInputChange} placeholder="Blé dur récolté en 2025, teneur en humidité < 12%" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="image">Image</Label>
+                      <Input name="image" type="file" accept="image/*" onChange={handleInputChange} required className="border-neutral-300" />
+                    </div>
+                    {/* Champ ID Catégorie masqué */}
+                    {/* <div className="space-y-2">
                         <Label htmlFor="categoryId">ID Catégorie</Label>
                         <Input name="categoryId" value={form.categoryId} onChange={handleInputChange} required placeholder="65dcf1234567890abcdef123" className="border-neutral-300" readOnly />
                       </div> */}
-                    </div>
-                    <div className="flex justify-end gap-2 mt-4">
-                      <Button variant="outline" type="button" onClick={() => setAddModalOpen(false)}>Annuler</Button>
-                      <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Ajouter</Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-              <Input
-                placeholder="Rechercher un produit..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setPage(1);
-                  setSearchTerm(e.target.value);
-                }}
-                className="pl-10 border-black bg-white"
-              />
-            </div>
-            <div className="flex items-center gap-2 mt-2 md:mt-0">
-              <label htmlFor="validationFilter" className="text-sm text-neutral-700">Validation :</label>
-              <select
-                id="validationFilter"
-                value={validationFilter}
-                onChange={e => {
-                  setPage(1);
-                  setValidationFilter(e.target.value);
-                }}
-                className="border border-neutral-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-              >
-                <option value="all">Tous</option>
-                <option value="true">Validés</option>
-                <option value="false">Attente de validation</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2 mt-2 md:mt-0">
-              <label htmlFor="isStockerFilter" className="text-sm text-neutral-700">Stocké :</label>
-              <select
-                id="isStockerFilter"
-                value={isStockerFilter}
-                onChange={e => {
-                  setPage(1);
-                  setIsStockerFilter(e.target.value);
-                }}
-                className="border border-neutral-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
-              >
-                <option value="all">Tous</option>
-                <option value="true">Stockés</option>
-                <option value="false">Non stockés</option>
-              </select>
-            </div>
-          </div>
-          <Card className="border-neutral-200 bg-white">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-neutral-50 border-b border-neutral-200">
-                  <tr>
-                    <th className="text-left p-4 text-xs text-neutral-600">Aperçu</th>
-                    <th className="text-left p-4 text-xs text-neutral-600">Nom</th>
-                    <th className="text-left p-4 text-xs text-neutral-600">Catégorie</th>
-                    {/* <th className="text-left p-4 text-xs text-neutral-600">Stocké</th> */}
-                    <th className="text-left p-4 text-xs text-neutral-600">Validé</th>
-                    <th className="text-left p-4 text-xs text-neutral-600">Code CPC</th>
-                    <th className="text-left p-4 text-xs text-neutral-600">Déposer</th>
-                    <th className="text-right p-4 text-xs text-neutral-600">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan="6" className="p-8 text-center text-neutral-400">Chargement...</td>
-                    </tr>
-                  ) : products.length > 0 ? (
-                    products.map((product) => (
-                      <tr key={product._id} className="border-b border-neutral-200 last:border-0">
-                        <td className="p-4 text-sm">
-                          {product.image ? (
-                            <img src={getFullMediaUrl(product.image)} alt={product.name} className="w-12 h-12 object-cover rounded" />
-                          ) : (
-                            <span className="text-neutral-400">-</span>
-                          )}
-                        </td>
-                        <td className="p-4 text-sm text-neutral-900">{product.name}</td>
-                        <td className="p-4 text-sm text-neutral-600">{product.categoryNom || '-'}</td>
-                        <td className="p-4 text-sm">
-                          <Badge
-                            variant={product.validation ? 'default' : 'secondary'}
-                            className={product.validation ? 'bg-green-100 text-green-700 border-green-200 ml-2' : 'bg-neutral-200 text-neutral-500 border-neutral-200 ml-2'}
-                          >
-                            {product.validation ? 'Oui' : 'Non'}
-                          </Badge>
-                        </td>
-                        <td className="p-4 text-sm text-neutral-600">{product.codeCPC || '-'}</td>
-                        <td className="p-4 text-sm">
-                          <Button
-                            onClick={() => handleOpenDepositModal(product._id)}
-                            variant="outline"
-                            size="sm"
-                            disabled={product.isStocker}
-                            className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
-                          >
-                            Ajouter à un dépôt
-                          </Button>
-                        </td>
-                        <td className="p-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleShowDetail(product._id)}
-                            // Le bouton détail reste toujours actif
-                            >
-                              <InfoIcon className="w-5 h-5 text-violet-600" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleOpenEditModal(product._id)}
-                              disabled={product.isStocker}
-                              className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
-                            >
-                              <EditIcon className="w-5 h-5 text-amber-600" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteProduct(product._id)}
-                              disabled={product.isStocker}
-                              className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
-                            >
-                              <DeleteIcon className="w-5 h-5 text-red-600" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="p-8 text-center text-neutral-400">Aucun produit trouvé</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-          <div className="flex justify-end items-center gap-4 mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1 || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Précédent
-            </Button>
-            <span className="text-sm text-neutral-600">
-              Page {page} / {Math.max(1, Math.ceil(total / limit))}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= Math.ceil(total / limit) || loading}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Suivant
-            </Button>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" type="button" onClick={() => setAddModalOpen(false)} disabled={adding}>Annuler</Button>
+                    <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit" disabled={adding}>
+                      {adding ? 'Ajout...' : 'Ajouter'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
+        <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
+          <div className="relative flex-1">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+            <Input
+              placeholder="Rechercher un produit..."
+              value={searchTerm}
+              onChange={(e) => {
+                setPage(1);
+                setSearchTerm(e.target.value);
+              }}
+              className="pl-10 border-black bg-white"
+            />
+          </div>
+          <div className="flex items-center gap-2 mt-2 md:mt-0">
+            <label htmlFor="validationFilter" className="text-sm text-neutral-700">Validation :</label>
+            <select
+              id="validationFilter"
+              value={validationFilter}
+              onChange={e => {
+                setPage(1);
+                setValidationFilter(e.target.value);
+              }}
+              className="min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 md:w-auto"
+            >
+              <option value="all">Tous</option>
+              <option value="true">Validés</option>
+              <option value="false">Attente de validation</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2 mt-2 md:mt-0">
+            <label htmlFor="isStockerFilter" className="text-sm text-neutral-700">Stocké :</label>
+            <select
+              id="isStockerFilter"
+              value={isStockerFilter}
+              onChange={e => {
+                setPage(1);
+                setIsStockerFilter(e.target.value);
+              }}
+              className="min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 md:w-auto"
+            >
+              <option value="all">Tous</option>
+              <option value="true">Stockés</option>
+              <option value="false">Non stockés</option>
+            </select>
+          </div>
+        </div>
+        <Card className="border-neutral-200 bg-white">
+          <ProductsTableOrList />
+        </Card>
+        <div className="flex justify-end items-center gap-4 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 1 || loading}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            Précédent
+          </Button>
+          <span className="text-sm text-neutral-600">
+            Page {page} / {Math.max(1, Math.ceil(total / limit))}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= Math.ceil(total / limit) || loading}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Suivant
+          </Button>
+        </div>
       </div>
+
 
       {/* Modal modification produit */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>

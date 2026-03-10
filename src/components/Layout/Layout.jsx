@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { privateRoutes } from '../../routes/routes';
 
 import Sidebar from './Sidebar';
+import useScreenType from '../../utils/useScreenType';
 
 import Header from './Header';
 
@@ -37,6 +38,7 @@ export function Layout({ children }) {
   ].includes(r.path)).map(r => ({ path: r.path, label: r.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()), element: r.element }));
 
   const isActive = (path) => location.pathname === path;
+  const { isDesktop } = useScreenType();
 
   return (
     <div className="min-h-screen bg-neutral-300">
@@ -58,6 +60,7 @@ export function Layout({ children }) {
             adminNavItems={adminNavItems}
             isActive={isActive}
             user={user}
+            isDesktop={isDesktop}
           />
           <Content>{children}</Content>
         </div>

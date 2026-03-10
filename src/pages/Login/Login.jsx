@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle';
+import useScreenType from '../../utils/useScreenType';
 import LogoImage from '../../assets/logo/logo.png';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -21,6 +22,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { isMobile } = useScreenType();
 
   const allowedRoles = ['Utilisateur', 'Moderateur', 'Admin'];
   const handleSubmit = async (e) => {
@@ -59,18 +61,18 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-linear-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center p-4">
+    <div className={`min-h-screen w-full bg-linear-to-br from-gray-200 to-gray-300 flex flex-col items-center ${isMobile ? 'justify-start py-6' : 'justify-center p-4'}`}>
       {/* Card with login form */}
-      <Card className="w-full max-w-md p-8 rounded-xl border border-neutral-200 bg-neutral-100">
+      <Card className={`${isMobile ? 'w-full h-full max-w-none p-6 rounded-none border-none bg-white overflow-auto' : 'w-full max-w-md p-8 rounded-xl border border-neutral-200 bg-neutral-100'}`}>
         {/* Branding above the card */}
-        <div className="flex flex-col items-center mb-8">
-          <img src={LogoImage} alt="Logo Etokisana" className="h-20 w-auto mb-4" />
-          <h1 className="text-3xl font-bold text-violet-700 mb-1">Connexion</h1>
-          <p className="text-base text-neutral-700 text-center">
+        <div className={`flex flex-col items-center ${isMobile ? 'mb-4' : 'mb-8'}`}>
+          <img src={LogoImage} alt="Logo Etokisana" className={`${isMobile ? 'h-12' : 'h-20'} w-auto mb-4`} />
+          <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-violet-700 mb-1`}>Connexion</h1>
+          <p className={`${isMobile ? 'text-sm' : 'text-base'} text-neutral-700 text-center`}>
             Connectez-vous à votre compte <span className="font-bold text-violet-600">Etokisana</span>
           </p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className={`${isMobile ? 'space-y-4' : 'space-y-5'}`}>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -112,7 +114,7 @@ export default function Login() {
           </div>
           <Button
             type="submit"
-            className="w-full bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center"
+            className={`w-full bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center`}
             disabled={loading}
           >
             {loading ? (
@@ -121,7 +123,7 @@ export default function Login() {
             Se connecter
           </Button>
         </form>
-        <div className="text-center text-sm mt-6">
+        <div className={`text-center text-sm ${isMobile ? 'mt-4 mb-6' : 'mt-6'}`}>
           <span className="text-neutral-600">Pas encore de compte ? </span>
           <Link to="/register" className="text-violet-600 hover:text-violet-700">
             S'inscrire
