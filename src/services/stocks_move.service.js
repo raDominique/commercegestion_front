@@ -43,7 +43,7 @@ export const depositStock = async (params, token) => {
  * @param {string} params.productId - ID du produit
  * @param {number} params.quantite - Quantité à transférer
  * @param {number} params.prixUnitaire - Prix unitaire du produit
- * @param {string} [params.detentaireId] - ID du détenteur (utilisé par l'API)
+ * @param {string} [params.detentaire] - Détenteur (utilisé par l'API)
  * @param {string} [params.observations] - Observations facultatives
  * @param {string} token - Token d'authentification
  * @returns {Promise}
@@ -56,7 +56,7 @@ export const withdrawStock = async (params, token) => {
             siteDestinationId: params.siteDestinationId,
             productId: params.productId,
             quantite: Number(params.quantite),
-            detentaireId: params.detentaireId || params.detentaire,
+            detentaire: params.detentaire,
             ayant_droit: params.ayant_droit,
             prixUnitaire: params.prixUnitaire != null ? Number(params.prixUnitaire) : params.prixUnitaire,
             observations: params.observations || '',

@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Separator } from '../ui/separator';
 import { privateRoutes } from '../../routes/routes';
 
-function Sidebar({ user }) {
+function Sidebar({ user, isDesktop = true }) {
   const location = useLocation();
   if (!user) return null;
 
@@ -29,7 +29,7 @@ function Sidebar({ user }) {
   );
 
   return (
-    <aside className="hidden md:block w-64 bg-gray-900 border-r border-neutral-200 sticky top-16">
+    <aside className={`${isDesktop ? 'block w-64' : 'hidden'} bg-gray-900 border-r border-neutral-200 sticky top-16`}>
       <div className="p-4 space-y-6">
         <nav className="space-y-1">
           <p className="text-xs text-neutral-100 px-3 mb-2">NAVIGATION</p>
