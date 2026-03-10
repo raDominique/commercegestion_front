@@ -9,6 +9,7 @@ import {
   validateUserNickName,
   validateUserName,
   validateUserFirstname,
+  validateUserDateOfBirth,
   validateUserEmail,
   validateUserPassword,
   validateUserPhone,
@@ -118,6 +119,7 @@ const Register = () => {
       errors.userEmail = validateUserEmail(form.userEmail);
       errors.userPassword = validateUserPassword(form.userPassword);
       errors.userPhone = validateUserPhone(form.userPhone);
+      errors.userDateOfBirth = validateUserDateOfBirth(form.userDateOfBirth);
       errors.userAddress = validateUserAddress(form.userAddress);
       errors.userMainLat = validateUserMainLat(form.userMainLat);
       errors.userMainLng = validateUserMainLng(form.userMainLng);

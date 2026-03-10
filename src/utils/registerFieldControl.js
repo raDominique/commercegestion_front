@@ -113,3 +113,16 @@ export function validateRequired(value, label = 'Ce champ') {
     if (!value) return `${label} est requis.`;
     return '';
 }
+
+export function validateUserDateOfBirth(value) {
+    if (!value) return 'La date de naissance est requise.';
+    // Accept YYYY-MM-DD from input[type=date]
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return 'La date de naissance n\'est pas valide.';
+    const today = new Date();
+    // Strip time for comparison
+    const dob = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const now = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (dob > now) return 'La date de naissance ne peut pas être dans le futur.';
+    return '';
+}
