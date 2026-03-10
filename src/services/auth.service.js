@@ -37,7 +37,7 @@ export async function createUser(data) {
   // Champs simples
   [
     'userMainLng', 'userPhone', 'userType', 'userPassword', 'userAddress',
-    'userFirstname', 'userEmail', 'documentType', 'userName', 'identityCardNumber',
+    'userFirstname', 'userDateOfBirth', 'userEmail', 'documentType', 'userName', 'identityCardNumber',
     'userNickName', 'userMainLat', 'managerName', 'managerEmail', 'parrainID1', 'parrainID2'
   ].forEach(key => {
     if (data[key] !== undefined && data[key] !== null) {
