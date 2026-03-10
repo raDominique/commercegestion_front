@@ -564,105 +564,104 @@ const MesProduits = () => {
       {user && user.userValidated === false && (
         <UserNotValidatedBanner />
       )}
-      <div className="px-6 mx-auto">
-        <div className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl text-neutral-900 mb-2">Mes Produits</h1>
-              <p className="text-sm text-neutral-600">
-                Liste de vos produits
-              </p>
-            </div>
-            <div>
-              <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    className="bg-violet-600 hover:bg-violet-700 text-white"
-                    onClick={() => setAddModalOpen(true)}
-                  >
-                    <AddIcon className="w-5 h-5 mr-2" />
-                    Ajouter un produit
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Ajouter un produit</DialogTitle>
-                  </DialogHeader>
-                  <form className="space-y-4" onSubmit={handleAddProduct}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Catégorie CPC et Code CPC côte à côte */}
-                      <div className="col-span-1 md:col-span-2 flex gap-4">
-                        <div className="space-y-2 flex-2">
-                          <Label htmlFor="productCategory">Catégorie CPC</Label>
-                          <div className="relative">
-                            <Input
-                              placeholder="Rechercher / Choisir une catégorie..."
-                              value={cpcSearch}
-                              onChange={e => { setCpcSearch(e.target.value); setCpcHighlighted(0); }}
-                              onFocus={() => { setCpcOpen(true); setCpcHighlighted(0); }}
-                              onBlur={() => setTimeout(() => setCpcOpen(false), 150)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Escape') return setCpcOpen(false);
-                                if (!cpcOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-                                  setCpcOpen(true);
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl text-neutral-900 mb-2">Mes Produits</h1>
+            <p className="text-sm text-neutral-600">
+              Liste de vos produits
+            </p>
+          </div>
+          <div>
+            <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-violet-600 hover:bg-violet-700 text-white"
+                  onClick={() => setAddModalOpen(true)}
+                >
+                  <AddIcon className="w-5 h-5 mr-2" />
+                  Ajouter un produit
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter un produit</DialogTitle>
+                </DialogHeader>
+                <form className="space-y-4" onSubmit={handleAddProduct}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Catégorie CPC et Code CPC côte à côte */}
+                    <div className="col-span-1 md:col-span-2 flex gap-4">
+                      <div className="space-y-2 flex-2">
+                        <Label htmlFor="productCategory">Catégorie CPC</Label>
+                        <div className="relative">
+                          <Input
+                            placeholder="Rechercher / Choisir une catégorie..."
+                            value={cpcSearch}
+                            onChange={e => { setCpcSearch(e.target.value); setCpcHighlighted(0); }}
+                            onFocus={() => { setCpcOpen(true); setCpcHighlighted(0); }}
+                            onBlur={() => setTimeout(() => setCpcOpen(false), 150)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') return setCpcOpen(false);
+                              if (!cpcOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                                setCpcOpen(true);
+                                e.preventDefault();
+                                return;
+                              }
+                              if (cpcOpen) {
+                                if (e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  return;
+                                  setCpcHighlighted(i => Math.min(i + 1, Math.max(filteredCpcOptions.length - 1, 0)));
+                                } else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  setCpcHighlighted(i => Math.max(i - 1, 0));
+                                } else if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const opt = filteredCpcOptions[cpcHighlighted];
+                                  if (opt) {
+                                    handleCpcSelect(opt.id, opt.nom, opt.code);
+                                    setCpcSearch(opt.nom);
+                                    setCpcOpen(false);
+                                  }
                                 }
-                                if (cpcOpen) {
-                                  if (e.key === 'ArrowDown') {
-                                    e.preventDefault();
-                                    setCpcHighlighted(i => Math.min(i + 1, Math.max(filteredCpcOptions.length - 1, 0)));
-                                  } else if (e.key === 'ArrowUp') {
-                                    e.preventDefault();
-                                    setCpcHighlighted(i => Math.max(i - 1, 0));
-                                  } else if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    const opt = filteredCpcOptions[cpcHighlighted];
-                                    if (opt) {
+                              }
+                            }}
+                            className="w-full"
+                          />
+                          {cpcOpen && (
+                            <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                              {filteredCpcOptions.length > 0 ? (
+                                filteredCpcOptions.map((opt, idx) => (
+                                  <button
+                                    type="button"
+                                    key={opt.id}
+                                    onMouseEnter={() => setCpcHighlighted(idx)}
+                                    onClick={() => {
                                       handleCpcSelect(opt.id, opt.nom, opt.code);
                                       setCpcSearch(opt.nom);
                                       setCpcOpen(false);
-                                    }
-                                  }
-                                }
-                              }}
-                              className="w-full"
-                            />
-                            {cpcOpen && (
-                              <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-                                {filteredCpcOptions.length > 0 ? (
-                                  filteredCpcOptions.map((opt, idx) => (
-                                    <button
-                                      type="button"
-                                      key={opt.id}
-                                      onMouseEnter={() => setCpcHighlighted(idx)}
-                                      onClick={() => {
-                                        handleCpcSelect(opt.id, opt.nom, opt.code);
-                                        setCpcSearch(opt.nom);
-                                        setCpcOpen(false);
-                                      }}
-                                      className={`w-full text-left px-3 py-2 text-sm ${idx === cpcHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
-                                    >
-                                      {opt.nom}
-                                    </button>
-                                  ))
-                                ) : (
-                                  <div className="px-3 py-2 text-sm text-neutral-500">Aucune catégorie</div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="space-y-2 flex-[0.7] min-w-30">
-                          <Label htmlFor="codeCPC">Code CPC</Label>
-                          <Input name="codeCPC" value={form.codeCPC} onChange={handleInputChange} required placeholder="01111" className="border-neutral-300" readOnly />
+                                    }}
+                                    className={`w-full text-left px-3 py-2 text-sm ${idx === cpcHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+                                  >
+                                    {opt.nom}
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="px-3 py-2 text-sm text-neutral-500">Aucune catégorie</div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productName">Nom du produit</Label>
-                        <Input name="productName" value={form.productName} onChange={handleInputChange} required placeholder="Blé dur de qualité supérieure" className="border-neutral-300" />
+                      <div className="space-y-2 flex-[0.7] min-w-30">
+                        <Label htmlFor="codeCPC">Code CPC</Label>
+                        <Input name="codeCPC" value={form.codeCPC} onChange={handleInputChange} required placeholder="01111" className="border-neutral-300" readOnly />
                       </div>
-                      {/* <div className="space-y-2">
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productName">Nom du produit</Label>
+                      <Input name="productName" value={form.productName} onChange={handleInputChange} required placeholder="Blé dur de qualité supérieure" className="border-neutral-300" />
+                    </div>
+                    {/* <div className="space-y-2">
                         <Label htmlFor="productState">État</Label>
                         <Select value={form.productState} onValueChange={val => setForm(f => ({ ...f, productState: val }))}>
                           <SelectTrigger>
@@ -675,121 +674,121 @@ const MesProduits = () => {
                           </SelectContent>
                         </Select>
                       </div> */}
-                      <div className="space-y-2">
-                        <Label htmlFor="productVolume">Volume</Label>
-                        <Input name="productVolume" value={form.productVolume} onChange={handleInputChange} placeholder="1000 L" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productLargeur">Largeur</Label>
-                        <Input name="productLargeur" value={form.productLargeur} onChange={handleInputChange} placeholder="0.8 m" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productPoids">Poids</Label>
-                        <Input name="productPoids" value={form.productPoids} onChange={handleInputChange} placeholder="500 kg" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productLongueur">Longueur</Label>
-                        <Input name="productLongueur" value={form.productLongueur} onChange={handleInputChange} placeholder="0.8 m" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productHauteur">Hauteur</Label>
-                        <Input name="productHauteur" value={form.productHauteur} onChange={handleInputChange} placeholder="1.2 m" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="productDescription">Description</Label>
-                        <Input name="productDescription" value={form.productDescription} onChange={handleInputChange} placeholder="Blé dur récolté en 2025, teneur en humidité < 12%" className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="image">Image</Label>
-                        <Input name="image" type="file" accept="image/*" onChange={handleInputChange} required className="border-neutral-300" />
-                      </div>
-                      {/* Champ ID Catégorie masqué */}
-                      {/* <div className="space-y-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="productVolume">Volume</Label>
+                      <Input name="productVolume" value={form.productVolume} onChange={handleInputChange} placeholder="1000 L" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productLargeur">Largeur</Label>
+                      <Input name="productLargeur" value={form.productLargeur} onChange={handleInputChange} placeholder="0.8 m" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productPoids">Poids</Label>
+                      <Input name="productPoids" value={form.productPoids} onChange={handleInputChange} placeholder="500 kg" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productLongueur">Longueur</Label>
+                      <Input name="productLongueur" value={form.productLongueur} onChange={handleInputChange} placeholder="0.8 m" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productHauteur">Hauteur</Label>
+                      <Input name="productHauteur" value={form.productHauteur} onChange={handleInputChange} placeholder="1.2 m" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productDescription">Description</Label>
+                      <Input name="productDescription" value={form.productDescription} onChange={handleInputChange} placeholder="Blé dur récolté en 2025, teneur en humidité < 12%" className="border-neutral-300" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="image">Image</Label>
+                      <Input name="image" type="file" accept="image/*" onChange={handleInputChange} required className="border-neutral-300" />
+                    </div>
+                    {/* Champ ID Catégorie masqué */}
+                    {/* <div className="space-y-2">
                         <Label htmlFor="categoryId">ID Catégorie</Label>
                         <Input name="categoryId" value={form.categoryId} onChange={handleInputChange} required placeholder="65dcf1234567890abcdef123" className="border-neutral-300" readOnly />
                       </div> */}
-                    </div>
-                    <div className="flex justify-end gap-2 mt-4">
-                      <Button variant="outline" type="button" onClick={() => setAddModalOpen(false)}>Annuler</Button>
-                      <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Ajouter</Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
-            <div className="relative flex-1">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-              <Input
-                placeholder="Rechercher un produit..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setPage(1);
-                  setSearchTerm(e.target.value);
-                }}
-                className="pl-10 border-black bg-white"
-              />
-            </div>
-            <div className="flex items-center gap-2 mt-2 md:mt-0">
-              <label htmlFor="validationFilter" className="text-sm text-neutral-700">Validation :</label>
-              <select
-                id="validationFilter"
-                value={validationFilter}
-                onChange={e => {
-                  setPage(1);
-                  setValidationFilter(e.target.value);
-                }}
-                className="min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 md:w-auto"
-              >
-                <option value="all">Tous</option>
-                <option value="true">Validés</option>
-                <option value="false">Attente de validation</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2 mt-2 md:mt-0">
-              <label htmlFor="isStockerFilter" className="text-sm text-neutral-700">Stocké :</label>
-              <select
-                id="isStockerFilter"
-                value={isStockerFilter}
-                onChange={e => {
-                  setPage(1);
-                  setIsStockerFilter(e.target.value);
-                }}
-                className="min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 md:w-auto"
-              >
-                <option value="all">Tous</option>
-                <option value="true">Stockés</option>
-                <option value="false">Non stockés</option>
-              </select>
-            </div>
-          </div>
-          <Card className="border-neutral-200 bg-white">
-            <ProductsTableOrList />
-          </Card>
-          <div className="flex justify-end items-center gap-4 mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1 || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Précédent
-            </Button>
-            <span className="text-sm text-neutral-600">
-              Page {page} / {Math.max(1, Math.ceil(total / limit))}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= Math.ceil(total / limit) || loading}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Suivant
-            </Button>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" type="button" onClick={() => setAddModalOpen(false)}>Annuler</Button>
+                    <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Ajouter</Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
+        <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
+          <div className="relative flex-1">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+            <Input
+              placeholder="Rechercher un produit..."
+              value={searchTerm}
+              onChange={(e) => {
+                setPage(1);
+                setSearchTerm(e.target.value);
+              }}
+              className="pl-10 border-black bg-white"
+            />
+          </div>
+          <div className="flex items-center gap-2 mt-2 md:mt-0">
+            <label htmlFor="validationFilter" className="text-sm text-neutral-700">Validation :</label>
+            <select
+              id="validationFilter"
+              value={validationFilter}
+              onChange={e => {
+                setPage(1);
+                setValidationFilter(e.target.value);
+              }}
+              className="min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 md:w-auto"
+            >
+              <option value="all">Tous</option>
+              <option value="true">Validés</option>
+              <option value="false">Attente de validation</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2 mt-2 md:mt-0">
+            <label htmlFor="isStockerFilter" className="text-sm text-neutral-700">Stocké :</label>
+            <select
+              id="isStockerFilter"
+              value={isStockerFilter}
+              onChange={e => {
+                setPage(1);
+                setIsStockerFilter(e.target.value);
+              }}
+              className="min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 md:w-auto"
+            >
+              <option value="all">Tous</option>
+              <option value="true">Stockés</option>
+              <option value="false">Non stockés</option>
+            </select>
+          </div>
+        </div>
+        <Card className="border-neutral-200 bg-white">
+          <ProductsTableOrList />
+        </Card>
+        <div className="flex justify-end items-center gap-4 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 1 || loading}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            Précédent
+          </Button>
+          <span className="text-sm text-neutral-600">
+            Page {page} / {Math.max(1, Math.ceil(total / limit))}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= Math.ceil(total / limit) || loading}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Suivant
+          </Button>
+        </div>
       </div>
+
 
       {/* Modal modification produit */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>

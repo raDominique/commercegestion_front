@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import SearchIcon from '@mui/icons-material/Search';
+import InfoIcon from '@mui/icons-material/Info';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
+import useScreenType from '../../utils/useScreenType';
 import { getMyStocksPassifs } from '../../services/stocks_move.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useDateFormat from '../../utils/useDateFormat.jsx';
@@ -28,12 +32,7 @@ const Retrait = () => {
 
 		try {
 			const token = localStorage.getItem('token');
-
-			const params = {
-				limit,
-				page
-			};
-
+			const params = { limit, page };
 			const res = await getMyStocksPassifs(params, token);
 
 			setPassifs(Array.isArray(res.data) ? res.data : []);
@@ -49,139 +48,143 @@ const Retrait = () => {
 		fetchPassifs();
 	}, [search, page, limit]);
 
-	/* ================= RENDER ================= */
+	/* ================= AFFICHAGE ================= */
 
 	return (
-		    <div className="px-6 mx-auto">
+		<div className="px-6 mx-auto">
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
 				<>
-					{/* HEADER */}
-					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-						<h1 className="text-2xl text-neutral-900">
-							Mes Retraits
-						</h1>
-
-						<Input
-							placeholder="Rechercher..."
-							value={search}
-							onChange={e => {
-								setPage(1);
-								setSearch(e.target.value);
-							}}
-							className="max-w-xs bg-white border-black"
-						/>
-					</div>
-
-					{/* TABLE */}
-					<Card className="border-neutral-200 bg-white">
-						<div className="overflow-x-auto">
-							<table className="w-full">
-								<thead className="bg-neutral-50 border-b border-neutral-200">
-									<tr>
-										<th className="p-4 text-xs text-left">Situation</th>
-										<th className="p-4 text-xs text-left">Type</th>
-										<th className="p-4 text-xs text-left">Montant</th>
-										<th className="p-4 text-xs text-left">Départ</th>
-										<th className="p-4 text-xs text-left">Arrivée</th>
-										<th className="p-4 text-xs text-left">Action</th>
-										<th className="p-4 text-xs text-left">Date</th>
-									</tr>
-								</thead>
-
-								<tbody>
-									{loading ? (
-										<tr>
-											<td colSpan="7" className="p-8 text-center text-neutral-400">
-												Chargement...
-											</td>
-										</tr>
-									) : passifs.length > 0 ? (
-										passifs.map((item, idx) => (
-											<tr
-												key={idx}
-												className="border-b border-neutral-100 last:border-0"
-											>
-												<td className="p-4 font-semibold">
-													{item.situation || '-'}
-												</td>
-
-												<td className="p-4">
-													{item.type || '-'}
-												</td>
-
-												<td className="p-4">
-													{item.montant !== undefined
-														? item.montant.toLocaleString()
-														: '-'}
-												</td>
-
-												<td className="p-4">
-													{item.departDe || '-'}
-												</td>
-
-												<td className="p-4">
-													{item.arrivee || '-'}
-												</td>
-
-												<td className="p-4">
-													{item.action || '-'}
-												</td>
-
-												<td className="p-4">
-													{item.date
-														? dateFormat(item.date)
-														: '-'}
-												</td>
-											</tr>
-										))
-									) : (
-										<tr>
-											<td colSpan="7" className="p-8 text-center text-neutral-400">
-												Aucun retrait trouvé
-											</td>
-										</tr>
-									)}
-								</tbody>
-							</table>
+					<div className="space-y-6">
+						<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+							<div>
+								<h1 className="text-2xl text-neutral-900 mb-2">Mes Retraits</h1>
+								<p className="text-sm text-neutral-600">Historique de vos retraits</p>
+							</div>
 						</div>
-					</Card>
 
-					{/* PAGINATION */}
-					<div className="flex justify-end items-center gap-4 mt-4">
-						<Button
-							variant="outline"
-							size="sm"
-							disabled={page === 1 || loading}
-							onClick={() =>
-								setPage(p => Math.max(1, p - 1))
-							}
-						>
-							Précédent
-						</Button>
+						<div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
+							<div className="relative flex-1 min-w-0">
+								<SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+								<Input
+									placeholder="Rechercher..."
+									value={search}
+									onChange={(e) => {
+										setPage(1);
+										setSearch(e.target.value);
+									}}
+									className="pl-10 border-black bg-white w-full"
+								/>
+							</div>
+						</div>
 
-						<span className="text-sm text-neutral-600">
-							Page {page} /{' '}
-							{Math.max(1, Math.ceil(total / limit))}
-						</span>
+						{/* TABLEAU */}
+						<Card className="border-neutral-200 bg-white">
+							<RetraitTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} />
+						</Card>
 
-						<Button
-							variant="outline"
-							size="sm"
-							disabled={
-								page >= Math.ceil(total / limit) ||
-								loading
-							}
-							onClick={() => setPage(p => p + 1)}
-						>
-							Suivant
-						</Button>
+						{/* PAGINATION */}
+						<div className="flex justify-end items-center gap-4 mt-4">
+							<Button
+								variant="outline"
+								size="sm"
+								disabled={page === 1 || loading}
+								onClick={() => setPage((p) => Math.max(1, p - 1))}
+							>
+								Précédent
+							</Button>
+
+							<span className="text-sm text-neutral-600">
+								Page {page} / {Math.max(1, Math.ceil(total / limit))}
+							</span>
+
+							<Button
+								variant="outline"
+								size="sm"
+								disabled={page >= Math.ceil(total / limit) || loading}
+								onClick={() => setPage((p) => p + 1)}
+							>
+								Suivant
+							</Button>
+						</div>
 					</div>
 				</>
 			)}
 		</div>
 	);
 };
+
+function RetraitTableOrList({ loading, passifs, dateFormat }) {
+	const { isDesktop } = useScreenType();
+
+	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+	if (!passifs || passifs.length === 0)
+		return <div className="p-8 text-center text-neutral-400">Aucun retrait trouvé</div>;
+
+	if (isDesktop) {
+		return (
+			<div className="overflow-x-auto">
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead className="text-xs text-neutral-600">Situation</TableHead>
+							<TableHead className="text-xs text-neutral-600">Type</TableHead>
+							<TableHead className="text-xs text-neutral-600">Montant</TableHead>
+							<TableHead className="text-xs text-neutral-600">Départ</TableHead>
+							<TableHead className="text-xs text-neutral-600">Arrivée</TableHead>
+							<TableHead className="text-xs text-neutral-600">Action</TableHead>
+							<TableHead className="text-xs text-neutral-600">Date</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{passifs.map((item, idx) => (
+							<TableRow key={idx}>
+								<TableCell className="text-sm font-semibold text-neutral-900">{item.situation || '-'}</TableCell>
+								<TableCell className="text-sm text-neutral-600">{item.type || '-'}</TableCell>
+								<TableCell className="text-sm text-neutral-600">{item.montant !== undefined ? item.montant.toLocaleString() : '-'}</TableCell>
+								<TableCell className="text-sm text-neutral-600">{item.departDe || '-'}</TableCell>
+								<TableCell className="text-sm text-neutral-600">{item.arrivee || '-'}</TableCell>
+								<TableCell className="text-sm text-neutral-600">{item.action || '-'}</TableCell>
+								<TableCell className="text-sm text-neutral-600">{item.date ? dateFormat(item.date) : '-'}</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-3 p-4">
+			{passifs.map((item, idx) => (
+				<Card key={idx} className="p-4">
+					<div className="flex items-start justify-between gap-4">
+						<div className="flex-1 min-w-0">
+							<div className="flex items-center gap-3">
+								<div className="min-w-0">
+									<div className="font-medium text-neutral-900 truncate">{item.situation || '-'}</div>
+									<div className="text-xs text-neutral-500 truncate">{item.type || '-'}</div>
+								</div>
+							</div>
+							<div className="mt-3 flex flex-wrap items-center gap-2">
+								<div className="text-sm text-neutral-900">Montant: {item.montant !== undefined ? item.montant.toLocaleString() : '-'}</div>
+								<div className="text-sm text-neutral-600">Départ: {item.departDe || '-'}</div>
+								<div className="text-sm text-neutral-600">Arrivée: {item.arrivee || '-'}</div>
+								<div className="text-sm text-neutral-600">Action: {item.action || '-'}</div>
+								<div className="text-sm text-neutral-600">{item.date ? dateFormat(item.date) : '-'}</div>
+							</div>
+						</div>
+						<div className="flex flex-col items-end gap-2">
+							<Button variant="ghost" size="sm" aria-label={`Détail ${idx}`}>
+								<InfoIcon className="w-5 h-5 text-violet-600" />
+							</Button>
+						</div>
+					</div>
+				</Card>
+			))}
+		</div>
+	);
+}
 
 export default Retrait;

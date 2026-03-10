@@ -80,7 +80,7 @@ const Boutique = () => {
         <div className="w-full md:w-64">
           <Input
             type="text"
-            placeholder="Rechercher par nom ou code CPC..."
+            placeholder="Rechercher par nom"
             className="bg-white"
             value={search}
             onChange={e => { setPage(1); setSearch(e.target.value); }}
