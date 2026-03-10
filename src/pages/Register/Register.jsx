@@ -179,6 +179,7 @@ const Register = () => {
     userName: '',
     userNickName: '',
     userFirstname: '',
+    userDateOfBirth: '',
     userEmail: '',
     userPassword: '',
     confirmPassword: '',
@@ -415,6 +416,13 @@ const Register = () => {
                   <div className="space-y-2">
                     <Label htmlFor="userFirstname">{form.userType === 'Entreprise' ? 'Nom commercial' : 'Prénom'}</Label>
                     <Input id="userFirstname" name="userFirstname" type="text" placeholder={form.userType === 'Entreprise' ? 'Nom commercial' : 'Prénom'} value={form.userFirstname} onChange={handleChange} required className="border-neutral-300" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="userDateOfBirth">Date de naissance</Label>
+                    <Input id="userDateOfBirth" name="userDateOfBirth" type="date" placeholder="Date de naissance" value={form.userDateOfBirth} onChange={handleChange} className="border-neutral-300" />
+                    {fieldErrors.userDateOfBirth && (
+                      <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userDateOfBirth}</span>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="userEmail">
