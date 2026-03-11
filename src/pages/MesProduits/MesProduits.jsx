@@ -78,7 +78,8 @@ const MesProduits = () => {
         quantite: Number(depositForm.quantite),
         prixUnitaire: Number(depositForm.prixUnitaire),
       }, token);
-      toast.success('Produit déposé avec succès');
+      const successMessage = res?.data?.message || res?.message || 'Produit déposé avec succès';
+      toast.success(successMessage);
       setDepositModalOpen(false);
       setDepositForm({
         siteOrigineId: '',
@@ -93,7 +94,8 @@ const MesProduits = () => {
       setDepositErrors({});
       fetchProducts();
     } catch (err) {
-      toast.error('Erreur lors du dépôt');
+      const errorMessage = err?.response?.data?.message || err?.message || 'Erreur lors du dépôt';
+      toast.error(errorMessage);
     }
   };
   usePageTitle('Mes Produits');
