@@ -91,6 +91,7 @@ const MesProduits = () => {
         observations: '',
       });
       setDepositErrors({});
+      fetchProducts();
     } catch (err) {
       toast.error('Erreur lors du dépôt');
     }
@@ -411,16 +412,16 @@ const MesProduits = () => {
     if (isDesktop) {
       return (
         <div className="overflow-x-auto">
-          <Table className="table-fixed">
+          <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="text-left p-4 text-xs text-neutral-600">Aperçu</TableHead>
-                <TableHead className="text-left p-4 text-xs text-neutral-600">Nom</TableHead>
-                <TableHead className="text-left p-4 text-xs text-neutral-600 w-48">Catégorie</TableHead>
-                <TableHead className="text-left p-4 text-xs text-neutral-600">Validé</TableHead>
-                <TableHead className="text-left p-4 text-xs text-neutral-600">Code CPC</TableHead>
-                <TableHead className="text-left p-4 text-xs text-neutral-600">Déposer</TableHead>
-                <TableHead className="text-right p-4 text-xs text-neutral-600">Actions</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600 w-17.5">Aperçu</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600 w-[18%]">Nom</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600 w-[18%]">Catégorie</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600 w-17.5">Validé</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600 w-22.5">Code CPC</TableHead>
+                <TableHead className="text-left p-4 text-xs text-neutral-600 w-40">Déposer</TableHead>
+                <TableHead className="text-right p-4 text-xs text-neutral-600 w-32.5">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -438,9 +439,11 @@ const MesProduits = () => {
                         <span className="text-neutral-400">-</span>
                       )}
                     </TableCell>
-                    <TableCell className="p-4 text-sm text-neutral-900">{product.name}</TableCell>
-                    <TableCell className="p-4 text-sm text-neutral-600 w-48">
-                      <div className="w-48 truncate">{product.categoryNom || '-'}</div>
+                    <TableCell className="p-4 text-sm text-neutral-900">
+                      <div className="truncate" title={product.name}>{product.name}</div>
+                    </TableCell>
+                    <TableCell className="p-4 text-sm text-neutral-600">
+                      <div className="truncate" title={product.categoryNom || '-'}>{product.categoryNom || '-'}</div>
                     </TableCell>
                     <TableCell className="p-4 text-sm">
                       <Badge
@@ -480,7 +483,7 @@ const MesProduits = () => {
                           className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
                           aria-label={`Modifier ${product.name}`}
                         >
-                          <EditIcon className="w-5 h-5 text-amber-600" />
+                          <EditIcon className={`w-5 h-5 ${product.isStocker ? 'text-neutral-400' : 'text-amber-600'}`} />
                         </Button>
                         <Button
                           variant="ghost"
@@ -490,7 +493,7 @@ const MesProduits = () => {
                           className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
                           aria-label={`Supprimer ${product.name}`}
                         >
-                          <DeleteIcon className="w-5 h-5 text-red-600" />
+                          <DeleteIcon className={`w-5 h-5 ${product.isStocker ? 'text-neutral-400' : 'text-red-600'}`} />
                         </Button>
                       </div>
                     </TableCell>
@@ -551,10 +554,10 @@ const MesProduits = () => {
                   <InfoIcon className="w-5 h-5 mr-2" />Détails
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => handleOpenEditModal(product._id)} disabled={product.isStocker} className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''} aria-label={`Modifier ${product.name}`}>
-                  <EditIcon className="w-5 h-5 mr-2" />Modifier
+                  <EditIcon className={`w-5 h-5 mr-2 ${product.isStocker ? 'text-neutral-400' : ''}`} />Modifier
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product._id)} disabled={product.isStocker} className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''} aria-label={`Supprimer ${product.name}`}>
-                  <DeleteIcon className="w-5 h-5 mr-2" />Supprimer
+                  <DeleteIcon className={`w-5 h-5 mr-2 ${product.isStocker ? 'text-neutral-400' : ''}`} />Supprimer
                 </Button>
               </div>
             </Card>
