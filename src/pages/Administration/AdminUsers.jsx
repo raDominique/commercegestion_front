@@ -7,6 +7,7 @@ import { Badge } from '../../components/ui/badge';
 import { Switch } from '../../components/ui/switch';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import useScreenType from '../../utils/useScreenType';
+import formatBirthDate from '../../utils/formatBirthDate';
 import SearchIcon from '@mui/icons-material/Search';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import InfoIcon from '@mui/icons-material/Info';
@@ -309,13 +310,22 @@ export default function AdminUsers() {
                         ) : detailUser ? (
                             <div className="space-y-2 text-sm">
                                 <div className="flex items-center gap-4 mb-4">
-                                    <img src={getFullMediaUrl(detailUser.userImage || detailUser.logo)} alt={detailUser.userNickName} className="w-16 h-16 object-cover rounded-full border" />
+                                    <img
+                                        src={getFullMediaUrl(detailUser.userType === 'Entreprise' ? (detailUser.logo || detailUser.userImage) : (detailUser.userImage || detailUser.logo))}
+                                        alt={detailUser.userNickName}
+                                        className={detailUser.userType === 'Entreprise' ? 'w-20 h-20 object-contain rounded border' : 'w-16 h-16 object-cover rounded-full border'}
+                                    />
                                     <div>
                                         <div className="font-bold text-lg text-neutral-900">{detailUser.userName} {detailUser.userFirstname}</div>
                                         <div className="text-xs text-neutral-500">{detailUser.userType} - {detailUser.userAccess}</div>
                                     </div>
                                 </div>
                                 <div><b>Email :</b> {detailUser.userEmail}</div>
+                                {detailUser.userType === 'Entreprise' ? (
+                                    <div><b>Date de création de l'entreprise :</b> {formatBirthDate(detailUser.userDateOfBirth)}</div>
+                                ) : (
+                                    <div><b>Date de naissance:</b> {formatBirthDate(detailUser.userDateOfBirth)}</div>
+                                )}
                                 <div><b>Téléphone :</b> {detailUser.userPhone}</div>
                                 <div><b>Adresse :</b> {detailUser.userAddress}</div>
                                 <div><b>Longitude :</b> {detailUser.userMainLng}</div>

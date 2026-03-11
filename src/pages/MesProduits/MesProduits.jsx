@@ -78,7 +78,7 @@ const MesProduits = () => {
         quantite: Number(depositForm.quantite),
         prixUnitaire: Number(depositForm.prixUnitaire),
       }, token);
-      const successMessage = res?.data?.message || res?.message || 'Produit déposé avec succès';
+      const successMessage = 'Produit déposé avec succès';
       toast.success(successMessage);
       setDepositModalOpen(false);
       setDepositForm({
@@ -94,7 +94,7 @@ const MesProduits = () => {
       setDepositErrors({});
       fetchProducts();
     } catch (err) {
-      const errorMessage = err?.response?.data?.message || err?.message || 'Erreur lors du dépôt';
+      const errorMessage = 'Erreur lors du dépôt';
       toast.error(errorMessage);
     }
   };
