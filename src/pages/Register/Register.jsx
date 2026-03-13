@@ -29,7 +29,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType.jsx';
 import { Button } from '../../components/ui/button.jsx';
-import { Squelette } from '../../components/ui/skeleton.jsx';
 import { toast } from 'sonner';
 import { Card } from '../../components/ui/card.jsx';
 import { Input } from '../../components/ui/input.jsx';

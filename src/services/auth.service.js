@@ -34,37 +34,55 @@ import { setAccessToken, clearAccessToken, setRefreshToken, getRefreshToken, cle
 export async function createUser(data) {
   if (!data) throw new Error('data est requis');
   const formData = new FormData();
-  // Champs simples
+  // Champs simples (accept both parrain1ID/parrain2ID used by the frontend)
   [
     'userMainLng', 'userPhone', 'userType', 'userPassword', 'userAddress',
     'userFirstname', 'userDateOfBirth', 'userEmail', 'documentType', 'userName', 'identityCardNumber',
-    'userNickName', 'userMainLat', 'managerName', 'managerEmail', 'parrainID1', 'parrainID2'
+    'userNickName', 'userMainLat', 'managerName', 'managerEmail', 'parrain1ID', 'parrain2ID'
   ].forEach(key => {
-    if (data[key] !== undefined && data[key] !== null) {
+    if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
       formData.append(key, data[key]);
     }
   });
 
-  // Fichiers multiples (tableaux) ou uniques
-  // `carteStat` can be an array (recto/verso) as well, handle it with other multi-file fields
+  // Helper to append either file(s) or plain string values safely
+  const appendField = (fd, name, value) => {
+    if (value === undefined || value === null) return;
+    // If array, append each element
+    if (Array.isArray(value)) {
+      value.forEach(item => {
+        if (item === undefined || item === null) return;
+        if (typeof item === 'string') {
+          fd.append(name, item);
+        } else if (item instanceof File || (item && item.name)) {
+          fd.append(name, item, item.name);
+        } else {
+          // Fallback: append JSON string
+          try { fd.append(name, JSON.stringify(item)); } catch (e) { fd.append(name, String(item)); }
+        }
+      });
+      return;
+    }
+    // Single value
+    if (typeof value === 'string') {
+      fd.append(name, value);
+      return;
+    }
+    if (value instanceof File || (value && value.name)) {
+      fd.append(name, value, value.name);
+      return;
+    }
+    try { fd.append(name, JSON.stringify(value)); } catch (e) { fd.append(name, String(value)); }
+  };
+
+  // Fichiers multiples ou champs pouvant être string
   const fileFields = ['carteFiscal', 'documents', 'carteStat'];
   fileFields.forEach(field => {
-    if (data[field]) {
-      if (Array.isArray(data[field])) {
-        data[field].forEach(file => {
-          if (file) formData.append(field, file, file.name);
-        });
-      } else {
-        formData.append(field, data[field], data[field].name);
-      }
-    }
+    appendField(formData, field, data[field]);
   });
-  // Fichiers uniques
-  ['logo', 'avatar'].forEach(field => {
-    if (data[field]) {
-      formData.append(field, data[field], data[field].name);
-    }
-  });
+
+  // Fichiers uniques (logo, avatar) - accept strings or File/Blob
+  ['logo', 'avatar'].forEach(field => appendField(formData, field, data[field]));
 
   const res = await axiosInstance.post('/api/v1/users', formData, {
     headers: {
