@@ -333,8 +333,10 @@ export default function AdminUsers() {
                                 <div><b>Solde :</b> {detailUser.userTotalSolde} Ariary</div>
                                 <div><b>Validé :</b> {detailUser.userValidated ? 'Oui' : 'Non'}</div>
                                 <div><b>Email vérifié :</b> {detailUser.userEmailVerified ? 'Oui' : 'Non'}</div>
+                                <div><b>Numéro Parrain 1 :</b> {detailUser.parrain1ID}</div>
+                                <div><b>Numéro Parrain 2 :</b> {detailUser.parrain2ID}</div>
                                 <div><b>Type document :</b> {detailUser.documentType}</div>
-                                <div><b>Numéro CIN :</b> {detailUser.identityCardNumber}</div>
+                                <div><b>Numéro document :</b> {detailUser.identityCardNumber}</div>
                                 <div><b>Manager :</b> {detailUser.managerName} ({detailUser.managerEmail})</div>
                                 <div><b>Date création :</b> {new Date(detailUser.createdAt).toLocaleString()}</div>
 
