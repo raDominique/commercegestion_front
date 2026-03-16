@@ -109,12 +109,12 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                             </button>
 
                             <div className="hidden md:flex items-center gap-4">
-                                <div className="flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg">
+                                {/* <div className="flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg">
                                     <AccountBalanceWallet className="w-4 h-4 text-neutral-600" />
                                     <span className="text-sm text-neutral-900">
                                         {typeof user.userTotalSolde === 'number' ? user.userTotalSolde.toLocaleString('fr-MG') : '0'} Ariary
                                     </span>
-                                </div>
+                                </div> */}
 
                                 <Popover>
                                     <PopoverTrigger asChild>
@@ -241,10 +241,10 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                     <div className="px-4 py-3 flex-1 overflow-y-auto">
                         <div className="space-y-3">
                             {/* Balance at top, left aligned */}
-                            <div className="px-3 py-2 rounded-lg text-sm text-neutral-700 flex items-center gap-2">
+                            {/* <div className="px-3 py-2 rounded-lg text-sm text-neutral-700 flex items-center gap-2">
                                 <AccountBalanceWallet className="w-5 h-5 text-neutral-600" />
                                 <span>{user && typeof user.userTotalSolde === 'number' ? user.userTotalSolde.toLocaleString('fr-MG') : '0'} Ariary</span>
-                            </div>
+                            </div> */}
 
                             {/* Notifications */}
                             <div>
