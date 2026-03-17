@@ -401,20 +401,7 @@ const Parrainage = () => {
                                             )}
                                             <div><b>Date création :</b> {detailUser.createdAt ? new Date(detailUser.createdAt).toLocaleString() : '-'}</div>
 
-                                            {/* Téléchargement carteStat */}
-                                            {Array.isArray(detailUser.carteStat) && detailUser.carteStat.length > 0 && (
-                                                <div className="mt-2">
-                                                    <b>Carte Stat :</b>
-                                                    <ul className="list-disc ml-6">
-                                                        {detailUser.carteStat.map((file, idx) => (
-                                                            <li key={idx}>
-                                                                <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-                                            {/* Téléchargement identityDocument */}
+                                            {/* Téléchargement documents selon le type d'utilisateur */}
                                             {Array.isArray(detailUser.identityDocument) && detailUser.identityDocument.length > 0 && (
                                                 <div className="mt-2">
                                                     <b>Documents d'identité :</b>
@@ -426,6 +413,36 @@ const Parrainage = () => {
                                                         ))}
                                                     </ul>
                                                 </div>
+                                            )}
+
+                                            {/* Pour les entreprises, afficher carteStat et carteFiscal */}
+                                            {detailUser.userType === 'Entreprise' && (
+                                                <>
+                                                    {Array.isArray(detailUser.carteStat) && detailUser.carteStat.length > 0 && (
+                                                        <div className="mt-2">
+                                                            <b>Carte Stat :</b>
+                                                            <ul className="list-disc ml-6">
+                                                                {detailUser.carteStat.map((file, idx) => (
+                                                                    <li key={idx}>
+                                                                        <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                    {Array.isArray(detailUser.carteFiscal) && detailUser.carteFiscal.length > 0 && (
+                                                        <div className="mt-2">
+                                                            <b>Carte Fiscal :</b>
+                                                            <ul className="list-disc ml-6">
+                                                                {detailUser.carteFiscal.map((file, idx) => (
+                                                                    <li key={idx}>
+                                                                        <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                         <div className="flex justify-end gap-2 mt-4">
