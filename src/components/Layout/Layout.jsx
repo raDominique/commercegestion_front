@@ -30,7 +30,7 @@ export function Layout({ children }) {
   ].includes(r.path)).map(r => ({ path: r.path, label: r.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()), element: r.element }));
 
   const accountNavItems = privateRoutes.filter(r => ['user', 'admin'].some(role => r.role && r.role.includes(role)) && [
-    '/mon-compte', '/mes-produits', '/mes-transactions', '/mes-sites'
+    '/mon-compte', '/mes-produits', '/mes-transactions', '/mes-sites', '/parrainages'
   ].includes(r.path)).map(r => ({ path: r.path, label: r.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()), element: r.element }));
 
   const adminNavItems = privateRoutes.filter(r => r.role && r.role.includes('admin') && [

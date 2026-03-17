@@ -40,12 +40,12 @@ export async function toggleUserRole(userId) {
 /**
  * Récupère la liste des utilisateurs (GET /users)
  * @param {Object} [params] - Paramètres de recherche optionnels
- * @param {boolean} [params.isVerified]
- * @param {boolean} [params.isActive]
- * @param {string} [params.userType]
- * @param {string} [params.search]
- * @param {number} [params.limit]
- * @param {number} [params.page]
+ * @param {boolean} [params.isVerified] - Filtrer par utilisateurs vérifiés
+ * @param {boolean} [params.isActive] - Filtrer par utilisateurs actifs
+ * @param {string} [params.userType] - Type d'utilisateur (Particulier, Professionnel, Entreprise)
+ * @param {string} [params.search] - Recherche par nom ou email
+ * @param {number} [params.limit=10] - Nombre de résultats par page (par défaut 10)
+ * @param {number} [params.page=1] - Numéro de la page
  * @returns {Promise<Object>} Résultat de l'API
  */
 export async function getUsers(params = {}) {

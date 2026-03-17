@@ -34,7 +34,7 @@ import MonCompte from '../pages/MonCompte/MonCompte.jsx';
 import MesProduits from '../pages/MesProduits/MesProduits.jsx';
 import MesTransactions from '../pages/MesTransactions/MesTransactions.jsx';
 import MesSites from '../pages/MesSites/MesSites.jsx';
-import Parrains from '../pages/Parrains/Parrains.jsx';
+import Parrainages from '../pages/Parrainages/Parrainages.jsx';
 
 export const publicRoutes = [
     { path: '/login', element: Login },
@@ -55,7 +55,7 @@ export const privateRoutes = [
     { path: '/mes-produits', element: MesProduits, role: 'Utilisateur,Admin', userValidated: true, icon: Inventory },
     { path: '/mes-transactions', element: MesTransactions, role: 'Utilisateur,Admin', userValidated: true, icon: ReceiptLong },
     { path: '/mes-sites', element: MesSites, role: 'Utilisateur,Admin', userValidated: true, icon: Public },
-    { path: '/parrains', element: Parrains, role: 'Utilisateur,Admin', userValidated: true, icon: Group },
+    { path: '/parrainages', element: Parrainages, role: 'Utilisateur,Admin', userValidated: true, icon: Group },
     // Routes strictement admin
     { path: '/admin/dashboard', element: AdminDashboard, role: 'Admin', icon: Dashboard, label: 'Tableau de bord' },
     { path: '/admin/produits', element: AdminProducts, role: 'Admin', icon: Inventory, label: 'Produits' },

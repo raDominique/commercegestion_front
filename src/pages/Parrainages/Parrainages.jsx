@@ -2,19 +2,23 @@ import { useState, useEffect } from 'react';
 import { getReferrals, getUserById, validateViaParrain } from '@/services/user.service';
 import { toast } from 'sonner';
 import { getFullMediaUrl } from '@/services/media.service';
+import { CircularProgress } from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InfoIcon from '@mui/icons-material/Info';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DoneIcon from '@mui/icons-material/Done';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { useAuth } from '@/context/AuthContext';
 import useScreenType from '@/utils/useScreenType';
 import UserNotValidatedBanner from '@/components/commons/UserNotValidatedBanner';
 import usePageTitle from '@/utils/usePageTitle';
 
-function ParrainsTableContent({ loading, referrals, isDesktop, onShowDetail, onApprove }) {
+function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, onApprove, actionLoading }) {
     if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
     if (!referrals || referrals.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun parrain trouvé</div>;
 
@@ -28,7 +32,7 @@ function ParrainsTableContent({ loading, referrals, isDesktop, onShowDetail, onA
                             <TableHead className="text-xs text-neutral-600">Utilisateur</TableHead>
                             <TableHead className="text-xs text-neutral-600">Email</TableHead>
                             <TableHead className="text-xs text-neutral-600">Type</TableHead>
-                            <TableHead className="text-xs text-neutral-600">Statut</TableHead>
+                            <TableHead className="text-xs text-neutral-600">Validation parrain</TableHead>
                             <TableHead className="text-xs text-neutral-600 text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -72,17 +76,36 @@ function ParrainsTableContent({ loading, referrals, isDesktop, onShowDetail, onA
                                 <TableCell className="text-sm">{referral.userEmail}</TableCell>
                                 <TableCell className="text-sm">{referral.userType}</TableCell>
                                 <TableCell className="text-sm">
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${referral.userValidated ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                        {referral.userValidated ? 'Validé' : 'En attente'}
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${(referral.isParrain1Validated && referral.isParrain2Validated) ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                        {(referral.isParrain1Validated && referral.isParrain2Validated) ? 'Validé' : 'En attente'}
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-sm text-right">
-                                    <div className="flex items-center justify-end gap-2">
-                                        <Button size="sm" variant={referral.userValidated ? 'ghost' : 'default'} disabled={referral.userValidated} onClick={() => onApprove?.(referral._id)}>
-                                            {referral.userValidated ? 'Validé' : 'Valider'}
+                                    <div className="flex items-center justify-end gap-1">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            disabled={referral.userValidated || actionLoading}
+                                            onClick={() => onApprove?.(referral._id)}
+                                            aria-label={referral.userValidated ? 'Déjà validé' : 'Valider cet utilisateur'}
+                                            className="hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title={referral.userValidated ? 'Déjà validé' : 'Valider'}
+                                        >
+                                            {actionLoading ? (
+                                                <CircularProgress size={20} />
+                                            ) : (
+                                                <DoneIcon className={`w-5 h-5 ${referral.userValidated ? 'text-gray-400' : 'text-green-600'}`} />
+                                            )}
                                         </Button>
-                                        <Button size="sm" variant="ghost" onClick={() => onShowDetail?.(referral)} aria-label="Détails">
-                                            <InfoIcon className="w-4 h-4" />
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => onShowDetail?.(referral)}
+                                            aria-label="Voir les détails"
+                                            className="hover:bg-violet-50"
+                                            title="Détails"
+                                        >
+                                            <InfoIcon className="w-5 h-5 text-violet-600" />
                                         </Button>
                                     </div>
                                 </TableCell>
@@ -113,16 +136,35 @@ function ParrainsTableContent({ loading, referrals, isDesktop, onShowDetail, onA
                             <div className="mt-3 flex flex-wrap gap-2 items-center">
                                 <Badge variant="outline" className="text-xs">{referral.userId ?? 'N/A'}</Badge>
                                 <div className="text-sm text-neutral-900">{referral.userType}</div>
-                                <Badge variant={referral.userValidated ? 'default' : 'secondary'} className="text-xs">{referral.userValidated ? 'Validé' : 'En attente'}</Badge>
+                                <Badge variant={(referral.isParrain1Validated && referral.isParrain2Validated) ? 'default' : 'secondary'} className="text-xs">{(referral.isParrain1Validated && referral.isParrain2Validated) ? 'Validé' : 'En attente'}</Badge>
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                            <div className="flex gap-2">
-                                <Button size="sm" variant={referral.userValidated ? 'ghost' : 'default'} disabled={referral.userValidated} onClick={() => onApprove?.(referral._id)}>
-                                    {referral.userValidated ? 'Validé' : 'Valider'}
+                            <div className="flex gap-1">
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    disabled={referral.userValidated || actionLoading}
+                                    onClick={() => onApprove?.(referral._id)}
+                                    aria-label={referral.userValidated ? 'Déjà validé' : 'Valider cet utilisateur'}
+                                    className="hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title={referral.userValidated ? 'Déjà validé' : 'Valider'}
+                                >
+                                    {actionLoading ? (
+                                        <CircularProgress size={20} />
+                                    ) : (
+                                        <DoneIcon className={`w-5 h-5 ${referral.userValidated ? 'text-gray-400' : 'text-green-600'}`} />
+                                    )}
                                 </Button>
-                                <Button size="sm" variant="ghost" onClick={() => onShowDetail?.(referral)}>
-                                    <InfoIcon className="w-4 h-4" />
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => onShowDetail?.(referral)}
+                                    aria-label="Voir les détails"
+                                    className="hover:bg-violet-50"
+                                    title="Détails"
+                                >
+                                    <InfoIcon className="w-5 h-5 text-violet-600" />
                                 </Button>
                             </div>
                         </div>
@@ -133,15 +175,21 @@ function ParrainsTableContent({ loading, referrals, isDesktop, onShowDetail, onA
     );
 }
 
-const Parrains = () => {
+const Parrainage = () => {
     const { user } = useAuth();
-    usePageTitle('Mes Parrains');
+    usePageTitle('Mes Parrainage');
 
     const [referrals, setReferrals] = useState([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
+
+    // Filtres
+    const [searchTerm, setSearchTerm] = useState('');
+    const [userTypeFilter, setUserTypeFilter] = useState('all');
+    const [isVerifiedFilter, setIsVerifiedFilter] = useState('all');
+    const [isActiveFilter, setIsActiveFilter] = useState('all');
 
     const [detailOpen, setDetailOpen] = useState(false);
     const [detailUser, setDetailUser] = useState(null);
@@ -154,7 +202,17 @@ const Parrains = () => {
         const fetchReferrals = async () => {
             setLoading(true);
             try {
-                const res = await getReferrals({ page, limit });
+                const params = {
+                    page,
+                    limit,
+                };
+                // Ajouter les filtres s'ils sont spécifiés
+                if (searchTerm) params.search = searchTerm;
+                if (userTypeFilter && userTypeFilter !== 'all') params.userType = userTypeFilter;
+                if (isVerifiedFilter && isVerifiedFilter !== 'all') params.isVerified = isVerifiedFilter === 'true';
+                if (isActiveFilter && isActiveFilter !== 'all') params.isActive = isActiveFilter === 'true';
+
+                const res = await getReferrals(params);
                 // normalize response
                 const data = res?.data ?? res?.referrals ?? res ?? [];
                 const list = Array.isArray(data) ? data : data.data ?? data.items ?? [];
@@ -163,14 +221,14 @@ const Parrains = () => {
                 setTotalPages(Math.max(1, Math.ceil((total || list.length) / limit)));
             } catch (err) {
                 console.error(err);
-                toast.error('Impossible de charger les parrains');
+                toast.error('Impossible de charger les Parrainage');
             } finally {
                 setLoading(false);
             }
         };
 
         fetchReferrals();
-    }, [page, limit]);
+    }, [page, limit, searchTerm, userTypeFilter, isVerifiedFilter, isActiveFilter]);
 
     const handleShowUserDetail = async (userOrObj) => {
         const userId = typeof userOrObj === 'string' ? userOrObj : (userOrObj?._id ?? userOrObj?.id);
@@ -215,13 +273,86 @@ const Parrains = () => {
                     <>
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div>
-                                <h1 className="text-2xl text-neutral-900 mb-2">Mes Parrains</h1>
-                                <p className="text-sm text-neutral-600">Liste des utilisateurs parrainés et statut de validation</p>
+                                <h1 className="text-2xl text-neutral-900 mb-2">Mes Parrainages</h1>
+                                <p className="text-sm text-neutral-600">Liste de mes filleuls et statut de validation</p>
                             </div>
                         </div>
 
+                        {/* Filtres */}
+                        <Card className="border-neutral-200 bg-white p-4">
+                            <div className="space-y-4">
+                                <h3 className="font-semibold text-neutral-900">Filtres</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                                    <div>
+                                        <label className="text-xs font-medium text-neutral-600 block mb-2">Recherche (nom/email)</label>
+                                        <Input
+                                            placeholder="Rechercher..."
+                                            value={searchTerm}
+                                            onChange={(e) => {
+                                                setSearchTerm(e.target.value);
+                                                setPage(1);
+                                            }}
+                                            className="text-sm"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-medium text-neutral-600 block mb-2">Type</label>
+                                        <Select value={userTypeFilter} onValueChange={(val) => {
+                                            setUserTypeFilter(val);
+                                            setPage(1);
+                                        }}>
+                                            <SelectTrigger className="text-sm">
+                                                <SelectValue placeholder="Tous les types" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">Tous les types</SelectItem>
+                                                <SelectItem value="Particulier">Particulier</SelectItem>
+                                                <SelectItem value="Professionnel">Professionnel</SelectItem>
+                                                <SelectItem value="Entreprise">Entreprise</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-medium text-neutral-600 block mb-2">Actif</label>
+                                        <Select value={isActiveFilter} onValueChange={(val) => {
+                                            setIsActiveFilter(val);
+                                            setPage(1);
+                                        }}>
+                                            <SelectTrigger className="text-sm">
+                                                <SelectValue placeholder="Tous" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">Tous</SelectItem>
+                                                <SelectItem value="true">Actif</SelectItem>
+                                                <SelectItem value="false">Inactif</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="flex items-end">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full"
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                setUserTypeFilter('all');
+                                                setIsVerifiedFilter('all');
+                                                setIsActiveFilter('all');
+                                                setPage(1);
+                                            }}
+                                        >
+                                            Réinitialiser
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+
                         <Card className="border-neutral-200 bg-white">
-                            <ParrainsTableContent loading={loading} referrals={referrals} isDesktop={isDesktop} onShowDetail={(u) => handleShowUserDetail(u)} onApprove={(id) => handleApprove(id, false)} />
+                            <ParrainageTableContent loading={loading} referrals={referrals} isDesktop={isDesktop} onShowDetail={(u) => handleShowUserDetail(u)} onApprove={(id) => handleApprove(id, false)} actionLoading={actionLoading} />
                         </Card>
 
                         {/* Detail Dialog */}
@@ -319,4 +450,4 @@ const Parrains = () => {
     );
 };
 
-export default Parrains;
+export default Parrainage;
