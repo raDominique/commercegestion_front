@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getReferrals, getUserById, validateViaParrain } from '@/services/user.service';
 import { toast } from 'sonner';
 import { getFullMediaUrl } from '@/services/media.service';
+import formatBirthDate from '@/utils/formatBirthDate';
 import { CircularProgress } from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -237,7 +238,7 @@ const Parrainage = () => {
         setDetailOpen(true);
         try {
             const res = await getUserById(userId);
-            const detail = res?.data ?? res;
+            const detail = Array.isArray(res.data) ? res.data[0] : res.data;
             setDetailUser(detail);
         } catch (err) {
             console.error(err);
@@ -380,36 +381,68 @@ const Parrainage = () => {
 
                                             <div><b>Email :</b> {detailUser.userEmail}</div>
                                             {detailUser.userType === 'Entreprise' ? (
-                                                <div><b>Date de création :</b> {detailUser.userDateOfBirth ? new Date(detailUser.userDateOfBirth).toLocaleDateString() : '-'}</div>
+                                                <div><b>Date de création de l'entreprise :</b> {formatBirthDate(detailUser.userDateOfBirth)}</div>
                                             ) : (
-                                                <div><b>Date de naissance:</b> {detailUser.userDateOfBirth ? new Date(detailUser.userDateOfBirth).toLocaleDateString() : '-'}</div>
+                                                <div><b>Date de naissance:</b> {formatBirthDate(detailUser.userDateOfBirth)}</div>
                                             )}
-                                            <div><b>Téléphone :</b> {detailUser.userPhone ?? '-'}</div>
-                                            <div><b>Adresse :</b> {detailUser.userAddress ?? '-'}</div>
-                                            <div><b>Solde :</b> {detailUser.userTotalSolde ?? 0} Ariary</div>
+                                            <div><b>Téléphone :</b> {detailUser.userPhone || '-'}</div>
+                                            <div><b>Adresse :</b> {detailUser.userAddress || '-'}</div>
+                                            <div><b>Longitude :</b> {detailUser.userMainLng || '-'}</div>
+                                            <div><b>Latitude :</b> {detailUser.userMainLat || '-'}</div>
+                                            <div><b>Solde :</b> {detailUser.userTotalSolde || 0} Ariary</div>
                                             <div><b>Validé :</b> {detailUser.userValidated ? 'Oui' : 'Non'}</div>
                                             <div><b>Email vérifié :</b> {detailUser.userEmailVerified ? 'Oui' : 'Non'}</div>
-
-                                            {Array.isArray(detailUser.carteStat) && detailUser.carteStat.length > 0 && (
-                                                <div className="mt-2">
-                                                    <b>Carte Stat :</b>
-                                                    <ul className="list-disc ml-6">
-                                                        {detailUser.carteStat.map((file, idx) => (
-                                                            <li key={idx}><a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a></li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
+                                            <div><b>Numéro Parrain 1 :</b> {detailUser.parrain1ID || '-'}</div>
+                                            <div><b>Numéro Parrain 2 :</b> {detailUser.parrain2ID || '-'}</div>
+                                            <div><b>Type document :</b> {detailUser.documentType || '-'}</div>
+                                            <div><b>Numéro document :</b> {detailUser.identityCardNumber || '-'}</div>
+                                            {(detailUser.managerName || detailUser.managerEmail) && (
+                                                <div><b>Manager :</b> {detailUser.managerName || '-'} ({detailUser.managerEmail || '-'})</div>
                                             )}
+                                            <div><b>Date création :</b> {detailUser.createdAt ? new Date(detailUser.createdAt).toLocaleString() : '-'}</div>
 
+                                            {/* Téléchargement documents selon le type d'utilisateur */}
                                             {Array.isArray(detailUser.identityDocument) && detailUser.identityDocument.length > 0 && (
                                                 <div className="mt-2">
                                                     <b>Documents d'identité :</b>
                                                     <ul className="list-disc ml-6">
                                                         {detailUser.identityDocument.map((file, idx) => (
-                                                            <li key={idx}><a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger document {idx + 1}</a></li>
+                                                            <li key={idx}>
+                                                                <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger document {idx + 1}</a>
+                                                            </li>
                                                         ))}
                                                     </ul>
                                                 </div>
+                                            )}
+
+                                            {/* Pour les entreprises, afficher carteStat et carteFiscal */}
+                                            {detailUser.userType === 'Entreprise' && (
+                                                <>
+                                                    {Array.isArray(detailUser.carteStat) && detailUser.carteStat.length > 0 && (
+                                                        <div className="mt-2">
+                                                            <b>Carte Stat :</b>
+                                                            <ul className="list-disc ml-6">
+                                                                {detailUser.carteStat.map((file, idx) => (
+                                                                    <li key={idx}>
+                                                                        <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                    {Array.isArray(detailUser.carteFiscal) && detailUser.carteFiscal.length > 0 && (
+                                                        <div className="mt-2">
+                                                            <b>Carte Fiscal :</b>
+                                                            <ul className="list-disc ml-6">
+                                                                {detailUser.carteFiscal.map((file, idx) => (
+                                                                    <li key={idx}>
+                                                                        <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                         <div className="flex justify-end gap-2 mt-4">
