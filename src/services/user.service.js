@@ -112,3 +112,27 @@ export async function getAllUsersSelect() {
     // Retourne uniquement le tableau d'utilisateurs ou []
     return res.data?.data || [];
 }
+
+/**
+ * Récupère la liste des parrains/filleuls de l'utilisateur connecté (GET /users/me/referrals)
+ * @param {Object} [params] - Paramètres de pagination optionnels
+ * @param {number} [params.limit=10] - Nombre de résultats par page
+ * @param {number} [params.page=1] - Numéro de la page
+ * @returns {Promise<Object>} Résultat de l'API contenant les informations des parrains/filleuls
+ */
+export async function getReferrals(params = { limit: 10, page: 1 }) {
+    const res = await axiosConfig.get('/api/v1/users/me/referrals', { params });
+    return res.data;
+}
+
+/**
+ * Valide un parrain (POST /users/validate-parrain/:id)
+ * Remarque: l'Authorization Bearer est injecté par axiosConfig si disponible
+ * @param {string} userId - L'identifiant du parrain à valider
+ * @returns {Promise<Object>} Résultat de l'API
+ */
+export async function validateViaParrain(userId) {
+    if (!userId) throw new Error('userId est requis');
+    const res = await axiosConfig.post(`/api/v1/users/validate-parrain/${userId}`);
+    return res.data;
+}

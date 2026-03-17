@@ -116,3 +116,20 @@ export const getMyStocksPassifs = async (params = {}) => {
     });
     return response.data;
 };
+
+/**
+ * Récupère l'historique des mouvements de stock
+ * @param {Object} params - Paramètres de filtre et pagination (limit, page, startDate, endDate, etc.)
+ * @param {string} token - Token d'authentification Bearer
+ * @returns {Promise}
+ */
+export const getStockHistory = async (params = {}, token) => {
+    const response = await axiosInstance.get('/api/v1/stocks/history', {
+        params,
+        headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+            accept: '*/*',
+        },
+    });
+    return response.data;
+};

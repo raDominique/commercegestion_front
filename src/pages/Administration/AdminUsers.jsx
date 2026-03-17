@@ -26,6 +26,8 @@ export default function AdminUsers() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [total, setTotal] = useState(0);
+    const [totalUserActif, setTotalUserActif] = useState(0);
+    const [totalAdmin, setTotalAdmin] = useState(0);
     // Filtres avancés
     const [isVerified, setIsVerified] = useState('');
     const [isActive, setIsActive] = useState('');
@@ -60,6 +62,8 @@ export default function AdminUsers() {
             const res = await getUsers(params);
             setUsers(Array.isArray(res.data) ? res.data.map(mapApiUser) : []);
             setTotal(res.total || 0);
+            setTotalUserActif(typeof res.totalUserActif !== 'undefined' ? res.totalUserActif : 0);
+            setTotalAdmin(typeof res.totalAdmin !== 'undefined' ? res.totalAdmin : 0);
         } catch (err) {
             toast.error('Erreur lors du chargement des utilisateurs');
         } finally {
@@ -70,7 +74,7 @@ export default function AdminUsers() {
     useEffect(() => {
         fetchUsers();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchTerm, page, limit]);
+    }, [searchTerm, page, limit, isVerified, isActive, userType]);
 
     // Les filtres sont maintenant côté API, donc on affiche users directement
     const filteredUsers = users;
@@ -150,8 +154,8 @@ export default function AdminUsers() {
     const [detailLoading, setDetailLoading] = useState(false);
 
     const totalUsers = total;
-    const activeUsers = users.filter((u) => u.status === 'Actif').length;
-    const adminUsers = users.filter((u) => u.role === 'admin').length;
+    const activeUsers = totalUserActif;
+    const adminUsers = totalAdmin;
 
     return (
         <div className="px-6 mx-auto">
@@ -308,62 +312,85 @@ export default function AdminUsers() {
                         {detailLoading ? (
                             <div className="p-8 text-center text-neutral-400">Chargement...</div>
                         ) : detailUser ? (
-                            <div className="space-y-2 text-sm">
-                                <div className="flex items-center gap-4 mb-4">
-                                    <img
-                                        src={getFullMediaUrl(detailUser.userType === 'Entreprise' ? (detailUser.logo || detailUser.userImage) : (detailUser.userImage || detailUser.logo))}
-                                        alt={detailUser.userNickName}
-                                        className={detailUser.userType === 'Entreprise' ? 'w-20 h-20 object-contain rounded border' : 'w-16 h-16 object-cover rounded-full border'}
-                                    />
-                                    <div>
-                                        <div className="font-bold text-lg text-neutral-900">{detailUser.userName} {detailUser.userFirstname}</div>
-                                        <div className="text-xs text-neutral-500">{detailUser.userType} - {detailUser.userAccess}</div>
+                            <div>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <img
+                                            src={getFullMediaUrl(detailUser.userType === 'Entreprise' ? (detailUser.logo || detailUser.userImage) : (detailUser.userImage || detailUser.logo))}
+                                            alt={detailUser.userNickName}
+                                            className={detailUser.userType === 'Entreprise' ? 'w-20 h-20 object-contain rounded border' : 'w-16 h-16 object-cover rounded-full border'}
+                                        />
+                                        <div>
+                                            <div className="font-bold text-lg text-neutral-900">{detailUser.userName} {detailUser.userFirstname}</div>
+                                            <div className="text-xs text-neutral-500">{detailUser.userType} - {detailUser.userAccess}</div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div><b>Email :</b> {detailUser.userEmail}</div>
-                                {detailUser.userType === 'Entreprise' ? (
-                                    <div><b>Date de création de l'entreprise :</b> {formatBirthDate(detailUser.userDateOfBirth)}</div>
-                                ) : (
-                                    <div><b>Date de naissance:</b> {formatBirthDate(detailUser.userDateOfBirth)}</div>
-                                )}
-                                <div><b>Téléphone :</b> {detailUser.userPhone}</div>
-                                <div><b>Adresse :</b> {detailUser.userAddress}</div>
-                                <div><b>Longitude :</b> {detailUser.userMainLng}</div>
-                                <div><b>Latitude :</b> {detailUser.userMainLat}</div>
-                                <div><b>Solde :</b> {detailUser.userTotalSolde} Ariary</div>
-                                <div><b>Validé :</b> {detailUser.userValidated ? 'Oui' : 'Non'}</div>
-                                <div><b>Email vérifié :</b> {detailUser.userEmailVerified ? 'Oui' : 'Non'}</div>
-                                <div><b>Type document :</b> {detailUser.documentType}</div>
-                                <div><b>Numéro CIN :</b> {detailUser.identityCardNumber}</div>
-                                <div><b>Manager :</b> {detailUser.managerName} ({detailUser.managerEmail})</div>
-                                <div><b>Date création :</b> {new Date(detailUser.createdAt).toLocaleString()}</div>
+                                    <div><b>Email :</b> {detailUser.userEmail}</div>
+                                    {detailUser.userType === 'Entreprise' ? (
+                                        <div><b>Date de création de l'entreprise :</b> {formatBirthDate(detailUser.userDateOfBirth)}</div>
+                                    ) : (
+                                        <div><b>Date de naissance:</b> {formatBirthDate(detailUser.userDateOfBirth)}</div>
+                                    )}
+                                    <div><b>Téléphone :</b> {detailUser.userPhone}</div>
+                                    <div><b>Adresse :</b> {detailUser.userAddress}</div>
+                                    <div><b>Longitude :</b> {detailUser.userMainLng}</div>
+                                    <div><b>Latitude :</b> {detailUser.userMainLat}</div>
+                                    <div><b>Solde :</b> {detailUser.userTotalSolde} Ariary</div>
+                                    <div><b>Validé :</b> {detailUser.userValidated ? 'Oui' : 'Non'}</div>
+                                    <div><b>Email vérifié :</b> {detailUser.userEmailVerified ? 'Oui' : 'Non'}</div>
+                                    <div><b>Numéro Parrain 1 :</b> {detailUser.parrain1ID}</div>
+                                    <div><b>Numéro Parrain 2 :</b> {detailUser.parrain2ID}</div>
+                                    <div><b>Type document :</b> {detailUser.documentType}</div>
+                                    <div><b>Numéro document :</b> {detailUser.identityCardNumber}</div>
+                                    <div><b>Manager :</b> {detailUser.managerName} ({detailUser.managerEmail})</div>
+                                    <div><b>Date création :</b> {new Date(detailUser.createdAt).toLocaleString()}</div>
 
-                                {/* Téléchargement carteStat */}
-                                {Array.isArray(detailUser.carteStat) && detailUser.carteStat.length > 0 && (
-                                    <div className="mt-2">
-                                        <b>Carte Stat :</b>
-                                        <ul className="list-disc ml-6">
-                                            {detailUser.carteStat.map((file, idx) => (
-                                                <li key={idx}>
-                                                    <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                {/* Téléchargement identityDocument */}
-                                {Array.isArray(detailUser.identityDocument) && detailUser.identityDocument.length > 0 && (
-                                    <div className="mt-2">
-                                        <b>Documents d'identité :</b>
-                                        <ul className="list-disc ml-6">
-                                            {detailUser.identityDocument.map((file, idx) => (
-                                                <li key={idx}>
-                                                    <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger document {idx + 1}</a>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
+                                    {/* Téléchargement carteStat */}
+                                    {Array.isArray(detailUser.carteStat) && detailUser.carteStat.length > 0 && (
+                                        <div className="mt-2">
+                                            <b>Carte Stat :</b>
+                                            <ul className="list-disc ml-6">
+                                                {detailUser.carteStat.map((file, idx) => (
+                                                    <li key={idx}>
+                                                        <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {/* Téléchargement identityDocument */}
+                                    {Array.isArray(detailUser.identityDocument) && detailUser.identityDocument.length > 0 && (
+                                        <div className="mt-2">
+                                            <b>Documents d'identité :</b>
+                                            <ul className="list-disc ml-6">
+                                                {detailUser.identityDocument.map((file, idx) => (
+                                                    <li key={idx}>
+                                                        <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger document {idx + 1}</a>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-end gap-2 mt-4">
+                                    <DialogClose asChild>
+                                        <Button variant="outline">Fermer</Button>
+                                    </DialogClose>
+                                    <Button
+                                        variant="default"
+                                        className="bg-green-600 text-white hover:bg-green-700"
+                                        disabled={actionLoading || detailUser.userValidated}
+                                        onClick={async () => {
+                                            if (detailUser && (detailUser._id || detailUser.id || detailUser.userId)) {
+                                                await handleActivateUser(detailUser._id || detailUser.id || detailUser.userId);
+                                                setDetailOpen(false);
+                                            }
+                                        }}
+                                    >
+                                        {detailUser.userValidated ? 'Déjà approuvé' : (actionLoading ? 'Traitement...' : 'Approuver')}
+                                    </Button>
+                                </div>
                             </div>
                         ) : (
                             <div className="p-8 text-center text-neutral-400">Aucune donnée</div>
