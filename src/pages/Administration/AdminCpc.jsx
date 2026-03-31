@@ -115,7 +115,8 @@ const AdminCpc = () => {
         }
     };
 
-    const handleAddCpc = async () => {
+    const handleAddCpc = async (e) => {
+        e.preventDefault();
         setSaving(true);
         try {
             const token = localStorage.getItem('token');
@@ -240,6 +241,56 @@ const AdminCpc = () => {
                                     Ajouter un CPC
                                 </Button>
                             </DialogTrigger>
+                            <DialogContent aria-describedby="cpc-add-desc">
+                                <DialogHeader>
+                                    <DialogTitle>Ajouter un code CPC</DialogTitle>
+                                    <DialogDescription id="cpc-add-desc">
+                                        Renseignez les informations du nouveau code CPC.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <form className="space-y-4" onSubmit={handleAddCpc}>
+                                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="add-code">Code</label>
+                                    <Input name="code" id="add-code" placeholder="Code" value={form.code} onChange={handleFormChange} required />
+
+                                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="add-nom">Nom</label>
+                                    <Input name="nom" id="add-nom" placeholder="Nom" value={form.nom} onChange={handleFormChange} required />
+
+                                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="add-niveau">Niveau</label>
+                                    <Select value={form.niveau} onValueChange={value => setForm({ ...form, niveau: value })}>
+                                        <SelectTrigger id="add-niveau" className="w-full border-neutral-300 bg-white">
+                                            <SelectValue placeholder="Choisir un niveau" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="section">Section</SelectItem>
+                                            <SelectItem value="division">Division</SelectItem>
+                                            <SelectItem value="groupe">Groupe</SelectItem>
+                                            <SelectItem value="classe">Classe</SelectItem>
+                                            <SelectItem value="sous-classe">Sous-classe</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+
+                                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="add-parentCode">Code Parent</label>
+                                    <Input name="parentCode" id="add-parentCode" placeholder="Parent Code" value={form.parentCode} onChange={handleFormChange} />
+
+                                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="add-ancetres">Ancêtres</label>
+                                    <Input name="ancetres" id="add-ancetres" placeholder="0,01,011,0111" value={form.ancetres.join(',')} onChange={handleFormChange} />
+
+                                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="add-correspondances-sh">SH</label>
+                                    <Input name="correspondances.sh" id="add-correspondances-sh" placeholder="SH" value={form.correspondances.sh} onChange={handleFormChange} />
+
+                                    <label className="block text-sm font-medium text-neutral-700 mb-1" htmlFor="add-correspondances-citi">CITI</label>
+                                    <Input name="correspondances.citi" id="add-correspondances-citi" placeholder="CITI" value={form.correspondances.citi} onChange={handleFormChange} />
+
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button variant="outline" type="button">Annuler</Button>
+                                        </DialogClose>
+                                        <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit" disabled={saving}>
+                                            {saving ? 'Enregistrement...' : 'Ajouter'}
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
                             <input
                                 type="file"
                                 accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
