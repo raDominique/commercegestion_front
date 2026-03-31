@@ -6,7 +6,6 @@ import {
 	getMyStocksActifs,
 	withdrawStock
 } from '../../services/stocks_move.service';
-import { getMySites } from '../../services/site.service';
 import {
 	Dialog,
 	DialogContent,
@@ -25,7 +24,6 @@ import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import InfoIcon from '@mui/icons-material/Info';
-import MoveUpIcon from '@mui/icons-material/MoveUp';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType';
 import { getFullMediaUrl } from '../../services/media.service';
@@ -35,6 +33,7 @@ import useDateFormat from '../../utils/useDateFormat.jsx';
 import { getAllUsersSelect } from '../../services/user.service';
 import { getAllSitesSelect } from '../../services/site.service';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 
 const Actifs = () => {
 	usePageTitle('Actifs');
@@ -45,7 +44,6 @@ const Actifs = () => {
 	const { isDesktop } = useScreenType();
 
 	const [actifs, setActifs] = useState([]);
-	const [sites, setSites] = useState([]);
 	const [usersOptions, setUsersOptions] = useState([]);
 	const [allSites, setAllSites] = useState([]);
 
@@ -57,7 +55,6 @@ const Actifs = () => {
 	const limit = 10;
 	const [total, setTotal] = useState(0);
 
-	const [transferModalOpen, setTransferModalOpen] = useState(false);
 	const [detailOpen, setDetailOpen] = useState(false);
 
 	const [detailActif, setDetailActif] = useState(null);
@@ -65,6 +62,7 @@ const Actifs = () => {
 
 	const [transferForm, setTransferForm] = useState({
 		actifId: '',
+		productId: '',
 		siteOrigineId: '',
 		siteDestinationId: '',
 		quantite: '',
@@ -97,7 +95,6 @@ const Actifs = () => {
 	}, [page, search]);
 
 	useEffect(() => {
-		getMySites().then(res => setSites(Array.isArray(res) ? res : []));
 		getAllUsersSelect().then(res => {
 			if (Array.isArray(res)) {
 				setUsersOptions(res);
@@ -112,21 +109,23 @@ const Actifs = () => {
 
 	/* ================= ACTIONS ================= */
 
-	const handleOpenTransferModal = item => {
-		setTransferForm({
-			actifId: item._id,
-			productId: item.productId?._id || '',
-			siteOrigineId: item.siteOrigineId?._id || '', // Correction ici
+	const handleSelectActifForTransfer = actifId => {
+		const actif = actifs.find(item => item._id === actifId);
+
+		setTransferForm(prev => ({
+			...prev,
+			actifId,
+			productId: actif?.productId?._id || '',
+			siteOrigineId: actif?.siteOrigineId?._id || '',
 			siteDestinationId: '',
 			quantite: '',
-			prixUnitaire: item.prixUnitaire || '',
+			prixUnitaire: actif?.prixUnitaire || '',
 			detentaire: '',
 			ayant_droit: '',
 			observations: ''
-		});
+		}));
 
-		setMaxTransferQty(item.quantite);
-		setTransferModalOpen(true);
+		setMaxTransferQty(actif?.quantite || null);
 	};
 
 	const handleTransferSubmit = async e => {
@@ -142,7 +141,18 @@ const Actifs = () => {
 			await withdrawStock(payload);
 
 			toast.success('Transfert effectué');
-			setTransferModalOpen(false);
+			setTransferForm({
+				actifId: '',
+				productId: '',
+				siteOrigineId: '',
+				siteDestinationId: '',
+				quantite: '',
+				prixUnitaire: '',
+				detentaire: '',
+				ayant_droit: '',
+				observations: ''
+			});
+			setMaxTransferQty(null);
 			fetchActifs();
 		} catch {
 			toast.error('Erreur lors du transfert');
@@ -168,135 +178,170 @@ const Actifs = () => {
 				<UserNotValidatedBanner />
 			) : (
 				<>
-					{/* HEADER */}
-					<div className="flex justify-between mb-6">
-						<h1 className="text-2xl">Mes Actifs</h1>
+					{/* TABS: Formulaire / Liste */}
+					<Tabs defaultValue="form" className="space-y-6">
+						<TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
+							<TabsTrigger value="form" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Formulaire de dépôt</TabsTrigger>
+							<TabsTrigger value="list" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Mes actifs</TabsTrigger>
+						</TabsList>
 
-						<Input
-							placeholder="Rechercher..."
-							value={search}
-							onChange={e => {
-								setPage(1);
-								setSearch(e.target.value);
-							}}
-							className="max-w-xs border-black bg-white"
-						/>
-					</div>
+						<TabsContent value="form">
+							<Card className="border-neutral-200 bg-white">
+								<form className="space-y-4 p-4" onSubmit={handleTransferSubmit}>
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+										<div className="space-y-2 md:col-span-2">
+											<Label htmlFor="actifId">Actif à transférer</Label>
+											<Select value={transferForm.actifId} onValueChange={handleSelectActifForTransfer}>
+												<SelectTrigger>
+													<SelectValue placeholder="Sélectionner un actif" />
+												</SelectTrigger>
+												<SelectContent>
+													{actifs.map(item => (
+														<SelectItem key={item._id} value={item._id}>
+															{item.productId?.productName || '-'} - Qté: {formatThousands(item.quantite)}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="siteOrigineId">Site d'origine</Label>
+											<Select value={transferForm.siteOrigineId} onValueChange={val => setTransferForm(f => ({ ...f, siteOrigineId: val }))}>
+												<SelectTrigger>
+													<SelectValue placeholder="Sélectionner le site d'origine" />
+												</SelectTrigger>
+												<SelectContent>
+													{allSites.map(site => (
+														<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="siteDestinationId">Site de destination</Label>
+											<Select value={transferForm.siteDestinationId} onValueChange={val => setTransferForm(f => ({ ...f, siteDestinationId: val }))}>
+												<SelectTrigger>
+													<SelectValue placeholder="Sélectionner le site de destination" />
+												</SelectTrigger>
+												<SelectContent>
+													{allSites.map(site => (
+														<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="quantite">Quantité</Label>
+											<Input name="quantite" value={transferForm.quantite} onChange={e => setTransferForm(f => ({ ...f, quantite: e.target.value }))} required placeholder="Quantité à transférer" className="border-neutral-300" type="number" min="1" max={maxTransferQty || undefined} />
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="prixUnitaire">Prix unitaire</Label>
+											<Input name="prixUnitaire" value={transferForm.prixUnitaire} onChange={e => setTransferForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix unitaire" className="border-neutral-300" type="number" min="0" />
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="detentaire">Détenteur</Label>
+											<Select value={transferForm.detentaire} onValueChange={val => setTransferForm(f => ({ ...f, detentaire: val }))}>
+												<SelectTrigger>
+													<SelectValue placeholder="Sélectionner le détenteur" />
+												</SelectTrigger>
+												<SelectContent>
+													{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
+														usersOptions.map(userOption => (
+															<SelectItem key={userOption._id} value={userOption._id}>{userOption.name || userOption.userNickName || userOption.userName || userOption.userFirstname || userOption.userId}</SelectItem>
+														))
+													) : (
+														<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
+													)}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="ayant_droit">Ayant droit</Label>
+											<Select value={transferForm.ayant_droit} onValueChange={val => setTransferForm(f => ({ ...f, ayant_droit: val }))}>
+												<SelectTrigger>
+													<SelectValue placeholder="Sélectionner l'ayant droit" />
+												</SelectTrigger>
+												<SelectContent>
+													{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
+														usersOptions.map(userOption => (
+															<SelectItem key={userOption._id} value={userOption._id}>{userOption.name || userOption.userNickName || userOption.userName || userOption.userFirstname || userOption.userId}</SelectItem>
+														))
+													) : (
+														<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
+													)}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2 md:col-span-2">
+											<Label htmlFor="observations">Observations</Label>
+											<Input name="observations" value={transferForm.observations} onChange={e => setTransferForm(f => ({ ...f, observations: e.target.value }))} placeholder="Observations" className="border-neutral-300" />
+										</div>
+									</div>
 
-					{/* TABLE */}
-					<Card className="border-neutral-200 bg-white">
-						<ActifsTableOrList loading={loading} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onTransfer={handleOpenTransferModal} onShowDetail={handleShowDetail} />
-					</Card>
+									<div className="flex justify-end gap-2">
+										<Button variant="outline" type="button" onClick={() => {
+											setTransferForm({
+												actifId: '',
+												productId: '',
+												siteOrigineId: '',
+												siteDestinationId: '',
+												quantite: '',
+												prixUnitaire: '',
+												detentaire: '',
+												ayant_droit: '',
+												observations: ''
+											});
+											setMaxTransferQty(null);
+										}}>
+											Annuler
+										</Button>
+										<Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Valider le transfert</Button>
+									</div>
+								</form>
+							</Card>
+						</TabsContent>
 
-					{/* PAGINATION */}
-					<div className="flex justify-end gap-4 mt-4">
-						<Button
-							disabled={page === 1}
-							onClick={() => setPage(p => p - 1)}
-						>
-							Précédent
-						</Button>
+						<TabsContent value="list" className="space-y-4">
+							<div className="flex justify-between items-center">
+								<h1 className="text-2xl">Mes Actifs</h1>
 
-						<span>
-							Page {page} / {Math.max(1, Math.ceil(total / limit))}
-						</span>
+								<Input
+									placeholder="Rechercher..."
+									value={search}
+									onChange={e => {
+										setPage(1);
+										setSearch(e.target.value);
+									}}
+									className="max-w-xs border-black bg-white"
+								/>
+							</div>
 
-						<Button
-							disabled={page >= Math.ceil(total / limit)}
-							onClick={() => setPage(p => p + 1)}
-						>
-							Suivant
-						</Button>
-					</div>
+							<Card className="border-neutral-200 bg-white">
+								<ActifsTableOrList loading={loading} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} />
+							</Card>
 
-					{/* Modal transfert */}
-					<Dialog open={transferModalOpen} onOpenChange={setTransferModalOpen}>
-						<DialogContent className="bg-white border border-neutral-200">
-							<DialogHeader>
-								<DialogTitle>Transférer le produit</DialogTitle>
-							</DialogHeader>
-							<form className="space-y-4" onSubmit={handleTransferSubmit}>
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<div className="space-y-2">
-										<Label htmlFor="siteOrigineId">Site d'origine</Label>
-										<Select value={transferForm.siteOrigineId} onValueChange={val => setTransferForm(f => ({ ...f, siteOrigineId: val }))}>
-											<SelectTrigger>
-												<SelectValue placeholder="Sélectionner le site d'origine" />
-											</SelectTrigger>
-											<SelectContent>
-												{allSites.map(site => (
-													<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="siteDestinationId">Site de destination</Label>
-										<Select value={transferForm.siteDestinationId} onValueChange={val => setTransferForm(f => ({ ...f, siteDestinationId: val }))}>
-											<SelectTrigger>
-												<SelectValue placeholder="Sélectionner le site de destination" />
-											</SelectTrigger>
-											<SelectContent>
-												{allSites.map(site => (
-													<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="quantite">Quantité</Label>
-										<Input name="quantite" value={transferForm.quantite} onChange={e => setTransferForm(f => ({ ...f, quantite: e.target.value }))} required placeholder="Quantité à transférer" className="border-neutral-300" type="number" min="1" max={maxTransferQty || undefined} />
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="prixUnitaire">Prix unitaire</Label>
-										<Input name="prixUnitaire" value={transferForm.prixUnitaire} onChange={e => setTransferForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix unitaire" className="border-neutral-300" type="number" min="0" />
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="detentaire">Détenteur</Label>
-										<Select value={transferForm.detentaire} onValueChange={val => setTransferForm(f => ({ ...f, detentaire: val }))}>
-											<SelectTrigger>
-												<SelectValue placeholder="Sélectionner le détenteur" />
-											</SelectTrigger>
-											<SelectContent>
-												{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
-													usersOptions.map(user => (
-														<SelectItem key={user._id} value={user._id}>{user.name || user.userNickName || user.userName || user.userFirstname || user.userId}</SelectItem>
-													))
-												) : (
-													<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
-												)}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="ayant_droit">Ayant droit</Label>
-										<Select value={transferForm.ayant_droit} onValueChange={val => setTransferForm(f => ({ ...f, ayant_droit: val }))}>
-											<SelectTrigger>
-												<SelectValue placeholder="Sélectionner l'ayant droit" />
-											</SelectTrigger>
-											<SelectContent>
-												{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
-													usersOptions.map(user => (
-														<SelectItem key={user._id} value={user._id}>{user.name || user.userNickName || user.userName || user.userFirstname || user.userId}</SelectItem>
-													))
-												) : (
-													<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
-												)}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="space-y-2 md:col-span-2">
-										<Label htmlFor="observations">Observations</Label>
-										<Input name="observations" value={transferForm.observations} onChange={e => setTransferForm(f => ({ ...f, observations: e.target.value }))} placeholder="Observations" className="border-neutral-300" />
-									</div>
-								</div>
-								<div className="flex justify-end gap-2 mt-4">
-									<Button variant="outline" type="button" onClick={() => setTransferModalOpen(false)}>Annuler</Button>
-									<Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Valider le transfert</Button>
-								</div>
-							</form>
-						</DialogContent>
-					</Dialog>
+							{/* PAGINATION */}
+							<div className="flex justify-end gap-4 mt-4">
+								<Button
+									disabled={page === 1}
+									onClick={() => setPage(p => p - 1)}
+								>
+									Précédent
+								</Button>
+
+								<span>
+									Page {page} / {Math.max(1, Math.ceil(total / limit))}
+								</span>
+
+								<Button
+									disabled={page >= Math.ceil(total / limit)}
+									onClick={() => setPage(p => p + 1)}
+								>
+									Suivant
+								</Button>
+							</div>
+						</TabsContent>
+					</Tabs>
 
 					{/* MODAL DETAIL */}
 					<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
@@ -337,7 +382,7 @@ const Actifs = () => {
 
 export default Actifs;
 
-function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onTransfer, onShowDetail }) {
+function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail }) {
 	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
 	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
 
@@ -380,10 +425,6 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onTransfer,
 								<TableCell className="text-sm">{item.ayant_droit?.userName || '-'}</TableCell>
 								<TableCell className="text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</TableCell>
 								<TableCell className="text-sm text-right">
-									<Button onClick={() => onTransfer(item)} variant="outline">
-										<MoveUpIcon className="w-5 h-5" />
-										Transférer
-									</Button>
 									<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}>
 										<InfoIcon className="w-5 h-5 text-violet-600" />
 									</Button>
@@ -419,7 +460,6 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onTransfer,
 							<div className="text-sm text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
 							<div className="text-sm text-neutral-600">Total: {formatThousands(item.prixUnitaire * item.quantite)}</div>
 							<div className="flex gap-2 mt-2">
-								<Button onClick={() => onTransfer(item)} variant="outline" size="sm"><MoveUpIcon className="w-4 h-4" /> Transférer</Button>
 								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
 							</div>
 						</div>
