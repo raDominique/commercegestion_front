@@ -11,6 +11,7 @@ import ReceiptLong from '@mui/icons-material/ReceiptLong';
 import Public from '@mui/icons-material/Public';
 import Dashboard from '@mui/icons-material/Dashboard';
 import Group from '@mui/icons-material/Group';
+import FactCheck from '@mui/icons-material/FactCheck';
 // import Category from '@mui/icons-material/Category';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
 import QrCodeIcon from '@mui/icons-material/QrCode';
@@ -35,6 +36,7 @@ import MesProduits from '../pages/MesProduits/MesProduits.jsx';
 import MesTransactions from '../pages/MesTransactions/MesTransactions.jsx';
 import MesSites from '../pages/MesSites/MesSites.jsx';
 import Parrainages from '../pages/Parrainages/Parrainages.jsx';
+import OperationsAValider from '../pages/OperationsAValider/OperationsAValider.jsx';
 
 export const publicRoutes = [
     { path: '/login', element: Login },
@@ -54,6 +56,7 @@ export const privateRoutes = [
     { path: '/mon-compte', element: MonCompte, role: 'Utilisateur,Admin', userValidated: [true, false], icon: Person },
     { path: '/mes-produits', element: MesProduits, role: 'Utilisateur,Admin', userValidated: true, icon: Inventory },
     { path: '/mes-transactions', element: MesTransactions, role: 'Utilisateur,Admin', userValidated: true, icon: ReceiptLong },
+    { path: '/operations-a-valider', element: OperationsAValider, role: 'Utilisateur,Admin', userValidated: true, icon: FactCheck, label: 'Opérations à valider' },
     { path: '/mes-sites', element: MesSites, role: 'Utilisateur,Admin', userValidated: true, icon: Public },
     { path: '/parrainages', element: Parrainages, role: 'Utilisateur,Admin', userValidated: true, icon: Group },
     // Routes strictement admin

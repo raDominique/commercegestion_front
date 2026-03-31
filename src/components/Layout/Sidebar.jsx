@@ -15,7 +15,7 @@ function Sidebar({ user, isDesktop = true }) {
   ].includes(r.path));
 
   const accountNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
-    '/mon-compte', '/mes-produits', '/mes-transactions', '/mes-sites', '/parrainages'
+    '/mon-compte', '/mes-produits', '/mes-transactions', '/operations-a-valider', '/mes-sites', '/parrainages'
   ].includes(r.path));
 
   const adminNavItems = privateRoutes.filter(
