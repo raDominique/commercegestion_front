@@ -6,19 +6,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { getMyStocksPassifs, withdrawStock } from '../../services/stocks_move.service.js';
-import { getMySites } from '../../services/site.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType';
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader } from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
 import { getAllUsersSelect } from '../../services/user.service';
 import { getAllSitesSelect } from '../../services/site.service';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
-import MoveUpIcon from '@mui/icons-material/MoveUp';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
+import { toast } from 'sonner';
+import InfoIcon from '@mui/icons-material/Info';
 
 const Passifs = () => {
 	const dateFormat = useDateFormat();
@@ -33,16 +34,15 @@ const Passifs = () => {
 
 	// Pour le détail d'un passif
 	const [detailOpen, setDetailOpen] = useState(false);
-	const [sites, setSites] = useState([]);
 	const [detailPassif, setDetailPassif] = useState(null);
 	const [usersOptions, setUsersOptions] = useState([]);
 	const [loadingDetail, setLoadingDetail] = useState(false);
 	const [allSites, setAllSites] = useState([]);
 	const { user } = useAuth();
 
-	const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
 	const [withdrawalForm, setWithdrawalForm] = useState({
 		actifId: '',
+		productId: '',
 		siteOrigineId: '',
 		siteDestinationId: '',
 		quantite: '',
@@ -76,7 +76,6 @@ const Passifs = () => {
 	}, [search, page, limit]);
 
 	useEffect(() => {
-		getMySites().then(res => setSites(Array.isArray(res) ? res : []));
 		getAllUsersSelect().then(res => {
 			if (Array.isArray(res)) {
 				setUsersOptions(res);
@@ -89,26 +88,22 @@ const Passifs = () => {
 		getAllSitesSelect().then(res => setAllSites(Array.isArray(res) ? res : []));
 	}, []);
 
-	const getSiteName = id => {
-		if (!id) return '-';
-		const s = sites.find(st => st._id === id);
-		return s ? s.siteName : id;
-	};
+	const handleSelectPassifForWithdrawal = passifId => {
+		const item = passifs.find(p => p._id === passifId);
 
-	const handleOpenWithdrawModal = item => {
 		setWithdrawalForm({
-			actifId: item.productId || item.actifId?._id || '',
-			siteOrigineId: item.departDeId || item.siteOriginId?._id || '',
+			actifId: passifId,
+			productId: item?.productId?._id || item?.productId || '',
+			siteOrigineId: item?.departDeId || item?.siteOrigineId?._id || item?.siteOriginId?._id || '',
 			siteDestinationId: '',
 			quantite: '',
-			prixUnitaire: item.montant || item.prixUnitaire || '',
+			prixUnitaire: item?.prixUnitaire || '',
 			detentaire: '',
 			ayant_droit: '',
 			observations: ''
 		});
 
-		setMaxWithdrawalQty(item.quantite || item.solde || undefined);
-		setWithdrawalModalOpen(true);
+		setMaxWithdrawalQty(item?.quantite || item?.solde || undefined);
 	};
 
 	const handleWithdrawalSubmit = async e => {
@@ -128,7 +123,18 @@ const Passifs = () => {
 			};
 
 			await withdrawStock(payload, token);
-			setWithdrawalModalOpen(false);
+			setWithdrawalForm({
+				actifId: '',
+				productId: '',
+				siteOrigineId: '',
+				siteDestinationId: '',
+				quantite: '',
+				prixUnitaire: '',
+				detentaire: '',
+				ayant_droit: '',
+				observations: ''
+			});
+			setMaxWithdrawalQty(undefined);
 			fetchPassifs();
 		} catch {
 			toast.error('Erreur lors du retrait du stock');
@@ -140,7 +146,7 @@ const Passifs = () => {
 		setLoadingDetail(true);
 		setDetailOpen(true);
 		try {
-			const data = await getPassifById(passifId);
+			const data = passifs.find(item => item._id === passifId) || null;
 			setDetailPassif(data);
 		} catch (err) {
 			setDetailPassif(null);
@@ -156,39 +162,163 @@ const Passifs = () => {
 				<UserNotValidatedBanner />
 			) : (
 				<>
-					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-						<h1 className="text-2xl text-neutral-900">Mes Passifs</h1>
-						<Input
-							placeholder="Rechercher..."
-							value={search}
-							onChange={e => { setPage(1); setSearch(e.target.value); }}
-							className="max-w-xs border-black bg-white"
-						/>
-					</div>
-					<Card className="border-neutral-200 bg-white">
-						<PassifsTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} isDesktop={isDesktop} onWithdraw={handleOpenWithdrawModal} />
-					</Card>
-					<div className="flex justify-end items-center gap-4 mt-4">
-						<Button
-							variant="outline"
-							size="sm"
-							disabled={page === 1 || loading}
-							onClick={() => setPage((p) => Math.max(1, p - 1))}
-						>
-							Précédent
-						</Button>
-						<span className="text-sm text-neutral-600">
-							Page {page} / {Math.max(1, Math.ceil(total / limit))}
-						</span>
-						<Button
-							variant="outline"
-							size="sm"
-							disabled={page >= Math.ceil(total / limit) || loading}
-							onClick={() => setPage((p) => p + 1)}
-						>
-							Suivant
-						</Button>
-					</div>
+					<Tabs defaultValue="form" className="space-y-6">
+						<TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
+							<TabsTrigger value="form" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Formulaire de retrait</TabsTrigger>
+							<TabsTrigger value="list" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Mes passifs</TabsTrigger>
+						</TabsList>
+
+						<TabsContent value="form">
+							<Card className="border-neutral-200 bg-white">
+								<form className="space-y-4 p-4" onSubmit={handleWithdrawalSubmit}>
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+										<div className="space-y-2 md:col-span-2">
+											<Label htmlFor="actifId">Passif à retirer</Label>
+											<Select value={withdrawalForm.actifId} onValueChange={handleSelectPassifForWithdrawal}>
+												<SelectTrigger>
+													<SelectValue placeholder="Sélectionner un passif" />
+												</SelectTrigger>
+												<SelectContent>
+													{passifs.map(item => (
+														<SelectItem key={item._id} value={item._id}>
+															{item.productId?.productName || item.productId?.codeCPC || '-'} - Qté: {formatThousands(item.quantite || 0)}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="siteOrigineId">Site d'origine</Label>
+											<Select value={withdrawalForm.siteOrigineId} onValueChange={val => setWithdrawalForm(f => ({ ...f, siteOrigineId: val }))}>
+												<SelectTrigger>
+													<SelectValue placeholder="Sélectionner le site d'origine" />
+												</SelectTrigger>
+												<SelectContent>
+													{allSites.map(site => (
+														<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="siteDestinationId">Site de destination</Label>
+											<Select value={withdrawalForm.siteDestinationId} onValueChange={val => setWithdrawalForm(f => ({ ...f, siteDestinationId: val }))}>
+												<SelectTrigger>
+													<SelectValue placeholder="Sélectionner le site de destination" />
+												</SelectTrigger>
+												<SelectContent>
+													{allSites.map(site => (
+														<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="quantite">Quantité</Label>
+											<Input name="quantite" value={withdrawalForm.quantite} onChange={e => setWithdrawalForm(f => ({ ...f, quantite: e.target.value }))} required placeholder="Quantité à retirer" className="border-neutral-300" type="number" min="1" max={maxWithdrawalQty || undefined} />
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="prixUnitaire">Prix unitaire</Label>
+											<Input name="prixUnitaire" value={withdrawalForm.prixUnitaire} onChange={e => setWithdrawalForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix unitaire" className="border-neutral-300" type="number" min="0" />
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="detentaire">Détenteur</Label>
+											<Select value={withdrawalForm.detentaire} onValueChange={val => setWithdrawalForm(f => ({ ...f, detentaire: val }))}>
+												<SelectTrigger>
+													<SelectValue placeholder="Sélectionner le détenteur" />
+												</SelectTrigger>
+												<SelectContent>
+													{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
+														usersOptions.map(userOption => (
+															<SelectItem key={userOption._id} value={userOption._id}>{userOption.name || userOption.userNickName || userOption.userName || userOption.userFirstname || userOption.userId}</SelectItem>
+														))
+													) : (
+														<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
+													)}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2">
+											<Label htmlFor="ayant_droit">Ayant droit</Label>
+											<Select value={withdrawalForm.ayant_droit} onValueChange={val => setWithdrawalForm(f => ({ ...f, ayant_droit: val }))}>
+												<SelectTrigger>
+													<SelectValue placeholder="Sélectionner l'ayant droit" />
+												</SelectTrigger>
+												<SelectContent>
+													{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
+														usersOptions.map(userOption => (
+															<SelectItem key={userOption._id} value={userOption._id}>{userOption.name || userOption.userNickName || userOption.userName || userOption.userFirstname || userOption.userId}</SelectItem>
+														))
+													) : (
+														<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
+													)}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2 md:col-span-2">
+											<Label htmlFor="observations">Observations</Label>
+											<Input name="observations" value={withdrawalForm.observations} onChange={e => setWithdrawalForm(f => ({ ...f, observations: e.target.value }))} placeholder="Observations" className="border-neutral-300" />
+										</div>
+									</div>
+									<div className="flex justify-end gap-2 mt-4">
+										<Button variant="outline" type="button" onClick={() => {
+											setWithdrawalForm({
+												actifId: '',
+												productId: '',
+												siteOrigineId: '',
+												siteDestinationId: '',
+												quantite: '',
+												prixUnitaire: '',
+												detentaire: '',
+												ayant_droit: '',
+												observations: ''
+											});
+											setMaxWithdrawalQty(undefined);
+										}}>
+											Annuler
+										</Button>
+										<Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Valider le retrait</Button>
+									</div>
+								</form>
+							</Card>
+						</TabsContent>
+
+						<TabsContent value="list" className="space-y-4">
+							<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+								<h1 className="text-2xl text-neutral-900">Mes Passifs</h1>
+								<Input
+									placeholder="Rechercher..."
+									value={search}
+									onChange={e => { setPage(1); setSearch(e.target.value); }}
+									className="max-w-xs border-black bg-white"
+								/>
+							</div>
+							<Card className="border-neutral-200 bg-white">
+								<PassifsTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} />
+							</Card>
+							<div className="flex justify-end items-center gap-4 mt-4">
+								<Button
+									variant="outline"
+									size="sm"
+									disabled={page === 1 || loading}
+									onClick={() => setPage((p) => Math.max(1, p - 1))}
+								>
+									Précédent
+								</Button>
+								<span className="text-sm text-neutral-600">
+									Page {page} / {Math.max(1, Math.ceil(total / limit))}
+								</span>
+								<Button
+									variant="outline"
+									size="sm"
+									disabled={page >= Math.ceil(total / limit) || loading}
+									onClick={() => setPage((p) => p + 1)}
+								>
+									Suivant
+								</Button>
+							</div>
+						</TabsContent>
+					</Tabs>
 					{/* Modal de détail du passif avec Dialog */}
 					<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
 						<DialogContent aria-describedby="detail-passif-desc">
@@ -209,95 +339,6 @@ const Passifs = () => {
 							)}
 						</DialogContent>
 					</Dialog>
-
-					{/* Modal de retrait de stock */}
-					<Dialog open={withdrawalModalOpen} onOpenChange={setWithdrawalModalOpen}>
-						<DialogContent className="bg-white border border-neutral-200">
-							<DialogHeader>
-								<DialogTitle>Retirer le produit</DialogTitle>
-							</DialogHeader>
-							<form className="space-y-4" onSubmit={handleWithdrawalSubmit}>
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<div className="space-y-2">
-										<Label htmlFor="siteOrigineId">Site d'origine</Label>
-										<Select value={withdrawalForm.siteOrigineId} onValueChange={val => setWithdrawalForm(f => ({ ...f, siteOrigineId: val }))}>
-											<SelectTrigger>
-												<SelectValue placeholder="Sélectionner le site d'origine" />
-											</SelectTrigger>
-											<SelectContent>
-												{allSites.map(site => (
-													<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="siteDestinationId">Site de destination</Label>
-										<Select value={withdrawalForm.siteDestinationId} onValueChange={val => setWithdrawalForm(f => ({ ...f, siteDestinationId: val }))}>
-											<SelectTrigger>
-												<SelectValue placeholder="Sélectionner le site de destination" />
-											</SelectTrigger>
-											<SelectContent>
-												{allSites.map(site => (
-													<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="quantite">Quantité</Label>
-										<Input name="quantite" value={withdrawalForm.quantite} onChange={e => setWithdrawalForm(f => ({ ...f, quantite: e.target.value }))} required placeholder="Quantité à retirer" className="border-neutral-300" type="number" min="1" max={maxWithdrawalQty || undefined} />
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="prixUnitaire">Prix unitaire</Label>
-										<Input name="prixUnitaire" value={withdrawalForm.prixUnitaire} onChange={e => setWithdrawalForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix unitaire" className="border-neutral-300" type="number" min="0" />
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="detentaire">Détenteur</Label>
-										<Select value={withdrawalForm.detentaire} onValueChange={val => setWithdrawalForm(f => ({ ...f, detentaire: val }))}>
-											<SelectTrigger>
-												<SelectValue placeholder="Sélectionner le détenteur" />
-											</SelectTrigger>
-											<SelectContent>
-												{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
-													usersOptions.map(user => (
-														<SelectItem key={user._id} value={user._id}>{user.name || user.userNickName || user.userName || user.userFirstname || user.userId}</SelectItem>
-													))
-												) : (
-													<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
-												)}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="space-y-2">
-										<Label htmlFor="ayant_droit">Ayant droit</Label>
-										<Select value={withdrawalForm.ayant_droit} onValueChange={val => setWithdrawalForm(f => ({ ...f, ayant_droit: val }))}>
-											<SelectTrigger>
-												<SelectValue placeholder="Sélectionner l'ayant droit" />
-											</SelectTrigger>
-											<SelectContent>
-												{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
-													usersOptions.map(user => (
-														<SelectItem key={user._id} value={user._id}>{user.name || user.userNickName || user.userName || user.userFirstname || user.userId}</SelectItem>
-													))
-												) : (
-													<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
-												)}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="space-y-2 md:col-span-2">
-										<Label htmlFor="observations">Observations</Label>
-										<Input name="observations" value={withdrawalForm.observations} onChange={e => setWithdrawalForm(f => ({ ...f, observations: e.target.value }))} placeholder="Observations" className="border-neutral-300" />
-									</div>
-								</div>
-								<div className="flex justify-end gap-2 mt-4">
-									<Button variant="outline" type="button" onClick={() => setWithdrawalModalOpen(false)}>Annuler</Button>
-									<Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Valider le retrait</Button>
-								</div>
-							</form>
-						</DialogContent>
-					</Dialog>
 				</>
 			)}
 		</div>
@@ -305,7 +346,7 @@ const Passifs = () => {
 };
 export default Passifs;
 
-function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onWithdraw }) {
+function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDetail }) {
 	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
 	if (!passifs || passifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun passif trouvé</div>;
 
@@ -339,8 +380,6 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onWithdra
 							const detenteur = item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
 							const ayantDroit = item.ayant_droit?.userNickName || '-';
 							const date = item.createdAt;
-							const typeVariant = item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default';
-
 							return (
 								<TableRow key={idx}>
 									<TableCell className="text-sm">{produit}</TableCell>
@@ -354,9 +393,8 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onWithdra
 									<TableCell className="text-sm">{ayantDroit}</TableCell>
 									<TableCell className="text-sm">{date ? dateFormat(date) : '-'}</TableCell>
 									<TableCell className="text-sm text-right">
-										<Button onClick={() => onWithdraw(item)} variant="outline">
-											<MoveUpIcon fontSize="small" className="mr-1" />
-											Retirer
+										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}>
+											<InfoIcon className="w-5 h-5 text-violet-600" />
 										</Button>
 									</TableCell>
 								</TableRow>
@@ -380,7 +418,6 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onWithdra
 				const detenteur = item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
 				const ayantDroit = item.ayant_droit?.userNickName || '-';
 				const date = item.createdAt;
-				const typeVariant = item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default';
 
 				return (
 					<Card key={idx} className="p-4">
@@ -398,9 +435,9 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onWithdra
 								</div>
 							</div>
 							<div className="flex flex-col items-end gap-2">
-								<Badge variant={typeVariant}>{item.type || '-'}</Badge>
-								<Button onClick={() => onWithdraw(item)} variant="outline" size="sm">
-									<MoveUpIcon fontSize="small" className="mr-1" /> Retirer
+								<Badge variant={item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default'}>{item.type || '-'}</Badge>
+								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}>
+									<InfoIcon className="w-5 h-5 text-violet-600" />
 								</Button>
 							</div>
 						</div>
