@@ -187,6 +187,10 @@ const Actifs = () => {
 
 						<TabsContent value="form">
 							<Card className="border-neutral-200 bg-white">
+								<div className="px-4 pt-4">
+									<h2 className="text-lg font-semibold text-neutral-900">Formulaire de transfert</h2>
+									<p className="text-sm text-neutral-600">Renseignez les informations pour transférer un actif.</p>
+								</div>
 								<form className="space-y-4 p-4" onSubmit={handleTransferSubmit}>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 										<div className="space-y-2 md:col-span-2">
