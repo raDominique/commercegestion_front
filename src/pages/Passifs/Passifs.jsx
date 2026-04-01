@@ -173,7 +173,7 @@ const Passifs = () => {
 					<Tabs defaultValue="form" className="space-y-6">
 						<TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
 							<TabsTrigger value="form" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Formulaire de retrait</TabsTrigger>
-							<TabsTrigger value="list" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Mes passifs</TabsTrigger>
+							<TabsTrigger value="list" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Historique de mes passifs</TabsTrigger>
 						</TabsList>
 
 						<TabsContent value="form">

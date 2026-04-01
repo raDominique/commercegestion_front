@@ -187,7 +187,7 @@ const Actifs = () => {
 					<Tabs defaultValue="form" className="space-y-6">
 						<TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
 							<TabsTrigger value="form" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Formulaire de dépôt</TabsTrigger>
-							<TabsTrigger value="list" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Mes actifs</TabsTrigger>
+							<TabsTrigger value="list" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Historique de mes actifs</TabsTrigger>
 						</TabsList>
 
 						<TabsContent value="form">
