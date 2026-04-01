@@ -55,10 +55,22 @@ export const getActifs = async (userId, params = {}) => {
   return response.data;
 };
 
+/**
+ * Récupère les mouvements de passifs d'un utilisateur (GET /api/ledger/passifs/{userId})
+ * @param {string} userId - L'identifiant de l'utilisateur
+ * @param {Object} [params] - Paramètres additionnels pour la requête (optionnel)
+ * @returns {Promise<Object>} - Une promesse qui résout la liste des mouvements de passifs
+ */
+export const getPassifs = async (userId, params = {}) => {
+  const response = await axiosInstance.get(`/api/ledger/passifs/${userId}`, { params });
+  return response.data;
+};
+
 export default {
   getUserLedger,
   getGlobalLedger,
   getProductLedger,
   getStockCard,
   getActifs,
+  getPassifs
 };

@@ -5,7 +5,9 @@ import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { getMyStocksPassifs, withdrawStock } from '../../services/stocks_move.service.js';
+import { getPassifs } from '../../services/ledger.service.js';
+import { withdrawStock } from '../../services/stocks_move.service.js';
+import { getProfile } from '../../services/auth.service.js';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../components/ui/dialog';
@@ -56,12 +58,18 @@ const Passifs = () => {
 	const fetchPassifs = async () => {
 		setLoading(true);
 		try {
-			const token = localStorage.getItem('token');
-			const params = {
-				limit,
-				page,
-			};
-			const res = await getMyStocksPassifs(params, token);
+			// Récupérer l'userId via le contexte ou l'API getProfile si nécessaire
+			let userId = user?._id;
+			if (!userId) {
+				try {
+					const profile = await getProfile();
+					userId = profile?._id || profile?.id;
+				} catch (e) {
+					throw new Error("Impossible de récupérer l'identifiant utilisateur");
+				}
+			}
+			const params = { limit, page };
+			const res = await getPassifs(userId, params);
 			setPassifs(Array.isArray(res.data) ? res.data : []);
 			setTotal(res.total || 0);
 		} catch (err) {

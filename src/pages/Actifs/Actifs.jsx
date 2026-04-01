@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import {
-	getMyStocksActifs,
-	withdrawStock
-} from '../../services/stocks_move.service';
+import { getActifs } from '../../services/ledger.service';
+import { withdrawStock } from '../../services/stocks_move.service';
+import { getProfile } from '../../services/auth.service';
 import {
 	Dialog,
 	DialogContent,
@@ -77,12 +76,18 @@ const Actifs = () => {
 	const fetchActifs = async () => {
 		try {
 			setLoading(true);
-			const res = await getMyStocksActifs({
-				page,
-				limit,
-				search
-			});
-
+			// Récupérer l'userId via le contexte ou l'API getProfile si nécessaire
+			let userId = user?._id;
+			if (!userId) {
+				try {
+					const profile = await getProfile();
+					userId = profile?._id || profile?.id;
+				} catch (e) {
+					throw new Error("Impossible de récupérer l'identifiant utilisateur");
+				}
+			}
+			const params = { page, limit, search };
+			const res = await getActifs(userId, params);
 			setActifs(res.data || []);
 			setTotal(res.total || 0);
 		} finally {
