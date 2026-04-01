@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import SearchIcon from '@mui/icons-material/Search';
 import InfoIcon from '@mui/icons-material/Info';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { getMyStocksPassifs } from '../../services/stocks_move.service';
+import { getWithdrawals } from '../../services/stocks_move.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useDateFormat from '../../utils/useDateFormat.jsx';
@@ -26,9 +24,8 @@ const Retrait = () => {
 
 	const [passifs, setPassifs] = useState([]);
 	const [loading, setLoading] = useState(false);
-	const [search, setSearch] = useState('');
 	const [page, setPage] = useState(1);
-	const [limit] = useState(10);
+	const [limit, setLimit] = useState(10);
 	const [total, setTotal] = useState(0);
 
 	/* ================= FETCH ================= */
@@ -39,10 +36,12 @@ const Retrait = () => {
 		try {
 			const token = localStorage.getItem('token');
 			const params = { limit, page };
-			const res = await getMyStocksPassifs(params, token);
+			const res = await getWithdrawals(params, token);
 
-			setPassifs(Array.isArray(res.data) ? res.data : []);
-			setTotal(res.total || 0);
+			const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+			const totalCount = Number(res?.pagination?.total ?? res?.total ?? items.length);
+			setPassifs(items);
+			setTotal(Number.isFinite(totalCount) ? totalCount : 0);
 		} catch (err) {
 			setPassifs([]);
 		} finally {
@@ -52,7 +51,7 @@ const Retrait = () => {
 
 	useEffect(() => {
 		fetchPassifs();
-	}, [search, page, limit]);
+	}, [page, limit]);
 
 	/* ================= AFFICHAGE ================= */
 
@@ -70,21 +69,6 @@ const Retrait = () => {
 							</div>
 						</div>
 
-						<div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
-							<div className="relative flex-1 min-w-0">
-								<SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-								<Input
-									placeholder="Rechercher..."
-									value={search}
-									onChange={(e) => {
-										setPage(1);
-										setSearch(e.target.value);
-									}}
-									className="pl-10 border-black bg-white w-full"
-								/>
-							</div>
-						</div>
-
 						{/* TABLEAU */}
 						<Card className="border-neutral-200 bg-white">
 							<RetraitTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} isDesktop={isDesktop} />
@@ -92,6 +76,23 @@ const Retrait = () => {
 
 						{/* PAGINATION */}
 						<div className="flex justify-end items-center gap-4 mt-4">
+							<div className="flex items-center gap-2">
+								<label htmlFor="retrait-limit" className="text-sm text-neutral-600">Par page</label>
+								<select
+									id="retrait-limit"
+									className="h-9 rounded-md border border-neutral-300 bg-white px-2 text-sm"
+									value={limit}
+									onChange={(e) => {
+										setLimit(Number(e.target.value));
+										setPage(1);
+									}}
+								>
+									<option value={10}>10</option>
+									<option value={20}>20</option>
+									<option value={50}>50</option>
+									<option value={100}>100</option>
+								</select>
+							</div>
 							<Button
 								variant="outline"
 								size="sm"
@@ -135,13 +136,14 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 						<TableRow>
 							<TableHead className="text-xs text-neutral-600">Produit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Image</TableHead>
+							<TableHead className="text-xs text-neutral-600">Opérateur</TableHead>
+							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
+							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Départ</TableHead>
 							<TableHead className="text-xs text-neutral-600">Arrivée</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Quantité</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Prix unitaire</TableHead>
-							<TableHead className="text-xs text-neutral-600">Type</TableHead>
-							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
-							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
+							<TableHead className="text-xs text-neutral-600">Validation</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 						</TableRow>
 					</TableHeader>
@@ -150,13 +152,13 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 							const produit = item.productId?.productName || item.productId?.codeCPC || '-';
 							const quantite = item.quantite ?? '-';
 							const prixUnitaire = item.prixUnitaire ?? null;
-							const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
 							const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
 							const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
-							const detenteur = item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
-							const ayantDroit = item.ayant_droit?.userNickName || '-';
+							const operatorName = item.operatorId?.userNickName || item.operatorId?.userName || '-';
+							const detenteur = item.detentaire?.userNickName || item.detentaire?.userName || '-';
+							const ayantDroit = item.ayant_droit?.userNickName || item.ayant_droit?.userName || '-';
 							const date = item.createdAt;
-							const typeVariant = item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default';
+							const validationVariant = item.isValide ? 'default' : 'secondary';
 
 							return (
 								<TableRow key={idx}>
@@ -168,13 +170,14 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 											<span className="text-neutral-400">-</span>
 										)}
 									</TableCell>
+									<TableCell className="text-sm text-neutral-600">{operatorName}</TableCell>
+									<TableCell className="text-sm text-neutral-600">{detenteur}</TableCell>
+									<TableCell className="text-sm text-neutral-600">{ayantDroit}</TableCell>
 									<TableCell className="text-sm text-neutral-600">{depart}</TableCell>
 									<TableCell className="text-sm text-neutral-600">{arrivee}</TableCell>
 									<TableCell className="text-sm text-neutral-600 text-right">{quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</TableCell>
 									<TableCell className="text-sm text-neutral-600 text-right">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{item.type || '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{detenteur}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{ayantDroit}</TableCell>
+									<TableCell className="text-sm text-neutral-600"><Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge></TableCell>
 									<TableCell className="text-sm text-neutral-600">{date ? dateFormat(date) : '-'}</TableCell>
 								</TableRow>
 							);
@@ -194,10 +197,11 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 				const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
 				const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
 				const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
-				const detenteur = item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
-				const ayantDroit = item.ayant_droit?.userNickName || '-';
+				const operatorName = item.operatorId?.userNickName || item.operatorId?.userName || '-';
+				const detenteur = item.detentaire?.userNickName || item.detentaire?.userName || '-';
+				const ayantDroit = item.ayant_droit?.userNickName || item.ayant_droit?.userName || '-';
 				const date = item.createdAt;
-				const typeVariant = item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default';
+				const validationVariant = item.isValide ? 'default' : 'secondary';
 
 				return (
 					<Card key={idx} className="p-4">
@@ -220,10 +224,11 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 								<div className="mt-3 flex flex-wrap items-center gap-2">
 									<div className="text-sm text-neutral-900">Quantité: {quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</div>
 									<div className="text-sm text-neutral-600">Prix: {prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</div>
-									<div className="text-sm text-neutral-600"><Badge variant={typeVariant}>{item.type || '-'}</Badge></div>
-									<div className="text-sm text-neutral-600">Montant: {montant !== null ? formatThousands(montant) : '-'}</div>
+									<div className="text-sm text-neutral-600">Opérateur: {operatorName}</div>
 									<div className="text-sm text-neutral-600">Détenteur: {detenteur}</div>
 									<div className="text-sm text-neutral-600">Ayant droit: {ayantDroit}</div>
+									<div className="text-sm text-neutral-600"><Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge></div>
+									<div className="text-sm text-neutral-600">Montant: {montant !== null ? formatThousands(montant) : '-'}</div>
 									<div className="text-sm text-neutral-600">{date ? dateFormat(date) : '-'}</div>
 								</div>
 							</div>

@@ -1,32 +1,42 @@
+import axiosInstance from './axios.config.js';
+
 /**
  * Récupère la liste des retraits de stock (GET /api/v1/stocks/withdrawals)
+ * @param {Object} params - Paramètres de pagination
+ * @param {number} [params.limit=10] - Éléments par page
+ * @param {number} [params.page=1] - Numéro de page
  * @param {string} token - Token d'authentification Bearer
  * @returns {Promise}
  */
-export const getWithdrawals = async (token) => {
+export const getWithdrawals = async (params = {}, token) => {
     const response = await axiosInstance.get('/api/v1/stocks/withdrawals', {
+        params,
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: token ? `Bearer ${token}` : undefined,
             accept: '*/*',
         },
     });
     return response.data;
 };
+
 /**
  * Récupère la liste des dépôts de stock (GET /api/v1/stocks/deposits)
+ * @param {Object} params - Paramètres de pagination
+ * @param {number} [params.limit=10] - Éléments par page
+ * @param {number} [params.page=1] - Numéro de page
  * @param {string} token - Token d'authentification Bearer
  * @returns {Promise}
  */
-export const getDeposits = async (token) => {
+export const getDeposits = async (params = {}, token) => {
     const response = await axiosInstance.get('/api/v1/stocks/deposits', {
+        params,
         headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: token ? `Bearer ${token}` : undefined,
             accept: '*/*',
         },
     });
     return response.data;
 };
-import axiosInstance from './axios.config.js';
 
 /**
  * Effectue un dépôt de stock (transfert de produit entre sites)
