@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
-import { getStockHistory } from '../../services/stocks_move.service';
+import { getUserLedger } from '../../services/ledger.service';
+import { getProfile } from '../../services/auth.service';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -33,7 +34,6 @@ const MesTransactions = () => {
     const fetchTransactions = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('token');
         const params = {
           limit,
           page,
@@ -42,9 +42,20 @@ const MesTransactions = () => {
           type: typeFilter !== 'all' ? typeFilter : undefined,
           productId: productIdFilter || undefined,
         };
-        const res = await getStockHistory(params, token);
 
-        // Expected shape: { status, message, total, page, lastPage, limit, data: [] }
+        // Récupérer l'userId via le contexte ou l'API getProfile si nécessaire
+        let userId = user?._id;
+        if (!userId) {
+          try {
+            const profile = await getProfile();
+            userId = profile?._id || profile?.id;
+          } catch (e) {
+            throw new Error("Impossible de récupérer l'identifiant utilisateur");
+          }
+        }
+        const res = await getUserLedger(userId, params);
+
+        // On suppose que la structure de retour est { data: [], total: number, ... }
         let items = [];
         let totalCount = 0;
         if (Array.isArray(res)) items = res;
@@ -59,7 +70,7 @@ const MesTransactions = () => {
         totalCount = Number(res?.total ?? res?.data?.total ?? (Array.isArray(items) ? items.length : 0));
         setTotal(Number.isFinite(totalCount) ? totalCount : 0);
       } catch (err) {
-        console.error('getStockHistory error', err);
+        console.error('getUserLedger error', err);
         toast.error('Erreur lors du chargement des transactions');
       } finally {
         setLoading(false);
