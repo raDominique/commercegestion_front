@@ -1,3 +1,31 @@
+/**
+ * Récupère la liste des retraits de stock (GET /api/v1/stocks/withdrawals)
+ * @param {string} token - Token d'authentification Bearer
+ * @returns {Promise}
+ */
+export const getWithdrawals = async (token) => {
+    const response = await axiosInstance.get('/api/v1/stocks/withdrawals', {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            accept: '*/*',
+        },
+    });
+    return response.data;
+};
+/**
+ * Récupère la liste des dépôts de stock (GET /api/v1/stocks/deposits)
+ * @param {string} token - Token d'authentification Bearer
+ * @returns {Promise}
+ */
+export const getDeposits = async (token) => {
+    const response = await axiosInstance.get('/api/v1/stocks/deposits', {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            accept: '*/*',
+        },
+    });
+    return response.data;
+};
 import axiosInstance from './axios.config.js';
 
 /**
