@@ -19,7 +19,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 import { Label } from '../../components/ui/label';
 import { getAllCpcSelect } from '../../services/cpc.service';
 import { getAllUsersSelect } from '../../services/user.service';
-import { depositStock } from '../../services/stocks_move.service.js';
+import { depositStock } from '../../services/transaction.service.js';
 import { getMySites } from '../../services/site.service';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
