@@ -120,7 +120,7 @@ const Actifs = () => {
 		setTransferForm(prev => ({
 			...prev,
 			actifId: actif?.id || '',
-			productId: actif?.productCode || '',
+			productId: actif?.id || '',
 			siteOrigineId: actif?.depot || '',
 			siteDestinationId: '',
 			quantite: '',
@@ -206,8 +206,8 @@ const Actifs = () => {
 												</SelectTrigger>
 												<SelectContent>
 													{actifs.map(item => (
-														<SelectItem key={item._id} value={item._id}>
-															{item.productId?.productName || '-'} - Qté: {formatThousands(item.quantite)}
+														<SelectItem key={item.id} value={item.id}>
+															{item.productName || '-'} - Qté: {formatThousands(item.quantite)}
 														</SelectItem>
 													))}
 												</SelectContent>
