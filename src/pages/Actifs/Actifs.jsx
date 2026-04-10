@@ -89,7 +89,7 @@ const Actifs = () => {
 			const params = { page, limit, search };
 			const res = await getActifs(userId, params);
 			setActifs(res.data || []);
-			setTotal(res.total || 0);
+			setTotal(res.data?.length || 0);
 		} finally {
 			setLoading(false);
 		}
@@ -115,18 +115,18 @@ const Actifs = () => {
 	/* ================= ACTIONS ================= */
 
 	const handleSelectActifForTransfer = actifId => {
-		const actif = actifs.find(item => item._id === actifId);
+		const actif = actifs.find(item => item.id === actifId);
 
 		setTransferForm(prev => ({
 			...prev,
-			actifId,
-			productId: actif?.productId?._id || '',
-			siteOrigineId: actif?.siteOrigineId?._id || '',
+			actifId: actif?.id || '',
+			productId: actif?.productCode || '',
+			siteOrigineId: actif?.depot || '',
 			siteDestinationId: '',
 			quantite: '',
 			prixUnitaire: actif?.prixUnitaire || '',
-			detentaire: '',
-			ayant_droit: '',
+			detentaire: actif?.detentaire || '',
+			ayant_droit: actif?.ayantDroit || '',
 			observations: ''
 		}));
 
@@ -167,7 +167,7 @@ const Actifs = () => {
 	const handleShowDetail = async id => {
 		try {
 			setLoadingDetail(true);
-			const actif = actifs.find(a => a._id === id);
+			const actif = actifs.find(a => a.id === id);
 			setDetailActif(actif);
 			setDetailOpen(true);
 		} finally {
@@ -214,10 +214,10 @@ const Actifs = () => {
 											</Select>
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor="siteOrigineId">Site d'origine</Label>
+											<Label htmlFor="siteOrigineId">Dépôt d'origine</Label>
 											<Select value={transferForm.siteOrigineId} onValueChange={val => setTransferForm(f => ({ ...f, siteOrigineId: val }))}>
 												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner le site d'origine" />
+													<SelectValue placeholder="Sélectionner le dépôt d'origine" />
 												</SelectTrigger>
 												<SelectContent>
 													{allSites.map(site => (
@@ -227,10 +227,10 @@ const Actifs = () => {
 											</Select>
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor="siteDestinationId">Site de destination</Label>
+											<Label htmlFor="siteDestinationId">Dépôt de destination</Label>
 											<Select value={transferForm.siteDestinationId} onValueChange={val => setTransferForm(f => ({ ...f, siteDestinationId: val }))}>
 												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner le site de destination" />
+													<SelectValue placeholder="Sélectionner le dépôt de destination" />
 												</SelectTrigger>
 												<SelectContent>
 													{allSites.map(site => (
@@ -250,35 +250,17 @@ const Actifs = () => {
 										<div className="space-y-2">
 											<Label htmlFor="detentaire">Détenteur</Label>
 											<Select value={transferForm.detentaire} onValueChange={val => setTransferForm(f => ({ ...f, detentaire: val }))}>
-												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner le détenteur" />
+												<SelectTrigger disabled>
+													<SelectValue placeholder={transferForm.detentaire ? transferForm.detentaire : 'Rempli automatiquement'} />
 												</SelectTrigger>
-												<SelectContent>
-													{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
-														usersOptions.map(userOption => (
-															<SelectItem key={userOption._id} value={userOption._id}>{userOption.name || userOption.userNickName || userOption.userName || userOption.userFirstname || userOption.userId}</SelectItem>
-														))
-													) : (
-														<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
-													)}
-												</SelectContent>
 											</Select>
 										</div>
 										<div className="space-y-2">
 											<Label htmlFor="ayant_droit">Ayant droit</Label>
 											<Select value={transferForm.ayant_droit} onValueChange={val => setTransferForm(f => ({ ...f, ayant_droit: val }))}>
-												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner l'ayant droit" />
+												<SelectTrigger disabled>
+													<SelectValue placeholder={transferForm.ayant_droit ? transferForm.ayant_droit : 'Rempli automatiquement'} />
 												</SelectTrigger>
-												<SelectContent>
-													{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
-														usersOptions.map(userOption => (
-															<SelectItem key={userOption._id} value={userOption._id}>{userOption.name || userOption.userNickName || userOption.userName || userOption.userFirstname || userOption.userId}</SelectItem>
-														))
-													) : (
-														<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
-													)}
-												</SelectContent>
 											</Select>
 										</div>
 										<div className="space-y-2 md:col-span-2">
@@ -368,7 +350,10 @@ const Actifs = () => {
 								<div className="space-y-2 text-sm">
 									<div>
 										<b>Produit :</b>{' '}
-										{detailActif.productId?.productName}
+										{detailActif.productName}
+									</div>
+									<div>
+										<b>Dépôt :</b> {detailActif.depot}
 									</div>
 									<div>
 										<b>Quantité :</b> {formatThousands(detailActif.quantite)}
@@ -377,7 +362,7 @@ const Actifs = () => {
 										<b>Prix unitaire :</b> {formatThousands(detailActif.prixUnitaire)}
 									</div>
 									<div>
-										<b>Total :</b> {formatThousands(detailActif.prixUnitaire * detailActif.quantite)}
+										<b>Total :</b> {formatThousands(detailActif.valeurTotale)}
 									</div>
 								</div>
 							)}
@@ -403,8 +388,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 						<TableRow>
 							<TableHead className="text-xs text-neutral-600">Produit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Image</TableHead>
-							<TableHead className="text-xs text-neutral-600">Site origine</TableHead>
-							<TableHead className="text-xs text-neutral-600">Site destination</TableHead>
+							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
+							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Total (Ar)</TableHead>
@@ -416,25 +401,25 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 					</TableHeader>
 					<TableBody>
 						{actifs.map(item => (
-							<TableRow key={item._id}>
-								<TableCell className="text-sm">{item.productId?.productName || '-'}</TableCell>
+							<TableRow key={item.id}>
+								<TableCell className="text-sm">{item.productName || '-'}</TableCell>
 								<TableCell>
-									{item.productId?.productImage ? (
-										<img src={getFullMediaUrl(item.productId.productImage)} className="w-12 h-12 rounded object-cover" />
+									{item.productImage ? (
+										<img src={getFullMediaUrl(item.productImage)} className="w-12 h-12 rounded object-cover" />
 									) : (
 										<span className="text-neutral-400">-</span>
 									)}
 								</TableCell>
-								<TableCell className="text-sm">{item.siteOrigineId?.siteName || '-'}</TableCell>
-								<TableCell className="text-sm">{item.siteDestinationId?.siteName || '-'}</TableCell>
+								<TableCell className="text-sm">{item.depot || '-'}</TableCell>
+								<TableCell className="text-sm">{item.depotAdresse || '-'}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
-								<TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire * item.quantite)}</TableCell>
-								<TableCell className="text-sm">{item.detentaire?.userName || '-'}</TableCell>
-								<TableCell className="text-sm">{item.ayant_droit?.userName || '-'}</TableCell>
-								<TableCell className="text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</TableCell>
+								<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell>
+								<TableCell className="text-sm">{item.detentaire || '-'}</TableCell>
+								<TableCell className="text-sm">{item.ayantDroit || '-'}</TableCell>
+								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								<TableCell className="text-sm text-right">
-									<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}>
+									<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
 										<InfoIcon className="w-5 h-5 text-violet-600" />
 									</Button>
 								</TableCell>
@@ -449,27 +434,27 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 	return (
 		<div className="space-y-3 p-4">
 			{actifs.map(item => (
-				<Card key={item._id} className="p-4">
+				<Card key={item.id} className="p-4">
 					<div className="flex items-start justify-between gap-4">
 						<div className="flex items-center gap-3">
 							<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
-								{item.productId?.productImage ? (
-									<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-full h-full object-cover" />
+								{item.productImage ? (
+									<img src={getFullMediaUrl(item.productImage)} alt={item.productName} className="w-full h-full object-cover" />
 								) : (
 									<span className="text-neutral-400">-</span>
 								)}
 							</div>
 							<div className="min-w-0">
-								<div className="font-medium text-neutral-900 truncate">{item.productId?.productName || '-'}</div>
-								<div className="text-xs text-neutral-500">{item.siteOrigineId?.siteName || '-'} → {item.siteDestinationId?.siteName || '-'}</div>
+								<div className="font-medium text-neutral-900 truncate">{item.productName || '-'}</div>
+								<div className="text-xs text-neutral-500">{item.depot || '-'} - {item.depotAdresse || '-'}</div>
 							</div>
 						</div>
 						<div className="flex flex-col items-end gap-2">
 							<div className="text-sm text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
 							<div className="text-sm text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
-							<div className="text-sm text-neutral-600">Total: {formatThousands(item.prixUnitaire * item.quantite)}</div>
+							<div className="text-sm text-neutral-600">Total: {formatThousands(item.valeurTotale)}</div>
 							<div className="flex gap-2 mt-2">
-								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
+								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
 							</div>
 						</div>
 					</div>

@@ -19,7 +19,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 import { Label } from '../../components/ui/label';
 import { getAllCpcSelect } from '../../services/cpc.service';
 import { getAllUsersSelect } from '../../services/user.service';
-import { depositStock } from '../../services/transaction.service.js';
+import { depositFirstStock } from '../../services/stocks_move.service.js';
 import { getMySites } from '../../services/site.service';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
@@ -72,7 +72,7 @@ const MesProduits = () => {
     if (Object.keys(errors).length > 0) return;
     const token = localStorage.getItem('token');
     try {
-      await depositStock({
+      await depositFirstStock({
         ...depositForm,
         productId: depositProductId || depositForm.productId,
         quantite: Number(depositForm.quantite),
