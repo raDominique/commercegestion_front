@@ -231,6 +231,22 @@ const MesProduits = () => {
   const [editCpcSearch, setEditCpcSearch] = useState('');
   const [editCpcOpen, setEditCpcOpen] = useState(false);
   const [editCpcHighlighted, setEditCpcHighlighted] = useState(0);
+  // States pour recherche site d'origine
+  const [siteOriginSearch, setSiteOriginSearch] = useState('');
+  const [siteOriginOpen, setSiteOriginOpen] = useState(false);
+  const [siteOriginHighlighted, setSiteOriginHighlighted] = useState(0);
+  // States pour recherche site de destination
+  const [siteDestinationSearch, setSiteDestinationSearch] = useState('');
+  const [siteDestinationOpen, setSiteDestinationOpen] = useState(false);
+  const [siteDestinationHighlighted, setSiteDestinationHighlighted] = useState(0);
+  // States pour recherche détentaire
+  const [detentaireSearch, setDetentaireSearch] = useState('');
+  const [detentaireOpen, setDetentaireOpen] = useState(false);
+  const [detentaireHighlighted, setDetentaireHighlighted] = useState(0);
+  // States pour recherche ayant droit
+  const [ayantDroitSearch, setAyantDroitSearch] = useState('');
+  const [ayantDroitOpen, setAyantDroitOpen] = useState(false);
+  const [ayantDroitHighlighted, setAyantDroitHighlighted] = useState(0);
   const [form, setForm] = useState({
     // productState: '',
     codeCPC: '',
@@ -257,6 +273,10 @@ const MesProduits = () => {
 
   const filteredCpcOptions = cpcOptions.filter(opt => opt.nom.toLowerCase().includes(cpcSearch.toLowerCase()));
   const filteredEditCpcOptions = editCpcOptions.filter(opt => opt.nom.toLowerCase().includes(editCpcSearch.toLowerCase()));
+  const filteredOriginSites = sites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
+  const filteredDestinationSites = sites.filter(site => site.siteName.toLowerCase().includes(siteDestinationSearch.toLowerCase()));
+  const filteredDetentaires = usersOptions.filter(user => user.name.toLowerCase().includes(detentaireSearch.toLowerCase()));
+  const filteredAyantDroits = usersOptions.filter(user => user.name.toLowerCase().includes(ayantDroitSearch.toLowerCase()));
 
   // Soumission du formulaire d'ajout
   const handleAddProduct = async (e) => {
@@ -961,16 +981,65 @@ const MesProduits = () => {
                   {addProductFieldControl.siteOrigineId.label}
                   {addProductFieldControl.siteOrigineId.required && <span style={{ color: 'red' }}> *</span>}
                 </Label>
-                <Select value={depositForm.siteOrigineId} onValueChange={val => setDepositForm(f => ({ ...f, siteOrigineId: val }))}>
-                  <SelectTrigger aria-invalid={!!depositErrors.siteOrigineId}>
-                    <SelectValue placeholder="Sélectionner le site d'origine" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sites.map(site => (
-                      <SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Input
+                    placeholder="Rechercher le site d'origine..."
+                    value={siteOriginSearch}
+                    onChange={e => { setSiteOriginSearch(e.target.value); setSiteOriginHighlighted(0); }}
+                    onFocus={() => { setSiteOriginOpen(true); setSiteOriginHighlighted(0); }}
+                    onBlur={() => setTimeout(() => setSiteOriginOpen(false), 150)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') return setSiteOriginOpen(false);
+                      if (!siteOriginOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                        setSiteOriginOpen(true);
+                        e.preventDefault();
+                        return;
+                      }
+                      if (siteOriginOpen) {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setSiteOriginHighlighted(i => Math.min(i + 1, Math.max(filteredOriginSites.length - 1, 0)));
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setSiteOriginHighlighted(i => Math.max(i - 1, 0));
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const site = filteredOriginSites[siteOriginHighlighted];
+                          if (site) {
+                            setDepositForm(f => ({ ...f, siteOrigineId: site._id }));
+                            setSiteOriginSearch(site.siteName);
+                            setSiteOriginOpen(false);
+                          }
+                        }
+                      }
+                    }}
+                    className="w-full"
+                    aria-invalid={!!depositErrors.siteOrigineId}
+                  />
+                  {siteOriginOpen && (
+                    <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                      {filteredOriginSites.length > 0 ? (
+                        filteredOriginSites.map((site, idx) => (
+                          <button
+                            type="button"
+                            key={site._id}
+                            onMouseEnter={() => setSiteOriginHighlighted(idx)}
+                            onClick={() => {
+                              setDepositForm(f => ({ ...f, siteOrigineId: site._id }));
+                              setSiteOriginSearch(site.siteName);
+                              setSiteOriginOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm ${idx === siteOriginHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+                          >
+                            {site.siteName}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 {depositErrors.siteOrigineId && <div className="text-red-600 text-xs mt-1">{depositErrors.siteOrigineId}</div>}
               </div>
               <div className="space-y-2">
@@ -978,16 +1047,65 @@ const MesProduits = () => {
                   {addProductFieldControl.siteDestinationId.label}
                   {addProductFieldControl.siteDestinationId.required && <span style={{ color: 'red' }}> *</span>}
                 </Label>
-                <Select value={depositForm.siteDestinationId} onValueChange={val => setDepositForm(f => ({ ...f, siteDestinationId: val }))}>
-                  <SelectTrigger aria-invalid={!!depositErrors.siteDestinationId}>
-                    <SelectValue placeholder="Sélectionner le site de destination" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sites.map(site => (
-                      <SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Input
+                    placeholder="Rechercher le site de destination..."
+                    value={siteDestinationSearch}
+                    onChange={e => { setSiteDestinationSearch(e.target.value); setSiteDestinationHighlighted(0); }}
+                    onFocus={() => { setSiteDestinationOpen(true); setSiteDestinationHighlighted(0); }}
+                    onBlur={() => setTimeout(() => setSiteDestinationOpen(false), 150)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') return setSiteDestinationOpen(false);
+                      if (!siteDestinationOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                        setSiteDestinationOpen(true);
+                        e.preventDefault();
+                        return;
+                      }
+                      if (siteDestinationOpen) {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setSiteDestinationHighlighted(i => Math.min(i + 1, Math.max(filteredDestinationSites.length - 1, 0)));
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setSiteDestinationHighlighted(i => Math.max(i - 1, 0));
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const site = filteredDestinationSites[siteDestinationHighlighted];
+                          if (site) {
+                            setDepositForm(f => ({ ...f, siteDestinationId: site._id }));
+                            setSiteDestinationSearch(site.siteName);
+                            setSiteDestinationOpen(false);
+                          }
+                        }
+                      }
+                    }}
+                    className="w-full"
+                    aria-invalid={!!depositErrors.siteDestinationId}
+                  />
+                  {siteDestinationOpen && (
+                    <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                      {filteredDestinationSites.length > 0 ? (
+                        filteredDestinationSites.map((site, idx) => (
+                          <button
+                            type="button"
+                            key={site._id}
+                            onMouseEnter={() => setSiteDestinationHighlighted(idx)}
+                            onClick={() => {
+                              setDepositForm(f => ({ ...f, siteDestinationId: site._id }));
+                              setSiteDestinationSearch(site.siteName);
+                              setSiteDestinationOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm ${idx === siteDestinationHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+                          >
+                            {site.siteName}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 {depositErrors.siteDestinationId && <div className="text-red-600 text-xs mt-1">{depositErrors.siteDestinationId}</div>}
               </div>
               <div className="space-y-2">
@@ -1008,29 +1126,125 @@ const MesProduits = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="detentaire">Détenteur</Label>
-                <Select value={depositForm.detentaire} onValueChange={val => setDepositForm(f => ({ ...f, detentaire: val }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner le détenteur" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {usersOptions.map(user => (
-                      <SelectItem key={user._id} value={user._id}>{user.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Input
+                    placeholder="Rechercher le détenteur..."
+                    value={detentaireSearch}
+                    onChange={e => { setDetentaireSearch(e.target.value); setDetentaireHighlighted(0); }}
+                    onFocus={() => { setDetentaireOpen(true); setDetentaireHighlighted(0); }}
+                    onBlur={() => setTimeout(() => setDetentaireOpen(false), 150)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') return setDetentaireOpen(false);
+                      if (!detentaireOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                        setDetentaireOpen(true);
+                        e.preventDefault();
+                        return;
+                      }
+                      if (detentaireOpen) {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setDetentaireHighlighted(i => Math.min(i + 1, Math.max(filteredDetentaires.length - 1, 0)));
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setDetentaireHighlighted(i => Math.max(i - 1, 0));
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const user = filteredDetentaires[detentaireHighlighted];
+                          if (user) {
+                            setDepositForm(f => ({ ...f, detentaire: user._id }));
+                            setDetentaireSearch(user.name);
+                            setDetentaireOpen(false);
+                          }
+                        }
+                      }
+                    }}
+                    className="w-full"
+                  />
+                  {detentaireOpen && (
+                    <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                      {filteredDetentaires.length > 0 ? (
+                        filteredDetentaires.map((user, idx) => (
+                          <button
+                            type="button"
+                            key={user._id}
+                            onMouseEnter={() => setDetentaireHighlighted(idx)}
+                            onClick={() => {
+                              setDepositForm(f => ({ ...f, detentaire: user._id }));
+                              setDetentaireSearch(user.name);
+                              setDetentaireOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm ${idx === detentaireHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+                          >
+                            {user.name}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-sm text-neutral-500">Aucun utilisateur trouvé</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ayant_droit">Ayant droit</Label>
-                <Select value={depositForm.ayant_droit} onValueChange={val => setDepositForm(f => ({ ...f, ayant_droit: val }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner l'ayant droit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {usersOptions.map(user => (
-                      <SelectItem key={user._id} value={user._id}>{user.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Input
+                    placeholder="Rechercher l'ayant droit..."
+                    value={ayantDroitSearch}
+                    onChange={e => { setAyantDroitSearch(e.target.value); setAyantDroitHighlighted(0); }}
+                    onFocus={() => { setAyantDroitOpen(true); setAyantDroitHighlighted(0); }}
+                    onBlur={() => setTimeout(() => setAyantDroitOpen(false), 150)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') return setAyantDroitOpen(false);
+                      if (!ayantDroitOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                        setAyantDroitOpen(true);
+                        e.preventDefault();
+                        return;
+                      }
+                      if (ayantDroitOpen) {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setAyantDroitHighlighted(i => Math.min(i + 1, Math.max(filteredAyantDroits.length - 1, 0)));
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setAyantDroitHighlighted(i => Math.max(i - 1, 0));
+                        } else if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const user = filteredAyantDroits[ayantDroitHighlighted];
+                          if (user) {
+                            setDepositForm(f => ({ ...f, ayant_droit: user._id }));
+                            setAyantDroitSearch(user.name);
+                            setAyantDroitOpen(false);
+                          }
+                        }
+                      }
+                    }}
+                    className="w-full"
+                  />
+                  {ayantDroitOpen && (
+                    <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                      {filteredAyantDroits.length > 0 ? (
+                        filteredAyantDroits.map((user, idx) => (
+                          <button
+                            type="button"
+                            key={user._id}
+                            onMouseEnter={() => setAyantDroitHighlighted(idx)}
+                            onClick={() => {
+                              setDepositForm(f => ({ ...f, ayant_droit: user._id }));
+                              setAyantDroitSearch(user.name);
+                              setAyantDroitOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm ${idx === ayantDroitHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+                          >
+                            {user.name}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-sm text-neutral-500">Aucun utilisateur trouvé</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="observations">Observations</Label>
