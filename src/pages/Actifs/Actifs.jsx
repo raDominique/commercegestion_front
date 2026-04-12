@@ -71,8 +71,6 @@ const Actifs = () => {
 		observations: ''
 	});
 
-	/* ================= FETCH ================= */
-
 	const fetchActifs = async () => {
 		try {
 			setLoading(true);
@@ -88,8 +86,9 @@ const Actifs = () => {
 			}
 			const params = { page, limit, search };
 			const res = await getActifs(userId, params);
-			setActifs(res.data || []);
-			setTotal(res.data?.length || 0);
+			const actifsList = Array.isArray(res.data) ? res.data : [];
+			setActifs(actifsList);
+			setTotal(actifsList.length);
 		} finally {
 			setLoading(false);
 		}
@@ -116,12 +115,13 @@ const Actifs = () => {
 
 	const handleSelectActifForTransfer = actifId => {
 		const actif = actifs.find(item => item.id === actifId);
+		const depotSite = allSites.find(site => site.siteName === actif?.depot);
 
 		setTransferForm(prev => ({
 			...prev,
 			actifId: actif?.id || '',
 			productId: actif?.id || '',
-			siteOrigineId: actif?.depot || '',
+			siteOrigineId: depotSite?._id || '',
 			siteDestinationId: '',
 			quantite: '',
 			prixUnitaire: actif?.prixUnitaire || '',
@@ -347,22 +347,33 @@ const Actifs = () => {
 							{loadingDetail ? (
 								<div>Chargement...</div>
 							) : detailActif && (
-								<div className="space-y-2 text-sm">
+								<div className="space-y-3 text-sm">
 									<div>
-										<b>Produit :</b>{' '}
-										{detailActif.productName}
+										<b>Code produit :</b> {detailActif.productCode || '-'}
+									</div>
+									<div>
+										<b>Produit :</b> {detailActif.productName}
 									</div>
 									<div>
 										<b>Dépôt :</b> {detailActif.depot}
 									</div>
 									<div>
+										<b>Adresse dépôt :</b> {detailActif.depotAdresse || '-'}
+									</div>
+									<div>
 										<b>Quantité :</b> {formatThousands(detailActif.quantite)}
 									</div>
 									<div>
-										<b>Prix unitaire :</b> {formatThousands(detailActif.prixUnitaire)}
+										<b>Prix unitaire :</b> {formatThousands(detailActif.prixUnitaire)} Ar
 									</div>
 									<div>
-										<b>Total :</b> {formatThousands(detailActif.valeurTotale)}
+										<b>Valeur totale :</b> {formatThousands(detailActif.valeurTotale)} Ar
+									</div>
+									<div>
+										<b>Détenteur :</b> {detailActif.detentaire || '-'}
+									</div>
+									<div>
+										<b>Ayant droit :</b> {detailActif.ayantDroit || '-'}
 									</div>
 								</div>
 							)}
@@ -387,6 +398,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 					<TableHeader>
 						<TableRow>
 							<TableHead className="text-xs text-neutral-600">Produit</TableHead>
+							<TableHead className="text-xs text-neutral-600">Code</TableHead>
 							<TableHead className="text-xs text-neutral-600">Image</TableHead>
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
@@ -403,6 +415,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 						{actifs.map(item => (
 							<TableRow key={item.id}>
 								<TableCell className="text-sm">{item.productName || '-'}</TableCell>
+								<TableCell className="text-sm text-neutral-500">{item.productCode || '-'}</TableCell>
 								<TableCell>
 									{item.productImage ? (
 										<img src={getFullMediaUrl(item.productImage)} className="w-12 h-12 rounded object-cover" />
@@ -446,13 +459,14 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							</div>
 							<div className="min-w-0">
 								<div className="font-medium text-neutral-900 truncate">{item.productName || '-'}</div>
-								<div className="text-xs text-neutral-500">{item.depot || '-'} - {item.depotAdresse || '-'}</div>
+								<div className="text-xs text-neutral-500">{item.productCode || '-'}</div>
+								<div className="text-xs text-neutral-500 mt-1">{item.depot || '-'}</div>
 							</div>
 						</div>
 						<div className="flex flex-col items-end gap-2">
-							<div className="text-sm text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
-							<div className="text-sm text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
-							<div className="text-sm text-neutral-600">Total: {formatThousands(item.valeurTotale)}</div>
+							<div className="text-sm font-medium text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
+							<div className="text-xs text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
+							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
 							<div className="flex gap-2 mt-2">
 								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
 							</div>
