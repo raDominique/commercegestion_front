@@ -15,7 +15,6 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import { getMyProducts, toggleProductStocker, getProductById, createProduct, updateProduct, deleteProduct } from '../../services/product.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '../../components/ui/dialog';
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Label } from '../../components/ui/label';
 import { getAllCpcSelect } from '../../services/cpc.service';
 import { getAllUsersSelect } from '../../services/user.service';

@@ -1,5 +1,4 @@
 import axiosConfig from './axios.config';
-import axios from 'axios';
 
 /**
  * Crée un site (POST /sites/create)
@@ -94,6 +93,36 @@ export async function deleteSite(id) {
         return response.data;
     } catch (error) {
         console.error('Erreur lors de la suppression du site:', error);
+        throw error;
+    }
+}
+
+/**
+ * Récupère tous les actifs d'un site (GET /actifs/all-by-site/:siteId)
+ * @param {string} siteId - L'identifiant du site
+ * @return {Promise} - Une promesse qui résout la réponse de l'API
+ */
+export async function getActifsBySite(siteId) {
+    try {
+        const response = await axiosConfig.get(`/api/v1/actifs/all-by-site/${siteId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Erreur lors de la récupération des actifs du site:', error);
+        throw error;
+    }
+}
+
+/**
+ * Récupère tous les passifs d'un site (GET /passifs/all-by-site/:siteId)
+ * @param {string} siteId - L'identifiant du site
+ * @return {Promise} - Une promesse qui résout la réponse de l'API
+ */
+export async function getPassifsBySite(siteId) {
+    try {
+        const response = await axiosConfig.get(`/api/v1/passifs/all-by-site/${siteId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Erreur lors de la récupération des passifs du site:', error);
         throw error;
     }
 }

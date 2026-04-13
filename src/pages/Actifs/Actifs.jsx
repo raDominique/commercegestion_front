@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { getActifs } from '../../services/ledger.service';
-import { withdrawStock } from '../../services/stocks_move.service';
+import { depositStockToAMember } from '../../services/transaction.service';
 import { getProfile } from '../../services/auth.service';
 import {
 	Dialog,
@@ -30,7 +30,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import { formatThousands } from '../../utils/formatNumber';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { getAllUsersSelect } from '../../services/user.service';
-import { getMySites } from '../../services/site.service';
+import { getMySites, getActifsBySite, getAllSitesSelect } from '../../services/site.service';
+import { getAccessToken } from '../../services/token.service';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 
@@ -45,6 +46,7 @@ const Actifs = () => {
 	const [actifs, setActifs] = useState([]);
 	const [usersOptions, setUsersOptions] = useState([]);
 	const [allSites, setAllSites] = useState([]);
+	const [allSitesSelectOptions, setAllSitesSelectOptions] = useState([]);
 
 	const [loading, setLoading] = useState(false);
 	const [loadingDetail, setLoadingDetail] = useState(false);
@@ -112,12 +114,20 @@ const Actifs = () => {
 		getMySites().then(res => {
 			const sites = res?.data || [];
 			setAllSites(Array.isArray(sites) ? sites : []);
+		}); getAllSitesSelect().then(res => {
+			if (Array.isArray(res)) {
+				setAllSitesSelectOptions(res);
+			} else if (res && Array.isArray(res.data)) {
+				setAllSitesSelectOptions(res.data);
+			} else {
+				setAllSitesSelectOptions([]);
+			}
 		});
 	}, []);
 
 	/* ================= ACTIONS ================= */
 
-	const handleSelectSiteOrigine = siteId => {
+	const handleSelectSiteOrigine = async siteId => {
 		setTransferForm(prev => ({
 			...prev,
 			siteOrigineId: siteId,
@@ -132,24 +142,43 @@ const Actifs = () => {
 		}));
 		setMaxTransferQty(null);
 
-		// Filtrer les produits du site choisi
-		const siteProducts = actifs.filter(item => {
-			const depotSite = allSites.find(site => site.siteName === item.depot);
-			return depotSite?._id === siteId;
-		});
-		setProductsOnSite(siteProducts);
+		// Récupérer les actifs du site via l'API
+		try {
+			const res = await getActifsBySite(siteId);
+			console.log('Réponse API getActifsBySite:', res);
+
+			let siteProducts = [];
+			if (Array.isArray(res)) {
+				siteProducts = res;
+			} else if (res?.data && Array.isArray(res.data)) {
+				siteProducts = res.data;
+			}
+
+			console.log('Produits du site:', siteProducts);
+			setProductsOnSite(siteProducts);
+			if (siteProducts.length > 0) {
+				toast.success(`${siteProducts.length} actif(s) chargé(s)`);
+			} else {
+				toast.info('Aucun actif sur ce site');
+			}
+		} catch (error) {
+			console.error('Erreur lors de la récupération des actifs:', error);
+			toast.error('Erreur lors du chargement des actifs du site');
+			setProductsOnSite([]);
+		}
 	};
 
 	const handleSelectProduct = productId => {
-		const actif = actifs.find(item => item.id === productId);
+		const actif = productsOnSite.find(item => item.productId === productId);
+		console.log('Actif sélectionné:', actif);
 		setTransferForm(prev => ({
 			...prev,
-			actifId: actif?.id || '',
-			productId: actif?.id || '',
+			actifId: actif?.productId || '',
+			productId: actif?.productId || '',
 			quantite: '',
 			prixUnitaire: actif?.prixUnitaire || '',
-			detentaire: actif?.detentaire || '',
-			ayant_droit: actif?.ayantDroit || '',
+			detentaire: '',
+			ayant_droit: '',
 		}));
 		setMaxTransferQty(actif?.quantite || null);
 	};
@@ -157,19 +186,30 @@ const Actifs = () => {
 	const handleTransferSubmit = async e => {
 		e.preventDefault();
 
-		if (!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId) {
+		if (!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire || !transferForm.ayant_droit) {
 			toast.error('Veuillez remplir tous les champs obligatoires');
 			return;
 		}
 
 		try {
+			const token = getAccessToken();
+			if (!token) {
+				toast.error('Token d\'authentification manquant');
+				return;
+			}
+
 			const payload = {
-				...transferForm,
+				detentaire: transferForm.detentaire,
+				ayant_droit: transferForm.ayant_droit,
+				productId: transferForm.productId,
+				siteOrigineId: transferForm.siteOrigineId,
+				siteDestinationId: transferForm.siteDestinationId,
 				quantite: Number(transferForm.quantite),
 				prixUnitaire: Number(transferForm.prixUnitaire),
+				observations: transferForm.observations || '',
 			};
 
-			await withdrawStock(payload);
+			await depositStockToAMember(payload, token);
 
 			toast.success('Transfert effectué');
 			setTransferForm({
@@ -186,7 +226,8 @@ const Actifs = () => {
 			setProductsOnSite([]);
 			setMaxTransferQty(null);
 			fetchActifs();
-		} catch {
+		} catch (error) {
+			console.error('Erreur lors du transfert:', error);
 			toast.error('Erreur lors du transfert');
 		}
 	};
@@ -252,7 +293,7 @@ const Actifs = () => {
 													</SelectTrigger>
 													<SelectContent>
 														{productsOnSite.map(item => (
-															<SelectItem key={item.id} value={item.id}>
+															<SelectItem key={item.productId} value={item.productId}>
 																{item.productName || '-'} - Qté disponible: {formatThousands(item.quantite)}
 															</SelectItem>
 														))}
@@ -266,29 +307,29 @@ const Actifs = () => {
 											<>
 												<div className="space-y-2">
 													<Label htmlFor="quantite">3. Quantité *</Label>
-													<Input 
-														name="quantite" 
-														value={transferForm.quantite} 
-														onChange={e => setTransferForm(f => ({ ...f, quantite: e.target.value }))} 
-														required 
-														placeholder="Quantité à transférer" 
-														className="border-neutral-300" 
-														type="number" 
-														min="1" 
-														max={maxTransferQty || undefined} 
+													<Input
+														name="quantite"
+														value={transferForm.quantite}
+														onChange={e => setTransferForm(f => ({ ...f, quantite: e.target.value }))}
+														required
+														placeholder="Quantité à transférer"
+														className="border-neutral-300"
+														type="number"
+														min="1"
+														max={maxTransferQty || undefined}
 													/>
 												</div>
 												<div className="space-y-2">
 													<Label htmlFor="prixUnitaire">3. Prix unitaire *</Label>
-													<Input 
-														name="prixUnitaire" 
-														value={transferForm.prixUnitaire} 
-														onChange={e => setTransferForm(f => ({ ...f, prixUnitaire: e.target.value }))} 
-														required 
-														placeholder="Prix unitaire" 
-														className="border-neutral-300" 
-														type="number" 
-														min="0" 
+													<Input
+														name="prixUnitaire"
+														value={transferForm.prixUnitaire}
+														onChange={e => setTransferForm(f => ({ ...f, prixUnitaire: e.target.value }))}
+														required
+														placeholder="Prix unitaire"
+														className="border-neutral-300"
+														type="number"
+														min="0"
 													/>
 												</div>
 											</>
@@ -300,17 +341,31 @@ const Actifs = () => {
 												<div className="space-y-2">
 													<Label htmlFor="detentaire">4. Détenteur *</Label>
 													<Select value={transferForm.detentaire} onValueChange={val => setTransferForm(f => ({ ...f, detentaire: val }))}>
-														<SelectTrigger disabled>
-															<SelectValue placeholder={transferForm.detentaire ? transferForm.detentaire : 'Rempli automatiquement'} />
+														<SelectTrigger>
+															<SelectValue placeholder="Sélectionner un détenteur" />
 														</SelectTrigger>
+														<SelectContent>
+															{usersOptions.map(user => (
+																<SelectItem key={user._id} value={user._id}>
+																	{user.name}
+																</SelectItem>
+															))}
+														</SelectContent>
 													</Select>
 												</div>
 												<div className="space-y-2">
 													<Label htmlFor="ayant_droit">4. Ayant droit *</Label>
 													<Select value={transferForm.ayant_droit} onValueChange={val => setTransferForm(f => ({ ...f, ayant_droit: val }))}>
-														<SelectTrigger disabled>
-															<SelectValue placeholder={transferForm.ayant_droit ? transferForm.ayant_droit : 'Rempli automatiquement'} />
+														<SelectTrigger>
+															<SelectValue placeholder="Sélectionner un ayant droit" />
 														</SelectTrigger>
+														<SelectContent>
+															{usersOptions.map(user => (
+																<SelectItem key={user._id} value={user._id}>
+																	{user.name}
+																</SelectItem>
+															))}
+														</SelectContent>
 													</Select>
 												</div>
 											</>
@@ -325,9 +380,7 @@ const Actifs = () => {
 														<SelectValue placeholder="Sélectionner le site de destination" />
 													</SelectTrigger>
 													<SelectContent>
-																{site.siteName} - {site.siteAddress}
-															
-														{allSites.map(site => (
+														{allSitesSelectOptions.map(site => (
 															<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
 														))}
 													</SelectContent>
@@ -339,12 +392,12 @@ const Actifs = () => {
 										{transferForm.productId && (
 											<div className="space-y-2 md:col-span-2">
 												<Label htmlFor="observations">6. Observation</Label>
-												<Input 
-													name="observations" 
-													value={transferForm.observations} 
-													onChange={e => setTransferForm(f => ({ ...f, observations: e.target.value }))} 
-													placeholder="Observation" 
-													className="border-neutral-300" 
+												<Input
+													name="observations"
+													value={transferForm.observations}
+													onChange={e => setTransferForm(f => ({ ...f, observations: e.target.value }))}
+													placeholder="Observation"
+													className="border-neutral-300"
 												/>
 											</div>
 										)}
@@ -368,9 +421,9 @@ const Actifs = () => {
 										}}>
 											Annuler
 										</Button>
-										<Button 
-											variant="default" 
-											className="bg-violet-600 text-white hover:bg-violet-700" 
+										<Button
+											variant="default"
+											className="bg-violet-600 text-white hover:bg-violet-700"
 											type="submit"
 											disabled={!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId}
 										>
