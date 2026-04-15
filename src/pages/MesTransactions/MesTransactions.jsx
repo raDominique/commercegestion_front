@@ -4,11 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { getUserLedger } from '../../services/ledger.service';
 import { getProfile } from '../../services/auth.service';
-import { getAccessToken } from '../../services/token.service';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { toast } from 'sonner';
 import useScreenType from '../../utils/useScreenType';
 import useDateFormat from '../../utils/useDateFormat.jsx';
@@ -57,19 +54,24 @@ const MesTransactions = () => {
         }
         const res = await getUserLedger(userId, params);
 
-        // On suppose que la structure de retour est { data: [], total: number, ... }
+        // Traiter la réponse - axios enveloppe dans res.data
+        // Structure: res.data = { info, movements: { actifs[], passifs[], all[] } }
         let items = [];
         let totalCount = 0;
-        if (Array.isArray(res)) items = res;
-        else if (Array.isArray(res.data)) items = res.data;
-        else if (Array.isArray(res.data?.data)) items = res.data.data;
-        else if (Array.isArray(res.data?.items)) items = res.data.items;
-        else if (Array.isArray(res.data?.rows)) items = res.data.rows;
-        else if (Array.isArray(res.history)) items = res.history;
-        else items = Array.isArray(res) ? res : (res.data || res) || [];
+
+        if (res?.data?.movements) {
+          // Sélectionner TOUS les mouvements (actifs + passifs)
+          items = res.data.movements.all || [];
+          totalCount = items.length;
+        } else if (Array.isArray(res?.data)) {
+          items = res.data;
+          totalCount = res.data.length;
+        } else if (Array.isArray(res)) {
+          items = res;
+          totalCount = res.length;
+        }
 
         setTransactions(Array.isArray(items) ? items : []);
-        totalCount = Number(res?.total ?? res?.data?.total ?? (Array.isArray(items) ? items.length : 0));
         setTotal(Number.isFinite(totalCount) ? totalCount : 0);
       } catch (err) {
         console.error('getUserLedger error', err);
@@ -93,42 +95,9 @@ const MesTransactions = () => {
   return (
     <div className="px-6 mx-auto">
       <h1 className="text-2xl mb-4">Mes transactions</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-        <Select value={typeFilter} onValueChange={(value) => { setPage(1); setTypeFilter(value); }}>
-          <SelectTrigger className="w-full border-neutral-300 bg-white">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les types</SelectItem>
-            <SelectItem value="DEPOT">DEPOT</SelectItem>
-            <SelectItem value="RETRAIT">RETRAIT</SelectItem>
-            <SelectItem value="TRANSFERT">TRANSFERT</SelectItem>
-            <SelectItem value="VIREMENT_PROPRIETE">VIREMENT_PROPRIETE</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={order} onValueChange={(value) => { setPage(1); setOrder(value); }}>
-          <SelectTrigger className="w-full border-neutral-300 bg-white">
-            <SelectValue placeholder="Ordre" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="desc">Plus récentes d'abord</SelectItem>
-            <SelectItem value="asc">Plus anciennes d'abord</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Input
-          placeholder="Filtrer par Product ID"
-          value={productIdFilter}
-          onChange={(e) => {
-            setPage(1);
-            setProductIdFilter(e.target.value);
-          }}
-          className="border-neutral-300 bg-white"
-        />
-      </div>
-
+      <p className="text-sm text-neutral-600">
+        Liste de vos transactions
+      </p>
       {loading ? (
         <div className="p-6 text-neutral-500">Chargement...</div>
       ) : (
@@ -175,46 +144,41 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="text-xs text-neutral-600">N° Transaction</TableHead>
               <TableHead className="text-xs text-neutral-600">Produit</TableHead>
               <TableHead className="text-xs text-neutral-600">Type</TableHead>
               <TableHead className="text-xs text-neutral-600 text-right">Quantité</TableHead>
-              <TableHead className="text-xs text-neutral-600 text-right">Prix unitaire</TableHead>
-              <TableHead className="text-xs text-neutral-600 text-right">Montant</TableHead>
-              <TableHead className="text-xs text-neutral-600">Départ</TableHead>
-              <TableHead className="text-xs text-neutral-600">Arrivée</TableHead>
-              <TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
-              <TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
+              <TableHead className="text-xs text-neutral-600 text-right">Stock Initial</TableHead>
+              <TableHead className="text-xs text-neutral-600 text-right">Stock Final</TableHead>
+              <TableHead className="text-xs text-neutral-600">Lieu</TableHead>
               <TableHead className="text-xs text-neutral-600">Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {transactions.map((item, idx) => {
-              const produit = item.productId?.productName || item.productId?.codeCPC || item.productId?.id || '-';
-              const quantite = item.quantite ?? '-';
-              const prixUnitaire = item.prixUnitaire ?? null;
-              const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
-              const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
-              const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
-              const detenteur = item.detentaire?.userNickName || item.detentaire?.userName || item.detentaire?.userId || '-';
-              const ayantDroit = item.ayant_droit?.userNickName || item.ayant_droit?.userName || item.ayant_droit?.userId || '-';
-              const date = item.createdAt;
-              const badgeClass = item.type === 'RETRAIT'
-                ? 'bg-red-600 text-white border-red-700'
-                : item.type === 'DEPOT'
-                  ? 'bg-green-600 text-white border-green-700'
+              const transNumber = item.transactionNumber || '-';
+              const produit = item.product || item.title || '-';
+              const quantity = item.quantity ?? '-';
+              const initialStock = item.initialStock ?? '-';
+              const finalStock = item.finalStock ?? '-';
+              const lieu = item.title || '-';
+              const date = item.dateTime;
+
+              const badgeClass = item.movementType === 'ACTIF'
+                ? 'bg-green-600 text-white border-green-700'
+                : item.movementType === 'PASSIF'
+                  ? 'bg-red-600 text-white border-red-700'
                   : 'bg-neutral-200 text-neutral-700';
 
               return (
-                <TableRow key={item._id || item.id || idx}>
+                <TableRow key={item._id || item.transactionId || idx}>
+                  <TableCell className="text-sm font-mono">{transNumber}</TableCell>
                   <TableCell className="text-sm">{produit}</TableCell>
-                  <TableCell className="text-sm"><Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{item.type || '-'}</Badge></TableCell>
-                  <TableCell className="text-sm text-right">{quantite !== '-' ? formatThousands(quantite) : '-'}</TableCell>
-                  <TableCell className="text-sm text-right">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
-                  <TableCell className="text-sm text-right">{montant !== null ? formatThousands(montant) : '-'}</TableCell>
-                  <TableCell className="text-sm">{depart}</TableCell>
-                  <TableCell className="text-sm">{arrivee}</TableCell>
-                  <TableCell className="text-sm">{detenteur}</TableCell>
-                  <TableCell className="text-sm">{ayantDroit}</TableCell>
+                  <TableCell className="text-sm"><Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{item.movementType || '-'}</Badge></TableCell>
+                  <TableCell className="text-sm text-right">{quantity !== '-' ? formatThousands(quantity) : '-'}</TableCell>
+                  <TableCell className="text-sm text-right">{initialStock !== '-' ? formatThousands(initialStock) : '-'}</TableCell>
+                  <TableCell className="text-sm text-right">{finalStock !== '-' ? formatThousands(finalStock) : '-'}</TableCell>
+                  <TableCell className="text-sm">{lieu}</TableCell>
                   <TableCell className="text-sm">{date ? dateFormat(date) : '-'}</TableCell>
                 </TableRow>
               );
@@ -228,38 +192,36 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
   return (
     <div className="space-y-3 p-4">
       {transactions.map((item, idx) => {
-        const produit = item.productId?.productName || item.productId?.codeCPC || '-';
-        const quantite = item.quantite ?? '-';
-        const prixUnitaire = item.prixUnitaire ?? null;
-        const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
-        const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
-        const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
-        const detenteur = item.detentaire?.userNickName || item.detentaire?.userName || item.detentaire?.userId || '-';
-        const ayantDroit = item.ayant_droit?.userNickName || item.ayant_droit?.userName || item.ayant_droit?.userId || '-';
-        const date = item.createdAt;
-        const badgeClass = item.type === 'RETRAIT'
-          ? 'bg-red-600 text-white border-red-700'
-          : item.type === 'DEPOT'
-            ? 'bg-green-600 text-white border-green-700'
+        const transNumber = item.transactionNumber || '-';
+        const produit = item.product || item.title || '-';
+        const quantity = item.quantity ?? '-';
+        const initialStock = item.initialStock ?? '-';
+        const finalStock = item.finalStock ?? '-';
+        const lieu = item.title || '-';
+        const date = item.dateTime;
+
+        const badgeClass = item.movementType === 'ACTIF'
+          ? 'bg-green-600 text-white border-green-700'
+          : item.movementType === 'PASSIF'
+            ? 'bg-red-600 text-white border-red-700'
             : 'bg-neutral-200 text-neutral-700';
 
         return (
-          <Card key={item._id || item.id || idx} className="p-4">
+          <Card key={item._id || item.transactionId || idx} className="p-4">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-neutral-900 truncate">{produit}</div>
-                <div className="text-xs text-neutral-500">{depart} → {arrivee}</div>
+                <div className="text-xs text-neutral-500">N°: {transNumber}</div>
                 <div className="mt-2 flex flex-wrap gap-2 text-sm text-neutral-600">
-                  <div>Quantité: {quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</div>
-                  <div>Prix: {prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</div>
-                  <div>Montant: {montant !== null ? formatThousands(montant) : '-'}</div>
-                  <div>Détenteur: {detenteur}</div>
-                  <div>Ayant droit: {ayantDroit}</div>
+                  <div>Quantité: {quantity !== '-' ? formatThousands(quantity) : '-'}</div>
+                  <div>Stock initial: {initialStock !== '-' ? formatThousands(initialStock) : '-'}</div>
+                  <div>Stock final: {finalStock !== '-' ? formatThousands(finalStock) : '-'}</div>
+                  <div>Lieu: {lieu}</div>
                   <div>{date ? dateFormat(date) : '-'}</div>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{item.type || '-'}</Badge>
+                <Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{item.movementType || '-'}</Badge>
               </div>
             </div>
           </Card>
