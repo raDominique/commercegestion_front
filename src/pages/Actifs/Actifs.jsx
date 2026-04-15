@@ -30,7 +30,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import { formatThousands } from '../../utils/formatNumber';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { getAllUsersSelect } from '../../services/user.service';
-import { getMySites, getActifsBySite, getAllSitesSelect } from '../../services/site.service';
+import { getMySites, getActifsBySite, getAllSitesSelect, getSitesByUser } from '../../services/site.service';
 import { getAccessToken } from '../../services/token.service';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
@@ -47,6 +47,7 @@ const Actifs = () => {
 	const [usersOptions, setUsersOptions] = useState([]);
 	const [allSites, setAllSites] = useState([]);
 	const [allSitesSelectOptions, setAllSitesSelectOptions] = useState([]);
+	const [detentaireSites, setDetentaireSites] = useState([]);
 
 	const [loading, setLoading] = useState(false);
 	const [loadingDetail, setLoadingDetail] = useState(false);
@@ -124,6 +125,30 @@ const Actifs = () => {
 			}
 		});
 	}, []);
+
+	// Charger les sites du détentaire sélectionné
+	useEffect(() => {
+		if (transferForm.detentaire) {
+			getSitesByUser(transferForm.detentaire)
+				.then(res => {
+					let sites = [];
+					if (Array.isArray(res)) {
+						sites = res;
+					} else if (res?.data && Array.isArray(res.data)) {
+						sites = res.data;
+					}
+					setDetentaireSites(sites);
+					console.log('Sites du détentaire:', sites);
+				})
+				.catch(error => {
+					console.error('Erreur lors de la récupération des sites du détentaire:', error);
+					toast.error('Erreur lors du chargement des sites du détentaire');
+					setDetentaireSites([]);
+				});
+		} else {
+			setDetentaireSites([]);
+		}
+	}, [transferForm.detentaire]);
 
 	/* ================= ACTIONS ================= */
 
@@ -380,7 +405,7 @@ const Actifs = () => {
 														<SelectValue placeholder="Sélectionner le site de destination" />
 													</SelectTrigger>
 													<SelectContent>
-														{allSitesSelectOptions.map(site => (
+														{detentaireSites.map(site => (
 															<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
 														))}
 													</SelectContent>

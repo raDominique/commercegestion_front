@@ -165,3 +165,18 @@ export async function getAllSitesSelect() {
   // Retourne uniquement le tableau de sites ou []
   return res.data?.data || [];
 }
+
+/**
+ * Récupère les sites d'un utilisateur (GET /sites/by-user/:userId)
+ * @param {string} userId - L'identifiant de l'utilisateur
+ * @return {Promise} - Une promesse qui résout la réponse de l'API
+ */
+export async function getSitesByUser(userId) {
+  try {
+    const response = await axiosConfig.get(`/api/v1/sites/by-user/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des sites par utilisateur:', error);
+    throw error;
+  }
+}

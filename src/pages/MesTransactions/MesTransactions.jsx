@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { getUserLedger } from '../../services/ledger.service';
 import { getProfile } from '../../services/auth.service';
+import { getAccessToken } from '../../services/token.service';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -27,6 +28,7 @@ const MesTransactions = () => {
   const [typeFilter, setTypeFilter] = useState('all');
   const [order, setOrder] = useState('desc');
   const [productIdFilter, setProductIdFilter] = useState('');
+
   const { isDesktop } = useScreenType();
   const dateFormat = useDateFormat();
 
