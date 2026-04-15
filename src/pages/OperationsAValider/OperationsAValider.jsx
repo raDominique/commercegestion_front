@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import usePageTitle from '../../utils/usePageTitle.jsx';
-import { getPendingTransactionsList } from '../../services/transaction.service';
+import { getPendingTransactionsList, approveTransaction, rejectTransaction, getTransactionById } from '../../services/transaction.service';
 import { getProfile } from '../../services/auth.service';
 import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
@@ -13,6 +15,14 @@ import useDateFormat from '../../utils/useDateFormat.jsx';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber.js';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../../components/ui/dialog';
 
 const OperationsAValider = () => {
   usePageTitle('Opérations à valider');
@@ -23,6 +33,20 @@ const OperationsAValider = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [total, setTotal] = useState(0);
+
+  // États pour la gestion des actions
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionTransactionId, setActionTransactionId] = useState(null);
+  
+  // États pour le dialog d'approbation
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [selectedTransactionForApprove, setSelectedTransactionForApprove] = useState(null);
+  const [observations, setObservations] = useState('');
+  
+  // États pour le dialog de rejet
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [selectedTransactionForReject, setSelectedTransactionForReject] = useState(null);
+  const [motifRejet, setMotifRejet] = useState('');
 
   const { isDesktop } = useScreenType();
   const dateFormat = useDateFormat();
@@ -60,15 +84,14 @@ const OperationsAValider = () => {
 
         let items = [];
         let totalCount = 0;
-        let pageNum = 1;
-        let limitNum = 10;
 
-        // Traiter la réponse - structure: { status, message, data[], page, limit, total }
-        if (res?.data && Array.isArray(res.data)) {
+        // Traiter la réponse - axios enveloppe dans res.data
+        // Structure: res.data = { status, message, data[], page, limit, total }
+        if (res?.data?.data && Array.isArray(res.data.data)) {
+          items = res.data.data;
+          totalCount = res.data.total || 0;
+        } else if (res?.data && Array.isArray(res.data)) {
           items = res.data;
-          totalCount = res.total || 0;
-          pageNum = res.page || 1;
-          limitNum = res.limit || 10;
         } else if (Array.isArray(res)) {
           items = res;
         }
@@ -85,6 +108,137 @@ const OperationsAValider = () => {
 
     fetchPendingTransactions();
   }, [page, limit, user]);
+
+  // Rafraîchir la liste des transactions
+  const refreshPendingTransactions = async () => {
+    setLoading(true);
+    try {
+      let userId = user?._id;
+      if (!userId) {
+        const profile = await getProfile();
+        userId = profile?._id || profile?.id;
+      }
+
+      const token = getAccessToken();
+      const params = { userId, page, limit };
+      const res = await getPendingTransactionsList(params, token);
+
+      let items = [];
+      let totalCount = 0;
+
+      // Traiter la réponse - axios enveloppe dans res.data
+      if (res?.data?.data && Array.isArray(res.data.data)) {
+        items = res.data.data;
+        totalCount = res.data.total || 0;
+      } else if (res?.data && Array.isArray(res.data)) {
+        items = res.data;
+      } else if (Array.isArray(res)) {
+        items = res;
+      }
+
+      setPendingTransactions(Array.isArray(items) ? items : []);
+      setTotal(Number.isFinite(totalCount) ? totalCount : 0);
+    } catch (err) {
+      console.error('Error refreshing pending transactions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Ouvrir le dialog d'approbation
+  const handleOpenApproveDialog = (transaction) => {
+    setSelectedTransactionForApprove(transaction);
+    setIsApproveDialogOpen(true);
+    setObservations('');
+  };
+
+  // Confirmer l'approbation
+  const handleConfirmApprove = async () => {
+    if (!selectedTransactionForApprove) return;
+
+    setActionLoading(true);
+    setActionTransactionId(selectedTransactionForApprove._id);
+    try {
+      let userId = user?._id;
+      if (!userId) {
+        const profile = await getProfile();
+        userId = profile?._id || profile?.id;
+      }
+
+      const token = getAccessToken();
+      if (!token) {
+        toast.error('Token d\'authentification manquant');
+        return;
+      }
+
+      await approveTransaction(selectedTransactionForApprove._id, {
+        approuveurId: userId,
+        observations: observations || '',
+      }, token);
+
+      toast.success('Transaction approuvée');
+      refreshPendingTransactions();
+      setIsApproveDialogOpen(false);
+      setSelectedTransactionForApprove(null);
+      setObservations('');
+    } catch (err) {
+      console.error('Error approving transaction:', err);
+      toast.error('Erreur lors de l\'approbation');
+    } finally {
+      setActionLoading(false);
+      setActionTransactionId(null);
+    }
+  };
+
+  // Ouvrir le dialog de rejet
+  const handleOpenRejectDialog = (transaction) => {
+    setSelectedTransactionForReject(transaction);
+    setIsRejectDialogOpen(true);
+    setMotifRejet('');
+  };
+
+  // Confirmer le rejet
+  const handleConfirmReject = async () => {
+    if (!motifRejet.trim()) {
+      toast.error('Le motif du rejet est obligatoire');
+      return;
+    }
+
+    if (!selectedTransactionForReject) return;
+
+    setActionLoading(true);
+    setActionTransactionId(selectedTransactionForReject._id);
+    try {
+      let userId = user?._id;
+      if (!userId) {
+        const profile = await getProfile();
+        userId = profile?._id || profile?.id;
+      }
+
+      const token = getAccessToken();
+      if (!token) {
+        toast.error('Token d\'authentification manquant');
+        return;
+      }
+
+      await rejectTransaction(selectedTransactionForReject._id, {
+        approuveurId: userId,
+        motifRejet: motifRejet,
+      }, token);
+
+      toast.success('Transaction rejetée');
+      refreshPendingTransactions();
+      setIsRejectDialogOpen(false);
+      setSelectedTransactionForReject(null);
+      setMotifRejet('');
+    } catch (err) {
+      console.error('Error rejecting transaction:', err);
+      toast.error('Erreur lors du rejet');
+    } finally {
+      setActionLoading(false);
+      setActionTransactionId(null);
+    }
+  };
 
   if (user && user.userValidated === false) {
     return (
@@ -112,7 +266,11 @@ const OperationsAValider = () => {
               loading={loading} 
               transactions={pendingTransactions} 
               isDesktop={isDesktop} 
-              dateFormat={dateFormat} 
+              dateFormat={dateFormat}
+              onApprove={handleOpenApproveDialog}
+              onReject={handleOpenRejectDialog}
+              actionLoading={actionLoading}
+              actionTransactionId={actionTransactionId}
             />
           </Card>
           <div className="flex justify-end items-center gap-4">
@@ -142,13 +300,125 @@ const OperationsAValider = () => {
           Aucune opération à valider pour le moment.
         </Card>
       )}
+
+      {/* Dialog d'approbation */}
+      <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
+        <DialogContent className="sm:max-w-106.25">
+          <DialogHeader>
+            <DialogTitle>Approuver la transaction</DialogTitle>
+            <DialogDescription>
+              N° Transaction: {selectedTransactionForApprove?.transactionNumber}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-3 pb-2">
+              <div className="text-sm text-neutral-700">
+                <div className="font-medium">Produit:</div>
+                <div className="text-neutral-600">{selectedTransactionForApprove?.productId?.productName}</div>
+              </div>
+              <div className="text-sm text-neutral-700">
+                <div className="font-medium">Quantité:</div>
+                <div className="text-neutral-600">{selectedTransactionForApprove?.quantite} unités</div>
+              </div>
+              <div className="text-sm text-neutral-700">
+                <div className="font-medium">Initié par:</div>
+                <div className="text-neutral-600">
+                  {selectedTransactionForApprove?.initiatorId?.userNickName || selectedTransactionForApprove?.initiatorId?.userName}
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="observations">Observations (optionnel)</Label>
+              <Input
+                id="observations"
+                placeholder="Ajouter des observations sur cette approbation"
+                value={observations}
+                onChange={(e) => setObservations(e.target.value)}
+                className="border-neutral-300"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsApproveDialogOpen(false)}
+              disabled={actionLoading}
+            >
+              Annuler
+            </Button>
+            <Button 
+              variant="default" 
+              onClick={handleConfirmApprove}
+              disabled={actionLoading}
+            >
+              {actionLoading ? 'Approbation en cours...' : 'Approuver'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de rejet */}
+      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+        <DialogContent className="sm:max-w-106.25">
+          <DialogHeader>
+            <DialogTitle>Rejeter la transaction</DialogTitle>
+            <DialogDescription>
+              N° Transaction: {selectedTransactionForReject?.transactionNumber}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-3 pb-2">
+              <div className="text-sm text-neutral-700">
+                <div className="font-medium">Produit:</div>
+                <div className="text-neutral-600">{selectedTransactionForReject?.productId?.productName}</div>
+              </div>
+              <div className="text-sm text-neutral-700">
+                <div className="font-medium">Quantité:</div>
+                <div className="text-neutral-600">{selectedTransactionForReject?.quantite} unités</div>
+              </div>
+              <div className="text-sm text-neutral-700">
+                <div className="font-medium">Initié par:</div>
+                <div className="text-neutral-600">
+                  {selectedTransactionForReject?.initiatorId?.userNickName || selectedTransactionForReject?.initiatorId?.userName}
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="motifRejet">Motif du rejet *</Label>
+              <Input
+                id="motifRejet"
+                placeholder="Veuillez indiquer le motif du rejet"
+                value={motifRejet}
+                onChange={(e) => setMotifRejet(e.target.value)}
+                className="border-neutral-300"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsRejectDialogOpen(false)}
+              disabled={actionLoading}
+            >
+              Annuler
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmReject}
+              disabled={actionLoading || !motifRejet.trim()}
+            >
+              {actionLoading ? 'Rejet en cours...' : 'Confirmer le rejet'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default OperationsAValider;
 
-function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat }) {
+function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat, onApprove, onReject, actionLoading, actionTransactionId }) {
   if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
   if (!transactions || transactions.length === 0) return <div className="p-8 text-center text-neutral-400">Aucune opération à valider</div>;
 
@@ -189,6 +459,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
               const initiatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || '-';
               const productName = item.productId?.productName || '-';
               const quantite = item.quantite || 0;
+              const isActioning = actionLoading && actionTransactionId === item._id;
 
               return (
                 <TableRow key={item._id || item.id || idx}>
@@ -202,8 +473,22 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                   <TableCell className="text-sm">
                     {item.status === 'PENDING' && (
                       <div className="flex gap-2">
-                        <Button size="xs" variant="default">Approuver</Button>
-                        <Button size="xs" variant="outline">Rejeter</Button>
+                        <Button 
+                          size="xs" 
+                          variant="default"
+                          disabled={isActioning}
+                          onClick={() => onApprove(item)}
+                        >
+                          {isActioning ? 'En cours...' : 'Approuver'}
+                        </Button>
+                        <Button 
+                          size="xs" 
+                          variant="outline"
+                          disabled={isActioning}
+                          onClick={() => onReject(item)}
+                        >
+                          {isActioning ? 'En cours...' : 'Rejeter'}
+                        </Button>
                       </div>
                     )}
                   </TableCell>
@@ -238,6 +523,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
         const initiatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || '-';
         const productName = item.productId?.productName || '-';
         const quantite = item.quantite || 0;
+        const isActioning = actionLoading && actionTransactionId === item._id;
 
         return (
           <Card key={item._id || item.id || idx} className="p-4">
@@ -253,8 +539,22 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                 </div>
                 {item.status === 'PENDING' && (
                   <div className="mt-3 flex gap-2">
-                    <Button size="sm" variant="default">Approuver</Button>
-                    <Button size="sm" variant="outline">Rejeter</Button>
+                    <Button 
+                      size="sm" 
+                      variant="default"
+                      disabled={isActioning}
+                      onClick={() => onApprove(item)}
+                    >
+                      {isActioning ? 'En cours...' : 'Approuver'}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      disabled={isActioning}
+                      onClick={() => onReject(item)}
+                    >
+                      {isActioning ? 'En cours...' : 'Rejeter'}
+                    </Button>
                   </div>
                 )}
               </div>
