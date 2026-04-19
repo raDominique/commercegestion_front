@@ -67,6 +67,38 @@ const Depot = () => {
 		observations: ''
 	});
 
+	// États pour les recherches - Site d'origine
+	const [siteOriginSearch, setSiteOriginSearch] = useState('');
+	const [siteOriginOpen, setSiteOriginOpen] = useState(false);
+	const [siteOriginHighlighted, setSiteOriginHighlighted] = useState(0);
+
+	// États pour les recherches - Produit
+	const [productSearch, setProductSearch] = useState('');
+	const [productOpen, setProductOpen] = useState(false);
+	const [productHighlighted, setProductHighlighted] = useState(0);
+
+	// États pour les recherches - Détentaire
+	const [detentaireSearch, setDetentaireSearch] = useState('');
+	const [detentaireOpen, setDetentaireOpen] = useState(false);
+	const [detentaireHighlighted, setDetentaireHighlighted] = useState(0);
+
+	// États pour les recherches - Ayant droit
+	const [ayantDroitSearch, setAyantDroitSearch] = useState('');
+	const [ayantDroitOpen, setAyantDroitOpen] = useState(false);
+	const [ayantDroitHighlighted, setAyantDroitHighlighted] = useState(0);
+
+	// États pour les recherches - Site de destination
+	const [siteDestinationSearch, setSiteDestinationSearch] = useState('');
+	const [siteDestinationOpen, setSiteDestinationOpen] = useState(false);
+	const [siteDestinationHighlighted, setSiteDestinationHighlighted] = useState(0);
+
+	// Données filtrées
+	const filteredOriginSites = allSites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
+	const filteredProducts = productsOnSite.filter(item => (item.productName || '').toLowerCase().includes(productSearch.toLowerCase()));
+	const filteredDetentaires = usersOptions.filter(user => user.name.toLowerCase().includes(detentaireSearch.toLowerCase()));
+	const filteredAyantDroits = usersOptions.filter(user => user.name.toLowerCase().includes(ayantDroitSearch.toLowerCase()));
+	const filteredDestinationSites = detentaireSites.filter(site => site.siteName.toLowerCase().includes(siteDestinationSearch.toLowerCase()));
+
 	const fetchActifs = async () => {
 		setLoading(true);
 		try {
@@ -303,39 +335,128 @@ const Depot = () => {
 						</div>
 						<form className="space-y-4 p-4" onSubmit={handleTransferSubmit}>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								{/* 1. Sélectionner Site d'origine */}
+								{/* 1. Site d'origine avec recherche */}
 								<div className="space-y-2 md:col-span-2">
-									<Label htmlFor="siteOrigineId">1. Site d'origine *</Label>
-									<Select value={transferForm.siteOrigineId} onValueChange={handleSelectSiteOrigine}>
-										<SelectTrigger>
-											<SelectValue placeholder="Sélectionner le site d'origine" />
-										</SelectTrigger>
-										<SelectContent>
-											{allSites.map(site => (
-												<SelectItem key={site._id} value={site._id}>
-													{site.siteName} - {site.siteAddress}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
+									<Label>1. Site d'origine *</Label>
+									<div className="relative">
+										<Input
+											placeholder="Rechercher le site d'origine..."
+											value={siteOriginSearch}
+											onChange={e => { setSiteOriginSearch(e.target.value); setSiteOriginHighlighted(0); }}
+											onFocus={() => { setSiteOriginOpen(true); setSiteOriginHighlighted(0); }}
+											onBlur={() => setTimeout(() => setSiteOriginOpen(false), 150)}
+											onKeyDown={(e) => {
+												if (e.key === 'Escape') return setSiteOriginOpen(false);
+												if (!siteOriginOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+													setSiteOriginOpen(true);
+													e.preventDefault();
+													return;
+												}
+												if (siteOriginOpen) {
+													if (e.key === 'ArrowDown') {
+														e.preventDefault();
+														setSiteOriginHighlighted(i => Math.min(i + 1, Math.max(filteredOriginSites.length - 1, 0)));
+													} else if (e.key === 'ArrowUp') {
+														e.preventDefault();
+														setSiteOriginHighlighted(i => Math.max(i - 1, 0));
+													} else if (e.key === 'Enter') {
+														e.preventDefault();
+														const site = filteredOriginSites[siteOriginHighlighted];
+														if (site) {
+															handleSelectSiteOrigine(site._id);
+															setSiteOriginSearch(site.siteName);
+															setSiteOriginOpen(false);
+														}
+													}
+												}
+											}}
+											className="w-full"
+										/>
+										{siteOriginOpen && (
+											<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+												{filteredOriginSites.length > 0 ? (
+													filteredOriginSites.map((site, idx) => (
+														<button
+															type="button"
+															key={site._id}
+															onMouseEnter={() => setSiteOriginHighlighted(idx)}
+															onClick={() => {
+																handleSelectSiteOrigine(site._id);
+																setSiteOriginSearch(site.siteName);
+																setSiteOriginOpen(false);
+															}}
+															className={`w-full text-left px-3 py-2 text-sm ${idx === siteOriginHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+														>
+															{site.siteName} - {site.siteAddress || ''}
+														</button>
+													))
+												) : (
+													<div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
+												)}
+											</div>
+										)}
+									</div>
 								</div>
 
-								{/* 2. Parmi les produits du site choisi */}
+								{/* 2. Produit du site avec recherche */}
 								{transferForm.siteOrigineId && (
 									<div className="space-y-2 md:col-span-2">
-										<Label htmlFor="productId">2. Produit du site *</Label>
-										<Select value={transferForm.productId} onValueChange={handleSelectProduct}>
-											<SelectTrigger disabled={!transferForm.siteOrigineId}>
-												<SelectValue placeholder={productsOnSite.length === 0 ? "Aucun produit disponible" : "Sélectionner un produit"} />
-											</SelectTrigger>
-											<SelectContent>
-												{productsOnSite.map(item => (
-													<SelectItem key={item.productId} value={item.productId}>
-														{item.productName || '-'} - Qté disponible: {formatThousands(item.quantite)}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
+										<Label>2. Produit du site *</Label>
+										<div className="relative">
+											<Input
+												placeholder={productsOnSite.length === 0 ? "Aucun produit disponible" : "Rechercher un produit..."}
+												value={productSearch}
+												onChange={e => { setProductSearch(e.target.value); setProductHighlighted(0); }}
+												onFocus={() => { setProductOpen(true); setProductHighlighted(0); }}
+												onBlur={() => setTimeout(() => setProductOpen(false), 150)}
+												onKeyDown={(e) => {
+													if (e.key === 'Escape') return setProductOpen(false);
+													if (!productOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+														setProductOpen(true);
+														e.preventDefault();
+														return;
+													}
+													if (productOpen) {
+														if (e.key === 'ArrowDown') {
+															e.preventDefault();
+															setProductHighlighted(i => Math.min(i + 1, Math.max(filteredProducts.length - 1, 0)));
+														} else if (e.key === 'ArrowUp') {
+															e.preventDefault();
+															setProductHighlighted(i => Math.max(i - 1, 0));
+														} else if (e.key === 'Enter') {
+															e.preventDefault();
+															const product = filteredProducts[productHighlighted];
+															if (product) {
+																handleSelectProduct(product.productId);
+																setProductSearch(product.productName);
+																setProductOpen(false);
+															}
+														}
+													}
+												}}
+												className="w-full"
+												disabled={productsOnSite.length === 0}
+											/>
+											{productOpen && filteredProducts.length > 0 && (
+												<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+													{filteredProducts.map((item, idx) => (
+														<button
+															type="button"
+															key={item.productId}
+															onMouseEnter={() => setProductHighlighted(idx)}
+															onClick={() => {
+																handleSelectProduct(item.productId);
+																setProductSearch(item.productName);
+																setProductOpen(false);
+															}}
+															className={`w-full text-left px-3 py-2 text-sm ${idx === productHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+														>
+															{item.productName || '-'} - Qté: {formatThousands(item.quantite)}
+														</button>
+													))}
+												</div>
+											)}
+										</div>
 									</div>
 								)}
 
@@ -343,7 +464,7 @@ const Depot = () => {
 								{transferForm.productId && (
 									<>
 										<div className="space-y-2">
-											<Label htmlFor="quantite">3. Quantité *</Label>
+											<Label>3. Quantité *</Label>
 											<Input
 												name="quantite"
 												value={transferForm.quantite}
@@ -357,7 +478,7 @@ const Depot = () => {
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor="prixUnitaire">3. Prix unitaire *</Label>
+											<Label>3. Prix unitaire *</Label>
 											<Input
 												name="prixUnitaire"
 												value={transferForm.prixUnitaire}
@@ -372,63 +493,205 @@ const Depot = () => {
 									</>
 								)}
 
-								{/* 4. Détenteur et Ayant droit */}
+								{/* 4. Détenteur avec recherche */}
 								{transferForm.productId && (
-									<>
-										<div className="space-y-2">
-											<Label htmlFor="detentaire">4. Détenteur *</Label>
-											<Select value={transferForm.detentaire} onValueChange={val => setTransferForm(f => ({ ...f, detentaire: val }))}>
-												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner un détenteur" />
-												</SelectTrigger>
-												<SelectContent>
-													{usersOptions.map(user => (
-														<SelectItem key={user._id} value={user._id}>
-															{user.name}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
+									<div className="space-y-2">
+										<Label>4. Détenteur *</Label>
+										<div className="relative">
+											<Input
+												placeholder="Rechercher un détenteur..."
+												value={detentaireSearch}
+												onChange={e => { setDetentaireSearch(e.target.value); setDetentaireHighlighted(0); }}
+												onFocus={() => { setDetentaireOpen(true); setDetentaireHighlighted(0); }}
+												onBlur={() => setTimeout(() => setDetentaireOpen(false), 150)}
+												onKeyDown={(e) => {
+													if (e.key === 'Escape') return setDetentaireOpen(false);
+													if (!detentaireOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+														setDetentaireOpen(true);
+														e.preventDefault();
+														return;
+													}
+													if (detentaireOpen) {
+														if (e.key === 'ArrowDown') {
+															e.preventDefault();
+															setDetentaireHighlighted(i => Math.min(i + 1, Math.max(filteredDetentaires.length - 1, 0)));
+														} else if (e.key === 'ArrowUp') {
+															e.preventDefault();
+															setDetentaireHighlighted(i => Math.max(i - 1, 0));
+														} else if (e.key === 'Enter') {
+															e.preventDefault();
+															const user = filteredDetentaires[detentaireHighlighted];
+															if (user) {
+																setTransferForm(f => ({ ...f, detentaire: user._id }));
+																setDetentaireSearch(user.name);
+																setDetentaireOpen(false);
+															}
+														}
+													}
+												}}
+												className="w-full"
+											/>
+											{detentaireOpen && (
+												<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+													{filteredDetentaires.length > 0 ? (
+														filteredDetentaires.map((user, idx) => (
+															<button
+																type="button"
+																key={user._id}
+																onMouseEnter={() => setDetentaireHighlighted(idx)}
+																onClick={() => {
+																	setTransferForm(f => ({ ...f, detentaire: user._id }));
+																	setDetentaireSearch(user.name);
+																	setDetentaireOpen(false);
+																}}
+																className={`w-full text-left px-3 py-2 text-sm ${idx === detentaireHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+															>
+																{user.name}
+															</button>
+														))
+													) : (
+														<div className="px-3 py-2 text-sm text-neutral-500">Aucun utilisateur trouvé</div>
+													)}
+												</div>
+											)}
 										</div>
-										<div className="space-y-2">
-											<Label htmlFor="ayant_droit">4. Ayant droit *</Label>
-											<Select value={transferForm.ayant_droit} onValueChange={val => setTransferForm(f => ({ ...f, ayant_droit: val }))}>
-												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner un ayant droit" />
-												</SelectTrigger>
-												<SelectContent>
-													{usersOptions.map(user => (
-														<SelectItem key={user._id} value={user._id}>
-															{user.name}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-										</div>
-									</>
+									</div>
 								)}
 
-								{/* 5. Choisir site de destination */}
+								{/* 4. Ayant droit avec recherche */}
+								{transferForm.productId && (
+									<div className="space-y-2">
+										<Label>4. Ayant droit *</Label>
+										<div className="relative">
+											<Input
+												placeholder="Rechercher l'ayant droit..."
+												value={ayantDroitSearch}
+												onChange={e => { setAyantDroitSearch(e.target.value); setAyantDroitHighlighted(0); }}
+												onFocus={() => { setAyantDroitOpen(true); setAyantDroitHighlighted(0); }}
+												onBlur={() => setTimeout(() => setAyantDroitOpen(false), 150)}
+												onKeyDown={(e) => {
+													if (e.key === 'Escape') return setAyantDroitOpen(false);
+													if (!ayantDroitOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+														setAyantDroitOpen(true);
+														e.preventDefault();
+														return;
+													}
+													if (ayantDroitOpen) {
+														if (e.key === 'ArrowDown') {
+															e.preventDefault();
+															setAyantDroitHighlighted(i => Math.min(i + 1, Math.max(filteredAyantDroits.length - 1, 0)));
+														} else if (e.key === 'ArrowUp') {
+															e.preventDefault();
+															setAyantDroitHighlighted(i => Math.max(i - 1, 0));
+														} else if (e.key === 'Enter') {
+															e.preventDefault();
+															const user = filteredAyantDroits[ayantDroitHighlighted];
+															if (user) {
+																setTransferForm(f => ({ ...f, ayant_droit: user._id }));
+																setAyantDroitSearch(user.name);
+																setAyantDroitOpen(false);
+															}
+														}
+													}
+												}}
+												className="w-full"
+											/>
+											{ayantDroitOpen && (
+												<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+													{filteredAyantDroits.length > 0 ? (
+														filteredAyantDroits.map((user, idx) => (
+															<button
+																type="button"
+																key={user._id}
+																onMouseEnter={() => setAyantDroitHighlighted(idx)}
+																onClick={() => {
+																	setTransferForm(f => ({ ...f, ayant_droit: user._id }));
+																	setAyantDroitSearch(user.name);
+																	setAyantDroitOpen(false);
+																}}
+																className={`w-full text-left px-3 py-2 text-sm ${idx === ayantDroitHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+															>
+																{user.name}
+															</button>
+														))
+													) : (
+														<div className="px-3 py-2 text-sm text-neutral-500">Aucun utilisateur trouvé</div>
+													)}
+												</div>
+											)}
+										</div>
+									</div>
+								)}
+
+								{/* 5. Site de destination avec recherche */}
 								{transferForm.productId && (
 									<div className="space-y-2 md:col-span-2">
-										<Label htmlFor="siteDestinationId">5. Site de destination *</Label>
-										<Select value={transferForm.siteDestinationId} onValueChange={val => setTransferForm(f => ({ ...f, siteDestinationId: val }))}>
-											<SelectTrigger>
-												<SelectValue placeholder="Sélectionner le site de destination" />
-											</SelectTrigger>
-											<SelectContent>
-												{detentaireSites.map(site => (
-													<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
+										<Label>5. Site de destination *</Label>
+										<div className="relative">
+											<Input
+												placeholder="Rechercher le site de destination..."
+												value={siteDestinationSearch}
+												onChange={e => { setSiteDestinationSearch(e.target.value); setSiteDestinationHighlighted(0); }}
+												onFocus={() => { setSiteDestinationOpen(true); setSiteDestinationHighlighted(0); }}
+												onBlur={() => setTimeout(() => setSiteDestinationOpen(false), 150)}
+												onKeyDown={(e) => {
+													if (e.key === 'Escape') return setSiteDestinationOpen(false);
+													if (!siteDestinationOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+														setSiteDestinationOpen(true);
+														e.preventDefault();
+														return;
+													}
+													if (siteDestinationOpen) {
+														if (e.key === 'ArrowDown') {
+															e.preventDefault();
+															setSiteDestinationHighlighted(i => Math.min(i + 1, Math.max(filteredDestinationSites.length - 1, 0)));
+														} else if (e.key === 'ArrowUp') {
+															e.preventDefault();
+															setSiteDestinationHighlighted(i => Math.max(i - 1, 0));
+														} else if (e.key === 'Enter') {
+															e.preventDefault();
+															const site = filteredDestinationSites[siteDestinationHighlighted];
+															if (site) {
+																setTransferForm(f => ({ ...f, siteDestinationId: site._id }));
+																setSiteDestinationSearch(site.siteName);
+																setSiteDestinationOpen(false);
+															}
+														}
+													}
+												}}
+												className="w-full"
+											/>
+											{siteDestinationOpen && (
+												<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+													{filteredDestinationSites.length > 0 ? (
+														filteredDestinationSites.map((site, idx) => (
+															<button
+																type="button"
+																key={site._id}
+																onMouseEnter={() => setSiteDestinationHighlighted(idx)}
+																onClick={() => {
+																	setTransferForm(f => ({ ...f, siteDestinationId: site._id }));
+																	setSiteDestinationSearch(site.siteName);
+																	setSiteDestinationOpen(false);
+																}}
+																className={`w-full text-left px-3 py-2 text-sm ${idx === siteDestinationHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+															>
+																{site.siteName}
+															</button>
+														))
+													) : (
+														<div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
+													)}
+												</div>
+											)}
+										</div>
 									</div>
 								)}
 
 								{/* 6. Observation */}
 								{transferForm.productId && (
 									<div className="space-y-2 md:col-span-2">
-										<Label htmlFor="observations">6. Observation</Label>
+										<Label>6. Observation</Label>
 										<Input
 											name="observations"
 											value={transferForm.observations}
@@ -453,6 +716,11 @@ const Depot = () => {
 										ayant_droit: '',
 										observations: ''
 									});
+									setSiteOriginSearch('');
+									setProductSearch('');
+									setDetentaireSearch('');
+									setAyantDroitSearch('');
+									setSiteDestinationSearch('');
 									setProductsOnSite([]);
 									setMaxTransferQty(null);
 								}}>
@@ -462,7 +730,7 @@ const Depot = () => {
 									variant="default"
 									className="bg-violet-600 text-white hover:bg-violet-700"
 									type="submit"
-									disabled={!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId}
+									disabled={!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire || !transferForm.ayant_droit}
 								>
 									Valider le transfert
 								</Button>
