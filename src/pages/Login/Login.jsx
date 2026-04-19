@@ -33,7 +33,7 @@ export default function Login() {
       const profile = await getProfile();
       if (profile && allowedRoles.includes(profile.userAccess)) {
         toast.success('Connexion réussie !');
-        navigate('/actifs', { replace: true });
+        navigate('/dashboard', { replace: true });
       } else {
         toast.error("Votre rôle ne permet pas d'accéder à cette application.");
       }

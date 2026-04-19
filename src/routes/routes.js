@@ -20,6 +20,7 @@ import Login from '../pages/Login/Login.jsx';
 import Register from '../pages/Register/Register.jsx';
 import ForgotPassword from '../pages/ForgotPassword/ForgotPassword.jsx';
 import ResetPassword from '../pages/ResetPassword/ResetPassword.jsx';
+import DashboardPage from '../pages/Dashboard/Dashboard.jsx';
 import Depot from '../pages/Depot/Depot.jsx';
 import Retrait from '../pages/Retrait/Retrait.jsx';
 import Boutique from '../pages/Boutique/Boutique.jsx';
@@ -46,6 +47,8 @@ export const publicRoutes = [
 ];
 
 export const privateRoutes = [
+    // Route tableau de bord accessible à tous les utilisateurs
+    { path: '/dashboard', element: DashboardPage, role: 'Utilisateur,Admin', userValidated: [true, false], icon: Dashboard, label: 'Tableau de bord' },
     // Routes accessibles à Utilisateur et Moderateur et Admin
     { path: '/actifs', element: Actifs, role: 'Utilisateur,Admin', userValidated: true, icon: TrendingUp },
     { path: '/passifs', element: Passifs, role: 'Utilisateur,Admin', userValidated: true, icon: TrendingDown },

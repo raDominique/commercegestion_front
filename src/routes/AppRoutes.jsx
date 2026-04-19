@@ -10,7 +10,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
     if (loading) return null; // ou un composant de chargement si souhaité
     if (!user) return <Navigate to="/login" />;
     if (allowedRoles && !allowedRoles.includes(user.userAccess)) {
-        return <Navigate to="/actifs" replace />;
+        return <Navigate to="/dashboard" replace />;
     }
     return children;
 };
@@ -25,7 +25,7 @@ const AppRoutes = () => {
                 {/* Redirection par défaut selon l'état d'authentification */}
                 <Route
                     path="/"
-                    element={user ? <Navigate to="/actifs" replace /> : <Navigate to="/login" replace />}
+                    element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
                 />
                 {/* Routes publiques (login/register sans layout, autres avec layout) */}
                 {publicRoutes.map(({ path, element }, idx) => {
@@ -35,7 +35,7 @@ const AppRoutes = () => {
                             <Route
                                 key={idx}
                                 path={path}
-                                element={user ? <Navigate to="/actifs" replace /> : React.createElement(element)}
+                                element={user ? <Navigate to="/dashboard" replace /> : React.createElement(element)}
                             />
                         );
                     }

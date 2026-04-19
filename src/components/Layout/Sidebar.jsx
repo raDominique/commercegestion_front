@@ -10,6 +10,8 @@ function Sidebar({ user, isDesktop = true }) {
   const isActive = (path) => location.pathname === path;
 
   // Filter navigation items from routes.js
+  const dashboardItem = privateRoutes.filter(r => r.path === '/dashboard');
+  
   const userNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
     '/actifs', '/passifs', '/boutique', '/depot', '/retrait'
   ].includes(r.path));
@@ -33,6 +35,23 @@ function Sidebar({ user, isDesktop = true }) {
       <div className="p-4 space-y-6">
         <nav className="space-y-1">
           <p className="text-xs text-neutral-100 px-3 mb-2">NAVIGATION</p>
+          {dashboardItem.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path)
+                ? 'bg-violet-600 text-violet-50'
+                : 'text-neutral-100 hover:bg-neutral-100 hover:text-neutral-900'
+                }`}
+            >
+              {item.icon ? (
+                <item.icon className="w-5 h-5" />
+              ) : (
+                <span className="material-icons">menu</span>
+              )}
+              <span className="text-sm">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+            </Link>
+          ))}
           {userNavItems.map((item) => (
             <Link
               key={item.path}

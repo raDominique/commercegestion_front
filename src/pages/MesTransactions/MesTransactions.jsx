@@ -146,11 +146,11 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
             <TableRow>
               <TableHead className="text-xs text-neutral-600">N° Transaction</TableHead>
               <TableHead className="text-xs text-neutral-600">Produit</TableHead>
-              <TableHead className="text-xs text-neutral-600">Type</TableHead>
+              <TableHead className="text-xs text-neutral-600">Types produits</TableHead>
               <TableHead className="text-xs text-neutral-600 text-right">Quantité</TableHead>
               <TableHead className="text-xs text-neutral-600 text-right">Stock Initial</TableHead>
               <TableHead className="text-xs text-neutral-600 text-right">Stock Final</TableHead>
-              <TableHead className="text-xs text-neutral-600">Lieu</TableHead>
+              <TableHead className="text-xs text-neutral-600">Type de transaction</TableHead>
               <TableHead className="text-xs text-neutral-600">Date</TableHead>
             </TableRow>
           </TableHeader>
