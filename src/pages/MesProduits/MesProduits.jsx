@@ -436,6 +436,7 @@ const MesProduits = () => {
           <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow>
+                <TableHead className="text-left p-4 text-xs text-neutral-600 w-17.5">IDs</TableHead>
                 <TableHead className="text-left p-4 text-xs text-neutral-600 w-17.5">Aperçu</TableHead>
                 <TableHead className="text-left p-4 text-xs text-neutral-600 w-[18%]">Nom</TableHead>
                 <TableHead className="text-left p-4 text-xs text-neutral-600 w-[18%]">Catégorie</TableHead>
@@ -453,6 +454,11 @@ const MesProduits = () => {
               ) : products.length > 0 ? (
                 products.map((product) => (
                   <TableRow key={product._id} className="border-b border-neutral-200 last:border-0">
+                    <TableCell className="p-4 text-sm text-neutral-900">
+                      <div className="truncate" title={product._id}>
+                        {product._id}
+                      </div>
+                    </TableCell>
                     <TableCell className="p-4 text-sm">
                       {product.image ? (
                         <img src={getFullMediaUrl(product.image)} alt={product.name} className="w-12 h-12 object-cover rounded" />
@@ -483,7 +489,7 @@ const MesProduits = () => {
                         disabled={product.isStocker}
                         className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
                       >
-                        Ajouter à un dépôt
+                        Stocker dans un site
                       </Button>
                     </TableCell>
                     <TableCell className="p-4 text-right">
