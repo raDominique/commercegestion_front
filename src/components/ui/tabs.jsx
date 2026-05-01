@@ -5,10 +5,7 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 
 import { cn } from "./utils";
 
-function Tabs({
-  className,
-  ...props
-}) {
+function Tabs({ className, ...props }) {
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
@@ -18,15 +15,12 @@ function Tabs({
   );
 }
 
-function TabsList({
-  className,
-  ...props
-}) {
+function TabsList({ className, ...props }) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "bg-muted text-muted-foreground h-9 w-fit items-center justify-center rounded-xl p-0.75 flex",
+        "bg-[#1a1625] h-9 w-fit items-center justify-center rounded-xl p-1 flex gap-0.5",
         className,
       )}
       {...props}
@@ -34,15 +28,21 @@ function TabsList({
   );
 }
 
-function TabsTrigger({
-  className,
-  ...props
-}) {
+function TabsTrigger({ className, ...props }) {
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "data-[state=active]:bg-card dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-xl border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        // Base
+        "inline-flex items-center justify-center px-3 py-1 text-sm font-medium whitespace-nowrap rounded-lg transition-all duration-150",
+        // Default (inactive)
+        "text-[#8b7fa8] hover:text-[#c4b5d9]",
+        // Active: white text + visible ring outline (pill border)
+        "data-[state=active]:text-white data-[state=active]:ring-1 data-[state=active]:ring-[#6d4fa0] data-[state=active]:ring-offset-1 data-[state=active]:ring-offset-[#1a1625]",
+        // Focus
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c3aed] focus-visible:ring-offset-1 focus-visible:ring-offset-[#1a1625]",
+        // Disabled
+        "disabled:pointer-events-none disabled:opacity-40",
         className,
       )}
       {...props}
@@ -50,10 +50,7 @@ function TabsTrigger({
   );
 }
 
-function TabsContent({
-  className,
-  ...props
-}) {
+function TabsContent({ className, ...props }) {
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"
