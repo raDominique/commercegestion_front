@@ -4,6 +4,7 @@ import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { getActifs } from '../../services/ledger.service';
 import { getProfile } from '../../services/auth.service';
+import { initializeTransaction } from '../../services/transaction.service';
 import {
 	Dialog,
 	DialogContent,
@@ -43,6 +44,11 @@ const Actifs = () => {
 
 	const [detailActif, setDetailActif] = useState(null);
 
+	const [stockModalOpen, setStockModalOpen] = useState(false);
+	const [selectedActifForStock, setSelectedActifForStock] = useState(null);
+	const [stockForm, setStockForm] = useState({ quantite: '', observations: '' });
+	const [loadingAddStock, setLoadingAddStock] = useState(false);
+
 	const fetchActifs = async () => {
 		try {
 			setLoading(true);
@@ -81,6 +87,42 @@ const Actifs = () => {
 		}
 	};
 
+	const handleOpenStockModal = (actif) => {
+		setSelectedActifForStock(actif);
+		setStockForm({ quantite: '', observations: '' });
+		setStockModalOpen(true);
+	};
+
+	const handleAddStock = async () => {
+		if (!stockForm.quantite || !selectedActifForStock) {
+			alert('Veuillez remplir la quantité');
+			return;
+		}
+
+		try {
+			setLoadingAddStock(true);
+			const params = {
+				productId: selectedActifForStock.id,
+				siteOrigineId: selectedActifForStock.siteOrigineId || selectedActifForStock.depot,
+				quantite: stockForm.quantite,
+				prixUnitaire: selectedActifForStock.prixUnitaire || 0,
+				observations: stockForm.observations,
+			};
+
+			await initializeTransaction(params, user?.token || localStorage.getItem('authToken'));
+			alert('Stock ajouté avec succès');
+			setStockModalOpen(false);
+			setStockForm({ quantite: '', observations: '' });
+			setSelectedActifForStock(null);
+			await fetchActifs();
+		} catch (error) {
+			console.error('Erreur lors de l\'ajout du stock:', error);
+			alert('Erreur lors de l\'ajout du stock');
+		} finally {
+			setLoadingAddStock(false);
+		}
+	};
+
 	/* ================= RENDER ================= */
 
 	return (
@@ -107,7 +149,7 @@ const Actifs = () => {
 					</div>
 
 					<Card className="border-neutral-200 bg-white">
-						<ActifsTableOrList loading={loading} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} />
+						<ActifsTableOrList loading={loading} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} onOpenStockModal={handleOpenStockModal} />
 					</Card>
 
 					{/* PAGINATION */}
@@ -176,6 +218,82 @@ const Actifs = () => {
 							)}
 						</DialogContent>
 					</Dialog>
+
+					{/* MODAL AJOUT STOCK */}
+					<Dialog open={stockModalOpen} onOpenChange={setStockModalOpen}>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Ajouter du stock</DialogTitle>
+								<DialogDescription>
+									{selectedActifForStock?.productName}
+								</DialogDescription>
+							</DialogHeader>
+
+							<div className="space-y-4">
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Produit</label>
+									<Input
+										disabled
+										value={selectedActifForStock?.productName || ''}
+										className="border-neutral-300 bg-neutral-50"
+									/>
+								</div>
+
+								<div>								<label className="block text-sm font-medium text-neutral-700 mb-1">Site d'origine</label>
+								<Input
+									disabled
+									value={selectedActifForStock?.siteOrigineId || selectedActifForStock?.depot || ''}
+									className="border-neutral-300 bg-neutral-50"
+								/>
+							</div>
+
+							<div>
+								<label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</label>
+								<Input
+									disabled
+									value={selectedActifForStock?.prixUnitaire || '0'}
+									className="border-neutral-300 bg-neutral-50"
+								/>
+							</div>
+
+							<div>									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</label>
+									<Input
+										type="number"
+										min="1"
+										placeholder="0"
+										value={stockForm.quantite}
+										onChange={(e) => setStockForm({ ...stockForm, quantite: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Observations</label>
+									<Input
+										placeholder="Observations facultatives"
+										value={stockForm.observations}
+										onChange={(e) => setStockForm({ ...stockForm, observations: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div className="flex justify-end gap-2 pt-4">
+									<Button
+										variant="outline"
+										onClick={() => setStockModalOpen(false)}
+									>
+										Annuler
+									</Button>
+									<Button
+										onClick={handleAddStock}
+										disabled={loadingAddStock}
+									>
+										{loadingAddStock ? 'Ajout en cours...' : 'Ajouter'}
+									</Button>
+								</div>
+							</div>
+						</DialogContent>
+					</Dialog>
 				</>
 			)}
 		</div>
@@ -184,7 +302,7 @@ const Actifs = () => {
 
 export default Actifs;
 
-function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail }) {
+function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal }) {
 	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
 	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
 
@@ -228,10 +346,15 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm">{item.detentaire || '-'}</TableCell>
 								<TableCell className="text-sm">{item.ayantDroit || '-'}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
-								<TableCell className="text-sm text-right">
+							<TableCell className="text-sm text-right">
+								<div className="flex gap-2 justify-end">
 									<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
 										<InfoIcon className="w-5 h-5 text-violet-600" />
 									</Button>
+									<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
+										+Stock
+									</Button>
+								</div>
 								</TableCell>
 							</TableRow>
 						))}
@@ -266,6 +389,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
 							<div className="flex gap-2 mt-2">
 								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
+								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>+Stock</Button>
 							</div>
 						</div>
 					</div>

@@ -167,3 +167,34 @@ export const rejectTransaction = async (transactionId, params, token) => {
         }
     );
 };
+
+/**
+ * Initialise une transaction (POST /api/transactions/initialization)
+ * @param {Object} params - Paramètres de l'initialisation
+ * @param {string} params.productId - ID du produit
+ * @param {string} params.siteOrigineId - ID du site d'origine
+ * @param {number} params.quantite - Quantité du produit
+ * @param {number} params.prixUnitaire - Prix unitaire du produit
+ * @param {string} [params.observations] - Observations facultatives
+ * @param {string} token - Token d'authentification
+ * @returns {Promise} - Résultat de l'API
+ */
+export const initializeTransaction = async (params, token) => {
+    return axiosInstance.post(
+        '/api/transactions/initialization',
+        {
+            productId: params.productId,
+            siteOrigineId: params.siteOrigineId,
+            quantite: Number(params.quantite),
+            prixUnitaire: Number(params.prixUnitaire),
+            observations: params.observations || '',
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                accept: 'application/json',
+            },
+        }
+    );
+};
