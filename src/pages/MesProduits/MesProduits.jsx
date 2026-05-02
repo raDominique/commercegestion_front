@@ -40,9 +40,19 @@ const MesProduits = () => {
   // Ouvrir le modal dépôt
   const handleOpenDepositModal = async (productId) => {
     setDepositProductId(productId);
-    setDepositForm(f => ({ ...f, productId: productId || '' }));
     setDepositModalOpen(true);
     try {
+      const token = localStorage.getItem('token');
+      // Récupérer le produit pour le prixUnitaire
+      const productRes = await getProductById(productId, token);
+      const product = Array.isArray(productRes.data) ? productRes.data[0] : productRes.data;
+
+      setDepositForm(f => ({
+        ...f,
+        productId: productId || '',
+        prixUnitaire: product?.prixUnitaire || 0
+      }));
+
       const res = await getMySites({ limit: 100, page: 1 });
       setSites(res.data || []);
       try {
@@ -61,9 +71,10 @@ const MesProduits = () => {
   // Soumission du dépôt
   const handleDepositSubmit = async (e) => {
     e.preventDefault();
-    // Validation centralisée
+    // Validation centralisée (exclure prixUnitaire et ayant_droit)
     const errors = {};
     Object.entries(addProductFieldControl).forEach(([key, ctrl]) => {
+      if (key === 'prixUnitaire' || key === 'ayant_droit') return; // Ignorer prixUnitaire et ayant_droit
       const err = ctrl.validate(depositForm[key]);
       if (err) errors[key] = err;
     });
@@ -73,6 +84,7 @@ const MesProduits = () => {
     try {
       await depositFirstStock({
         ...depositForm,
+        ayant_droit: depositForm.detentaire, // Synchroniser ayant_droit avec detentaire
         productId: depositProductId || depositForm.productId,
         quantite: Number(depositForm.quantite),
         prixUnitaire: Number(depositForm.prixUnitaire),
@@ -242,10 +254,6 @@ const MesProduits = () => {
   const [detentaireSearch, setDetentaireSearch] = useState('');
   const [detentaireOpen, setDetentaireOpen] = useState(false);
   const [detentaireHighlighted, setDetentaireHighlighted] = useState(0);
-  // States pour recherche ayant droit
-  const [ayantDroitSearch, setAyantDroitSearch] = useState('');
-  const [ayantDroitOpen, setAyantDroitOpen] = useState(false);
-  const [ayantDroitHighlighted, setAyantDroitHighlighted] = useState(0);
   const [form, setForm] = useState({
     // productState: '',
     codeCPC: '',
@@ -275,7 +283,6 @@ const MesProduits = () => {
   const filteredOriginSites = sites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
   const filteredDestinationSites = sites.filter(site => site.siteName.toLowerCase().includes(siteDestinationSearch.toLowerCase()));
   const filteredDetentaires = usersOptions.filter(user => user.name.toLowerCase().includes(detentaireSearch.toLowerCase()));
-  const filteredAyantDroits = usersOptions.filter(user => user.name.toLowerCase().includes(ayantDroitSearch.toLowerCase()));
 
   // Soumission du formulaire d'ajout
   const handleAddProduct = async (e) => {
@@ -1121,14 +1128,8 @@ const MesProduits = () => {
                 <Input name="quantite" value={depositForm.quantite} onChange={e => setDepositForm(f => ({ ...f, quantite: e.target.value }))} placeholder="Quantité à déposer" className="border-neutral-300" type="number" min="1" aria-invalid={!!depositErrors.quantite} />
                 {depositErrors.quantite && <div className="text-red-600 text-xs mt-1">{depositErrors.quantite}</div>}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="prixUnitaire">
-                  {addProductFieldControl.prixUnitaire.label}
-                  {addProductFieldControl.prixUnitaire.required && <span style={{ color: 'red' }}> *</span>}
-                </Label>
-                <Input name="prixUnitaire" value={depositForm.prixUnitaire} onChange={e => setDepositForm(f => ({ ...f, prixUnitaire: e.target.value }))} placeholder="Prix Unitaire du produit" className="border-neutral-300" type="number" min="0" step="0.01" aria-invalid={!!depositErrors.prixUnitaire} />
-                {depositErrors.prixUnitaire && <div className="text-red-600 text-xs mt-1">{depositErrors.prixUnitaire}</div>}
-              </div>
+              {/* Prix unitaire masqué */}
+              <Input name="prixUnitaire" value={depositForm.prixUnitaire} onChange={e => setDepositForm(f => ({ ...f, prixUnitaire: e.target.value }))} type="hidden" />
               <div className="space-y-2">
                 <Label htmlFor="detentaire">Détenteur</Label>
                 <div className="relative">
@@ -1179,67 +1180,6 @@ const MesProduits = () => {
                               setDetentaireOpen(false);
                             }}
                             className={`w-full text-left px-3 py-2 text-sm ${idx === detentaireHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
-                          >
-                            {user.name}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3 py-2 text-sm text-neutral-500">Aucun utilisateur trouvé</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ayant_droit">Ayant droit</Label>
-                <div className="relative">
-                  <Input
-                    placeholder="Rechercher l'ayant droit..."
-                    value={ayantDroitSearch}
-                    onChange={e => { setAyantDroitSearch(e.target.value); setAyantDroitHighlighted(0); }}
-                    onFocus={() => { setAyantDroitOpen(true); setAyantDroitHighlighted(0); }}
-                    onBlur={() => setTimeout(() => setAyantDroitOpen(false), 150)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') return setAyantDroitOpen(false);
-                      if (!ayantDroitOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-                        setAyantDroitOpen(true);
-                        e.preventDefault();
-                        return;
-                      }
-                      if (ayantDroitOpen) {
-                        if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          setAyantDroitHighlighted(i => Math.min(i + 1, Math.max(filteredAyantDroits.length - 1, 0)));
-                        } else if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          setAyantDroitHighlighted(i => Math.max(i - 1, 0));
-                        } else if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const user = filteredAyantDroits[ayantDroitHighlighted];
-                          if (user) {
-                            setDepositForm(f => ({ ...f, ayant_droit: user._id }));
-                            setAyantDroitSearch(user.name);
-                            setAyantDroitOpen(false);
-                          }
-                        }
-                      }
-                    }}
-                    className="w-full"
-                  />
-                  {ayantDroitOpen && (
-                    <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-                      {filteredAyantDroits.length > 0 ? (
-                        filteredAyantDroits.map((user, idx) => (
-                          <button
-                            type="button"
-                            key={user._id}
-                            onMouseEnter={() => setAyantDroitHighlighted(idx)}
-                            onClick={() => {
-                              setDepositForm(f => ({ ...f, ayant_droit: user._id }));
-                              setAyantDroitSearch(user.name);
-                              setAyantDroitOpen(false);
-                            }}
-                            className={`w-full text-left px-3 py-2 text-sm ${idx === ayantDroitHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
                           >
                             {user.name}
                           </button>
