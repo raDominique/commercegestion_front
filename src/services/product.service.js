@@ -211,3 +211,22 @@ export const getShopProducts = async (params = {}) => {
     });
     return response.data;
 };
+
+/**
+ * Récupère tous les produits disponibles (GET /api/v1/products/select-all-produits)
+ * @param {Object} params - Paramètres de recherche (search, etc.)
+ * @returns {Promise<Object>} Résultat de l'API avec liste des produits
+ */
+export const selectAllProduits = async (params = {}) => {
+    const response = await axiosInstance.get(
+        '/api/v1/products/select-all-produits',
+        {
+            params,
+            headers: {
+                'accept': 'application/json',
+            },
+        }
+    );
+    return response.data;
+};
+
