@@ -5,6 +5,9 @@ import { Button } from '../../components/ui/button';
 import { getActifs } from '../../services/ledger.service';
 import { getProfile } from '../../services/auth.service';
 import { initializeTransaction } from '../../services/transaction.service';
+import { selectAllProduits } from '../../services/product.service';
+import { getMySites } from '../../services/site.service';
+import { Label } from '../../components/ui/label';
 import {
 	Dialog,
 	DialogContent,
@@ -17,6 +20,7 @@ import { formatThousands } from '../../utils/formatNumber';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
 import InfoIcon from '@mui/icons-material/Info';
+import AddHomeIcon from '@mui/icons-material/AddHome';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType';
 import { getFullMediaUrl } from '../../services/media.service';
@@ -48,6 +52,28 @@ const Actifs = () => {
 	const [selectedActifForStock, setSelectedActifForStock] = useState(null);
 	const [stockForm, setStockForm] = useState({ quantite: '', observations: '' });
 	const [loadingAddStock, setLoadingAddStock] = useState(false);
+
+	const [addProductModalOpen, setAddProductModalOpen] = useState(false);
+	const [addProductForm, setAddProductForm] = useState({ productId: '', siteId: '', quantite: '', prixUnitaire: '' });
+	const [products, setProducts] = useState([]);
+	const [sites, setSites] = useState([]);
+	const [loadingAddProduct, setLoadingAddProduct] = useState(false);
+
+	// États pour la recherche du produit
+	const [productSearch, setProductSearch] = useState('');
+	const [productOpen, setProductOpen] = useState(false);
+	const [productHighlighted, setProductHighlighted] = useState(0);
+
+	// États pour la recherche du site
+	const [siteSearch, setSiteSearch] = useState('');
+	const [siteOpen, setSiteOpen] = useState(false);
+	const [siteHighlighted, setSiteHighlighted] = useState(0);
+
+	// Produits filtrés
+	const filteredProducts = products.filter(product => (product.productName || '').toLowerCase().includes(productSearch.toLowerCase()) || (product.codeCPC || '').toLowerCase().includes(productSearch.toLowerCase()));
+
+	// Sites filtrés
+	const filteredSites = sites.filter(site => (site.siteName || '').toLowerCase().includes(siteSearch.toLowerCase()));
 
 	const fetchActifs = async () => {
 		try {
@@ -123,6 +149,61 @@ const Actifs = () => {
 		}
 	};
 
+	const handleOpenAddProductModal = async () => {
+		setAddProductModalOpen(true);
+		setProductSearch('');
+		setProductOpen(false);
+		setProductHighlighted(0);
+		setSiteSearch('');
+		setSiteOpen(false);
+		setSiteHighlighted(0);
+		try {
+			const prodRes = await selectAllProduits();
+			setProducts(Array.isArray(prodRes.data) ? prodRes.data : []);
+
+			const sitesRes = await getMySites({ limit: 100, page: 1 });
+			setSites(sitesRes.data || []);
+		} catch (error) {
+			console.error('Erreur lors du chargement des données:', error);
+			alert('Erreur lors du chargement des données');
+		}
+	};
+
+	const handleAddProductToSite = async () => {
+		if (!addProductForm.productId || !addProductForm.siteId || !addProductForm.quantite || !addProductForm.prixUnitaire) {
+			alert('Veuillez remplir tous les champs');
+			return;
+		}
+
+		try {
+			setLoadingAddProduct(true);
+			const params = {
+				productId: addProductForm.productId,
+				siteOrigineId: addProductForm.siteId,
+				quantite: addProductForm.quantite,
+				prixUnitaire: addProductForm.prixUnitaire,
+				observations: '',
+			};
+
+			await initializeTransaction(params, user?.token || localStorage.getItem('authToken'));
+			alert('Produit ajouté au site avec succès');
+			setAddProductModalOpen(false);
+			setAddProductForm({ productId: '', siteId: '', quantite: '', prixUnitaire: '' });
+			setProductSearch('');
+			setProductOpen(false);
+			setProductHighlighted(0);
+			setSiteSearch('');
+			setSiteOpen(false);
+			setSiteHighlighted(0);
+			await fetchActifs();
+		} catch (error) {
+			console.error('Erreur lors de l\'ajout du produit:', error);
+			alert('Erreur lors de l\'ajout du produit');
+		} finally {
+			setLoadingAddProduct(false);
+		}
+	};
+
 	/* ================= RENDER ================= */
 
 	return (
@@ -137,15 +218,23 @@ const Actifs = () => {
 							<p className="text-sm text-neutral-600">Historique de vos actifs</p>
 						</div>
 
-						<Input
-							placeholder="Rechercher..."
-							value={search}
-							onChange={e => {
-								setPage(1);
-								setSearch(e.target.value);
-							}}
-							className="max-w-xs border-black bg-white"
-						/>
+						<div className="flex gap-3 items-center">
+							<Button
+								onClick={handleOpenAddProductModal}
+								className="bg-violet-600 hover:bg-violet-700 text-white"
+							>
+								+ Ajouter un produit à un site
+							</Button>
+							<Input
+								placeholder="Rechercher..."
+								value={search}
+								onChange={e => {
+									setPage(1);
+									setSearch(e.target.value);
+								}}
+								className="max-w-xs border-black bg-white"
+							/>
+						</div>
 					</div>
 
 					<Card className="border-neutral-200 bg-white">
@@ -240,23 +329,23 @@ const Actifs = () => {
 								</div>
 
 								<div>								<label className="block text-sm font-medium text-neutral-700 mb-1">Site d'origine</label>
-								<Input
-									disabled
-									value={selectedActifForStock?.siteOrigineId || selectedActifForStock?.depot || ''}
-									className="border-neutral-300 bg-neutral-50"
-								/>
-							</div>
+									<Input
+										disabled
+										value={selectedActifForStock?.siteOrigineId || selectedActifForStock?.depot || ''}
+										className="border-neutral-300 bg-neutral-50"
+									/>
+								</div>
 
-							<div>
-								<label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</label>
-								<Input
-									disabled
-									value={selectedActifForStock?.prixUnitaire || '0'}
-									className="border-neutral-300 bg-neutral-50"
-								/>
-							</div>
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</label>
+									<Input
+										disabled
+										value={selectedActifForStock?.prixUnitaire || '0'}
+										className="border-neutral-300 bg-neutral-50"
+									/>
+								</div>
 
-							<div>									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</label>
+								<div>									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</label>
 									<Input
 										type="number"
 										min="1"
@@ -287,8 +376,205 @@ const Actifs = () => {
 									<Button
 										onClick={handleAddStock}
 										disabled={loadingAddStock}
+										className="bg-violet-600 hover:bg-violet-700 text-white"
 									>
 										{loadingAddStock ? 'Ajout en cours...' : 'Ajouter'}
+									</Button>
+								</div>
+							</div>
+						</DialogContent>
+					</Dialog>
+
+					{/* MODAL AJOUT PRODUIT À UN SITE */}
+					<Dialog open={addProductModalOpen} onOpenChange={setAddProductModalOpen}>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Ajouter un produit à un site</DialogTitle>
+								<DialogDescription>
+									Sélectionnez un produit et un site pour l'ajouter
+								</DialogDescription>
+							</DialogHeader>
+
+							<div className="space-y-4">
+								<div className="space-y-2">
+									<Label>Produit *</Label>
+									<div className="relative">
+										<Input
+											placeholder={products.length === 0 ? "Aucun produit disponible" : "Rechercher un produit..."}
+											value={productSearch}
+											onChange={e => { setProductSearch(e.target.value); setProductHighlighted(0); }}
+											onFocus={() => { setProductOpen(true); setProductHighlighted(0); }}
+											onBlur={() => setTimeout(() => setProductOpen(false), 150)}
+											onKeyDown={(e) => {
+												if (e.key === 'Escape') return setProductOpen(false);
+												if (!productOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+													setProductOpen(true);
+													e.preventDefault();
+													return;
+												}
+												if (productOpen) {
+													if (e.key === 'ArrowDown') {
+														e.preventDefault();
+														setProductHighlighted(i => Math.min(i + 1, Math.max(filteredProducts.length - 1, 0)));
+													} else if (e.key === 'ArrowUp') {
+														e.preventDefault();
+														setProductHighlighted(i => Math.max(i - 1, 0));
+													} else if (e.key === 'Enter') {
+														e.preventDefault();
+														const product = filteredProducts[productHighlighted];
+														if (product) {
+															setAddProductForm(prev => ({
+																...prev,
+																productId: product._id,
+																prixUnitaire: product.prixUnitaire || 0
+															}));
+															setProductSearch(product.productName);
+															setProductOpen(false);
+														}
+													}
+												}
+											}}
+											className="w-full"
+											disabled={products.length === 0}
+										/>
+										{productOpen && filteredProducts.length > 0 && (
+											<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+												{filteredProducts.map((product, idx) => (
+													<button
+														type="button"
+														key={product._id}
+														onMouseEnter={() => setProductHighlighted(idx)}
+														onClick={() => {
+															setAddProductForm(prev => ({
+																...prev,
+																productId: product._id,
+																prixUnitaire: product.prixUnitaire || 0
+															}));
+															setProductSearch(product.productName);
+															setProductOpen(false);
+														}}
+														className={`w-full text-left px-3 py-2 text-sm ${idx === productHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+													>
+														{product.productName} - {product.codeCPC}
+													</button>
+												))}
+											</div>
+										)}
+										{productOpen && filteredProducts.length === 0 && products.length > 0 && (
+											<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+												<div className="px-3 py-2 text-sm text-neutral-500">Aucun produit trouvé</div>
+											</div>
+										)}
+									</div>
+								</div>
+
+								<div className="space-y-2">
+									<Label>Site *</Label>
+									<div className="relative">
+										<Input
+											placeholder={sites.length === 0 ? "Aucun site disponible" : "Rechercher un site..."}
+											value={siteSearch}
+											onChange={e => { setSiteSearch(e.target.value); setSiteHighlighted(0); }}
+											onFocus={() => { setSiteOpen(true); setSiteHighlighted(0); }}
+											onBlur={() => setTimeout(() => setSiteOpen(false), 150)}
+											onKeyDown={(e) => {
+												if (e.key === 'Escape') return setSiteOpen(false);
+												if (!siteOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+													setSiteOpen(true);
+													e.preventDefault();
+													return;
+												}
+												if (siteOpen) {
+													if (e.key === 'ArrowDown') {
+														e.preventDefault();
+														setSiteHighlighted(i => Math.min(i + 1, Math.max(filteredSites.length - 1, 0)));
+													} else if (e.key === 'ArrowUp') {
+														e.preventDefault();
+														setSiteHighlighted(i => Math.max(i - 1, 0));
+													} else if (e.key === 'Enter') {
+														e.preventDefault();
+														const site = filteredSites[siteHighlighted];
+														if (site) {
+															setAddProductForm(prev => ({
+																...prev,
+																siteId: site._id
+															}));
+															setSiteSearch(site.siteName);
+															setSiteOpen(false);
+														}
+													}
+												}
+											}}
+											className="w-full"
+											disabled={sites.length === 0}
+										/>
+										{siteOpen && filteredSites.length > 0 && (
+											<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+												{filteredSites.map((site, idx) => (
+													<button
+														type="button"
+														key={site._id}
+														onMouseEnter={() => setSiteHighlighted(idx)}
+														onClick={() => {
+															setAddProductForm(prev => ({
+																...prev,
+																siteId: site._id
+															}));
+															setSiteSearch(site.siteName);
+															setSiteOpen(false);
+														}}
+														className={`w-full text-left px-3 py-2 text-sm ${idx === siteHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+													>
+														{site.siteName}
+													</button>
+												))}
+											</div>
+										)}
+										{siteOpen && filteredSites.length === 0 && sites.length > 0 && (
+											<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+												<div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
+											</div>
+										)}
+									</div>
+								</div>
+
+								<div>
+									<Label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</Label>
+									<Input
+										type="number"
+										min="1"
+										placeholder="0"
+										value={addProductForm.quantite}
+										onChange={(e) => setAddProductForm({ ...addProductForm, quantite: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div>
+									<Label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</Label>
+									<Input
+										type="number"
+										min="0"
+										step="0.01"
+										value={addProductForm.prixUnitaire}
+										onChange={(e) => setAddProductForm({ ...addProductForm, prixUnitaire: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div className="flex justify-end gap-2 pt-4">
+									<Button
+										variant="outline"
+										onClick={() => setAddProductModalOpen(false)}
+									>
+										Annuler
+									</Button>
+									<Button
+										onClick={handleAddProductToSite}
+										disabled={loadingAddProduct}
+										className="bg-violet-600 hover:bg-violet-700 text-white"
+									>
+										{loadingAddProduct ? 'Ajout en cours...' : 'Ajouter'}
 									</Button>
 								</div>
 							</div>
@@ -346,15 +632,15 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm">{item.detentaire || '-'}</TableCell>
 								<TableCell className="text-sm">{item.ayantDroit || '-'}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
-							<TableCell className="text-sm text-right">
-								<div className="flex gap-2 justify-end">
-									<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
-										<InfoIcon className="w-5 h-5 text-violet-600" />
-									</Button>
-									<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
-										+Stock
-									</Button>
-								</div>
+								<TableCell className="text-sm text-right">
+									<div className="flex gap-2 justify-end">
+										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
+											<InfoIcon className="w-5 h-5 text-violet-600" />
+										</Button>
+										<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
+											<AddHomeIcon className="w-4 h-4 text-orange-500" /> Initialiser stock
+										</Button>
+									</div>
 								</TableCell>
 							</TableRow>
 						))}
@@ -389,7 +675,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
 							<div className="flex gap-2 mt-2">
 								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
-								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>+Stock</Button>
+								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}><AddHomeIcon className="w-4 h-4 text-orange-500" /> Initialiser stock</Button>
 							</div>
 						</div>
 					</div>
