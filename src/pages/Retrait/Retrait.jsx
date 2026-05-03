@@ -171,10 +171,10 @@ const Retrait = () => {
 				<UserNotValidatedBanner />
 			) : (
 				<>
-					<Tabs defaultValue="list" className="space-y-6">
-						<TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
-							<TabsTrigger value="list" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Historique de mes retraits</TabsTrigger>
-							<TabsTrigger value="form" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Formulaire de retrait</TabsTrigger>
+				<Tabs defaultValue="list">
+					<TabsList>
+						<TabsTrigger value="list">Historique de mes retraits</TabsTrigger>
+						<TabsTrigger value="form">Formulaire de retrait</TabsTrigger>
 						</TabsList>
 
 						<TabsContent value="list" className="space-y-6">

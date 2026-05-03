@@ -270,10 +270,10 @@ const Depot = () => {
 				<UserNotValidatedBanner />
 			)}
 
-			<Tabs defaultValue="list" className="space-y-6">
-				<TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
-					<TabsTrigger value="list" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Historique de mes dépôts</TabsTrigger>
-					<TabsTrigger value="form" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">Formulaire de dépôt</TabsTrigger>
+		<Tabs defaultValue="list">
+			<TabsList>
+				<TabsTrigger value="list">Historique de mes dépôts</TabsTrigger>
+				<TabsTrigger value="form">Formulaire de dépôt</TabsTrigger>
 				</TabsList>
 				<TabsContent value="list" className="space-y-6">
 					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

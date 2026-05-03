@@ -224,13 +224,13 @@ export default function MonCompte() {
         </Card>
 
         {/* Tabs */}
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-xl">
-            <TabsTrigger value="profile" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+        <Tabs defaultValue="profile">
+          <TabsList>
+            <TabsTrigger value="profile">
               <UserIcon className="w-4 h-4 mr-2" />
               Profil
             </TabsTrigger>
-            <TabsTrigger value="security" className="data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+            <TabsTrigger value="security">
               <ShieldIcon className="w-4 h-4 mr-2" />
               Sécurité
             </TabsTrigger>
