@@ -8,6 +8,7 @@ import { initializeTransaction } from '../../services/transaction.service';
 import { selectAllProduits } from '../../services/product.service';
 import { getMySites } from '../../services/site.service';
 import { Label } from '../../components/ui/label';
+import { toast } from 'sonner';
 import {
 	Dialog,
 	DialogContent,
@@ -121,7 +122,7 @@ const Actifs = () => {
 
 	const handleAddStock = async () => {
 		if (!stockForm.quantite || !selectedActifForStock) {
-			alert('Veuillez remplir la quantité');
+			toast.error('Veuillez remplir la quantité');
 			return;
 		}
 
@@ -136,14 +137,14 @@ const Actifs = () => {
 			};
 
 			await initializeTransaction(params, user?.token || localStorage.getItem('authToken'));
-			alert('Stock ajouté avec succès');
+			toast.success('Stock ajouté avec succès');
 			setStockModalOpen(false);
 			setStockForm({ quantite: '', observations: '' });
 			setSelectedActifForStock(null);
 			await fetchActifs();
 		} catch (error) {
 			console.error('Erreur lors de l\'ajout du stock:', error);
-			alert('Erreur lors de l\'ajout du stock');
+			toast.error('Erreur lors de l\'ajout du stock');
 		} finally {
 			setLoadingAddStock(false);
 		}
@@ -165,13 +166,13 @@ const Actifs = () => {
 			setSites(sitesRes.data || []);
 		} catch (error) {
 			console.error('Erreur lors du chargement des données:', error);
-			alert('Erreur lors du chargement des données');
+			toast.error('Erreur lors du chargement des données');
 		}
 	};
 
 	const handleAddProductToSite = async () => {
 		if (!addProductForm.productId || !addProductForm.siteId || !addProductForm.quantite || !addProductForm.prixUnitaire) {
-			alert('Veuillez remplir tous les champs');
+			toast.error('Veuillez remplir tous les champs');
 			return;
 		}
 
@@ -186,7 +187,7 @@ const Actifs = () => {
 			};
 
 			await initializeTransaction(params, user?.token || localStorage.getItem('authToken'));
-			alert('Produit ajouté au site avec succès');
+			toast.success('Produit ajouté au site avec succès');
 			setAddProductModalOpen(false);
 			setAddProductForm({ productId: '', siteId: '', quantite: '', prixUnitaire: '' });
 			setProductSearch('');
@@ -198,7 +199,7 @@ const Actifs = () => {
 			await fetchActifs();
 		} catch (error) {
 			console.error('Erreur lors de l\'ajout du produit:', error);
-			alert('Erreur lors de l\'ajout du produit');
+			toast.error('Erreur lors de l\'ajout du produit');
 		} finally {
 			setLoadingAddProduct(false);
 		}
@@ -397,7 +398,7 @@ const Actifs = () => {
 
 							<div className="space-y-4">
 								<div className="space-y-2">
-									<Label>Produit *</Label>
+									<Label>Produit</Label>
 									<div className="relative">
 										<Input
 											placeholder={products.length === 0 ? "Aucun produit disponible" : "Rechercher un produit..."}
@@ -469,7 +470,7 @@ const Actifs = () => {
 								</div>
 
 								<div className="space-y-2">
-									<Label>Site *</Label>
+									<Label>Site</Label>
 									<div className="relative">
 										<Input
 											placeholder={sites.length === 0 ? "Aucun site disponible" : "Rechercher un site..."}
