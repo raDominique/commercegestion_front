@@ -398,7 +398,7 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 
 							return (
 								<TableRow key={item._id}>
-									<TableCell className="text-sm font-semibold text-neutral-900">{produit}</TableCell>
+									<TableCell className="text-sm">{produit}</TableCell>
 									<TableCell>
 										{item.productId?.productImage ? (
 											<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
@@ -406,15 +406,15 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 											<span className="text-neutral-400">-</span>
 										)}
 									</TableCell>
-									<TableCell className="text-sm text-neutral-600">{operatorName}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{detenteur}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{ayantDroit}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{depart}</TableCell>
-									<TableCell className="text-sm text-neutral-600">{arrivee}</TableCell>
-									<TableCell className="text-sm text-neutral-600 text-right">{quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600 text-right">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
-									<TableCell className="text-sm text-neutral-600"><Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge></TableCell>
-									<TableCell className="text-sm text-neutral-600">{date ? dateFormat(date) : '-'}</TableCell>
+									<TableCell className="text-sm">{operatorName}</TableCell>
+									<TableCell className="text-sm">{detenteur}</TableCell>
+									<TableCell className="text-sm">{ayantDroit}</TableCell>
+									<TableCell className="text-sm">{depart}</TableCell>
+									<TableCell className="text-sm">{arrivee}</TableCell>
+									<TableCell className="text-sm text-right">{quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</TableCell>
+									<TableCell className="text-sm text-right">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
+									<TableCell className="text-sm"><Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge></TableCell>
+									<TableCell className="text-sm">{date ? dateFormat(date) : '-'}</TableCell>
 								</TableRow>
 							);
 						})}

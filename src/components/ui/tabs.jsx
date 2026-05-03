@@ -35,7 +35,7 @@ function TabsTrigger({ className, ...props }) {
         "text-sm font-normal whitespace-nowrap text-center",
         "bg-gray-100 text-gray-700",
         "border border-b-2 border-gray-200 border-b-violet-300",
-        "transition-colors duration-100",
+        "transition-colors duration-100 cursor-pointer",
         // Hover
         "hover:bg-gray-200 hover:text-gray-900",
         // Actif — fond panel, bordure colorée, bas masqué
