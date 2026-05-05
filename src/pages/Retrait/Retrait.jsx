@@ -193,20 +193,17 @@ const Retrait = () => {
 								<div className="flex justify-end items-center gap-4 mt-4">
 									<div className="flex items-center gap-2">
 										<label htmlFor="retrait-limit" className="text-sm text-neutral-600">Par page</label>
-										<select
-											id="retrait-limit"
-											className="h-9 rounded-md border border-neutral-300 bg-white px-2 text-sm"
-											value={limit}
-											onChange={(e) => {
-												setLimit(Number(e.target.value));
-												setPage(1);
-											}}
-										>
-											<option value={10}>10</option>
-											<option value={20}>20</option>
-											<option value={50}>50</option>
-											<option value={100}>100</option>
-										</select>
+										<Select value={String(limit)} onValueChange={(value) => { setLimit(Number(value)); setPage(1); }}>
+											<SelectTrigger className="bg-white">
+												<SelectValue placeholder="Par page" />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value={String(10)}>10 / page</SelectItem>
+												<SelectItem value={String(20)}>20 / page</SelectItem>
+												<SelectItem value={String(50)}>50 / page</SelectItem>
+												<SelectItem value={String(100)}>100 / page</SelectItem>
+											</SelectContent>
+										</Select>
 									</div>
 									<Button
 										variant="outline"

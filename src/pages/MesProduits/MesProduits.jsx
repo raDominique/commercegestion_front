@@ -3,6 +3,13 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '../../components/ui/select.jsx';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import InfoIcon from '@mui/icons-material/Info';
@@ -777,36 +784,32 @@ const MesProduits = () => {
             />
           </div>
           <div className="flex items-center gap-2 mt-2 md:mt-0">
-            <label htmlFor="validationFilter" className="text-sm text-neutral-700">Validation :</label>
-            <select
-              id="validationFilter"
-              value={validationFilter}
-              onChange={e => {
-                setPage(1);
-                setValidationFilter(e.target.value);
-              }}
-              className="min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 md:w-auto"
-            >
-              <option value="all">Tous</option>
-              <option value="true">Validés</option>
-              <option value="false">Attente de validation</option>
-            </select>
+            <div className="w-full md:w-48">
+              <Select value={validationFilter} onValueChange={value => { setPage(1); setValidationFilter(value); }}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Validation" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="true">Validés</SelectItem>
+                  <SelectItem value="false">Attente de validation</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="flex items-center gap-2 mt-2 md:mt-0">
-            <label htmlFor="isStockerFilter" className="text-sm text-neutral-700">Stocké :</label>
-            <select
-              id="isStockerFilter"
-              value={isStockerFilter}
-              onChange={e => {
-                setPage(1);
-                setIsStockerFilter(e.target.value);
-              }}
-              className="min-w-0 border border-neutral-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 md:w-auto"
-            >
-              <option value="all">Tous</option>
-              <option value="true">Stockés</option>
-              <option value="false">Non stockés</option>
-            </select>
+            <div className="w-full md:w-48">
+              <Select value={isStockerFilter} onValueChange={value => { setPage(1); setIsStockerFilter(value); }}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Stocké" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="true">Stockés</SelectItem>
+                  <SelectItem value="false">Non stockés</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <Card className="border-neutral-200 bg-white">
