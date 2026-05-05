@@ -34,7 +34,7 @@ export function Layout({ children }) {
   ].includes(r.path)).map(r => ({ path: r.path, label: r.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()), element: r.element }));
 
   const adminNavItems = privateRoutes.filter(r => r.role && r.role.includes('admin') && [
-    '/admin/dashboard', '/admin/utilisateurs', '/admin/produits', '/admin/categories'
+    '/admin/utilisateurs', '/admin/produits', '/admin/categories'
   ].includes(r.path)).map(r => ({ path: r.path, label: r.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()), element: r.element }));
 
   const isActive = (path) => location.pathname === path;

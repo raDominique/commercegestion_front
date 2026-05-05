@@ -27,7 +27,6 @@ import Boutique from '../pages/Boutique/Boutique.jsx';
 import Actifs from '../pages/Actifs/Actifs.jsx';
 import Passifs from '../pages/Passifs/Passifs.jsx';
 import Panier from '../pages/Panier/Panier.jsx';
-import AdminDashboard from '../pages/Administration/AdminDashboard.jsx';
 import AdminUsers from '../pages/Administration/AdminUsers.jsx';
 import AdminProducts from '../pages/Administration/AdminProducts.jsx';
 // import AdminCategories from '../pages/Administration/AdminCategories.jsx';
@@ -63,7 +62,6 @@ export const privateRoutes = [
     { path: '/mes-sites', element: MesSites, role: 'Utilisateur,Admin', userValidated: true, icon: Public },
     { path: '/parrainages', element: Parrainages, role: 'Utilisateur,Admin', userValidated: true, icon: Group },
     // Routes strictement admin
-    { path: '/admin/dashboard', element: AdminDashboard, role: 'Admin', icon: Dashboard, label: 'Tableau de bord' },
     { path: '/admin/produits', element: AdminProducts, role: 'Admin', icon: Inventory, label: 'Produits' },
     { path: '/admin/cpc', element: AdminCpc, role: 'Admin', icon: QrCodeIcon, label: 'CPC' },
     { path: '/admin/utilisateurs', element: AdminUsers, role: 'Admin', icon: Group, label: 'Utilisateurs' },

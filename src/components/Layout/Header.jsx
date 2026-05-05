@@ -81,7 +81,6 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
 
     const adminNavItems = privateRoutes.filter(
         r => r.role && r.role.includes('Admin') && [
-            '/admin/dashboard',
             '/admin/produits',
             '/admin/utilisateurs',
             '/admin/cpc'
