@@ -337,7 +337,7 @@ const Depot = () => {
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								{/* 1. Site d'origine avec recherche */}
 								<div className="space-y-2 md:col-span-2">
-									<Label>1. Site d'origine *</Label>
+									<Label required>1. Site d'origine</Label>
 									<div className="relative">
 										<Input
 											placeholder="Rechercher le site d'origine..."
@@ -401,7 +401,7 @@ const Depot = () => {
 								{/* 2. Produit du site avec recherche */}
 								{transferForm.siteOrigineId && (
 									<div className="space-y-2 md:col-span-2">
-										<Label>2. Produit du site *</Label>
+										<Label required>2. Produit du site</Label>
 										<div className="relative">
 											<Input
 												placeholder={productsOnSite.length === 0 ? "Aucun produit disponible" : "Rechercher un produit..."}
@@ -464,11 +464,16 @@ const Depot = () => {
 								{transferForm.productId && (
 									<>
 										<div className="space-y-2">
-											<Label>3. Quantité *</Label>
+											<Label required>3. Quantité (Stock disponible: {formatThousands(maxTransferQty || 0)})</Label>
 											<Input
 												name="quantite"
 												value={transferForm.quantite}
-												onChange={e => setTransferForm(f => ({ ...f, quantite: e.target.value }))}
+												onChange={e => {
+													const qty = Number(e.target.value);
+													if (qty <= (maxTransferQty || 0) || e.target.value === '') {
+														setTransferForm(f => ({ ...f, quantite: e.target.value }));
+													}
+												}}
 												required
 												placeholder="Quantité à transférer"
 												className="border-neutral-300"
@@ -478,16 +483,16 @@ const Depot = () => {
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label>3. Prix unitaire *</Label>
+											<Label required>3. Prix unitaire</Label>
 											<Input
 												name="prixUnitaire"
-												value={transferForm.prixUnitaire}
-												onChange={e => setTransferForm(f => ({ ...f, prixUnitaire: e.target.value }))}
+												value={transferForm.prixUnitaire ? formatThousands(transferForm.prixUnitaire) : ''}
+												readOnly
+												disabled
 												required
-												placeholder="Prix unitaire"
-												className="border-neutral-300"
-												type="number"
-												min="0"
+												placeholder="Défini automatiquement"
+												className="border-neutral-300 bg-neutral-100"
+												type="text"
 											/>
 										</div>
 									</>
@@ -496,7 +501,7 @@ const Depot = () => {
 								{/* 4. Détenteur avec recherche */}
 								{transferForm.productId && (
 									<div className="space-y-2">
-										<Label>4. Détenteur *</Label>
+										<Label required>4. Détenteur</Label>
 										<div className="relative">
 											<Input
 												placeholder="Rechercher un détenteur..."
@@ -561,7 +566,7 @@ const Depot = () => {
 								{/* 4. Ayant droit avec recherche */}
 								{transferForm.productId && (
 									<div className="space-y-2">
-										<Label>4. Ayant droit *</Label>
+									<Label required>4. Ayant droit</Label>
 										<div className="relative">
 											<Input
 												placeholder="Rechercher l'ayant droit..."
@@ -626,7 +631,7 @@ const Depot = () => {
 								{/* 5. Site de destination avec recherche */}
 								{transferForm.productId && (
 									<div className="space-y-2 md:col-span-2">
-										<Label>5. Site de destination *</Label>
+									<Label required>5. Site de destination</Label>
 										<div className="relative">
 											<Input
 												placeholder="Rechercher le site de destination..."

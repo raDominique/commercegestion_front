@@ -384,7 +384,7 @@ const OperationsAValider = () => {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="motifRejet">Motif du rejet *</Label>
+              <Label htmlFor="motifRejet" required>Motif du rejet</Label>
               <Input
                 id="motifRejet"
                 placeholder="Veuillez indiquer le motif du rejet"

@@ -493,8 +493,8 @@ const MesProduits = () => {
                         onClick={() => handleOpenDepositModal(product._id)}
                         variant="outline"
                         size="sm"
-                        disabled={product.isStocker}
-                        className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
+                        disabled={product.isStocker || product.validation === false}
+                        className={product.isStocker || product.validation === false ? 'opacity-50 cursor-not-allowed' : ''}
                       >
                         Stocker dans un site
                       </Button>
@@ -575,8 +575,8 @@ const MesProduits = () => {
                       onClick={() => handleOpenDepositModal(product._id)}
                       variant="outline"
                       size="sm"
-                      disabled={product.isStocker}
-                      className={product.isStocker ? 'opacity-50 cursor-not-allowed' : ''}
+                      disabled={product.isStocker || product.validation === false}
+                      className={product.isStocker || product.validation === false ? 'opacity-50 cursor-not-allowed' : ''}
                     >
                       Ajouter
                     </Button>

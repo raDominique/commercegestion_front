@@ -252,7 +252,7 @@ export default function Panier() {
                 </div>
 
                 <div className="space-y-3 mb-4">
-                  <Label htmlFor="address">Adresse de livraison *</Label>
+                  <Label htmlFor="address" required>Adresse de livraison</Label>
                   <Textarea
                     id="address"
                     placeholder="Entrez votre adresse complète"

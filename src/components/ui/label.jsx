@@ -2,7 +2,7 @@ import React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { cn } from "./utils";
 
-function Label({ className, ...props }) {
+function Label({ className, required, children, ...props }) {
   return (
     <LabelPrimitive.Root
       data-slot="label"
@@ -11,7 +11,10 @@ function Label({ className, ...props }) {
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      {required && <span className="text-red-500 ml-0.5">*</span>}
+    </LabelPrimitive.Root>
   );
 }
 
