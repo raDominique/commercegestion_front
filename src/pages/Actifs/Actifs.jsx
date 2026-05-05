@@ -224,7 +224,7 @@ const Actifs = () => {
 								onClick={handleOpenAddProductModal}
 								className="bg-violet-600 hover:bg-violet-700 text-white"
 							>
-								+ Ajouter un produit à un site
+								+ Initialiser un produit à un site
 							</Button>
 							<Input
 								placeholder="Rechercher..."
@@ -386,13 +386,13 @@ const Actifs = () => {
 						</DialogContent>
 					</Dialog>
 
-					{/* MODAL AJOUT PRODUIT À UN SITE */}
+					{/* MODAL INITIALISER PRODUIT À UN SITE */}
 					<Dialog open={addProductModalOpen} onOpenChange={setAddProductModalOpen}>
 						<DialogContent>
 							<DialogHeader>
-								<DialogTitle>Ajouter un produit à un site</DialogTitle>
+								<DialogTitle>Initialiser un produit à un site</DialogTitle>
 								<DialogDescription>
-									Sélectionnez un produit et un site pour l'ajouter
+									Sélectionnez un produit et un site pour l'initialiser
 								</DialogDescription>
 							</DialogHeader>
 
@@ -639,7 +639,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 											<InfoIcon className="w-5 h-5 text-violet-600" />
 										</Button>
 										<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
-											<AddHomeIcon className="w-4 h-4 text-orange-500" /> Initialiser stock
+											<AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter du stock
 										</Button>
 									</div>
 								</TableCell>
@@ -676,7 +676,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
 							<div className="flex gap-2 mt-2">
 								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
-								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}><AddHomeIcon className="w-4 h-4 text-orange-500" /> Initialiser stock</Button>
+								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}><AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter du stock</Button>
 							</div>
 						</div>
 					</div>
