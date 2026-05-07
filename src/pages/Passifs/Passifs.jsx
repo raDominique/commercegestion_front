@@ -158,8 +158,8 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 							<TableHead className="text-xs text-neutral-600">Produit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Type</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Quantité</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Prix unitaire</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Montant</TableHead>
+							{/* <TableHead className="text-xs text-neutral-600 text-right">Prix unitaire</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right">Montant</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">Départ</TableHead>
 							<TableHead className="text-xs text-neutral-600">Arrivée</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
@@ -172,8 +172,8 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 						{passifs.map((item, idx) => {
 							const produit = item.productId?.productName || item.productId?.codeCPC || '-';
 							const quantite = item.quantite ?? '-';
-							const prixUnitaire = item.prixUnitaire ?? null;
-							const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
+							// const prixUnitaire = item.prixUnitaire ?? null;
+							// const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
 							const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
 							const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
 							const detenteur = item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
@@ -184,8 +184,8 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<TableCell className="text-sm">{produit}</TableCell>
 									<TableCell className="text-sm">{item.type || '-'}</TableCell>
 									<TableCell className="text-sm text-right">{quantite}</TableCell>
-									<TableCell className="text-sm text-right">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
-									<TableCell className="text-sm text-right">{montant !== null ? formatThousands(montant) : '-'}</TableCell>
+									{/* <TableCell className="text-sm text-right">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
+									<TableCell className="text-sm text-right">{montant !== null ? formatThousands(montant) : '-'}</TableCell> */}
 									<TableCell className="text-sm">{depart}</TableCell>
 									<TableCell className="text-sm">{arrivee}</TableCell>
 									<TableCell className="text-sm">{detenteur}</TableCell>
