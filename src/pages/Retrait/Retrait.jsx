@@ -239,10 +239,10 @@ const Retrait = () => {
 								<form className="space-y-4 p-4" onSubmit={handleWithdrawalSubmit}>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 										<div className="space-y-2 md:col-span-2">
-											<Label htmlFor="actifId">Passif à retirer</Label>
+											<Label htmlFor="actifId">Actif à retirer</Label>
 											<Select value={withdrawalForm.actifId} onValueChange={handleSelectPassifForWithdrawal}>
 												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner un passif" />
+													<SelectValue placeholder="Sélectionner un actif" />
 												</SelectTrigger>
 												<SelectContent>
 													{passifsList.map(item => (

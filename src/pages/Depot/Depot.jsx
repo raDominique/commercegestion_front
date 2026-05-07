@@ -479,7 +479,7 @@ const Depot = () => {
 												max={maxTransferQty || undefined}
 											/>
 										</div>
-										<div className="space-y-2">
+										{/* <div className="space-y-2">
 											<Label required>3. Prix unitaire</Label>
 											<Input
 												name="prixUnitaire"
@@ -491,7 +491,7 @@ const Depot = () => {
 												className="border-neutral-300 bg-neutral-100"
 												type="text"
 											/>
-										</div>
+										</div> */}
 									</>
 								)}
 
@@ -561,7 +561,7 @@ const Depot = () => {
 								)}
 
 								{/* 4. Ayant droit avec recherche */}
-								{transferForm.productId && (
+								{/* {transferForm.productId && (
 									<div className="space-y-2">
 									<Label required>4. Ayant droit</Label>
 										<div className="relative">
@@ -623,7 +623,7 @@ const Depot = () => {
 											)}
 										</div>
 									</div>
-								)}
+								)} */}
 
 								{/* 5. Site de destination avec recherche */}
 								{transferForm.productId && (

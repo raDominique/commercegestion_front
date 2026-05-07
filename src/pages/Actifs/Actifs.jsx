@@ -224,7 +224,7 @@ const Actifs = () => {
 								onClick={handleOpenAddProductModal}
 								className="bg-violet-600 hover:bg-violet-700 text-white"
 							>
-								+ Initialiser un produit à un site
+								Initialisation du stock
 							</Button>
 							<Input
 								placeholder="Rechercher..."

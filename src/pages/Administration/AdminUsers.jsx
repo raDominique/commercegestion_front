@@ -8,6 +8,7 @@ import { Switch } from '../../components/ui/switch';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import useScreenType from '../../utils/useScreenType';
 import formatBirthDate from '../../utils/formatBirthDate';
+import useDateFormat from '../../utils/useDateFormat';
 import SearchIcon from '@mui/icons-material/Search';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import InfoIcon from '@mui/icons-material/Info';
@@ -21,6 +22,7 @@ import { getFullMediaUrl } from '../../services/media.service';
 
 export default function AdminUsers() {
     const [searchTerm, setSearchTerm] = useState('');
+    const dateFormat = useDateFormat();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
@@ -39,7 +41,6 @@ export default function AdminUsers() {
         name: apiUser.userName + (apiUser.userFirstname ? ' ' + apiUser.userFirstname : ''),
         email: apiUser.userEmail,
         role: apiUser.userAccess && apiUser.userAccess.toLowerCase() === 'admin' ? 'admin' : 'user',
-        balance: apiUser.userTotalSolde || 0,
         status: apiUser.deletedAt ? 'Suspendu' : (apiUser.userValidated ? 'Actif' : 'Non validé'),
         createdAt: apiUser.createdAt,
         emailVerified: apiUser.userEmailVerified,
@@ -335,7 +336,6 @@ export default function AdminUsers() {
                                     <div><b>Adresse :</b> {detailUser.userAddress}</div>
                                     <div><b>Longitude :</b> {detailUser.userMainLng}</div>
                                     <div><b>Latitude :</b> {detailUser.userMainLat}</div>
-                                    <div><b>Solde :</b> {detailUser.userTotalSolde} Ariary</div>
                                     <div><b>Validé :</b> {detailUser.userValidated ? 'Oui' : 'Non'}</div>
                                     <div><b>Email vérifié :</b> {detailUser.userEmailVerified ? 'Oui' : 'Non'}</div>
                                     <div><b>Numéro Parrain 1 :</b> {detailUser.parrain1ID}</div>
@@ -343,7 +343,7 @@ export default function AdminUsers() {
                                     <div><b>Type document :</b> {detailUser.documentType}</div>
                                     <div><b>Numéro document :</b> {detailUser.identityCardNumber}</div>
                                     <div><b>Manager :</b> {detailUser.managerName} ({detailUser.managerEmail})</div>
-                                    <div><b>Date création :</b> {new Date(detailUser.createdAt).toLocaleString()}</div>
+                                    <div><b>Date création :</b> {detailUser.createdAt ? dateFormat(detailUser.createdAt) : '-'}</div>
 
                                     {/* Téléchargement documents selon le type d'utilisateur */}
                                     {Array.isArray(detailUser.identityDocument) && detailUser.identityDocument.length > 0 && (
@@ -442,6 +442,7 @@ export default function AdminUsers() {
 
 function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setModalOpen, handleShowUserDetail }) {
     const { isDesktop } = useScreenType();
+    const dateFormat = useDateFormat();
 
     if (loading) {
         return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
@@ -459,8 +460,8 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
                         <TableHead className="text-xs text-neutral-600">N° membre</TableHead>
                         <TableHead className="text-xs text-neutral-600">Utilisateur</TableHead>
                         <TableHead className="text-xs text-neutral-600">Email</TableHead>
-                        <TableHead className="text-xs text-neutral-600">Solde</TableHead>
                         <TableHead className="text-xs text-neutral-600">Vérification e-mail</TableHead>
+                        <TableHead className="text-xs text-neutral-600">Date d'inscription</TableHead>
                         <TableHead className="text-xs text-neutral-600">Rôle</TableHead>
                         <TableHead className="text-xs text-neutral-600">Statut</TableHead>
                         <TableHead className="text-xs text-neutral-600 text-right">Actions</TableHead>
@@ -481,10 +482,10 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
                             </TableCell>
                             <TableCell><p className={`text-sm ${user.status === 'Actif' ? 'text-neutral-900' : 'text-neutral-400'}`}>{user.name}</p></TableCell>
                             <TableCell className={`text-sm ${user.status === 'Actif' ? 'text-neutral-600' : 'text-neutral-400'}`}>{user.email}</TableCell>
-                            <TableCell className="text-sm text-neutral-900">{user.balance.toLocaleString()} Ariary</TableCell>
                             <TableCell>
                                 <Badge variant={user.emailVerified ? 'default' : 'secondary'} className={user.emailVerified ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{user.emailVerified ? 'Vérifié' : 'Non vérifié'}</Badge>
                             </TableCell>
+                            <TableCell className="text-sm text-neutral-900">{user.createdAt ? dateFormat(user.createdAt) : '-'}</TableCell>
                             <TableCell>
                                 <div className="flex items-center gap-2">
                                     <Switch aria-label="Basculer rôle admin" checked={user.role === 'admin'} onCheckedChange={() => { setModalUserId(user.id); setModalAction('role'); setModalOpen(true); }} />
@@ -526,7 +527,6 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
                             </div>
                             <div className="mt-3 flex flex-wrap gap-2 items-center">
                                 <Badge variant="outline" className="text-xs">{user.referralCode || 'N/A'}</Badge>
-                                <div className="text-sm text-neutral-900">{user.balance.toLocaleString()} Ariary</div>
                                 <Badge variant={user.emailVerified ? 'default' : 'secondary'} className="text-xs">{user.emailVerified ? 'Vérifié' : 'Non vérifié'}</Badge>
                                 <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">{user.role === 'admin' ? 'Admin' : 'Utilisateur'}</Badge>
                                 <Badge variant={user.status === 'Actif' ? 'default' : 'secondary'} className="text-xs">{user.status}</Badge>
