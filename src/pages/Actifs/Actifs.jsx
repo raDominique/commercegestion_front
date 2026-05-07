@@ -126,11 +126,17 @@ const Actifs = () => {
 			return;
 		}
 
+		const siteOrigineId = selectedActifForStock.depotId || selectedActifForStock.siteOrigineId;
+		if (!siteOrigineId) {
+			toast.error("Dépôt d'origine introuvable");
+			return;
+		}
+
 		try {
 			setLoadingAddStock(true);
 			const params = {
 				productId: selectedActifForStock.id,
-				siteOrigineId: selectedActifForStock.siteOrigineId || selectedActifForStock.depot,
+				siteOrigineId,
 				quantite: stockForm.quantite,
 				prixUnitaire: selectedActifForStock.prixUnitaire || 0,
 				observations: stockForm.observations,
@@ -605,8 +611,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Total (Ar)</TableHead>
+							{/* <TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right">Total (Ar)</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
@@ -628,8 +634,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm">{item.depot || '-'}</TableCell>
 								<TableCell className="text-sm">{item.depotAdresse || '-'}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
-								<TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
-								<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell>
+								{/* <TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
+								<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell> */}
 								<TableCell className="text-sm">{item.detentaire || '-'}</TableCell>
 								<TableCell className="text-sm">{item.ayantDroit || '-'}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
