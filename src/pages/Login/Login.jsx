@@ -114,6 +114,7 @@ export default function Login() {
           </div>
           <Button
             type="submit"
+            status={loading ? "loading" : "active"}
             className={`w-full bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center`}
             disabled={loading}
           >

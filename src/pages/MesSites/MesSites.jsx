@@ -173,7 +173,7 @@ const MesSites = () => {
           </p>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-violet-600 hover:bg-violet-700 text-white mt-2">
+              <Button status="active" className="bg-violet-600 hover:bg-violet-700 text-white mt-2">
                 <AddIcon className="w-4 h-4 mr-2" />
                 Ajouter un site
               </Button>
@@ -240,6 +240,7 @@ const MesSites = () => {
                 </div>
                 <Button
                   type="submit"
+                  status={loading ? "loading" : "active"}
                   className="w-full bg-violet-600 hover:bg-violet-700 text-white"
                   disabled={loading}
                 >
@@ -422,10 +423,11 @@ const MesSites = () => {
               </p>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={loadingDelete}>
+              <Button variant="outline" status="inactive" onClick={() => setIsDeleteDialogOpen(false)} disabled={loadingDelete}>
                 Annuler
               </Button>
               <Button
+                status={loadingDelete ? "loading" : "active"}
                 className="bg-red-600 hover:bg-red-700 text-white"
                 onClick={confirmDeleteSite}
                 disabled={loadingDelete}

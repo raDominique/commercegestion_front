@@ -761,8 +761,8 @@ const MesProduits = () => {
                       </div> */}
                   </div>
                   <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" type="button" onClick={() => setAddModalOpen(false)} disabled={adding}>Annuler</Button>
-                    <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit" disabled={adding}>
+                    <Button variant="outline" type="button" status="inactive" onClick={() => setAddModalOpen(false)} disabled={adding}>Annuler</Button>
+                    <Button variant="default" status={adding ? "loading" : "active"} className="bg-violet-600 text-white hover:bg-violet-700" type="submit" disabled={adding}>
                       {adding ? 'Ajout...' : 'Ajouter'}
                     </Button>
                   </div>
@@ -937,8 +937,8 @@ const MesProduits = () => {
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" type="button" onClick={() => setEditModalOpen(false)}>Annuler</Button>
-              <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Modifier</Button>
+              <Button variant="outline" type="button" status="inactive" onClick={() => setEditModalOpen(false)}>Annuler</Button>
+              <Button variant="default" status="active" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Modifier</Button>
             </div>
           </form>
         </DialogContent>
@@ -955,9 +955,9 @@ const MesProduits = () => {
           </DialogHeader>
           <div className="flex justify-end gap-2 mt-4">
             <DialogClose asChild>
-              <Button variant="outline">Annuler</Button>
+              <Button variant="outline" status="inactive">Annuler</Button>
             </DialogClose>
-            <Button variant="default" className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDeleteProduct} disabled={deleting}>
+            <Button variant="default" status={deleting ? "loading" : "active"} className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDeleteProduct} disabled={deleting}>
               {deleting ? 'Suppression...' : 'Confirmer la suppression'}
             </Button>
           </div>
@@ -1181,8 +1181,8 @@ const MesProduits = () => {
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" type="button" onClick={() => setDepositModalOpen(false)}>Annuler</Button>
-              <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Déposer</Button>
+              <Button variant="outline" type="button" status="inactive" onClick={() => setDepositModalOpen(false)}>Annuler</Button>
+              <Button variant="default" status="active" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Déposer</Button>
             </div>
           </form>
         </DialogContent>

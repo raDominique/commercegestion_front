@@ -301,7 +301,7 @@ export default function MonCompte() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white" disabled={updating}>
+                <Button type="submit" status={updating ? "loading" : "active"} className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white" disabled={updating}>
                   {updating ? 'Enregistrement...' : 'Enregistrer les modifications'}
                 </Button>
                 {/* Modal de confirmation */}
@@ -314,10 +314,10 @@ export default function MonCompte() {
                       </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowConfirm(false)} disabled={updating} className="w-full sm:w-auto">
+                      <Button variant="outline" status="inactive" onClick={() => setShowConfirm(false)} disabled={updating} className="w-full sm:w-auto">
                         Annuler
                       </Button>
-                      <Button onClick={handleConfirmUpdate} className="bg-violet-600 text-white w-full sm:w-auto" disabled={updating}>
+                      <Button onClick={handleConfirmUpdate} status={updating ? "loading" : "active"} className="bg-violet-600 text-white w-full sm:w-auto" disabled={updating}>
                         Confirmer
                       </Button>
                     </DialogFooter>
@@ -363,7 +363,7 @@ export default function MonCompte() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center" disabled={changingPassword}>
+                <Button type="submit" status={changingPassword ? "loading" : "active"} className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center" disabled={changingPassword}>
                   {changingPassword ? (
                     <span className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                   ) : null}

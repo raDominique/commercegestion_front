@@ -461,10 +461,11 @@ const Parrainage = () => {
                                         </div>
                                         <div className="flex justify-end gap-2 mt-4">
                                             <DialogClose asChild>
-                                                <Button variant="outline">Fermer</Button>
+                                                <Button variant="outline" status="inactive">Fermer</Button>
                                             </DialogClose>
                                             <Button
                                                 variant="default"
+                                                status={actionLoading ? "loading" : (detailUser.userValidated ? "inactive" : "active")}
                                                 className="bg-green-600 text-white hover:bg-green-700"
                                                 disabled={actionLoading || detailUser.userValidated}
                                                 onClick={() => { if (detailUser && detailUser._id) handleApprove(detailUser._id, true); }}

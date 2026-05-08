@@ -321,14 +321,16 @@ const OperationsAValider = () => {
           </div>
           <DialogFooter>
             <Button 
-              variant="outline" 
+              variant="outline"
+              status="inactive" 
               onClick={() => setIsApproveDialogOpen(false)}
               disabled={actionLoading}
             >
               Annuler
             </Button>
             <Button 
-              variant="default" 
+              variant="default"
+              status={actionLoading ? "loading" : "active"} 
               onClick={handleConfirmApprove}
               disabled={actionLoading}
             >
@@ -377,14 +379,16 @@ const OperationsAValider = () => {
           </div>
           <DialogFooter>
             <Button 
-              variant="outline" 
+              variant="outline"
+              status="inactive" 
               onClick={() => setIsRejectDialogOpen(false)}
               disabled={actionLoading}
             >
               Annuler
             </Button>
             <Button 
-              variant="destructive" 
+              variant="destructive"
+              status={actionLoading ? "loading" : (motifRejet.trim() ? "active" : "inactive")} 
               onClick={handleConfirmReject}
               disabled={actionLoading || !motifRejet.trim()}
             >

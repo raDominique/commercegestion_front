@@ -274,6 +274,7 @@ export default function Panier() {
                 </div>
 
                 <Button
+                  status="active"
                   onClick={handleCheckout}
                   className="w-full bg-violet-600 hover:bg-violet-700 text-white"
                 >
@@ -283,6 +284,7 @@ export default function Panier() {
 
                 <Button
                   variant="outline"
+                  status="inactive"
                   onClick={() => navigate('/boutique')}
                   className="w-full border-neutral-300 mt-2"
                 >

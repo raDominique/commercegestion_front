@@ -237,7 +237,7 @@ const AdminCpc = () => {
                     <div className="flex gap-2">
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700">
+                                <Button variant="default" status="active" className="bg-violet-600 text-white hover:bg-violet-700">
                                     <AddIcon className="w-4 h-4 mr-2" />
                                     Ajouter un CPC
                                 </Button>
@@ -284,9 +284,9 @@ const AdminCpc = () => {
 
                                     <DialogFooter>
                                         <DialogClose asChild>
-                                            <Button variant="outline" type="button">Annuler</Button>
+                                            <Button variant="outline" type="button" status="inactive">Annuler</Button>
                                         </DialogClose>
-                                        <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit" disabled={saving}>
+                                        <Button variant="default" status={saving ? "loading" : "active"} className="bg-violet-600 text-white hover:bg-violet-700" type="submit" disabled={saving}>
                                             {saving ? 'Enregistrement...' : 'Ajouter'}
                                         </Button>
                                     </DialogFooter>
@@ -302,6 +302,7 @@ const AdminCpc = () => {
                         </Dialog>
                         <Button
                             variant="outline"
+                            status={importing ? "loading" : "inactive"}
                             className="border-violet-600 text-violet-700 hover:bg-violet-50"
                             onClick={handleImportClick}
                             disabled={importing}
@@ -427,9 +428,9 @@ const AdminCpc = () => {
                     </form>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Annuler</Button>
+                            <Button variant="outline" status="inactive">Annuler</Button>
                         </DialogClose>
-                        <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" onClick={handleUpdateCpc} disabled={saving}>
+                        <Button variant="default" status={saving ? "loading" : "active"} className="bg-violet-600 text-white hover:bg-violet-700" onClick={handleUpdateCpc} disabled={saving}>
                             {saving ? 'Enregistrement...' : 'Enregistrer'}
                         </Button>
                     </DialogFooter>
@@ -447,9 +448,9 @@ const AdminCpc = () => {
                     </DialogHeader>
                     <div className="flex justify-end gap-2 mt-4">
                         <DialogClose asChild>
-                            <Button variant="outline">Annuler</Button>
+                            <Button variant="outline" status="inactive">Annuler</Button>
                         </DialogClose>
-                        <Button variant="default" className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDeleteCpc} disabled={deleting}>
+                        <Button variant="default" status={deleting ? "loading" : "active"} className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDeleteCpc} disabled={deleting}>
                             {deleting ? 'Suppression...' : 'Confirmer la suppression'}
                         </Button>
                     </div>

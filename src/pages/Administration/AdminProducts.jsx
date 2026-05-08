@@ -143,9 +143,9 @@ const AdminProducts = () => {
           </DialogHeader>
           <div className="flex justify-end gap-2 mt-4">
             <DialogClose asChild>
-              <Button variant="outline">Annuler</Button>
+              <Button variant="outline" status="inactive">Annuler</Button>
             </DialogClose>
-            <Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" onClick={handleValidateProduct} disabled={validating}>
+            <Button variant="default" status={validating ? "loading" : "active"} className="bg-violet-600 text-white hover:bg-violet-700" onClick={handleValidateProduct} disabled={validating}>
               {validating ? 'Validation...' : 'Confirmer'}
             </Button>
           </div>

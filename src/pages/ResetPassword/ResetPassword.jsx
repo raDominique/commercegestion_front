@@ -83,7 +83,7 @@ const ResetPassword = () => {
             <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
             <Input id="confirmPassword" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="border-neutral-300" />
           </div>
-          <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white" disabled={loading}>
+          <Button type="submit" status={loading ? "loading" : "active"} className="w-full bg-violet-600 hover:bg-violet-700 text-white" disabled={loading}>
             {loading ? 'Envoi...' : 'Réinitialiser'}
           </Button>
         </form>

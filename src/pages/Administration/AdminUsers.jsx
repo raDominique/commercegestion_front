@@ -286,10 +286,11 @@ export default function AdminUsers() {
                         </DialogHeader>
                         <div className="flex justify-end gap-2 mt-4">
                             <DialogClose asChild>
-                                <Button variant="outline">Annuler</Button>
+                                <Button variant="outline" status="inactive">Annuler</Button>
                             </DialogClose>
                             <Button
                                 variant="default"
+                                status={actionLoading ? "loading" : "active"}
                                 className="bg-violet-600 text-white hover:bg-violet-700"
                                 disabled={actionLoading}
                                 onClick={() => {

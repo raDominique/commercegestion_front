@@ -373,11 +373,13 @@ const Actifs = () => {
 								<div className="flex justify-end gap-2 pt-4">
 									<Button
 										variant="outline"
+										status="inactive"
 										onClick={() => setStockModalOpen(false)}
 									>
 										Annuler
 									</Button>
 									<Button
+										status={loadingAddStock ? "loading" : "active"}
 										onClick={handleAddStock}
 										disabled={loadingAddStock}
 										className="bg-violet-600 hover:bg-violet-700 text-white"
@@ -569,11 +571,13 @@ const Actifs = () => {
 								<div className="flex justify-end gap-2 pt-4">
 									<Button
 										variant="outline"
+										status="inactive"
 										onClick={() => setAddProductModalOpen(false)}
 									>
 										Annuler
 									</Button>
 									<Button
+										status={loadingAddProduct ? "loading" : "active"}
 										onClick={handleAddProductToSite}
 										disabled={loadingAddProduct}
 										className="bg-violet-600 hover:bg-violet-700 text-white"

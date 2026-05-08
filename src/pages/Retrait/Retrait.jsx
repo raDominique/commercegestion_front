@@ -301,7 +301,7 @@ const Retrait = () => {
 										</div>
 									</div>
 									<div className="flex justify-end gap-2 mt-4">
-										<Button variant="outline" type="button" onClick={() => {
+										<Button variant="outline" status="inactive" type="button" onClick={() => {
 											setWithdrawalForm({
 												actifId: '',
 												productId: '',
@@ -317,7 +317,7 @@ const Retrait = () => {
 										}}>
 											Annuler
 										</Button>
-										<Button variant="default" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Valider le retrait</Button>
+										<Button variant="default" status="active" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Valider le retrait</Button>
 									</div>
 								</form>
 							</Card>

@@ -759,7 +759,7 @@ const Register = () => {
                   </Button>
                 )}
                 {step < steps.length - 1 && (
-                  <Button type="button" className="bg-violet-600 hover:bg-violet-700 text-white" onClick={nextStep} disabled={loading}>
+                  <Button type="button" status="active" className="bg-violet-600 hover:bg-violet-700 text-white" onClick={nextStep} disabled={loading}>
                     Suivant
                   </Button>
                 )}

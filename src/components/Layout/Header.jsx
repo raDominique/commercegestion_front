@@ -189,12 +189,13 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                         </DialogHeader>
                                         <DialogFooter>
                                             <DialogClose asChild>
-                                                <Button variant="outline" onClick={() => setLogoutDialogOpen(false)}>
+                                                <Button variant="outline" status="inactive" onClick={() => setLogoutDialogOpen(false)}>
                                                     Annuler
                                                 </Button>
                                             </DialogClose>
                                             <Button
                                                 variant="destructive"
+                                                status={logoutLoading ? "loading" : "active"}
                                                 className="bg-red-600 hover:bg-red-700 text-white font-semibold"
                                                 onClick={() => {
                                                     setLogoutDialogOpen(false);
