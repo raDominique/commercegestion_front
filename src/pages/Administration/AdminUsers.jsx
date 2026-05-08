@@ -43,6 +43,7 @@ export default function AdminUsers() {
         role: apiUser.userAccess && apiUser.userAccess.toLowerCase() === 'admin' ? 'admin' : 'user',
         status: apiUser.deletedAt ? 'Suspendu' : (apiUser.userValidated ? 'Actif' : 'Non validé'),
         createdAt: apiUser.createdAt,
+        updatedAt: apiUser.updatedAt,
         emailVerified: apiUser.userEmailVerified,
         raw: apiUser,
         referralCode: apiUser.userId, // code de parrainage / identifiant court
@@ -462,6 +463,7 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
                         <TableHead className="text-xs text-neutral-600">Email</TableHead>
                         <TableHead className="text-xs text-neutral-600">Vérification e-mail</TableHead>
                         <TableHead className="text-xs text-neutral-600">Date d'inscription</TableHead>
+                        <TableHead className="text-xs text-neutral-600">Date de validation</TableHead>
                         <TableHead className="text-xs text-neutral-600">Rôle</TableHead>
                         <TableHead className="text-xs text-neutral-600">Statut</TableHead>
                         <TableHead className="text-xs text-neutral-600 text-right">Actions</TableHead>
@@ -486,6 +488,7 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
                                 <Badge variant={user.emailVerified ? 'default' : 'secondary'} className={user.emailVerified ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{user.emailVerified ? 'Vérifié' : 'Non vérifié'}</Badge>
                             </TableCell>
                             <TableCell className="text-sm text-neutral-900">{user.createdAt ? dateFormat(user.createdAt) : '-'}</TableCell>
+                            <TableCell className="text-sm text-neutral-900">{user.status !== 'Non validé' && user.updatedAt ? dateFormat(user.updatedAt) : '-'}</TableCell>
                             <TableCell>
                                 <div className="flex items-center gap-2">
                                     <Switch aria-label="Basculer rôle admin" checked={user.role === 'admin'} onCheckedChange={() => { setModalUserId(user.id); setModalAction('role'); setModalOpen(true); }} />

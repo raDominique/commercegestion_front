@@ -16,12 +16,15 @@ import DoneIcon from '@mui/icons-material/Done';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { useAuth } from '@/context/AuthContext';
 import useScreenType from '@/utils/useScreenType';
+import useDateFormat from '@/utils/useDateFormat';
 import UserNotValidatedBanner from '@/components/commons/UserNotValidatedBanner';
 import usePageTitle from '@/utils/usePageTitle';
 
 function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, onApprove, actionLoading }) {
     if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
     if (!referrals || referrals.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun parrain trouvé</div>;
+
+    const dateFormat = useDateFormat();
 
     if (isDesktop) {
         return (
@@ -33,6 +36,8 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
                             <TableHead className="text-xs text-neutral-600">Utilisateur</TableHead>
                             <TableHead className="text-xs text-neutral-600">Email</TableHead>
                             <TableHead className="text-xs text-neutral-600">Type</TableHead>
+                            <TableHead className="text-xs text-neutral-600">Date création</TableHead>
+                            <TableHead className="text-xs text-neutral-600">Date de validation</TableHead>
                             <TableHead className="text-xs text-neutral-600">Validation parrain</TableHead>
                             <TableHead className="text-xs text-neutral-600 text-right">Actions</TableHead>
                         </TableRow>
@@ -76,6 +81,8 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
                                 </TableCell>
                                 <TableCell className="text-sm">{referral.userEmail}</TableCell>
                                 <TableCell className="text-sm">{referral.userType}</TableCell>
+                                <TableCell className="text-sm">{(referral.createdAt || referral.created_at || referral.raw?.createdAt) ? dateFormat(referral.createdAt || referral.created_at || referral.raw?.createdAt) : '-'}</TableCell>
+                                <TableCell className="text-sm">{(referral.isParrain1Validated && referral.isParrain2Validated) && (referral.updatedAt || referral.updated_at || referral.raw?.updatedAt) ? dateFormat(referral.updatedAt || referral.updated_at || referral.raw?.updatedAt) : '-'}</TableCell>
                                 <TableCell className="text-sm">
                                     <span className={`px-2 py-1 rounded text-xs font-medium ${(referral.isParrain1Validated && referral.isParrain2Validated) ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                         {(referral.isParrain1Validated && referral.isParrain2Validated) ? 'Validé' : 'En attente'}
@@ -138,6 +145,10 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
                                 <Badge variant="outline" className="text-xs">{referral.userId ?? 'N/A'}</Badge>
                                 <div className="text-sm text-neutral-900">{referral.userType}</div>
                                 <Badge variant={(referral.isParrain1Validated && referral.isParrain2Validated) ? 'default' : 'secondary'} className="text-xs">{(referral.isParrain1Validated && referral.isParrain2Validated) ? 'Validé' : 'En attente'}</Badge>
+                            </div>
+                            <div className="mt-2 text-xs text-neutral-600">
+                                <div>Créé: {(referral.createdAt || referral.created_at || referral.raw?.createdAt) ? dateFormat(referral.createdAt || referral.created_at || referral.raw?.createdAt) : '-'}</div>
+                                <div>Validation: {(referral.isParrain1Validated && referral.isParrain2Validated) && (referral.updatedAt || referral.updated_at || referral.raw?.updatedAt) ? dateFormat(referral.updatedAt || referral.updated_at || referral.raw?.updatedAt) : '-'}</div>
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-2">
