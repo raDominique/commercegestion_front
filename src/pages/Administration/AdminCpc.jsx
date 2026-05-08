@@ -28,6 +28,7 @@ import {
     SelectItem,
     SelectValue,
 } from '../../components/ui/select';
+import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import AddIcon from '@mui/icons-material/Add';
 import InfoIcon from '@mui/icons-material/Info';
 import EditIcon from '@mui/icons-material/Edit';
@@ -351,28 +352,7 @@ const AdminCpc = () => {
                     />
                 </Card>
 
-                {/* Pagination simple */}
-                <div className="flex justify-end items-center gap-4 mt-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1 || loading}
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                        Précédent
-                    </Button>
-                    <span className="text-sm text-neutral-600">
-                        Page {page} / {Math.max(1, Math.ceil(total / limit))}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page >= Math.ceil(total / limit) || loading}
-                        onClick={() => setPage((p) => p + 1)}
-                    >
-                        Suivant
-                    </Button>
-                </div>
+                <PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
             </div>
 
             {/* Dialog Info CPC */}

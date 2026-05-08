@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/button';
 import { toast } from 'sonner';
 import useScreenType from '../../utils/useScreenType';
 import useDateFormat from '../../utils/useDateFormat.jsx';
+import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
@@ -105,27 +106,7 @@ const MesTransactions = () => {
           <Card className="border-neutral-200 bg-white">
             <TransactionsTableOrList loading={loading} transactions={transactions} isDesktop={isDesktop} dateFormat={dateFormat} />
           </Card>
-          <div className="flex justify-end items-center gap-4 mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1 || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Précédent
-            </Button>
-            <span className="text-sm text-neutral-600">
-              Page {page} / {Math.max(1, Math.ceil(total / limit))}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= Math.ceil(total / limit) || loading}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Suivant
-            </Button>
-          </div>
+          <PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
         </>
       )}
     </div>

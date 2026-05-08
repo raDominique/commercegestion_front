@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { getUsers, deleteUser, toggleUserRole, activateUser, getUserById } from '../../services/user.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '../../components/ui/dialog';
 import { getFullMediaUrl } from '../../services/media.service';
+import PaginationControls from '../../components/commons/PaginationControls.jsx';
 
 export default function AdminUsers() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -416,26 +417,7 @@ export default function AdminUsers() {
                     </DialogContent>
                 </Dialog>
 
-                {/* Pagination simple */}
-                <div className="flex justify-end items-center gap-4 mt-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1 || loading}
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                        Précédent
-                    </Button>
-                    <span className="text-sm text-neutral-600">Page {page} / {Math.max(1, Math.ceil(total / limit))}</span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page >= Math.ceil(total / limit) || loading}
-                        onClick={() => setPage((p) => p + 1)}
-                    >
-                        Suivant
-                    </Button>
-                </div>
+                <PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
             </div>
         </div>
     );

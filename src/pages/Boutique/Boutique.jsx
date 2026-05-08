@@ -16,6 +16,7 @@ import {
   SelectItem,
 } from '../../components/ui/select.jsx';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import PaginationControls from '../../components/commons/PaginationControls.jsx';
 
 const sortOptions = [
   { value: 'createdAt', label: 'Date de création' },
@@ -180,27 +181,7 @@ const Boutique = () => {
           })}
         </div>
       )}
-      <div className="flex justify-end items-center gap-4 mt-8">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page === 1 || loading}
-          onClick={() => setPage(p => Math.max(1, p - 1))}
-        >
-          Précédent
-        </Button>
-        <span className="text-sm text-neutral-600">
-          Page {page} / {Math.max(1, Math.ceil(total / limit))}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= Math.ceil(total / limit) || loading}
-          onClick={() => setPage(p => p + 1)}
-        >
-          Suivant
-        </Button>
-      </div>
+      <PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-8" />
     </div>
   );
 };

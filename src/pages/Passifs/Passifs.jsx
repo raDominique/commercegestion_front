@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../com
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
@@ -101,27 +102,7 @@ const Passifs = () => {
 					<Card className="border-neutral-200 bg-white">
 						<PassifsTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} />
 					</Card>
-					<div className="flex justify-end items-center gap-4 mt-4">
-						<Button
-							variant="outline"
-							size="sm"
-							disabled={page === 1 || loading}
-							onClick={() => setPage((p) => Math.max(1, p - 1))}
-						>
-							Précédent
-						</Button>
-						<span className="text-sm text-neutral-600">
-							Page {page} / {Math.max(1, Math.ceil(total / limit))}
-						</span>
-						<Button
-							variant="outline"
-							size="sm"
-							disabled={page >= Math.ceil(total / limit) || loading}
-							onClick={() => setPage((p) => p + 1)}
-						>
-							Suivant
-						</Button>
-					</div>
+					<PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
 					{/* Modal de détail du passif avec Dialog */}
 					<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
 						<DialogContent aria-describedby="detail-passif-desc">

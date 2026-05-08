@@ -27,6 +27,7 @@ import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType';
 import { getFullMediaUrl } from '../../services/media.service';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import PaginationControls from '../../components/commons/PaginationControls.jsx';
 
 const renderPerson = (person) => {
 	if (!person) return '-';
@@ -192,7 +193,7 @@ const Actifs = () => {
 	};
 
 	const handleAddProductToSite = async () => {
-		if (!addProductForm.productId || !addProductForm.siteId || !addProductForm.quantite || !addProductForm.prixUnitaire) {
+		if (!addProductForm.productId || !addProductForm.siteId || !addProductForm.quantite) {
 			toast.error('Veuillez remplir tous les champs');
 			return;
 		}
@@ -263,26 +264,7 @@ const Actifs = () => {
 						<ActifsTableOrList loading={loading} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} onOpenStockModal={handleOpenStockModal} />
 					</Card>
 
-					{/* PAGINATION */}
-					<div className="flex justify-end gap-4 mt-4">
-						<Button
-							disabled={page === 1}
-							onClick={() => setPage(p => p - 1)}
-						>
-							Précédent
-						</Button>
-
-						<span>
-							Page {page} / {Math.max(1, Math.ceil(total / limit))}
-						</span>
-
-						<Button
-							disabled={page >= Math.ceil(total / limit)}
-							onClick={() => setPage(p => p + 1)}
-						>
-							Suivant
-						</Button>
-					</div>
+					<PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
 
 					{/* MODAL DETAIL */}
 					<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
@@ -313,12 +295,12 @@ const Actifs = () => {
 									<div>
 										<b>Quantité :</b> {formatThousands(detailActif.quantite ?? 0)}
 									</div>
-									<div>
+									{/* <div>
 										<b>Prix unitaire :</b> {formatThousands(detailActif.prixUnitaire ?? 0)} Ar
-									</div>
-									<div>
+									</div> */}
+									{/* <div>
 										<b>Valeur totale :</b> {formatThousands(((detailActif.quantite || 0) * (detailActif.prixUnitaire || 0)) ?? 0)} Ar
-									</div>
+									</div> */}
 									<div>
 										<b>Détenteur :</b> {renderPerson(detailActif.detentaire)}
 									</div>
@@ -358,14 +340,14 @@ const Actifs = () => {
 									/>
 								</div>
 
-								<div>
+								{/* <div>
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</label>
 									<Input
 										disabled
 										value={selectedActifForStock?.prixUnitaire || '0'}
 										className="border-neutral-300 bg-neutral-50"
 									/>
-								</div>
+								</div> */}
 
 								<div>									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</label>
 									<Input
@@ -448,7 +430,7 @@ const Actifs = () => {
 															setAddProductForm(prev => ({
 																...prev,
 																productId: product._id,
-																prixUnitaire: product.prixUnitaire || 0
+																// prixUnitaire: product.prixUnitaire || 0
 															}));
 															setProductSearch(product.productName);
 															setProductOpen(false);
@@ -470,7 +452,7 @@ const Actifs = () => {
 															setAddProductForm(prev => ({
 																...prev,
 																productId: product._id,
-																prixUnitaire: product.prixUnitaire || 0
+																// prixUnitaire: product.prixUnitaire || 0
 															}));
 															setProductSearch(product.productName);
 															setProductOpen(false);
@@ -572,7 +554,7 @@ const Actifs = () => {
 									/>
 								</div>
 
-								<div>
+								{/* <div>
 									<Label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</Label>
 									<Input
 										type="number"
@@ -582,7 +564,7 @@ const Actifs = () => {
 										onChange={(e) => setAddProductForm({ ...addProductForm, prixUnitaire: e.target.value })}
 										className="border-neutral-300"
 									/>
-								</div>
+								</div> */}
 
 								<div className="flex justify-end gap-2 pt-4">
 									<Button

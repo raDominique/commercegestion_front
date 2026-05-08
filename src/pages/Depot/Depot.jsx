@@ -23,6 +23,7 @@ import { getFullMediaUrl } from '../../services/media.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 import { getAllUsersSelect } from '../../services/user.service';
@@ -304,41 +305,17 @@ const Depot = () => {
 						<DepotTableOrList loading={loading} actifs={actifs} dateFormat={dateFormat} />
 					</Card>
 
-					<div className="flex justify-end items-center gap-4 mt-4">
-						<div className="flex items-center gap-2">
-							<label htmlFor="depot-limit" className="text-sm text-neutral-600">Par page</label>
-							<Select value={String(limit)} onValueChange={(value) => { setLimit(Number(value)); setPage(1); }}>
-								<SelectTrigger className="bg-white">
-									<SelectValue placeholder="Par page" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value={String(10)}>10 / page</SelectItem>
-									<SelectItem value={String(20)}>20 / page</SelectItem>
-									<SelectItem value={String(50)}>50 / page</SelectItem>
-									<SelectItem value={String(100)}>100 / page</SelectItem>
-								</SelectContent>
-							</Select>
-						</div>
-						<Button
-							variant="outline"
-							size="sm"
-							disabled={page === 1 || loading}
-							onClick={() => setPage((p) => Math.max(1, p - 1))}
-						>
-							Précédent
-						</Button>
-						<span className="text-sm text-neutral-600">
-							Page {page} / {Math.max(1, Math.ceil(total / limit))}
-						</span>
-						<Button
-							variant="outline"
-							size="sm"
-							disabled={page >= Math.ceil(total / limit) || loading}
-							onClick={() => setPage((p) => p + 1)}
-						>
-							Suivant
-						</Button>
-					</div>
+					<PaginationControls
+						page={page}
+						total={total}
+						limit={limit}
+						loading={loading}
+						onPageChange={setPage}
+						onLimitChange={setLimit}
+						showLimitSelector
+						limitLabel="Par page"
+						className="mt-4"
+					/>
 				</TabsContent>
 
 				<TabsContent value="form">
