@@ -4,6 +4,8 @@ import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { getPassifs } from '../../services/ledger.service.js';
+import { getPassifById } from '../../services/passifs.service';
+import { toast } from 'sonner';
 import { getProfile } from '../../services/auth.service.js';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType';
@@ -64,13 +66,15 @@ const Passifs = () => {
 	// Fonction pour afficher le détail d'un passif
 	const handleShowDetail = async (passifId) => {
 		setLoadingDetail(true);
-		setDetailOpen(true);
 		try {
-			const data = passifs.find(item => item._id === passifId) || null;
-			setDetailPassif(data);
+			const token = user?.token || localStorage.getItem('authToken');
+			const data = await getPassifById(passifId, token);
+			setDetailPassif(data || null);
+			setDetailOpen(true);
 		} catch (err) {
 			setDetailPassif(null);
 			console.error('Erreur lors de la récupération du détail du passif :', err);
+			toast.error('Erreur lors du chargement du détail');
 		} finally {
 			setLoadingDetail(false);
 		}

@@ -3,6 +3,7 @@ import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { getActifs } from '../../services/ledger.service';
+import { getActifById } from '../../services/actifs.service';
 import { getProfile } from '../../services/auth.service';
 import { initializeTransaction } from '../../services/transaction.service';
 import { selectAllProduits } from '../../services/product.service';
@@ -27,6 +28,15 @@ import useScreenType from '../../utils/useScreenType';
 import { getFullMediaUrl } from '../../services/media.service';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 
+const renderPerson = (person) => {
+	if (!person) return '-';
+	if (typeof person === 'string') return person;
+	if (person.userNickName) return person.userNickName;
+	if (person.userName) return person.userName;
+	if (person.name) return person.name;
+	return '-';
+};
+
 const Actifs = () => {
 	usePageTitle('Actifs');
 
@@ -48,6 +58,7 @@ const Actifs = () => {
 	const [detailOpen, setDetailOpen] = useState(false);
 
 	const [detailActif, setDetailActif] = useState(null);
+
 
 	const [stockModalOpen, setStockModalOpen] = useState(false);
 	const [selectedActifForStock, setSelectedActifForStock] = useState(null);
@@ -106,9 +117,13 @@ const Actifs = () => {
 	const handleShowDetail = async id => {
 		try {
 			setLoadingDetail(true);
-			const actif = actifs.find(a => a.id === id);
-			setDetailActif(actif);
+			const token = user?.token || localStorage.getItem('authToken');
+			const data = await getActifById(id, token);
+			setDetailActif(data || null);
 			setDetailOpen(true);
+		} catch (err) {
+			console.error('Erreur lors du chargement du détail de l\'actif :', err);
+			toast.error('Erreur lors du chargement du détail');
 		} finally {
 			setLoadingDetail(false);
 		}
@@ -284,31 +299,31 @@ const Actifs = () => {
 							) : detailActif && (
 								<div className="space-y-3 text-sm">
 									<div>
-										<b>Code produit :</b> {detailActif.productCode || '-'}
+										<b>Code produit :</b> {detailActif.productId?.codeCPC || detailActif.productCode || '-'}
 									</div>
 									<div>
-										<b>Produit :</b> {detailActif.productName}
+										<b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}
 									</div>
 									<div>
-										<b>Dépôt :</b> {detailActif.depot}
+										<b>Dépôt :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}
 									</div>
 									<div>
-										<b>Adresse dépôt :</b> {detailActif.depotAdresse || '-'}
+										<b>Adresse dépôt :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}
 									</div>
 									<div>
-										<b>Quantité :</b> {formatThousands(detailActif.quantite)}
+										<b>Quantité :</b> {formatThousands(detailActif.quantite ?? 0)}
 									</div>
 									<div>
-										<b>Prix unitaire :</b> {formatThousands(detailActif.prixUnitaire)} Ar
+										<b>Prix unitaire :</b> {formatThousands(detailActif.prixUnitaire ?? 0)} Ar
 									</div>
 									<div>
-										<b>Valeur totale :</b> {formatThousands(detailActif.valeurTotale)} Ar
+										<b>Valeur totale :</b> {formatThousands(((detailActif.quantite || 0) * (detailActif.prixUnitaire || 0)) ?? 0)} Ar
 									</div>
 									<div>
-										<b>Détenteur :</b> {detailActif.detentaire || '-'}
+										<b>Détenteur :</b> {renderPerson(detailActif.detentaire)}
 									</div>
 									<div>
-										<b>Ayant droit :</b> {detailActif.ayantDroit || '-'}
+										<b>Ayant droit :</b> {renderPerson(detailActif.ayant_droit || detailActif.ayantDroit)}
 									</div>
 								</div>
 							)}
@@ -636,8 +651,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
 								{/* <TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell> */}
-								<TableCell className="text-sm">{item.detentaire || '-'}</TableCell>
-								<TableCell className="text-sm">{item.ayantDroit || '-'}</TableCell>
+								<TableCell className="text-sm">{renderPerson(item.detentaire)}</TableCell>
+								<TableCell className="text-sm">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								<TableCell className="text-sm text-right">
 									<div className="flex gap-2 justify-end">
