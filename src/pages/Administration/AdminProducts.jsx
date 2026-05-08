@@ -145,7 +145,7 @@ const AdminProducts = () => {
             <DialogClose asChild>
               <Button variant="outline" status="inactive">Annuler</Button>
             </DialogClose>
-            <Button variant="default" status={validating ? "loading" : "active"} className="bg-violet-600 text-white hover:bg-violet-700" onClick={handleValidateProduct} disabled={validating}>
+            <Button variant="default" status={validating ? "loading" : "active"} color="default" onClick={handleValidateProduct} disabled={validating}>
               {validating ? 'Validation...' : 'Confirmer'}
             </Button>
           </div>

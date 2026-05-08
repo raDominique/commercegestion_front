@@ -291,7 +291,7 @@ export default function AdminUsers() {
                             <Button
                                 variant="default"
                                 status={actionLoading ? "loading" : "active"}
-                                className="bg-violet-600 text-white hover:bg-violet-700"
+                                color="default"
                                 disabled={actionLoading}
                                 onClick={() => {
                                     if (modalUserId && modalAction) {
@@ -395,11 +395,12 @@ export default function AdminUsers() {
 
                                 <div className="flex justify-end gap-2 mt-4">
                                     <DialogClose asChild>
-                                        <Button variant="outline">Fermer</Button>
+                                        <Button variant="outline" status="inactive">Fermer</Button>
                                     </DialogClose>
                                     <Button
                                         variant="default"
-                                        className="bg-green-600 text-white hover:bg-green-700"
+                                        status={actionLoading ? "loading" : (detailUser.userValidated ? "inactive" : "active")}
+                                        color="success"
                                         disabled={actionLoading || detailUser.userValidated}
                                         onClick={async () => {
                                             if (detailUser && (detailUser._id || detailUser.id || detailUser.userId)) {

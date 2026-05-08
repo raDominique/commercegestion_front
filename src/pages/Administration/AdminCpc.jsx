@@ -237,7 +237,7 @@ const AdminCpc = () => {
                     <div className="flex gap-2">
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="default" status="active" className="bg-violet-600 text-white hover:bg-violet-700">
+                                <Button variant="default" status="active" color="default">
                                     <AddIcon className="w-4 h-4 mr-2" />
                                     Ajouter un CPC
                                 </Button>
@@ -286,7 +286,7 @@ const AdminCpc = () => {
                                         <DialogClose asChild>
                                             <Button variant="outline" type="button" status="inactive">Annuler</Button>
                                         </DialogClose>
-                                        <Button variant="default" status={saving ? "loading" : "active"} className="bg-violet-600 text-white hover:bg-violet-700" type="submit" disabled={saving}>
+                                        <Button variant="default" status={saving ? "loading" : "active"} color="default" type="submit" disabled={saving}>
                                             {saving ? 'Enregistrement...' : 'Ajouter'}
                                         </Button>
                                     </DialogFooter>
@@ -430,7 +430,7 @@ const AdminCpc = () => {
                         <DialogClose asChild>
                             <Button variant="outline" status="inactive">Annuler</Button>
                         </DialogClose>
-                        <Button variant="default" status={saving ? "loading" : "active"} className="bg-violet-600 text-white hover:bg-violet-700" onClick={handleUpdateCpc} disabled={saving}>
+                        <Button variant="default" status={saving ? "loading" : "active"} color="default" onClick={handleUpdateCpc} disabled={saving}>
                             {saving ? 'Enregistrement...' : 'Enregistrer'}
                         </Button>
                     </DialogFooter>
@@ -450,7 +450,7 @@ const AdminCpc = () => {
                         <DialogClose asChild>
                             <Button variant="outline" status="inactive">Annuler</Button>
                         </DialogClose>
-                        <Button variant="default" status={deleting ? "loading" : "active"} className="bg-red-600 text-white hover:bg-red-700" onClick={confirmDeleteCpc} disabled={deleting}>
+                        <Button variant="default" status={deleting ? "loading" : "active"} color="destructive" onClick={confirmDeleteCpc} disabled={deleting}>
                             {deleting ? 'Suppression...' : 'Confirmer la suppression'}
                         </Button>
                     </div>

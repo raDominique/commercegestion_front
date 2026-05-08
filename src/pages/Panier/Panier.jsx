@@ -94,7 +94,8 @@ export default function Panier() {
                 </p>
                 <Button
                   onClick={() => navigate('/boutique')}
-                  className="bg-violet-600 hover:bg-violet-700 text-white"
+                  status="active"
+                  color="default"
                 >
                   Parcourir la boutique
                 </Button>
@@ -276,7 +277,8 @@ export default function Panier() {
                 <Button
                   status="active"
                   onClick={handleCheckout}
-                  className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                  status="active"
+                  color="default"
                 >
                   <CreditCardIcon className="w-4 h-4 mr-2" />
                   Procéder au paiement

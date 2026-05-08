@@ -244,7 +244,8 @@ const Actifs = () => {
 						<div className="flex gap-3 items-center">
 							<Button
 								onClick={handleOpenAddProductModal}
-								className="bg-violet-600 hover:bg-violet-700 text-white"
+								status="active"
+								color="default"
 							>
 								Initialisation du stock
 							</Button>
@@ -382,7 +383,7 @@ const Actifs = () => {
 										status={loadingAddStock ? "loading" : "active"}
 										onClick={handleAddStock}
 										disabled={loadingAddStock}
-										className="bg-violet-600 hover:bg-violet-700 text-white"
+										color="default"
 									>
 										{loadingAddStock ? 'Ajout en cours...' : 'Ajouter'}
 									</Button>
@@ -580,7 +581,7 @@ const Actifs = () => {
 										status={loadingAddProduct ? "loading" : "active"}
 										onClick={handleAddProductToSite}
 										disabled={loadingAddProduct}
-										className="bg-violet-600 hover:bg-violet-700 text-white"
+										color="default"
 									>
 										{loadingAddProduct ? 'Ajout en cours...' : 'Ajouter'}
 									</Button>

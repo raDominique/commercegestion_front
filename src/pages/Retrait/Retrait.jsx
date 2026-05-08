@@ -317,7 +317,7 @@ const Retrait = () => {
 										}}>
 											Annuler
 										</Button>
-										<Button variant="default" status="active" className="bg-violet-600 text-white hover:bg-violet-700" type="submit">Valider le retrait</Button>
+										<Button variant="default" status="active" color="default" type="submit">Valider le retrait</Button>
 									</div>
 								</form>
 							</Card>

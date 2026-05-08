@@ -724,7 +724,8 @@ const Depot = () => {
 								</Button>
 								<Button
 									variant="default"
-									className="bg-violet-600 text-white hover:bg-violet-700"
+									status={saving ? 'loading' : 'active'}
+									color="default"
 									type="submit"
 									disabled={!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire}
 								>

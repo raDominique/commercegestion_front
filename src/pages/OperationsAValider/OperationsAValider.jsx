@@ -461,6 +461,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                         <Button 
                           size="xs" 
                           variant="default"
+                          status={isActioning ? "loading" : "active"}
                           disabled={isActioning}
                           onClick={() => onApprove(item)}
                         >
@@ -469,6 +470,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                         <Button 
                           size="xs" 
                           variant="outline"
+                          status="inactive"
                           disabled={isActioning}
                           onClick={() => onReject(item)}
                         >
@@ -527,6 +529,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                     <Button 
                       size="sm" 
                       variant="default"
+                      status={isActioning ? "loading" : "active"}
                       disabled={isActioning}
                       onClick={() => onApprove(item)}
                     >
@@ -535,6 +538,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                     <Button 
                       size="sm" 
                       variant="outline"
+                      status="inactive"
                       disabled={isActioning}
                       onClick={() => onReject(item)}
                     >

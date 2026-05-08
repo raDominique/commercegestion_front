@@ -466,7 +466,7 @@ const Parrainage = () => {
                                             <Button
                                                 variant="default"
                                                 status={actionLoading ? "loading" : (detailUser.userValidated ? "inactive" : "active")}
-                                                className="bg-green-600 text-white hover:bg-green-700"
+                                                color="success"
                                                 disabled={actionLoading || detailUser.userValidated}
                                                 onClick={() => { if (detailUser && detailUser._id) handleApprove(detailUser._id, true); }}
                                             >

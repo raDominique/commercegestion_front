@@ -759,14 +759,15 @@ const Register = () => {
                   </Button>
                 )}
                 {step < steps.length - 1 && (
-                  <Button type="button" status="active" className="bg-violet-600 hover:bg-violet-700 text-white" onClick={nextStep} disabled={loading}>
+                  <Button type="button" status="active" color="default" onClick={nextStep} disabled={loading}>
                     Suivant
                   </Button>
                 )}
                 {step === steps.length - 1 && (
                   <Button
                     type="submit"
-                    className="bg-violet-600 hover:bg-violet-700 text-white"
+                    status={loading ? "loading" : "active"}
+                    color="default"
                     disabled={loading}
                   >
                     {loading ? (

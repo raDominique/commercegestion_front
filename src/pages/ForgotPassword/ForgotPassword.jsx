@@ -48,7 +48,9 @@ const ForgotPassword = () => {
                     </div>
                     <Button
                         type="submit"
-                        className="w-full bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center"
+                        status={loading ? "loading" : "active"}
+                        color="default"
+                        className="w-full flex items-center justify-center"
                         disabled={loading}
                     >
                         {loading ? (

@@ -248,13 +248,18 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
 
                             {/* Notifications */}
                             <div>
-                                <button aria-label="Notifications" onClick={() => setMobileNotifOpen(v => !v)} className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 flex items-center justify-between">
+                                <Button 
+                                  variant="ghost"
+                                  className="w-full justify-between text-left px-3 py-2" 
+                                  aria-label="Notifications" 
+                                  onClick={() => setMobileNotifOpen(v => !v)}
+                                >
                                     <div className="flex items-center gap-2">
                                         <BellIcon className="w-5 h-5 text-neutral-700" />
-                                        <span className="text-sm">Notifications</span>
+                                        <span className="text-sm text-neutral-700">Notifications</span>
                                     </div>
                                     {notifications.length > 0 && <span className="text-xs bg-red-600 text-white rounded-full px-2 py-0.5">{notifications.length}</span>}
-                                </button>
+                                </Button>
                                 {mobileNotifOpen && (
                                     <div className="mt-2 bg-white border border-neutral-100 rounded-lg divide-y divide-neutral-100 max-h-48 overflow-y-auto">
                                         {notifications.length === 0 ? (

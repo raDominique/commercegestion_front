@@ -74,16 +74,24 @@ const ResetPassword = () => {
             <Label htmlFor="newPassword">Nouveau mot de passe</Label>
             <div className="relative">
               <Input id="newPassword" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={newPassword} onChange={e => setNewPassword(e.target.value)} required className="border-neutral-300 pr-10" />
-              <button type="button" tabIndex={-1} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShowPassword(v => !v)} aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+              <Button 
+                type="button" 
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-1/2 -translate-y-1/2 h-9 w-9 text-neutral-500 hover:text-neutral-700"
+                onClick={() => setShowPassword(v => !v)} 
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                tabIndex={-1}
+              >
                 {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-              </button>
+              </Button>
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
             <Input id="confirmPassword" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="border-neutral-300" />
           </div>
-          <Button type="submit" status={loading ? "loading" : "active"} className="w-full bg-violet-600 hover:bg-violet-700 text-white" disabled={loading}>
+          <Button type="submit" status={loading ? "loading" : "active"} color="default" className="w-full" disabled={loading}>
             {loading ? 'Envoi...' : 'Réinitialiser'}
           </Button>
         </form>

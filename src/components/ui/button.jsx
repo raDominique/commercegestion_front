@@ -9,8 +9,15 @@ const statusVariants = {
     loading: "bg-amber-500 text-white hover:bg-amber-600 focus-visible:ring-amber/20 dark:bg-amber-600 dark:hover:bg-amber-700 opacity-80",
 };
 
+// Color theme for actions
+const colorThemes = {
+    default: "bg-violet-600 text-white hover:bg-violet-700 focus-visible:ring-violet/20",
+    destructive: "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red/20",
+    success: "bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green/20",
+};
+
 // buttonVariants utilitaire simple (remplace cva)
-function buttonVariants({ variant = "default", size = "default", status = null, className = "" } = {}) {
+function buttonVariants({ variant = "default", size = "default", status = null, color = null, className = "" } = {}) {
     const base =
         "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:cursor-pointer data-[state=open]:bg-accent";
     const variants = {
@@ -30,10 +37,17 @@ function buttonVariants({ variant = "default", size = "default", status = null, 
         sm: "h-8 rounded-md gap-1.5 px-3",
         lg: "h-10 rounded-md px-6",
         icon: "size-9 rounded-md",
+        xs: "h-7 rounded-md gap-1 px-2 text-xs",
     };
     
-    // If status is provided, use status variant instead of variant
-    const finalVariant = status && statusVariants[status] ? statusVariants[status] : (variants[variant] || variants.default);
+    // Priority: status > color > variant
+    let finalVariant = variants[variant] || variants.default;
+    
+    if (status && statusVariants[status]) {
+        finalVariant = statusVariants[status];
+    } else if (color && colorThemes[color]) {
+        finalVariant = colorThemes[color];
+    }
     
     return [
         base,
@@ -45,7 +59,7 @@ function buttonVariants({ variant = "default", size = "default", status = null, 
 
 // Button component
 const Button = forwardRef(function Button(
-    { className = "", variant = "default", size = "default", status = null, asChild = false, children, ...props },
+    { className = "", variant = "default", size = "default", status = null, color = null, asChild = false, children, ...props },
     ref
 ) {
     const Comp = asChild ? Slot : "button";
@@ -53,7 +67,7 @@ const Button = forwardRef(function Button(
         <Comp
             ref={ref}
             data-slot="button"
-            className={cn(buttonVariants({ variant, size, status, className }))}
+            className={cn(buttonVariants({ variant, size, status, color, className }))}
             {...props}
         >
             {children}

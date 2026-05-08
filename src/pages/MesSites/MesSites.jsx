@@ -173,7 +173,7 @@ const MesSites = () => {
           </p>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button status="active" className="bg-violet-600 hover:bg-violet-700 text-white mt-2">
+              <Button status="active" color="default" className="mt-2">
                 <AddIcon className="w-4 h-4 mr-2" />
                 Ajouter un site
               </Button>
@@ -241,7 +241,8 @@ const MesSites = () => {
                 <Button
                   type="submit"
                   status={loading ? "loading" : "active"}
-                  className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                  color="default"
+                  className="w-full"
                   disabled={loading}
                 >
                   {loading ? 'Ajout en cours...' : 'Ajouter le site'}
@@ -399,7 +400,9 @@ const MesSites = () => {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                  status={loadingEdit ? "loading" : "active"}
+                  color="default"
+                  className="w-full"
                   disabled={loadingEdit}
                 >
                   {loadingEdit ? 'Modification...' : 'Enregistrer les modifications'}
@@ -428,7 +431,7 @@ const MesSites = () => {
               </Button>
               <Button
                 status={loadingDelete ? "loading" : "active"}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                color="destructive"
                 onClick={confirmDeleteSite}
                 disabled={loadingDelete}
               >
@@ -453,7 +456,8 @@ const MesSites = () => {
             <PublicIcon className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
             <p className="text-neutral-500 mb-4">Aucun site enregistré</p>
             <Button
-              className="bg-violet-600 hover:bg-violet-700 text-white"
+              status="active"
+              color="default"
               onClick={() => setIsDialogOpen(true)}
             >
               <AddIcon className="w-4 h-4 mr-2" />
