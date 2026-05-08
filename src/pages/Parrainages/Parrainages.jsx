@@ -19,6 +19,7 @@ import useScreenType from '@/utils/useScreenType';
 import useDateFormat from '@/utils/useDateFormat';
 import UserNotValidatedBanner from '@/components/commons/UserNotValidatedBanner';
 import usePageTitle from '@/utils/usePageTitle';
+import PaginationControls from '@/components/commons/PaginationControls.jsx';
 
 function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, onApprove, actionLoading }) {
     if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
@@ -195,6 +196,7 @@ const Parrainage = () => {
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
+    const [total, setTotal] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
 
     // Filtres
@@ -230,6 +232,7 @@ const Parrainage = () => {
                 const list = Array.isArray(data) ? data : data.data ?? data.items ?? [];
                 const total = data.total ?? data.count ?? (Array.isArray(data) ? data.length : list.length);
                 setReferrals(list);
+                setTotal(Number(total) || list.length || 0);
                 setTotalPages(Math.max(1, Math.ceil((total || list.length) / limit)));
             } catch (err) {
                 console.error(err);
@@ -475,18 +478,7 @@ const Parrainage = () => {
                                 )}
                             </DialogContent>
                         </Dialog>
-                        {/* Pagination */}
-                        <div className="flex justify-end items-center gap-4 mt-4">
-                            <Button variant="outline" size="sm" disabled={page === 1 || loading} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                                Précédent
-                            </Button>
-
-                            <span className="text-sm text-neutral-600">Page {page} / {totalPages}</span>
-
-                            <Button variant="outline" size="sm" disabled={page >= totalPages || loading} onClick={() => setPage((p) => p + 1)}>
-                                Suivant
-                            </Button>
-                        </div>
+                        <PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
                     </>
                 )}
             </div>
