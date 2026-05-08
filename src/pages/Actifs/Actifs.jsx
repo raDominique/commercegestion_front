@@ -150,7 +150,7 @@ const Actifs = () => {
 		try {
 			setLoadingAddStock(true);
 			const params = {
-				productId: selectedActifForStock.id,
+				productId: selectedActifForStock.productId,
 				siteOrigineId,
 				quantite: stockForm.quantite,
 				prixUnitaire: selectedActifForStock.prixUnitaire || 0,
