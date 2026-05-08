@@ -17,6 +17,7 @@ import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
 import { getDeposits } from '../../services/stocks_move.service';
 import { depositStockToAMember } from '../../services/transaction.service';
+import { getProfile } from '../../services/auth.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
@@ -218,7 +219,7 @@ const Depot = () => {
 	const handleTransferSubmit = async e => {
 		e.preventDefault();
 
-		if (!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire || !transferForm.ayant_droit) {
+		if (!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire) {
 			toast.error('Veuillez remplir tous les champs obligatoires');
 			return;
 		}
@@ -230,9 +231,25 @@ const Depot = () => {
 				return;
 			}
 
+			// Resolve ayant_droit: prefer currently authenticated user's id, fallback to profile, then form value
+			let ayantDroitId = (user && (user._id || user.id)) || transferForm.ayant_droit;
+			if (!ayantDroitId) {
+				try {
+					const profile = await getProfile();
+					ayantDroitId = profile?._id || profile?.id || ayantDroitId;
+				} catch (err) {
+					console.debug('Impossible de récupérer le profil pour ayant_droit:', err);
+				}
+			}
+
+			if (!ayantDroitId) {
+				toast.error("Ayant droit introuvable");
+				return;
+			}
+
 			const payload = {
 				detentaire: transferForm.detentaire,
-				ayant_droit: transferForm.ayant_droit,
+				ayant_droit: ayantDroitId,
 				productId: transferForm.productId,
 				siteOrigineId: transferForm.siteOrigineId,
 				siteDestinationId: transferForm.siteDestinationId,
@@ -732,7 +749,7 @@ const Depot = () => {
 									variant="default"
 									className="bg-violet-600 text-white hover:bg-violet-700"
 									type="submit"
-									disabled={!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire || !transferForm.ayant_droit}
+									disabled={!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire}
 								>
 									Valider le transfert
 								</Button>
