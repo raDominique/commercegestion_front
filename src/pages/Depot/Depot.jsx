@@ -784,7 +784,7 @@ function DepotTableOrList({ loading, actifs, dateFormat }) {
 							<TableHead className="text-xs text-neutral-600">Site origine</TableHead>
 							<TableHead className="text-xs text-neutral-600">Site destination</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Quantité</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Prix unitaire</TableHead>
+							{/* <TableHead className="text-xs text-neutral-600 text-right">Prix unitaire</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">Validation</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 						</TableRow>
@@ -811,7 +811,7 @@ function DepotTableOrList({ loading, actifs, dateFormat }) {
 									<TableCell className="text-sm">{item.siteOrigineId?.siteName || '-'}</TableCell>
 									<TableCell className="text-sm">{item.siteDestinationId?.siteName || '-'}</TableCell>
 									<TableCell className="text-sm text-right">{item.quantite !== undefined && item.quantite !== null ? formatThousands(item.quantite) : '-'}</TableCell>
-									<TableCell className="text-sm text-right">{item.prixUnitaire !== undefined && item.prixUnitaire !== null ? formatThousands(item.prixUnitaire) : '-'}</TableCell>
+									{/* <TableCell className="text-sm text-right">{item.prixUnitaire !== undefined && item.prixUnitaire !== null ? formatThousands(item.prixUnitaire) : '-'}</TableCell> */}
 									<TableCell className="text-sm"><Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge></TableCell>
 									<TableCell className="text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</TableCell>
 								</TableRow>
