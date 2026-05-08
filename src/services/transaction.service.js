@@ -14,7 +14,7 @@ import axiosInstance from './axios.config.js';
  */
 export const depositStock = async (params, token) => {
     return axiosInstance.post(
-        '/api/transactions/deposit',
+        '/api/v1/transactions/deposit',
         {
             siteOrigineId: params.siteOrigineId,
             siteDestinationId: params.siteDestinationId,
@@ -51,7 +51,7 @@ export const depositStock = async (params, token) => {
  */
 export const depositStockToAMember = async (params, token) => {
     return axiosInstance.post(
-        '/api/transactions/return',
+        '/api/v1/transactions/return',
         {
             detentaire: params.detentaire,
             ayant_droit: params.ayant_droit,
@@ -83,7 +83,7 @@ export const depositStockToAMember = async (params, token) => {
  */
 export const getPendingTransactionsList = async (params, token) => {
     return axiosInstance.get(
-        '/api/transactions/pending/list',
+        '/api/v1/transactions/pending/list',
         {
             params: {
                 userId: params.userId,
@@ -99,14 +99,14 @@ export const getPendingTransactionsList = async (params, token) => {
 };
 
 /**
- * Récupère les détails d'une transaction (GET /api/transactions/:transactionId)
+ * Récupère les détails d'une transaction (GET /api/v1/transactions/:transactionId)
  * @param {string} transactionId - ID de la transaction
  * @param {string} token - Token d'authentification
  * @returns {Promise} - Résultat de l'API contenant les détails de la transaction
  */
 export const getTransactionById = async (transactionId, token) => {
     return axiosInstance.get(
-        `/api/transactions/${transactionId}`,
+        `/api/v1/transactions/${transactionId}`,
         {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -117,7 +117,7 @@ export const getTransactionById = async (transactionId, token) => {
 };
 
 /**
- * Approuve une transaction en attente (PATCH /api/transactions/:transactionId/approve)
+ * Approuve une transaction en attente (PATCH /api/v1/transactions/:transactionId/approve)
  * @param {string} transactionId - ID de la transaction
  * @param {Object} params - Paramètres d'approbation
  * @param {string} params.approuveurId - ID de l'approuveur (Manager/Admin)
@@ -127,7 +127,7 @@ export const getTransactionById = async (transactionId, token) => {
  */
 export const approveTransaction = async (transactionId, params, token) => {
     return axiosInstance.patch(
-        `/api/transactions/${transactionId}/approve`,
+        `/api/v1/transactions/${transactionId}/approve`,
         {
             approuveurId: params.approuveurId,
             observations: params.observations || '',
@@ -143,7 +143,7 @@ export const approveTransaction = async (transactionId, params, token) => {
 };
 
 /**
- * Rejette une transaction en attente (PATCH /api/transactions/:transactionId/reject)
+ * Rejette une transaction en attente (PATCH /api/v1/transactions/:transactionId/reject)
  * @param {string} transactionId - ID de la transaction
  * @param {Object} params - Paramètres de rejet
  * @param {string} params.approuveurId - ID de l'approuveur (Manager/Admin)
@@ -153,7 +153,7 @@ export const approveTransaction = async (transactionId, params, token) => {
  */
 export const rejectTransaction = async (transactionId, params, token) => {
     return axiosInstance.patch(
-        `/api/transactions/${transactionId}/reject`,
+        `/api/v1/transactions/${transactionId}/reject`,
         {
             approuveurId: params.approuveurId,
             motifRejet: params.motifRejet,
@@ -169,7 +169,7 @@ export const rejectTransaction = async (transactionId, params, token) => {
 };
 
 /**
- * Initialise une transaction (POST /api/transactions/initialization)
+ * Initialise une transaction (POST /api/v1/transactions/initialization)
  * @param {Object} params - Paramètres de l'initialisation
  * @param {string} params.productId - ID du produit
  * @param {string} params.siteOrigineId - ID du site d'origine
@@ -181,7 +181,7 @@ export const rejectTransaction = async (transactionId, params, token) => {
  */
 export const initializeTransaction = async (params, token) => {
     return axiosInstance.post(
-        '/api/transactions/initialization',
+        '/api/v1/transactions//initialization',
         {
             productId: params.productId,
             siteOrigineId: params.siteOrigineId,

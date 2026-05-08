@@ -2,7 +2,7 @@ Transactions
 
 
 POST
-/api/transactions/deposit
+/api/v1/transactions/deposit
 Créer une transaction de dépôt
 
 
@@ -83,7 +83,7 @@ Non authentifié
 No links
 
 POST
-/api/transactions/return
+/api/v1/transactions/return
 Créer une transaction de retour
 
 
@@ -158,7 +158,7 @@ Non authentifié
 No links
 
 POST
-/api/transactions/initialization
+/api/v1/transactions/initialization
 Initialiser le stock pour un nouvel actif/passif
 
 
@@ -233,7 +233,7 @@ Paramètres invalides ou quantité négative
 No links
 
 PATCH
-/api/transactions/{id}/approve
+/api/v1/transactions/{id}/approve
 Approuver une transaction
 
 
@@ -319,7 +319,7 @@ Transaction non trouvée
 No links
 
 PATCH
-/api/transactions/{id}/reject
+/api/v1/transactions/{id}/reject
 Rejeter une transaction en attente
 
 
@@ -401,7 +401,7 @@ Transaction non trouvée
 No links
 
 GET
-/api/transactions/{id}
+/api/v1/transactions/{id}
 Détails complète d'une transaction
 
 
@@ -480,7 +480,7 @@ Transaction non trouvée
 No links
 
 GET
-/api/transactions/pending/list
+/api/v1/transactions/pending/list
 Lister les transactions en attente d'approbation
 
 
@@ -571,7 +571,7 @@ Non authentifié
 No links
 
 GET
-/api/transactions/user/{userId}
+/api/v1/transactions/user/{userId}
 Historique complet des transactions d'un utilisateur
 
 

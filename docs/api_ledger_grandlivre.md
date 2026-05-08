@@ -2,7 +2,7 @@ Ledger Display
 
 
 GET
-/api/ledger/user/{userId}
+/api/v1/ledger/user/{userId}
 Grand livre complet d'un utilisateur
 
 
@@ -72,7 +72,7 @@ Utilisateur non trouvé
 No links
 
 GET
-/api/ledger/global
+/api/v1/ledger/global
 Grand livre global du système
 
 
@@ -148,7 +148,7 @@ Pas permissions admin
 No links
 
 GET
-/api/ledger/product/{productId}
+/api/v1/ledger/product/{productId}
 Historique complet d'un produit
 
 
@@ -234,7 +234,7 @@ Produit non trouvé
 No links
 
 GET
-/api/ledger/stock-card/{userId}/{productId}
+/api/v1/ledger/stock-card/{userId}/{productId}
 Fiche de stock détaillée (Stock card)
 
 
@@ -335,7 +335,7 @@ Produit ou utilisateur non trouvé
 No links
 
 GET
-/api/ledger/actifs/{userId}
+/api/v1/ledger/actifs/{userId}
 Mouvements d'ACTIFS d'un utilisateur
 
 
@@ -413,7 +413,7 @@ Utilisateur non trouvé ou pas d'actifs
 No links
 
 GET
-/api/ledger/passifs/{userId}
+/api/v1/ledger/passifs/{userId}
 Mouvements de PASSIFS d'un utilisateur
 
 
