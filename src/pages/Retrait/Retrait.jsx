@@ -10,7 +10,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { getWithdrawals, withdrawStock } from '../../services/stocks_move.service';
+import { depositStockToAMember } from '../../services/transaction.service';
+import { getWithdrawals } from '../../services/stocks_move.service.js';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAllUsersSelect } from '../../services/user.service';
 import { getSitesByUser, getActifsBySite } from '../../services/site.service';
@@ -20,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { getProfile } from '../../services/auth.service.js';
+import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
 
 const Retrait = () => {
@@ -226,20 +228,40 @@ const Retrait = () => {
 
 		try {
 			setSaving(true);
-			const token = localStorage.getItem('token');
+			const token = getAccessToken();
+			if (!token) {
+				toast.error('Token d\'authentification manquant');
+				return;
+			}
+
+			// Resolve ayant_droit: prefer currently authenticated user's id, fallback to profile, then form value
+			let ayantDroitId = (user && (user._id || user.id)) || withdrawalForm.ayant_droit;
+			if (!ayantDroitId) {
+				try {
+					const profile = await getProfile();
+					ayantDroitId = profile?._id || profile?.id || ayantDroitId;
+				} catch (err) {
+					console.debug('Impossible de récupérer le profil pour ayant_droit:', err);
+				}
+			}
+
+			if (!ayantDroitId) {
+				toast.error("Ayant droit introuvable");
+				return;
+			}
 
 			const payload = {
+				detentaire: withdrawalForm.detentaire,
+				ayant_droit: ayantDroitId,
+				productId: withdrawalForm.productId,
 				siteOrigineId: withdrawalForm.siteOrigineId,
 				siteDestinationId: withdrawalForm.siteDestinationId || withdrawalForm.siteOrigineId,
-				productId: withdrawalForm.productId,
 				quantite: Number(withdrawalForm.quantite),
 				prixUnitaire: withdrawalForm.prixUnitaire !== '' ? Number(withdrawalForm.prixUnitaire) : null,
-				detentaireId: withdrawalForm.detentaire,
-				ayant_droit: withdrawalForm.ayant_droit || (user && (user._id || user.id)),
 				observations: withdrawalForm.observations || '',
 			};
 
-			await withdrawStock(payload, token);
+			await depositStockToAMember(payload, token);
 			setWithdrawalForm({
 				actifId: '',
 				productId: '',
