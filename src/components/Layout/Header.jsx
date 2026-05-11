@@ -28,6 +28,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
     const socketInitialized = useRef(false);
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
     const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
+    const [logoutLoading, setLogoutLoading] = useState(false);
 
     useEffect(() => {
         let mounted = true;
@@ -197,10 +198,17 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
                                                 variant="destructive"
                                                 status={logoutLoading ? "loading" : "active"}
                                                 className="bg-red-600 hover:bg-red-700 text-white font-semibold"
-                                                onClick={() => {
-                                                    setLogoutDialogOpen(false);
-                                                    handleLogout();
-                                                    toast.success('Déconnecté avec succès');
+                                                onClick={async () => {
+                                                    setLogoutLoading(true);
+                                                    try {
+                                                        setLogoutDialogOpen(false);
+                                                        await handleLogout();
+                                                        toast.success('Déconnecté avec succès');
+                                                    } catch (error) {
+                                                        toast.error('Erreur lors de la déconnexion');
+                                                    } finally {
+                                                        setLogoutLoading(false);
+                                                    }
                                                 }}
                                             >
                                                 Se déconnecter
