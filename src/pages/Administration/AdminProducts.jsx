@@ -328,11 +328,11 @@ function ProductTableOrList({ loading, products, handleAskValidate, handleShowDe
                     <span className="text-neutral-400">-</span>
                   )}
                 </TableCell>
-                <TableCell className="text-sm text-neutral-900">{product.name}</TableCell>
+                <TableCell className="text-sm text-neutral-900 truncate max-w-xs">{product.name}</TableCell>
                 <TableCell className="text-sm text-neutral-600">
-                  <div className="w-48 truncate">{product.categoryNom || '-'}</div>
+                  <div className="w-48 truncate max-w-xs">{product.categoryNom || '-'}</div>
                 </TableCell>
-                <TableCell className="text-sm text-neutral-600">{product.ownerName || product.ownerNickName || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-600 truncate max-w-xs">{product.ownerName || product.ownerNickName || '-'}</TableCell>
                 <TableCell>
                   <Badge variant={product.isStocker ? 'default' : 'secondary'} className={product.isStocker ? 'bg-violet-100 text-violet-700 border-violet-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
                     {product.isStocker ? 'Oui' : 'Non'}
@@ -346,7 +346,7 @@ function ProductTableOrList({ loading, products, handleAskValidate, handleShowDe
                     </Badge>
                   </div>
                 </TableCell>
-                <TableCell className="text-sm text-neutral-600">{product.codeCPC || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-600 truncate max-w-xs">{product.codeCPC || '-'}</TableCell>
                 <TableCell>
                   <Button variant="ghost" size="sm" aria-label={`Détail ${product._id}`} onClick={() => handleShowDetail(product._id)}>
                     <InfoIcon className="w-5 h-5 text-violet-600" />

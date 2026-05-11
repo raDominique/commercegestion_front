@@ -153,13 +153,13 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
 
               return (
                 <TableRow key={item._id || item.transactionId || idx}>
-                  <TableCell className="text-sm font-mono">{transNumber}</TableCell>
-                  <TableCell className="text-sm">{produit}</TableCell>
+                  <TableCell className="text-sm font-mono truncate max-w-xs">{transNumber}</TableCell>
+                  <TableCell className="text-sm truncate max-w-xs">{produit}</TableCell>
                   <TableCell className="text-sm"><Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{item.movementType || '-'}</Badge></TableCell>
                   <TableCell className="text-sm text-right">{quantity !== '-' ? formatThousands(quantity) : '-'}</TableCell>
                   <TableCell className="text-sm text-right">{initialStock !== '-' ? formatThousands(initialStock) : '-'}</TableCell>
                   <TableCell className="text-sm text-right">{finalStock !== '-' ? formatThousands(finalStock) : '-'}</TableCell>
-                  <TableCell className="text-sm">{lieu}</TableCell>
+                  <TableCell className="text-sm truncate max-w-xs">{lieu}</TableCell>
                   <TableCell className="text-sm">{date ? dateFormat(date) : '-'}</TableCell>
                 </TableRow>
               );

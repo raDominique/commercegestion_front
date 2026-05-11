@@ -624,7 +624,7 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 
 							return (
 								<TableRow key={item._id}>
-									<TableCell className="text-sm">{produit}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{produit}</TableCell>
 									<TableCell>
 										{item.productId?.productImage ? (
 											<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
@@ -632,11 +632,11 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 											<span className="text-neutral-400">-</span>
 										)}
 									</TableCell>
-									<TableCell className="text-sm">{operatorName}</TableCell>
-									<TableCell className="text-sm">{detenteur}</TableCell>
-									<TableCell className="text-sm">{ayantDroit}</TableCell>
-									<TableCell className="text-sm">{depart}</TableCell>
-									<TableCell className="text-sm">{arrivee}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{operatorName}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{detenteur}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{ayantDroit}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{depart}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{arrivee}</TableCell>
 									<TableCell className="text-sm text-right">{quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</TableCell>
 									<TableCell className="text-sm text-right">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
 									<TableCell className="text-sm"><Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge></TableCell>

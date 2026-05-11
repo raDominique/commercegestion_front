@@ -13,7 +13,7 @@ function Table({ className, ...props }) {
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-s bg-white", className)}
+        className={cn("w-full caption-bottom text-s bg-white table-fixed", className)}
         {...props}
       />
     </div>
@@ -71,7 +71,7 @@ function TableHead({ className, ...props }) {
     <th
       data-slot="table-head"
       className={cn(
-        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5 bg-white",
+        "text-foreground h-10 px-2 py-2 text-left align-middle font-medium overflow-hidden text-ellipsis wrop-break-words [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5 bg-white",
         className,
       )}
       {...props}
@@ -84,7 +84,7 @@ function TableCell({ className, ...props }) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5 bg-white",
+        "p-2 align-middle overflow-hidden text-ellipsis wrap-break-words min-w-0 [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5 bg-white",
         className,
       )}
       {...props}

@@ -447,11 +447,11 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
 
               return (
                 <TableRow key={item._id || item.id || idx}>
-                  <TableCell className="text-sm font-mono">{item.transactionNumber || '-'}</TableCell>
-                  <TableCell className="text-sm">{productName}</TableCell>
+                  <TableCell className="text-sm font-mono truncate max-w-xs">{item.transactionNumber || '-'}</TableCell>
+                  <TableCell className="text-sm truncate max-w-xs">{productName}</TableCell>
                   <TableCell className="text-sm"><Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{item.type || '-'}</Badge></TableCell>
                   <TableCell className="text-sm text-right">{quantite ? formatThousands(quantite) : '-'}</TableCell>
-                  <TableCell className="text-sm">{initiatorName}</TableCell>
+                  <TableCell className="text-sm truncate max-w-xs">{initiatorName}</TableCell>
                   <TableCell className="text-sm"><Badge className={`text-xs ${statusClass} px-2 py-0.5 rounded`}>{item.status || '-'}</Badge></TableCell>
                   <TableCell className="text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</TableCell>
                   <TableCell className="text-sm">

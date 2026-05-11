@@ -624,8 +624,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 					<TableBody>
 						{actifs.map(item => (
 							<TableRow key={item.id}>
-								<TableCell className="text-sm">{item.productName || '-'}</TableCell>
-								<TableCell className="text-sm text-neutral-500">{item.productCode || '-'}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{item.productName || '-'}</TableCell>
+								<TableCell className="text-sm text-neutral-500 truncate max-w-xs">{item.productCode || '-'}</TableCell>
 								<TableCell>
 									{item.productImage ? (
 										<img src={getFullMediaUrl(item.productImage)} className="w-12 h-12 rounded object-cover" />
@@ -633,13 +633,13 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 										<span className="text-neutral-400">-</span>
 									)}
 								</TableCell>
-								<TableCell className="text-sm">{item.depot || '-'}</TableCell>
-								<TableCell className="text-sm">{item.depotAdresse || '-'}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
 								{/* <TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell> */}
-								<TableCell className="text-sm">{renderPerson(item.detentaire)}</TableCell>
-								<TableCell className="text-sm">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								<TableCell className="text-sm text-right">
 									<div className="flex gap-2 justify-end">
@@ -647,7 +647,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 											<InfoIcon className="w-5 h-5 text-violet-600" />
 										</Button>
 										<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
-											<AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter du stock
+											<AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock
 										</Button>
 									</div>
 								</TableCell>
@@ -684,7 +684,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
 							<div className="flex gap-2 mt-2">
 								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
-								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}><AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter du stock</Button>
+								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}><AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock</Button>
 							</div>
 						</div>
 					</div>

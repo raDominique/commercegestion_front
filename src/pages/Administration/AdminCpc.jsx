@@ -485,7 +485,7 @@ function CpcTableOrList({ loading, items, handleShowInfo, handleEditCpc, handleD
                             <TableRow key={idx}>
                                 <TableCell className="text-sm text-neutral-900 w-28">{item.code}</TableCell>
                                 <TableCell className="text-sm text-neutral-600 w-64">
-                                    <div className="w-64 truncate">{item.nom}</div>
+                                    <div className="w-64 truncate max-w-xs">{item.nom}</div>
                                 </TableCell>
                                 <TableCell className="text-sm text-neutral-600 w-40"><Badge variant="secondary" className="text-xs">{item.niveau}</Badge></TableCell>
                                 <TableCell className="w-32">

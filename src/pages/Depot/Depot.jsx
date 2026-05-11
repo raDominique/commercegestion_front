@@ -779,7 +779,7 @@ function DepotTableOrList({ loading, actifs, dateFormat }) {
 							const ayantDroitName = item.ayant_droit?.userNickName || item.ayant_droit?.userName || '-';
 							return (
 								<TableRow key={item._id}>
-									<TableCell className="text-sm">{item.productId?.productName || '-'}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{item.productId?.productName || '-'}</TableCell>
 									<TableCell>
 										{item.productId?.productImage ? (
 											<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
@@ -787,11 +787,11 @@ function DepotTableOrList({ loading, actifs, dateFormat }) {
 											<span className="text-neutral-400">-</span>
 										)}
 									</TableCell>
-									<TableCell className="text-sm">{operatorName}</TableCell>
-									<TableCell className="text-sm">{detenteurName}</TableCell>
-									<TableCell className="text-sm">{ayantDroitName}</TableCell>
-									<TableCell className="text-sm">{item.siteOrigineId?.siteName || '-'}</TableCell>
-									<TableCell className="text-sm">{item.siteDestinationId?.siteName || '-'}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{operatorName}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{detenteurName}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{ayantDroitName}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{item.siteOrigineId?.siteName || '-'}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{item.siteDestinationId?.siteName || '-'}</TableCell>
 									<TableCell className="text-sm text-right">{item.quantite !== undefined && item.quantite !== null ? formatThousands(item.quantite) : '-'}</TableCell>
 									{/* <TableCell className="text-sm text-right">{item.prixUnitaire !== undefined && item.prixUnitaire !== null ? formatThousands(item.prixUnitaire) : '-'}</TableCell> */}
 									<TableCell className="text-sm"><Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge></TableCell>

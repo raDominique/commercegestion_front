@@ -485,7 +485,7 @@ const MesProduits = () => {
                       <div className="truncate" title={product.name}>{product.name}</div>
                     </TableCell>
                     <TableCell className="p-4 text-sm text-neutral-600">
-                      <div className="truncate" title={product.categoryNom || '-'}>{product.categoryNom || '-'}</div>
+                      <div className="truncate max-w-xs" title={product.categoryNom || '-'}>{product.categoryNom || '-'}</div>
                     </TableCell>
                     <TableCell className="p-4 text-sm">
                       <Badge
@@ -495,7 +495,7 @@ const MesProduits = () => {
                         {product.validation ? 'Oui' : 'Non'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="p-4 text-sm text-neutral-600">{product.codeCPC || '-'}</TableCell>
+                    <TableCell className="p-4 text-sm text-neutral-600 truncate max-w-xs">{product.codeCPC || '-'}</TableCell>
                     <TableCell className="p-4 text-sm">
                       <Button
                         onClick={() => handleOpenDepositModal(product._id)}

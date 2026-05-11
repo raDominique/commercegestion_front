@@ -77,10 +77,10 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
                                         ) : (
                                             <div className="w-8 h-8 rounded bg-neutral-100 flex items-center justify-center text-sm text-neutral-500">{(referral.userNickName || referral.userName || '').charAt(0)}</div>
                                         )} */}
-                                        <div>{referral.userNickName || referral.userName}</div>
+                                        <div className="truncate max-w-xs">{referral.userNickName || referral.userName}</div>
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-sm">{referral.userEmail}</TableCell>
+                                <TableCell className="text-sm truncate max-w-xs">{referral.userEmail}</TableCell>
                                 <TableCell className="text-sm">{referral.userType}</TableCell>
                                 <TableCell className="text-sm">{(referral.createdAt || referral.created_at || referral.raw?.createdAt) ? dateFormat(referral.createdAt || referral.created_at || referral.raw?.createdAt) : '-'}</TableCell>
                                 <TableCell className="text-sm">{(referral.isParrain1Validated && referral.isParrain2Validated) && (referral.updatedAt || referral.updated_at || referral.raw?.updatedAt) ? dateFormat(referral.updatedAt || referral.updated_at || referral.raw?.updatedAt) : '-'}</TableCell>

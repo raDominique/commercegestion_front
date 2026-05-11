@@ -166,15 +166,15 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 							const date = item.createdAt;
 							return (
 								<TableRow key={idx}>
-									<TableCell className="text-sm">{produit}</TableCell>
-									<TableCell className="text-sm">{item.type || '-'}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{produit}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{item.type || '-'}</TableCell>
 									<TableCell className="text-sm text-right">{quantite}</TableCell>
 									{/* <TableCell className="text-sm text-right">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
 									<TableCell className="text-sm text-right">{montant !== null ? formatThousands(montant) : '-'}</TableCell> */}
-									<TableCell className="text-sm">{depart}</TableCell>
-									<TableCell className="text-sm">{arrivee}</TableCell>
-									<TableCell className="text-sm">{detenteur}</TableCell>
-									<TableCell className="text-sm">{ayantDroit}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{depart}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{arrivee}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{detenteur}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{ayantDroit}</TableCell>
 									<TableCell className="text-sm">{date ? dateFormat(date) : '-'}</TableCell>
 									<TableCell className="text-sm text-right">
 										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}>

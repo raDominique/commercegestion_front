@@ -463,8 +463,8 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
                                     )}
                                 </div>
                             </TableCell>
-                            <TableCell><p className={`text-sm ${user.status === 'Actif' ? 'text-neutral-900' : 'text-neutral-400'}`}>{user.name}</p></TableCell>
-                            <TableCell className={`text-sm ${user.status === 'Actif' ? 'text-neutral-600' : 'text-neutral-400'}`}>{user.email}</TableCell>
+                            <TableCell><p className={`text-sm ${user.status === 'Actif' ? 'text-neutral-900' : 'text-neutral-400'} truncate max-w-xs`}>{user.name}</p></TableCell>
+                            <TableCell className={`text-sm ${user.status === 'Actif' ? 'text-neutral-600' : 'text-neutral-400'} truncate max-w-xs`}>{user.email}</TableCell>
                             <TableCell>
                                 <Badge variant={user.emailVerified ? 'default' : 'secondary'} className={user.emailVerified ? 'bg-violet-100 text-violet-700 border-violet-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{user.emailVerified ? 'Vérifié' : 'Non vérifié'}</Badge>
                             </TableCell>
