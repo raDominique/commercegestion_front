@@ -93,7 +93,8 @@ const Depot = () => {
 	const [siteDestinationSearch, setSiteDestinationSearch] = useState('');
 	const [siteDestinationOpen, setSiteDestinationOpen] = useState(false);
 	const [siteDestinationHighlighted, setSiteDestinationHighlighted] = useState(0);
-
+	// Estado para o formulário de transferência
+	const [saving, setSaving] = useState(false);
 	// Données filtrées
 	const filteredOriginSites = allSites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
 	const filteredProducts = productsOnSite.filter(item => (item.productName || '').toLowerCase().includes(productSearch.toLowerCase()));
@@ -226,6 +227,7 @@ const Depot = () => {
 		}
 
 		try {
+			setSaving(true);
 			const token = getAccessToken();
 			if (!token) {
 				toast.error('Token d\'authentification manquant');
@@ -279,6 +281,8 @@ const Depot = () => {
 		} catch (error) {
 			console.error('Erreur lors du transfert:', error);
 			toast.error('Erreur lors du transfert');
+		} finally {
+			setSaving(false);
 		}
 	};
 

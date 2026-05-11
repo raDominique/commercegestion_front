@@ -100,7 +100,6 @@ export default function AdminUsers() {
             fetchUsers();
         } catch (err) {
             toast.error("Erreur lors de la suppression");
-            console.log("Erreur de suppression:", err);
         } finally {
             setActionLoading(false);
             setModalOpen(false);
@@ -115,7 +114,6 @@ export default function AdminUsers() {
             fetchUsers();
         } catch (err) {
             toast.error("Erreur lors du changement de rôle");
-            console.log("Erreur de changement de rôle:", err);
         } finally {
             setActionLoading(false);
             setModalOpen(false);
@@ -130,7 +128,6 @@ export default function AdminUsers() {
             fetchUsers();
         } catch (err) {
             toast.error("Erreur lors de l'activation");
-            console.log("Erreur d'activation:", err);
         } finally {
             setActionLoading(false);
             setModalOpen(false);

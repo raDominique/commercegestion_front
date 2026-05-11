@@ -81,7 +81,6 @@ const OperationsAValider = () => {
         };
 
         const res = await getPendingTransactionsList(params, token);
-        console.log('getPendingTransactionsList response:', res);
 
         let items = [];
         let totalCount = 0;
