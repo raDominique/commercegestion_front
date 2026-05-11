@@ -4,7 +4,7 @@ import { cn } from "./utils";
 
 // Status variants for button states
 const statusVariants = {
-    active: "bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green/20 dark:bg-green-700 dark:hover:bg-green-800",
+    active: "bg-violet-600 text-white hover:bg-violet-700 focus-visible:ring-violet/20 dark:bg-violet-700 dark:hover:bg-violet-800",
     inactive: "bg-gray-400 text-white hover:bg-gray-500 cursor-not-allowed disabled:opacity-75",
     loading: "bg-amber-500 text-white hover:bg-amber-600 focus-visible:ring-amber/20 dark:bg-amber-600 dark:hover:bg-amber-700 opacity-80",
 };
@@ -13,7 +13,7 @@ const statusVariants = {
 const colorThemes = {
     default: "bg-violet-600 text-white hover:bg-violet-700 focus-visible:ring-violet/20",
     destructive: "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red/20",
-    success: "bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green/20",
+    success: "bg-violet-600 text-white hover:bg-violet-700 focus-visible:ring-violet/20",
 };
 
 // buttonVariants utilitaire simple (remplace cva)

@@ -85,7 +85,7 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
                                 <TableCell className="text-sm">{(referral.createdAt || referral.created_at || referral.raw?.createdAt) ? dateFormat(referral.createdAt || referral.created_at || referral.raw?.createdAt) : '-'}</TableCell>
                                 <TableCell className="text-sm">{(referral.isParrain1Validated && referral.isParrain2Validated) && (referral.updatedAt || referral.updated_at || referral.raw?.updatedAt) ? dateFormat(referral.updatedAt || referral.updated_at || referral.raw?.updatedAt) : '-'}</TableCell>
                                 <TableCell className="text-sm">
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${(referral.isParrain1Validated && referral.isParrain2Validated) ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${(referral.isParrain1Validated && referral.isParrain2Validated) ? 'bg-violet-100 text-violet-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                         {(referral.isParrain1Validated && referral.isParrain2Validated) ? 'Validé' : 'En attente'}
                                     </span>
                                 </TableCell>
@@ -97,13 +97,13 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
                                             disabled={referral.userValidated || actionLoading}
                                             onClick={() => onApprove?.(referral._id)}
                                             aria-label={referral.userValidated ? 'Déjà validé' : 'Valider cet utilisateur'}
-                                            className="hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="hover:bg-violet-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                             title={referral.userValidated ? 'Déjà validé' : 'Valider'}
                                         >
                                             {actionLoading ? (
                                                 <CircularProgress size={20} />
                                             ) : (
-                                                <DoneIcon className={`w-5 h-5 ${referral.userValidated ? 'text-gray-400' : 'text-green-600'}`} />
+                                                <DoneIcon className={`w-5 h-5 ${referral.userValidated ? 'text-gray-400' : 'text-violet-600'}`} />
                                             )}
                                         </Button>
                                         <Button
@@ -160,13 +160,13 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
                                     disabled={referral.userValidated || actionLoading}
                                     onClick={() => onApprove?.(referral._id)}
                                     aria-label={referral.userValidated ? 'Déjà validé' : 'Valider cet utilisateur'}
-                                    className="hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="hover:bg-violet-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                     title={referral.userValidated ? 'Déjà validé' : 'Valider'}
                                 >
                                     {actionLoading ? (
                                         <CircularProgress size={20} />
                                     ) : (
-                                        <DoneIcon className={`w-5 h-5 ${referral.userValidated ? 'text-gray-400' : 'text-green-600'}`} />
+                                        <DoneIcon className={`w-5 h-5 ${referral.userValidated ? 'text-gray-400' : 'text-violet-600'}`} />
                                     )}
                                 </Button>
                                 <Button

@@ -12,9 +12,8 @@ import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
 import { getWithdrawals, withdrawStock } from '../../services/stocks_move.service';
 import { getFullMediaUrl } from '../../services/media.service';
-import { getPassifs } from '../../services/ledger.service.js';
 import { getAllUsersSelect } from '../../services/user.service';
-import { getAllSitesSelect } from '../../services/site.service';
+import { getSitesByUser, getActifsBySite } from '../../services/site.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
@@ -38,8 +37,10 @@ const Retrait = () => {
 
 	// États pour le formulaire de retrait
 	const [usersOptions, setUsersOptions] = useState([]);
-	const [allSites, setAllSites] = useState([]);
-	const [passifsList, setPassifsList] = useState([]);
+	const [detentaireSites, setDetentaireSites] = useState([]);
+	const [productsOnSite, setProductsOnSite] = useState([]);
+	const [maxWithdrawalQty, setMaxWithdrawalQty] = useState(null);
+	
 	const [withdrawalForm, setWithdrawalForm] = useState({
 		actifId: '',
 		productId: '',
@@ -51,7 +52,29 @@ const Retrait = () => {
 		ayant_droit: '',
 		observations: ''
 	});
-	const [maxWithdrawalQty, setMaxWithdrawalQty] = useState(undefined);
+
+	// États pour les recherches - Détentaire
+	const [detentaireSearch, setDetentaireSearch] = useState('');
+	const [detentaireOpen, setDetentaireOpen] = useState(false);
+	const [detentaireHighlighted, setDetentaireHighlighted] = useState(0);
+
+	// États pour les recherches - Site d'origine
+	const [siteOriginSearch, setSiteOriginSearch] = useState('');
+	const [siteOriginOpen, setSiteOriginOpen] = useState(false);
+	const [siteOriginHighlighted, setSiteOriginHighlighted] = useState(0);
+
+	// États pour les recherches - Produit
+	const [productSearch, setProductSearch] = useState('');
+	const [productOpen, setProductOpen] = useState(false);
+	const [productHighlighted, setProductHighlighted] = useState(0);
+
+	// État pour les transferts
+	const [saving, setSaving] = useState(false);
+
+	// Données filtrées
+	const filteredDetentaires = usersOptions.filter(user => user.name.toLowerCase().includes(detentaireSearch.toLowerCase()));
+	const filteredOriginSites = detentaireSites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
+	const filteredProducts = productsOnSite.filter(item => (item.productName || '').toLowerCase().includes(productSearch.toLowerCase()));
 
 	// Récupérer l'historique des retraits
 	const fetchPassifs = async () => {
@@ -72,33 +95,12 @@ const Retrait = () => {
 		}
 	};
 
-	// Récupérer les passifs pour le formulaire
-	const fetchPassifsForForm = async () => {
-		try {
-			let userId = user?._id;
-			if (!userId) {
-				try {
-					const profile = await getProfile();
-					userId = profile?._id || profile?.id;
-				} catch (e) {
-					// Silently fail
-				}
-			}
-			if (userId) {
-				const res = await getPassifs(userId, { limit: 100, page: 1 });
-				setPassifsList(Array.isArray(res.data) ? res.data : []);
-			}
-		} catch (err) {
-			setPassifsList([]);
-		}
-	};
-
 	useEffect(() => {
 		fetchPassifs();
 	}, [page, limit]);
 
+	// Charger les utilisateurs au chargement initial
 	useEffect(() => {
-		fetchPassifsForForm();
 		getAllUsersSelect().then(res => {
 			if (Array.isArray(res)) {
 				setUsersOptions(res);
@@ -108,8 +110,93 @@ const Retrait = () => {
 				setUsersOptions([]);
 			}
 		});
-		getAllSitesSelect().then(res => setAllSites(Array.isArray(res) ? res : []));
 	}, []);
+
+	// Charger les sites du détentaire sélectionné
+	useEffect(() => {
+		if (withdrawalForm.detentaire) {
+			getSitesByUser(withdrawalForm.detentaire)
+				.then(res => {
+					let sites = [];
+					if (Array.isArray(res)) {
+						sites = res;
+					} else if (res?.data && Array.isArray(res.data)) {
+						sites = res.data;
+					}
+					setDetentaireSites(sites);
+				})
+				.catch(error => {
+					console.error('Erreur lors de la récupération des sites du détentaire:', error);
+					toast.error('Erreur lors du chargement des sites du détentaire');
+					setDetentaireSites([]);
+				});
+		} else {
+			setDetentaireSites([]);
+		}
+	}, [withdrawalForm.detentaire]);
+
+	/* ================= ACTIONS ================= */
+
+	const handleSelectDetentaire = detentaireId => {
+		setWithdrawalForm(prev => ({
+			...prev,
+			detentaire: detentaireId,
+			siteOrigineId: '',
+			productId: '',
+			actifId: '',
+			quantite: '',
+			siteDestinationId: '',
+			observations: ''
+		}));
+		setDetentaireSites([]);
+		setProductsOnSite([]);
+		setMaxWithdrawalQty(null);
+	};
+
+	const handleSelectSiteOrigine = async siteId => {
+		setWithdrawalForm(prev => ({
+			...prev,
+			siteOrigineId: siteId,
+			productId: '',
+			actifId: '',
+			quantite: '',
+			siteDestinationId: '',
+			observations: ''
+		}));
+		setMaxWithdrawalQty(null);
+
+		try {
+			const res = await getActifsBySite(siteId);
+			let siteProducts = [];
+			if (Array.isArray(res)) {
+				siteProducts = res;
+			} else if (res?.data && Array.isArray(res.data)) {
+				siteProducts = res.data;
+			}
+			setProductsOnSite(siteProducts);
+			if (siteProducts.length > 0) {
+				toast.success(`${siteProducts.length} actif(s) chargé(s)`);
+			} else {
+				toast.info('Aucun actif sur ce site');
+			}
+		} catch (error) {
+			console.error('Erreur lors de la récupération des actifs:', error);
+			toast.error('Erreur lors du chargement des actifs du site');
+			setProductsOnSite([]);
+		}
+	};
+
+	const handleSelectProduct = productId => {
+		const actif = productsOnSite.find(item => item.productId === productId);
+		setWithdrawalForm(prev => ({
+			...prev,
+			actifId: actif?.productId || '',
+			productId: actif?.productId || '',
+			quantite: '',
+			prixUnitaire: actif?.prixUnitaire || '',
+		}));
+		setMaxWithdrawalQty(actif?.quantite || null);
+	};
 
 	const handleSelectPassifForWithdrawal = passifId => {
 		const item = passifsList.find(p => p._id === passifId);
@@ -132,16 +219,23 @@ const Retrait = () => {
 	const handleWithdrawalSubmit = async e => {
 		e.preventDefault();
 
+		if (!withdrawalForm.detentaire || !withdrawalForm.siteOrigineId || !withdrawalForm.productId || !withdrawalForm.quantite) {
+			toast.error('Veuillez remplir tous les champs obligatoires');
+			return;
+		}
+
 		try {
+			setSaving(true);
 			const token = localStorage.getItem('token');
+
 			const payload = {
 				siteOrigineId: withdrawalForm.siteOrigineId,
-				siteDestinationId: withdrawalForm.siteDestinationId,
-				productId: withdrawalForm.actifId || withdrawalForm.productId,
+				siteDestinationId: withdrawalForm.siteDestinationId || withdrawalForm.siteOrigineId,
+				productId: withdrawalForm.productId,
 				quantite: Number(withdrawalForm.quantite),
 				prixUnitaire: withdrawalForm.prixUnitaire !== '' ? Number(withdrawalForm.prixUnitaire) : null,
-				detentaireId: withdrawalForm.detentaire || withdrawalForm.detentaireId,
-				ayant_droit: withdrawalForm.ayant_droit,
+				detentaireId: withdrawalForm.detentaire,
+				ayant_droit: withdrawalForm.ayant_droit || (user && (user._id || user.id)),
 				observations: withdrawalForm.observations || '',
 			};
 
@@ -157,12 +251,19 @@ const Retrait = () => {
 				ayant_droit: '',
 				observations: ''
 			});
-			setMaxWithdrawalQty(undefined);
+			setDetentaireSites([]);
+			setProductsOnSite([]);
+			setMaxWithdrawalQty(null);
+			setSiteOriginSearch('');
+			setProductSearch('');
+			setDetentaireSearch('');
 			toast.success('Retrait effectué avec succès');
 			fetchPassifs();
-			fetchPassifsForForm();
-		} catch {
+		} catch (error) {
+			console.error('Erreur lors du retrait du stock:', error);
 			toast.error('Erreur lors du retrait du stock');
+		} finally {
+			setSaving(false);
 		}
 	};
 
@@ -208,100 +309,241 @@ const Retrait = () => {
 							<Card className="border-neutral-200 bg-white">
 								<div className="px-4 pt-4">
 									<h2 className="text-lg font-semibold text-neutral-900">Formulaire de retrait</h2>
-									<p className="text-sm text-neutral-600">Renseignez les informations pour retirer un passif.</p>
+									<p className="text-sm text-neutral-600">Renseignez les informations pour retirer un actif.</p>
 								</div>
 								<form className="space-y-4 p-4" onSubmit={handleWithdrawalSubmit}>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+										{/* 1. Détentaire avec recherche */}
 										<div className="space-y-2 md:col-span-2">
-											<Label htmlFor="actifId">Actif à retirer</Label>
-											<Select value={withdrawalForm.actifId} onValueChange={handleSelectPassifForWithdrawal}>
-												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner un actif" />
-												</SelectTrigger>
-												<SelectContent>
-													{passifsList.map(item => (
-														<SelectItem key={item._id} value={item._id}>
-															{item.productId?.productName || item.productId?.codeCPC || '-'} - Qté: {formatThousands(item.quantite || 0)}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
+											<Label required>1. Détentaire</Label>
+											<div className="relative">
+												<Input
+													placeholder="Rechercher un détentaire..."
+													value={detentaireSearch}
+													onChange={e => { setDetentaireSearch(e.target.value); setDetentaireHighlighted(0); }}
+													onFocus={() => { setDetentaireOpen(true); setDetentaireHighlighted(0); }}
+													onBlur={() => setTimeout(() => setDetentaireOpen(false), 150)}
+													onKeyDown={(e) => {
+														if (e.key === 'Escape') return setDetentaireOpen(false);
+														if (!detentaireOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+															setDetentaireOpen(true);
+															e.preventDefault();
+															return;
+														}
+														if (detentaireOpen) {
+															if (e.key === 'ArrowDown') {
+																e.preventDefault();
+																setDetentaireHighlighted(i => Math.min(i + 1, Math.max(filteredDetentaires.length - 1, 0)));
+															} else if (e.key === 'ArrowUp') {
+																e.preventDefault();
+																setDetentaireHighlighted(i => Math.max(i - 1, 0));
+															} else if (e.key === 'Enter') {
+																e.preventDefault();
+																const user = filteredDetentaires[detentaireHighlighted];
+																if (user) {
+																	handleSelectDetentaire(user._id);
+																	setDetentaireSearch(user.name);
+																	setDetentaireOpen(false);
+																}
+															}
+														}
+													}}
+													className="w-full"
+												/>
+												{detentaireOpen && (
+													<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+														{filteredDetentaires.length > 0 ? (
+															filteredDetentaires.map((user, idx) => (
+																<button
+																	type="button"
+																	key={user._id}
+																	onMouseEnter={() => setDetentaireHighlighted(idx)}
+																	onClick={() => {
+																		handleSelectDetentaire(user._id);
+																		setDetentaireSearch(user.name);
+																		setDetentaireOpen(false);
+																	}}
+																	className={`w-full text-left px-3 py-2 text-sm ${idx === detentaireHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+																>
+																	{user.name}
+																</button>
+															))
+														) : (
+															<div className="px-3 py-2 text-sm text-neutral-500">Aucun utilisateur trouvé</div>
+														)}
+													</div>
+												)}
+											</div>
 										</div>
-										<div className="space-y-2">
-											<Label htmlFor="siteOrigineId">Site d'origine</Label>
-											<Select value={withdrawalForm.siteOrigineId} onValueChange={val => setWithdrawalForm(f => ({ ...f, siteOrigineId: val }))}>
-												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner le site d'origine" />
-												</SelectTrigger>
-												<SelectContent>
-													{allSites.map(site => (
-														<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-										</div>
-										<div className="space-y-2">
-											<Label htmlFor="siteDestinationId">Site de destination</Label>
-											<Select value={withdrawalForm.siteDestinationId} onValueChange={val => setWithdrawalForm(f => ({ ...f, siteDestinationId: val }))}>
-												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner le site de destination" />
-												</SelectTrigger>
-												<SelectContent>
-													{allSites.map(site => (
-														<SelectItem key={site._id} value={site._id}>{site.siteName}</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-										</div>
-										<div className="space-y-2">
-											<Label htmlFor="quantite">Quantité</Label>
-											<Input name="quantite" value={withdrawalForm.quantite} onChange={e => setWithdrawalForm(f => ({ ...f, quantite: e.target.value }))} required placeholder="Quantité à retirer" className="border-neutral-300" type="number" min="1" max={maxWithdrawalQty || undefined} />
-										</div>
-										<div className="space-y-2">
-											<Label htmlFor="prixUnitaire">Prix unitaire</Label>
-											<Input name="prixUnitaire" value={withdrawalForm.prixUnitaire} onChange={e => setWithdrawalForm(f => ({ ...f, prixUnitaire: e.target.value }))} required placeholder="Prix unitaire" className="border-neutral-300" type="number" min="0" />
-										</div>
-										<div className="space-y-2">
-											<Label htmlFor="detentaire">Détenteur</Label>
-											<Select value={withdrawalForm.detentaire} onValueChange={val => setWithdrawalForm(f => ({ ...f, detentaire: val }))}>
-												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner le détenteur" />
-												</SelectTrigger>
-												<SelectContent>
-													{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
-														usersOptions.map(userOption => (
-															<SelectItem key={userOption._id} value={userOption._id}>{userOption.name || userOption.userNickName || userOption.userName || userOption.userFirstname || userOption.userId}</SelectItem>
-														))
-													) : (
-														<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
+
+										{/* 2. Site d'origine avec recherche */}
+										{withdrawalForm.detentaire && (
+											<div className="space-y-2 md:col-span-2">
+												<Label required>2. Site du détentaire</Label>
+												<div className="relative">
+													<Input
+														placeholder={detentaireSites.length === 0 ? "Aucun site disponible" : "Rechercher le site..."}
+														value={siteOriginSearch}
+														onChange={e => { setSiteOriginSearch(e.target.value); setSiteOriginHighlighted(0); }}
+														onFocus={() => { setSiteOriginOpen(true); setSiteOriginHighlighted(0); }}
+														onBlur={() => setTimeout(() => setSiteOriginOpen(false), 150)}
+														onKeyDown={(e) => {
+															if (e.key === 'Escape') return setSiteOriginOpen(false);
+															if (!siteOriginOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+																setSiteOriginOpen(true);
+																e.preventDefault();
+																return;
+															}
+															if (siteOriginOpen) {
+																if (e.key === 'ArrowDown') {
+																	e.preventDefault();
+																	setSiteOriginHighlighted(i => Math.min(i + 1, Math.max(filteredOriginSites.length - 1, 0)));
+																} else if (e.key === 'ArrowUp') {
+																	e.preventDefault();
+																	setSiteOriginHighlighted(i => Math.max(i - 1, 0));
+																} else if (e.key === 'Enter') {
+																	e.preventDefault();
+																	const site = filteredOriginSites[siteOriginHighlighted];
+																	if (site) {
+																		handleSelectSiteOrigine(site._id);
+																		setSiteOriginSearch(site.siteName);
+																		setSiteOriginOpen(false);
+																	}
+																}
+															}
+														}}
+														className="w-full"
+														disabled={detentaireSites.length === 0}
+													/>
+													{siteOriginOpen && (
+														<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+															{filteredOriginSites.length > 0 ? (
+																filteredOriginSites.map((site, idx) => (
+																	<button
+																		type="button"
+																		key={site._id}
+																		onMouseEnter={() => setSiteOriginHighlighted(idx)}
+																		onClick={() => {
+																			handleSelectSiteOrigine(site._id);
+																			setSiteOriginSearch(site.siteName);
+																			setSiteOriginOpen(false);
+																		}}
+																		className={`w-full text-left px-3 py-2 text-sm ${idx === siteOriginHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+																	>
+																		{site.siteName} - {site.siteAddress || ''}
+																	</button>
+																))
+															) : (
+																<div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
+															)}
+														</div>
 													)}
-												</SelectContent>
-											</Select>
-										</div>
-										<div className="space-y-2">
-											<Label htmlFor="ayant_droit">Ayant droit</Label>
-											<Select value={withdrawalForm.ayant_droit} onValueChange={val => setWithdrawalForm(f => ({ ...f, ayant_droit: val }))}>
-												<SelectTrigger>
-													<SelectValue placeholder="Sélectionner l'ayant droit" />
-												</SelectTrigger>
-												<SelectContent>
-													{Array.isArray(usersOptions) && usersOptions.length > 0 ? (
-														usersOptions.map(userOption => (
-															<SelectItem key={userOption._id} value={userOption._id}>{userOption.name || userOption.userNickName || userOption.userName || userOption.userFirstname || userOption.userId}</SelectItem>
-														))
-													) : (
-														<div className="px-4 py-2 text-neutral-400">Aucun utilisateur</div>
+												</div>
+											</div>
+										)}
+
+										{/* 3. Produit du site avec recherche */}
+										{withdrawalForm.siteOrigineId && (
+											<div className="space-y-2 md:col-span-2">
+												<Label required>3. Actif à retirer</Label>
+												<div className="relative">
+													<Input
+														placeholder={productsOnSite.length === 0 ? "Aucun actif disponible" : "Rechercher un actif..."}
+														value={productSearch}
+														onChange={e => { setProductSearch(e.target.value); setProductHighlighted(0); }}
+														onFocus={() => { setProductOpen(true); setProductHighlighted(0); }}
+														onBlur={() => setTimeout(() => setProductOpen(false), 150)}
+														onKeyDown={(e) => {
+															if (e.key === 'Escape') return setProductOpen(false);
+															if (!productOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+																setProductOpen(true);
+																e.preventDefault();
+																return;
+															}
+															if (productOpen) {
+																if (e.key === 'ArrowDown') {
+																	e.preventDefault();
+																	setProductHighlighted(i => Math.min(i + 1, Math.max(filteredProducts.length - 1, 0)));
+																} else if (e.key === 'ArrowUp') {
+																	e.preventDefault();
+																	setProductHighlighted(i => Math.max(i - 1, 0));
+																} else if (e.key === 'Enter') {
+																	e.preventDefault();
+																	const product = filteredProducts[productHighlighted];
+																	if (product) {
+																		handleSelectProduct(product.productId);
+																		setProductSearch(product.productName);
+																		setProductOpen(false);
+																	}
+																}
+															}
+														}}
+														className="w-full"
+														disabled={productsOnSite.length === 0}
+													/>
+													{productOpen && filteredProducts.length > 0 && (
+														<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+															{filteredProducts.map((item, idx) => (
+																<button
+																	type="button"
+																	key={item.productId}
+																	onMouseEnter={() => setProductHighlighted(idx)}
+																	onClick={() => {
+																		handleSelectProduct(item.productId);
+																		setProductSearch(item.productName);
+																		setProductOpen(false);
+																	}}
+																	className={`w-full text-left px-3 py-2 text-sm ${idx === productHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+																>
+																	{item.productName || '-'} - Qté: {formatThousands(item.quantite)}
+																</button>
+															))}
+														</div>
 													)}
-												</SelectContent>
-											</Select>
-										</div>
-										<div className="space-y-2 md:col-span-2">
-											<Label htmlFor="observations">Observations</Label>
-											<Input name="observations" value={withdrawalForm.observations} onChange={e => setWithdrawalForm(f => ({ ...f, observations: e.target.value }))} placeholder="Observations" className="border-neutral-300" />
-										</div>
+												</div>
+											</div>
+										)}
+
+										{/* 4. Quantité */}
+										{withdrawalForm.productId && (
+											<div className="space-y-2 md:col-span-2">
+												<Label required>4. Quantité (Stock disponible: {formatThousands(maxWithdrawalQty || 0)})</Label>
+												<Input
+													name="quantite"
+													value={withdrawalForm.quantite}
+													onChange={e => {
+														const qty = Number(e.target.value);
+														if (qty <= (maxWithdrawalQty || 0) || e.target.value === '') {
+															setWithdrawalForm(f => ({ ...f, quantite: e.target.value }));
+														}
+													}}
+													required
+													placeholder="Quantité à retirer"
+													className="border-neutral-300"
+													type="number"
+													min="1"
+													max={maxWithdrawalQty || undefined}
+												/>
+											</div>
+										)}
+
+										{/* 5. Observation */}
+										{withdrawalForm.productId && (
+											<div className="space-y-2 md:col-span-2">
+												<Label>5. Observation</Label>
+												<Input
+													name="observations"
+													value={withdrawalForm.observations}
+													onChange={e => setWithdrawalForm(f => ({ ...f, observations: e.target.value }))}
+													placeholder="Observation"
+													className="border-neutral-300"
+												/>
+											</div>
+										)}
 									</div>
-									<div className="flex justify-end gap-2 mt-4">
-										<Button variant="outline" status="inactive" type="button" onClick={() => {
+
+									<div className="flex justify-end gap-2">
+										<Button variant="outline" type="button" onClick={() => {
 											setWithdrawalForm({
 												actifId: '',
 												productId: '',
@@ -313,11 +555,24 @@ const Retrait = () => {
 												ayant_droit: '',
 												observations: ''
 											});
-											setMaxWithdrawalQty(undefined);
+											setDetentaireSearch('');
+											setSiteOriginSearch('');
+											setProductSearch('');
+											setDetentaireSites([]);
+											setProductsOnSite([]);
+											setMaxWithdrawalQty(null);
 										}}>
 											Annuler
 										</Button>
-										<Button variant="default" status="active" color="default" type="submit">Valider le retrait</Button>
+										<Button
+											variant="default"
+											status={saving ? 'loading' : 'active'}
+											color="default"
+											type="submit"
+											disabled={!withdrawalForm.detentaire || !withdrawalForm.siteOrigineId || !withdrawalForm.productId || !withdrawalForm.quantite}
+										>
+											Valider le retrait
+										</Button>
 									</div>
 								</form>
 							</Card>

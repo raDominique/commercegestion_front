@@ -427,7 +427,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
               const badgeClass = item.type === 'RETOUR'
                 ? 'bg-blue-600 text-white border-blue-700'
                 : item.type === 'DÉPÔT'
-                  ? 'bg-green-600 text-white border-green-700'
+                  ? 'bg-violet-600 text-white border-violet-700'
                   : item.type === 'RETRAIT'
                     ? 'bg-red-600 text-white border-red-700'
                     : 'bg-neutral-200 text-neutral-700';
@@ -435,7 +435,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
               const statusClass = item.status === 'PENDING'
                 ? 'bg-orange-600 text-white border-orange-700'
                 : item.status === 'APPROVED'
-                  ? 'bg-green-600 text-white border-green-700'
+                  ? 'bg-violet-600 text-white border-violet-700'
                   : item.status === 'REJECTED'
                     ? 'bg-red-600 text-white border-red-700'
                     : 'bg-neutral-200 text-neutral-700';
@@ -493,7 +493,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
         const badgeClass = item.type === 'RETOUR'
           ? 'bg-blue-600 text-white border-blue-700'
           : item.type === 'DÉPÔT'
-            ? 'bg-green-600 text-white border-green-700'
+            ? 'bg-violet-600 text-white border-violet-700'
             : item.type === 'RETRAIT'
               ? 'bg-red-600 text-white border-red-700'
               : 'bg-neutral-200 text-neutral-700';
@@ -501,7 +501,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
         const statusClass = item.status === 'PENDING'
           ? 'bg-orange-600 text-white border-orange-700'
           : item.status === 'APPROVED'
-            ? 'bg-green-600 text-white border-green-700'
+            ? 'bg-violet-600 text-white border-violet-700'
             : item.status === 'REJECTED'
               ? 'bg-red-600 text-white border-red-700'
               : 'bg-neutral-200 text-neutral-700';

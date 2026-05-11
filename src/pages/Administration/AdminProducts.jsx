@@ -198,7 +198,7 @@ const AdminProducts = () => {
                       variant={detailProduct.isStocker ? 'default' : 'secondary'}
                       className={
                         detailProduct.isStocker
-                          ? 'bg-green-100 text-green-700 border-green-200'
+                          ? 'bg-violet-100 text-violet-700 border-violet-200'
                           : 'bg-neutral-200 text-neutral-500 border-neutral-200'
                       }
                     >
@@ -209,7 +209,7 @@ const AdminProducts = () => {
                       variant={detailProduct.productValidation ? 'default' : 'secondary'}
                       className={
                         detailProduct.productValidation
-                          ? 'bg-green-100 text-green-700 border-green-200'
+                          ? 'bg-violet-100 text-violet-700 border-violet-200'
                           : 'bg-neutral-200 text-neutral-500 border-neutral-200'
                       }
                     >
@@ -334,14 +334,14 @@ function ProductTableOrList({ loading, products, handleAskValidate, handleShowDe
                 </TableCell>
                 <TableCell className="text-sm text-neutral-600">{product.ownerName || product.ownerNickName || '-'}</TableCell>
                 <TableCell>
-                  <Badge variant={product.isStocker ? 'default' : 'secondary'} className={product.isStocker ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
+                  <Badge variant={product.isStocker ? 'default' : 'secondary'} className={product.isStocker ? 'bg-violet-100 text-violet-700 border-violet-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
                     {product.isStocker ? 'Oui' : 'Non'}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Switch aria-label="Basculer validation produit" checked={product.validation} onCheckedChange={() => handleAskValidate(product._id)} />
-                    <Badge variant={product.validation ? 'default' : 'secondary'} className={product.validation ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
+                    <Badge variant={product.validation ? 'default' : 'secondary'} className={product.validation ? 'bg-violet-100 text-violet-700 border-violet-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>
                       {product.validation ? 'Oui' : 'Non'}
                     </Badge>
                   </div>

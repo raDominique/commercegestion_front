@@ -462,7 +462,7 @@ const Register = () => {
                       </button>
                     </div>
                     {form.userPassword.length >= 8 ? (
-                      <span className="text-xs text-green-500 flex items-center"><CheckCircleIcon fontSize="small" className="mr-1 inline" /> Mot de passe valide.</span>
+                      <span className="text-xs text-violet-500 flex items-center"><CheckCircleIcon fontSize="small" className="mr-1 inline" /> Mot de passe valide.</span>
                     ) : (
                       <span className="text-xs text-orange-300 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> Le mot de passe doit contenir au moins 8 caractères.</span>
                     )}

@@ -183,8 +183,8 @@ export default function AdminUsers() {
 
                     <Card className="p-4 border-neutral-200 bg-white">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                                <PersonIcon className="w-5 h-5 text-green-600" />
+                            <div className="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center">
+                                <PersonIcon className="w-5 h-5 text-violet-600" />
                             </div>
                             <div>
                                 <p className="text-sm text-neutral-600">Utilisateurs actifs</p>
@@ -466,7 +466,7 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
                             <TableCell><p className={`text-sm ${user.status === 'Actif' ? 'text-neutral-900' : 'text-neutral-400'}`}>{user.name}</p></TableCell>
                             <TableCell className={`text-sm ${user.status === 'Actif' ? 'text-neutral-600' : 'text-neutral-400'}`}>{user.email}</TableCell>
                             <TableCell>
-                                <Badge variant={user.emailVerified ? 'default' : 'secondary'} className={user.emailVerified ? 'bg-green-100 text-green-700 border-green-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{user.emailVerified ? 'Vérifié' : 'Non vérifié'}</Badge>
+                                <Badge variant={user.emailVerified ? 'default' : 'secondary'} className={user.emailVerified ? 'bg-violet-100 text-violet-700 border-violet-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{user.emailVerified ? 'Vérifié' : 'Non vérifié'}</Badge>
                             </TableCell>
                             <TableCell className="text-sm text-neutral-900">{user.createdAt ? dateFormat(user.createdAt) : '-'}</TableCell>
                             <TableCell className="text-sm text-neutral-900">{user.status !== 'Non validé' && user.updatedAt ? dateFormat(user.updatedAt) : '-'}</TableCell>

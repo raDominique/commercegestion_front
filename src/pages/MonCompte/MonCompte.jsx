@@ -192,7 +192,7 @@ export default function MonCompte() {
                   </Badge>
                 )}
                 {profile.userValidated ? (
-                  <Badge variant="default" className="bg-green-50 text-green-700 border-green-200">
+                  <Badge variant="default" className="bg-violet-50 text-violet-700 border-violet-200">
                     Compte vérifié
                   </Badge>
                 ) : (

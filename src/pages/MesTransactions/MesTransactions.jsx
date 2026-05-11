@@ -146,7 +146,7 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
               const date = item.dateTime;
 
               const badgeClass = item.movementType === 'ACTIF'
-                ? 'bg-green-600 text-white border-green-700'
+                ? 'bg-violet-600 text-white border-violet-700'
                 : item.movementType === 'PASSIF'
                   ? 'bg-red-600 text-white border-red-700'
                   : 'bg-neutral-200 text-neutral-700';
@@ -182,7 +182,7 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
         const date = item.dateTime;
 
         const badgeClass = item.movementType === 'ACTIF'
-          ? 'bg-green-600 text-white border-green-700'
+          ? 'bg-violet-600 text-white border-violet-700'
           : item.movementType === 'PASSIF'
             ? 'bg-red-600 text-white border-red-700'
             : 'bg-neutral-200 text-neutral-700';
