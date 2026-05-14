@@ -10,7 +10,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { depositStockToAMember } from '../../services/transaction.service';
+import { returnStockToAMember } from '../../services/transaction.service';
 import { getWithdrawals } from '../../services/stocks_move.service.js';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAllUsersSelect } from '../../services/user.service';
@@ -261,7 +261,7 @@ const Retrait = () => {
 				observations: withdrawalForm.observations || '',
 			};
 
-			await depositStockToAMember(payload, token);
+			await returnStockToAMember(payload, token);
 			setWithdrawalForm({
 				actifId: '',
 				productId: '',
