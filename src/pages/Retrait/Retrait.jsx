@@ -73,10 +73,10 @@ const Retrait = () => {
 	// État pour les transferts
 	const [saving, setSaving] = useState(false);
 
-	// Données filtrées
-	const filteredDetentaires = usersOptions.filter(user => user.name.toLowerCase().includes(detentaireSearch.toLowerCase()));
-	const filteredOriginSites = detentaireSites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
-	const filteredProducts = productsOnSite.filter(item => (item.productName || '').toLowerCase().includes(productSearch.toLowerCase()));
+	// Données filtrées (défensif pour éviter les valeurs undefined)
+	const filteredDetentaires = usersOptions.filter(user => (user?.name || '').toLowerCase().includes((detentaireSearch || '').toLowerCase()));
+	const filteredOriginSites = detentaireSites.filter(site => (site?.siteName || '').toLowerCase().includes((siteOriginSearch || '').toLowerCase()));
+	const filteredProducts = productsOnSite.filter(item => ((item?.productName || '').toLowerCase()).includes((productSearch || '').toLowerCase()));
 
 	// Récupérer l'historique des retraits
 	const fetchPassifs = async () => {
@@ -341,7 +341,7 @@ const Retrait = () => {
 											<div className="relative">
 												<Input
 													placeholder="Rechercher un détentaire..."
-													value={detentaireSearch}
+													value={detentaireSearch || ''}
 													onChange={e => { setDetentaireSearch(e.target.value); setDetentaireHighlighted(0); }}
 													onFocus={() => { setDetentaireOpen(true); setDetentaireHighlighted(0); }}
 													onBlur={() => setTimeout(() => setDetentaireOpen(false), 150)}
@@ -364,7 +364,7 @@ const Retrait = () => {
 																const user = filteredDetentaires[detentaireHighlighted];
 																if (user) {
 																	handleSelectDetentaire(user._id);
-																	setDetentaireSearch(user.name);
+																	setDetentaireSearch(user.name || '');
 																	setDetentaireOpen(false);
 																}
 															}
@@ -378,11 +378,11 @@ const Retrait = () => {
 															filteredDetentaires.map((user, idx) => (
 																<button
 																	type="button"
-																	key={user._id}
+																	key={user?._id ?? user?.id ?? idx}
 																	onMouseEnter={() => setDetentaireHighlighted(idx)}
 																	onClick={() => {
 																		handleSelectDetentaire(user._id);
-																		setDetentaireSearch(user.name);
+																		setDetentaireSearch(user.name || '');
 																		setDetentaireOpen(false);
 																	}}
 																	className={`w-full text-left px-3 py-2 text-sm ${idx === detentaireHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
@@ -405,7 +405,7 @@ const Retrait = () => {
 												<div className="relative">
 													<Input
 														placeholder={detentaireSites.length === 0 ? "Aucun site disponible" : "Rechercher le site..."}
-														value={siteOriginSearch}
+														value={siteOriginSearch || ''}
 														onChange={e => { setSiteOriginSearch(e.target.value); setSiteOriginHighlighted(0); }}
 														onFocus={() => { setSiteOriginOpen(true); setSiteOriginHighlighted(0); }}
 														onBlur={() => setTimeout(() => setSiteOriginOpen(false), 150)}
@@ -428,7 +428,7 @@ const Retrait = () => {
 																	const site = filteredOriginSites[siteOriginHighlighted];
 																	if (site) {
 																		handleSelectSiteOrigine(site._id);
-																		setSiteOriginSearch(site.siteName);
+																		setSiteOriginSearch(site.siteName || '');
 																		setSiteOriginOpen(false);
 																	}
 																}
@@ -443,11 +443,11 @@ const Retrait = () => {
 																filteredOriginSites.map((site, idx) => (
 																	<button
 																		type="button"
-																		key={site._id}
+																		key={site?._id ?? site?.id ?? idx}
 																		onMouseEnter={() => setSiteOriginHighlighted(idx)}
 																		onClick={() => {
 																			handleSelectSiteOrigine(site._id);
-																			setSiteOriginSearch(site.siteName);
+																			setSiteOriginSearch(site.siteName || '');
 																			setSiteOriginOpen(false);
 																		}}
 																		className={`w-full text-left px-3 py-2 text-sm ${idx === siteOriginHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
@@ -471,7 +471,7 @@ const Retrait = () => {
 												<div className="relative">
 													<Input
 														placeholder={productsOnSite.length === 0 ? "Aucun actif disponible" : "Rechercher un actif..."}
-														value={productSearch}
+														value={productSearch || ''}
 														onChange={e => { setProductSearch(e.target.value); setProductHighlighted(0); }}
 														onFocus={() => { setProductOpen(true); setProductHighlighted(0); }}
 														onBlur={() => setTimeout(() => setProductOpen(false), 150)}
@@ -494,7 +494,7 @@ const Retrait = () => {
 																	const product = filteredProducts[productHighlighted];
 																	if (product) {
 																		handleSelectProduct(product.productId);
-																		setProductSearch(product.productName);
+																		setProductSearch(product.productName || '');
 																		setProductOpen(false);
 																	}
 																}
@@ -508,11 +508,11 @@ const Retrait = () => {
 															{filteredProducts.map((item, idx) => (
 																<button
 																	type="button"
-																	key={item.productId}
+																	key={item?.productId?._id ?? item?.productId ?? item?._id ?? idx}
 																	onMouseEnter={() => setProductHighlighted(idx)}
 																	onClick={() => {
 																		handleSelectProduct(item.productId);
-																		setProductSearch(item.productName);
+																		setProductSearch(item.productName || '');
 																		setProductOpen(false);
 																	}}
 																	className={`w-full text-left px-3 py-2 text-sm ${idx === productHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
@@ -532,7 +532,7 @@ const Retrait = () => {
 												<Label required>4. Quantité (Stock disponible: {formatThousands(maxWithdrawalQty || 0)})</Label>
 												<Input
 													name="quantite"
-													value={withdrawalForm.quantite}
+												value={withdrawalForm.quantite || ''}
 													onChange={e => {
 														const qty = Number(e.target.value);
 														if (qty <= (maxWithdrawalQty || 0) || e.target.value === '') {
@@ -555,7 +555,7 @@ const Retrait = () => {
 												<Label>5. Observation</Label>
 												<Input
 													name="observations"
-													value={withdrawalForm.observations}
+												value={withdrawalForm.observations || ''}
 													onChange={e => setWithdrawalForm(f => ({ ...f, observations: e.target.value }))}
 													placeholder="Observation"
 													className="border-neutral-300"

@@ -12,7 +12,6 @@ import Public from '@mui/icons-material/Public';
 import Dashboard from '@mui/icons-material/Dashboard';
 import Group from '@mui/icons-material/Group';
 import FactCheck from '@mui/icons-material/FactCheck';
-// import Category from '@mui/icons-material/Category';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 
@@ -29,7 +28,6 @@ import Passifs from '../pages/Passifs/Passifs.jsx';
 import Panier from '../pages/Panier/Panier.jsx';
 import AdminUsers from '../pages/Administration/AdminUsers.jsx';
 import AdminProducts from '../pages/Administration/AdminProducts.jsx';
-// import AdminCategories from '../pages/Administration/AdminCategories.jsx';
 import AdminCpc from '../pages/Administration/AdminCpc.jsx';
 import MonCompte from '../pages/MonCompte/MonCompte.jsx';
 import MesProduits from '../pages/MesProduits/MesProduits.jsx';
