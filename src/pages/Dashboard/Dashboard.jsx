@@ -75,10 +75,6 @@ const DashboardPage = () => {
                     <h1 className="text-3xl font-bold text-neutral-900">Tableau de Bord</h1>
                     <p className="text-muted-foreground mt-1">Gérez et suivez votre activité avec facilité</p>
                 </div>
-                <div className="flex gap-3">
-                    <Button variant="outline">Importer les données</Button>
-                    <Button className="bg-violet-600 hover:bg-violet-700">+ Ajouter</Button>
-                </div>
             </div>
 
             {/* Statistiques principales - Layout en 4 colonnes */}
@@ -86,7 +82,7 @@ const DashboardPage = () => {
                 <StatisticCard
                     title="Nombre d'Actifs"
                     value={stats.actifs}
-                    icon={<Inventory className="text-emerald-600" />}
+                    icon={<Inventory className="text-violet-600" />}
                     trend="+12%"
                     description="par rapport au mois dernier"
                 />
@@ -100,7 +96,7 @@ const DashboardPage = () => {
                 <StatisticCard
                     title="Retraits Effectués"
                     value={stats.retraitEffectue}
-                    icon={<AccountBalanceWallet className="text-amber-600" />}
+                    icon={<AccountBalanceWallet className="text-violet-600" />}
                     trend="+8%"
                     description="par rapport au mois dernier"
                 />
@@ -143,7 +139,7 @@ const DashboardPage = () => {
                                     />
                                     <Bar 
                                         dataKey="quantite" 
-                                        fill="#059669" 
+                                        fill="#7c3aed" 
                                         name="Quantité"
                                         radius={[8, 8, 0, 0]}
                                     />
@@ -165,7 +161,7 @@ const DashboardPage = () => {
                                     <p className="text-sm text-gray-600">Total Actifs</p>
                                     <p className="text-2xl font-bold text-violet-900">{inventory?.global?.actifs || 0}</p>
                                 </div>
-                                <Inventory className="text-3xl text-emerald-600" />
+                                <Inventory className="text-3xl text-violet-600" />
                             </div>
                             <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
                                 <div>
@@ -179,7 +175,7 @@ const DashboardPage = () => {
                                     <p className="text-sm text-gray-600">Qté Actifs</p>
                                     <p className="text-2xl font-bold text-violet-900">{inventory?.global?.quantiteTotaleActifs || 0}</p>
                                 </div>
-                                <TrendingUp className="text-3xl text-amber-600" />
+                                <TrendingUp className="text-3xl text-violet-600" />
                             </div>
                         </div>
                     </CardContent>
