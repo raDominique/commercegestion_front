@@ -10,6 +10,8 @@ import { selectAllProduits } from '../../services/product.service';
 import { getMySites } from '../../services/site.service';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
+import ExportButton from '../../components/commons/ExportButton.jsx';
+import { exportAndDownloadActifs } from '../../services/export.service.js';
 import {
 	Dialog,
 	DialogContent,
@@ -249,6 +251,15 @@ const Actifs = () => {
 							>
 								Initialisation du stock
 							</Button>
+							<ExportButton
+								exportFunction={exportAndDownloadActifs}
+								formats={[
+									{ label: 'PDF', value: 'pdf', description: 'Document PDF' },
+									{ label: 'Excel', value: 'excel', description: 'Fichier Excel' }
+								]}
+								title="Exporter les actifs"
+								buttonLabel="Exporter"
+							/>
 							<Input
 								placeholder="Rechercher..."
 								value={search}

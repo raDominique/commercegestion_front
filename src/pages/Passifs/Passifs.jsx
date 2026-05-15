@@ -14,6 +14,8 @@ import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
+import ExportButton from '../../components/commons/ExportButton.jsx';
+import { exportAndDownloadPassifs } from '../../services/export.service.js';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
@@ -86,18 +88,29 @@ const Passifs = () => {
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
-				<>
+                <>
 					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 						<div>
 							<h1 className="text-2xl text-neutral-900 mb-2">Mes Passifs</h1>
 							<p className="text-sm text-neutral-600">Historique de vos passifs</p>
 						</div>
-						<Input
-							placeholder="Rechercher..."
-							value={search}
-							onChange={e => { setPage(1); setSearch(e.target.value); }}
-							className="max-w-xs border-black bg-white"
-						/>
+						<div className="flex gap-3 items-center">
+							<ExportButton
+								exportFunction={exportAndDownloadPassifs}
+								formats={[
+									{ label: 'PDF', value: 'pdf', description: 'Document PDF' },
+									{ label: 'Excel', value: 'excel', description: 'Fichier Excel' }
+								]}
+								title="Exporter les passifs"
+								buttonLabel="Exporter"
+							/>
+							<Input
+								placeholder="Rechercher..."
+								value={search}
+								onChange={e => { setPage(1); setSearch(e.target.value); }}
+								className="max-w-xs border-black bg-white"
+							/>
+						</div>
 					</div>
 					<Card className="border-neutral-200 bg-white">
 						<PassifsTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} />

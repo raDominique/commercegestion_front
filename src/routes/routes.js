@@ -14,6 +14,7 @@ import Group from '@mui/icons-material/Group';
 import FactCheck from '@mui/icons-material/FactCheck';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
 import QrCodeIcon from '@mui/icons-material/QrCode';
+import FileDownload from '@mui/icons-material/FileDownload';
 
 import Login from '../pages/Login/Login.jsx';
 import Register from '../pages/Register/Register.jsx';
@@ -29,6 +30,7 @@ import Panier from '../pages/Panier/Panier.jsx';
 import AdminUsers from '../pages/Administration/AdminUsers.jsx';
 import AdminProducts from '../pages/Administration/AdminProducts.jsx';
 import AdminCpc from '../pages/Administration/AdminCpc.jsx';
+import ExportHub from '../pages/Administration/ExportHub.jsx';
 import MonCompte from '../pages/MonCompte/MonCompte.jsx';
 import MesProduits from '../pages/MesProduits/MesProduits.jsx';
 import MesTransactions from '../pages/MesTransactions/MesTransactions.jsx';
@@ -63,5 +65,6 @@ export const privateRoutes = [
     { path: '/admin/produits', element: AdminProducts, role: 'Admin', icon: Inventory, label: 'Produits' },
     { path: '/admin/cpc', element: AdminCpc, role: 'Admin', icon: QrCodeIcon, label: 'CPC' },
     { path: '/admin/utilisateurs', element: AdminUsers, role: 'Admin', icon: Group, label: 'Utilisateurs' },
+    { path: '/admin/export-hub', element: ExportHub, role: 'Utilisateur,Admin', icon: FileDownload, label: 'Centre d\'Export' },
     // { path: '/admin/categories', element: AdminCategories, role: 'Admin', icon: Category, label: 'Catégories' },
 ];
