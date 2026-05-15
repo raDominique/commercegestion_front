@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getStatsDashboard } from '../../services/dash.service.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card.jsx';
 import { Badge } from '../../components/ui/badge.jsx';
 import { Alert, AlertDescription } from '../../components/ui/alert.jsx';
@@ -13,11 +14,12 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from 'recharts';
-import { ErrorOutline, TrendingUp, TrendingDown, Inventory, AccountBalanceWallet, Assessment, ArrowUpward } from '@mui/icons-material';
+import { ErrorOutline, TrendingUp, TrendingDown, Inventory, AccountBalanceWallet, Assessment, ArrowUpward, Groups, LocationCity } from '@mui/icons-material';
 import { Button } from '../../components/ui/button.jsx';
 
 const DashboardPage = () => {
     usePageTitle('Tableau de bord');
+    const { user } = useAuth();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -66,6 +68,7 @@ const DashboardPage = () => {
 
     const stats = data?.stats || {};
     const inventory = data?.inventory || {};
+    const isAdmin = user?.userAccess === 'Admin';
 
     return (
         <div className="px-6 mx-auto space-y-8">
@@ -81,74 +84,158 @@ const DashboardPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatisticCard
                     title="Nombre d'Actifs"
-                    value={stats.actifs}
+                    value={stats.actifs || 0}
                     icon={<Inventory className="text-violet-600" />}
-                    trend="+12%"
-                    description="par rapport au mois dernier"
+                    description="Vos actifs"
                 />
                 <StatisticCard
                     title="Nombre de Passifs"
-                    value={stats.passifs}
+                    value={stats.passifs || 0}
                     icon={<TrendingDown className="text-violet-600" />}
-                    trend={stats.passifs > 0 ? "+5%" : "0%"}
-                    description="par rapport au mois dernier"
+                    description="Vos passifs"
                 />
                 <StatisticCard
                     title="Retraits Effectués"
-                    value={stats.retraitEffectue}
+                    value={stats.retraitEffectue || 0}
                     icon={<AccountBalanceWallet className="text-violet-600" />}
-                    trend="+8%"
-                    description="par rapport au mois dernier"
+                    description="Retraits"
                 />
                 <StatisticCard
                     title="Dépôts Effectués"
-                    value={stats.depotEffectue}
+                    value={stats.depotEffectue || 0}
                     icon={<TrendingUp className="text-blue-600" />}
-                    trend="+3%"
-                    description="par rapport au mois dernier"
+                    description="Dépôts"
                 />
             </div>
 
-            {/* Contenu principal */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Graphique Actifs par Site - Prend 2 colonnes */}
-                {inventory?.charts?.actifsBySite && inventory.charts.actifsBySite.length > 0 && (
-                    <Card className="border border-gray-200 bg-white lg:col-span-2">
-                        <CardHeader>
-                            <CardTitle className="text-black font-semibold">Distribution des Actifs par Site</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={320}>
-                                <BarChart data={inventory.charts.actifsBySite} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                    <XAxis 
-                                        dataKey="siteName" 
-                                        tick={false}
-                                        height={20}
-                                    />
-                                    <YAxis tick={{ fontSize: 12 }} />
-                                    <Tooltip 
-                                        contentStyle={{
-                                            backgroundColor: '#ffffff',
-                                            border: '1px solid #e5e7eb',
-                                            borderRadius: '8px',
-                                            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                                        }}
-                                        formatter={(value) => [`${value} unités`, 'Quantité']}
-                                        labelStyle={{ color: '#000' }}
-                                    />
-                                    <Bar 
-                                        dataKey="quantite" 
-                                        fill="#7c3aed" 
-                                        name="Quantité"
-                                        radius={[8, 8, 0, 0]}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-                )}
+            {/* Statistiques Admin - visible uniquement pour les admins */}
+            {isAdmin && stats.admin && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+                    <StatisticCard
+                        title="Total Sites"
+                        value={stats.admin.totalSites || 0}
+                        icon={<LocationCity className="text-emerald-600" />}
+                    />
+                    <StatisticCard
+                        title="Total Utilisateurs"
+                        value={stats.admin.totalUsers || 0}
+                        icon={<Groups className="text-blue-600" />}
+                    />
+                    <StatisticCard
+                        title="Total Actifs"
+                        value={stats.admin.totalAssets || 0}
+                        icon={<Inventory className="text-amber-600" />}
+                    />
+                    <StatisticCard
+                        title="Total Passifs"
+                        value={stats.admin.totalLiabilities || 0}
+                        icon={<TrendingDown className="text-red-600" />}
+                    />
+                    <StatisticCard
+                        title="Total Transactions"
+                        value={stats.admin.totalTransactions || 0}
+                        icon={<Assessment className="text-purple-600" />}
+                    />
+                    <StatisticCard
+                        title="Total Produits"
+                        value={stats.admin.totalProducts || 0}
+                        icon={<Inventory className="text-indigo-600" />}
+                    />
+                </div>
+            )}
 
+            {/* Section Graphiques - 6 Charts */}
+            <div>
+                <h2 className="text-2xl font-bold text-neutral-900 mb-6">Graphiques & Analyses</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Chart 1: Actifs par Site */}
+                    <ChartCard
+                        title="Distribution des Actifs par Site"
+                        data={inventory?.charts?.actifsBySite}
+                        dataKey="total"
+                        xAxisKey="siteName"
+                        transformData={(data) => data
+                            .filter(site => site.total > 0 || site._id !== null)
+                            .map(site => ({
+                                ...site,
+                                siteName: site._id || 'Sans site'
+                            }))
+                        }
+                    />
+
+                    {/* Chart 2: Passifs par Site */}
+                    <ChartCard
+                        title="Distribution des Passifs par Site"
+                        data={inventory?.charts?.passifsBySite}
+                        dataKey="total"
+                        xAxisKey="siteName"
+                        transformData={(data) => data
+                            .filter(site => site.total > 0 || site._id !== null)
+                            .map(site => ({
+                                ...site,
+                                siteName: site._id || 'Sans site'
+                            }))
+                        }
+                    />
+
+                    {/* Chart 3: Actifs par Produit */}
+                    <ChartCard
+                        title="Distribution des Actifs par Produit"
+                        data={inventory?.charts?.actifsByProduct}
+                        dataKey="total"
+                        xAxisKey="productName"
+                        transformData={(data) => data
+                            .filter(product => product.total > 0 || product._id !== null)
+                            .map(product => ({
+                                ...product,
+                                productName: product._id?.substring(0, 8) || 'Sans produit'
+                            }))
+                        }
+                    />
+
+                    {/* Chart 4: Passifs par Produit */}
+                    <ChartCard
+                        title="Distribution des Passifs par Produit"
+                        data={inventory?.charts?.passifsByProduct}
+                        dataKey="total"
+                        xAxisKey="productName"
+                        transformData={(data) => data
+                            .filter(product => product.total > 0 || product._id !== null)
+                            .map(product => ({
+                                ...product,
+                                productName: product._id?.substring(0, 8) || 'Sans produit'
+                            }))
+                        }
+                    />
+
+                    {/* Chart 5: Transactions par Mois */}
+                    <ChartCard
+                        title="Transactions par Mois"
+                        data={inventory?.charts?.transactionsByMonth}
+                        dataKey="count"
+                        xAxisKey="month"
+                        transformData={(data) => data.map(item => ({
+                            month: `${item._id?.month}/${item._id?.year}`,
+                            count: item.count
+                        }))}
+                    />
+
+                    {/* Chart 6: Transactions par Semaine */}
+                    <ChartCard
+                        title="Transactions par Semaine"
+                        data={inventory?.charts?.transactionsByWeek}
+                        dataKey="count"
+                        xAxisKey="week"
+                        transformData={(data) => data.map(item => ({
+                            week: `S${item._id?.week} - 2026`,
+                            count: item.count
+                        }))}
+                    />
+                </div>
+            </div>
+
+            {/* Inventaire Global et Détails */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Inventaire Global - Prend 1 colonne */}
                 <Card className="border border-gray-200 bg-white">
                     <CardHeader>
@@ -158,32 +245,29 @@ const DashboardPage = () => {
                         <div className="space-y-3">
                             <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
                                 <div>
-                                    <p className="text-sm text-gray-600">Total Actifs</p>
-                                    <p className="text-2xl font-bold text-violet-900">{inventory?.global?.actifs || 0}</p>
+                                    <p className="text-sm text-gray-600">Quantité Actifs</p>
+                                    <p className="text-2xl font-bold text-violet-900">{inventory?.global?.quantiteTotaleActifs || 0}</p>
                                 </div>
                                 <Inventory className="text-3xl text-violet-600" />
                             </div>
                             <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
                                 <div>
-                                    <p className="text-sm text-gray-600">Total Passifs</p>
-                                    <p className="text-2xl font-bold text-violet-900">{inventory?.global?.passifs || 0}</p>
+                                    <p className="text-sm text-gray-600">Quantité Passifs</p>
+                                    <p className="text-2xl font-bold text-violet-900">{inventory?.global?.quantiteTotalePassifs || 0}</p>
                                 </div>
                                 <TrendingDown className="text-3xl text-violet-600" />
                             </div>
                             <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
                                 <div>
-                                    <p className="text-sm text-gray-600">Qté Actifs</p>
-                                    <p className="text-2xl font-bold text-violet-900">{inventory?.global?.quantiteTotaleActifs || 0}</p>
+                                    <p className="text-sm text-gray-600">Nombre Actifs</p>
+                                    <p className="text-2xl font-bold text-violet-900">{inventory?.global?.actifs || 0}</p>
                                 </div>
                                 <TrendingUp className="text-3xl text-violet-600" />
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-            </div>
 
-            {/* Détails par Site et Autres Statistiques */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Détail par Site */}
                 <Card className="border border-gray-200 bg-white">
                     <CardHeader>
@@ -191,16 +275,19 @@ const DashboardPage = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3 max-h-72 overflow-y-auto">
-                            {inventory?.charts?.actifsBySite?.map((site, index) => (
-                                <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
-                                    <div>
-                                        <p className="font-medium text-sm text-neutral-900">{site.siteName}</p>
-                                        <p className="text-xs text-gray-600">{site.total} article(s)</p>
-                                    </div>
-                                    <Badge className="bg-violet-100 text-violet-800 hover:bg-violet-100">{site.quantite}</Badge>
-                                </div>
-                            ))}
-                            {inventory?.charts?.actifsBySite?.length === 0 && (
+                            {inventory?.charts?.actifsBySite?.filter(site => site._id !== null).length > 0 ? (
+                                inventory?.charts?.actifsBySite
+                                    ?.filter(site => site._id !== null)
+                                    ?.map((site, index) => (
+                                        <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                                            <div>
+                                                <p className="font-medium text-sm text-neutral-900">{site._id || 'Sans site'}</p>
+                                                <p className="text-xs text-gray-600">{site.total || 0} élément(s)</p>
+                                            </div>
+                                            <Badge className="bg-violet-100 text-violet-800 hover:bg-violet-100">{site.total || 0}</Badge>
+                                        </div>
+                                    ))
+                            ) : (
                                 <p className="text-gray-600 text-center py-6 text-sm">Aucun site avec actifs</p>
                             )}
                         </div>
@@ -214,10 +301,10 @@ const DashboardPage = () => {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            <MetricRow label="Stocks Produits" value={stats.stocksProduits} />
-                            <MetricRow label="Nombre de Sites" value={stats.nombreDeSite} />
-                            <MetricRow label="Produits par Site" value={stats.nombreDeProduitsParSite} />
-                            <MetricRow label="Produits Utilisables" value={stats.produitsUtilisables} />
+                            <MetricRow label="Stocks Produits" value={stats.stocksProduits || 0} />
+                            <MetricRow label="Nombre de Sites" value={stats.nombreDeSite || 0} />
+                            <MetricRow label="Produits par Site" value={stats.nombreDeProduitsParSite || 0} />
+                            <MetricRow label="Produits Utilisables" value={stats.produitsUtilisables || 0} />
                         </div>
                     </CardContent>
                 </Card>
@@ -235,11 +322,13 @@ function StatisticCard({ title, value, icon, trend, description }) {
                     <div className="flex-1">
                         <p className="text-sm text-black font-semibold">{title}</p>
                         <p className="text-4xl font-bold mt-3 text-violet-900">{value}</p>
-                        <div className="flex items-center gap-1 mt-3">
-                            <ArrowUpward className="text-violet-600 text-sm" />
-                            <span className="text-xs font-medium text-violet-600">{trend}</span>
-                        </div>
-                        <p className="text-xs text-gray-600 mt-1">{description}</p>
+                        {trend && (
+                            <div className="flex items-center gap-1 mt-3">
+                                <ArrowUpward className="text-violet-600 text-sm" />
+                                <span className="text-xs font-medium text-violet-600">{trend}</span>
+                            </div>
+                        )}
+                        {description && <p className="text-xs text-gray-600 mt-1">{description}</p>}
                     </div>
                     <div className="text-4xl opacity-80">{icon}</div>
                 </div>
@@ -255,6 +344,83 @@ function MetricRow({ label, value }) {
             <p className="text-sm font-medium text-gray-700">{label}</p>
             <p className="text-2xl font-bold text-violet-900">{value}</p>
         </div>
+    );
+}
+
+// Composant réutilisable pour les charts
+function ChartCard({ title, data, dataKey, xAxisKey, transformData }) {
+    if (!data || data.length === 0) {
+        return (
+            <Card className="border border-gray-200 bg-white">
+                <CardHeader>
+                    <CardTitle className="text-black font-semibold">{title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-center h-80 text-gray-500">
+                        <p>Aucune donnée disponible</p>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    const chartData = transformData ? transformData(data) : data.map(item => ({
+        ...item,
+        [xAxisKey]: item._id || 'Sans donnée'
+    }));
+
+    if (chartData.filter(item => item[dataKey] > 0).length === 0) {
+        return (
+            <Card className="border border-gray-200 bg-white">
+                <CardHeader>
+                    <CardTitle className="text-black font-semibold">{title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-center h-80 text-gray-500">
+                        <p>Aucune donnée disponible</p>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    return (
+        <Card className="border border-gray-200 bg-white">
+            <CardHeader>
+                <CardTitle className="text-black font-semibold">{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis 
+                            dataKey={xAxisKey} 
+                            tick={{ fontSize: 11 }}
+                            height={70}
+                            angle={-45}
+                            textAnchor="end"
+                        />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip 
+                            contentStyle={{
+                                backgroundColor: '#ffffff',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '8px',
+                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                            }}
+                            formatter={(value) => [`${value}`, 'Nombre']}
+                            labelStyle={{ color: '#000' }}
+                        />
+                        <Bar 
+                            dataKey={dataKey} 
+                            fill="#7c3aed" 
+                            name="Total"
+                            radius={[8, 8, 0, 0]}
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+            </CardContent>
+        </Card>
     );
 }
 
