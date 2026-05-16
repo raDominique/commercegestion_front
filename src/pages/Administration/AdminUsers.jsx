@@ -18,6 +18,8 @@ import PersonIcon from '@mui/icons-material/Person';
 import { toast } from 'sonner';
 import { getUsers, deleteUser, toggleUserRole, activateUser, getUserById } from '../../services/user.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '../../components/ui/dialog';
+import ExportButton from '../../components/commons/ExportButton.jsx';
+import { exportAndDownloadUsers } from '../../services/export.service.js';
 import { getFullMediaUrl } from '../../services/media.service';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 
@@ -220,7 +222,7 @@ export default function AdminUsers() {
                             className="pl-10 border-black bg-white w-full"
                         />
                     </div>
-                    <div className="flex flex-wrap gap-2 w-auto">
+                    <div className="flex flex-wrap gap-2 w-auto items-center">
                         <Select value={isVerified === '' ? 'all' : isVerified} onValueChange={v => { setPage(1); setIsVerified(v === 'all' ? '' : v); }}>
                             <SelectTrigger className="bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 w-auto min-w-0">
                                 <SelectValue placeholder="Email vérifié ?" />
@@ -251,6 +253,16 @@ export default function AdminUsers() {
                                 <SelectItem value="Entreprise">Entreprise</SelectItem>
                             </SelectContent>
                         </Select>
+                        <ExportButton
+                            exportFunction={exportAndDownloadUsers}
+                            formats={[
+                                { label: 'PDF', value: 'pdf', description: 'Document PDF' },
+                                { label: 'Excel', value: 'excel', description: 'Fichier Excel' }
+                            ]}
+                            title="Exporter les utilisateurs"
+                            buttonLabel="Exporter"
+                            buttonVariant="outline"
+                        />
                     </div>
                 </div>
 

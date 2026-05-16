@@ -14,6 +14,8 @@ import { getFullMediaUrl } from '../../services/media.service';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import useScreenType from '../../utils/useScreenType';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
+import ExportButton from '../../components/commons/ExportButton.jsx';
+import { exportAndDownloadProducts } from '../../services/export.service.js';
 
 const AdminProducts = () => {
   usePageTitle('Produits');
@@ -106,6 +108,18 @@ const AdminProducts = () => {
             <p className="text-sm text-neutral-600">
               Gérez les produits de la plateforme
             </p>
+          </div>
+          <div className="flex gap-2">
+            <ExportButton
+              exportFunction={exportAndDownloadProducts}
+              formats={[
+                { label: 'PDF', value: 'pdf', description: 'Document PDF' },
+                { label: 'Excel', value: 'excel', description: 'Fichier Excel (.xlsx)' }
+              ]}
+              title="Exporter les produits"
+              buttonLabel="Exporter"
+              buttonVariant="outline"
+            />
           </div>
         </div>
         <div className="flex flex-col md:flex-row md:items-center md:gap-4 gap-2">

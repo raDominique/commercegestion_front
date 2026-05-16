@@ -51,9 +51,21 @@ function Sidebar({ user, isDesktop = true }) {
     '/actifs', '/passifs', '/boutique', '/depot', '/retrait', '/panier'
   ].includes(r.path));
 
-  const accountNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
-    '/mon-compte', '/mes-produits', '/mes-transactions', '/operations-a-valider', '/mes-sites', '/parrainages'
-  ].includes(r.path));
+  const accountNavItems = privateRoutes.filter(r => {
+    const allowedRole = ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role));
+    const includedPath = [
+      '/mon-compte',
+      '/mes-produits',
+      '/mes-transactions',
+      '/operations-a-valider',
+      '/mes-sites',
+      '/parrainages',
+      '/mon-compte/audit'
+    ].includes(r.path);
+    const requiresValidation = r.userValidated === true;
+    const validatedOk = !(requiresValidation && user && user.userValidated === false);
+    return allowedRole && includedPath && validatedOk;
+  });
 
   const adminNavItems = privateRoutes.filter(
     r => r.role && r.role.includes('Admin') && [

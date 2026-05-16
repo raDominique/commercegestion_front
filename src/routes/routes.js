@@ -15,6 +15,7 @@ import FactCheck from '@mui/icons-material/FactCheck';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import FileDownload from '@mui/icons-material/FileDownload';
+import Assessment from '@mui/icons-material/Assessment';
 
 import Login from '../pages/Login/Login.jsx';
 import Register from '../pages/Register/Register.jsx';
@@ -32,6 +33,7 @@ import AdminProducts from '../pages/Administration/AdminProducts.jsx';
 import AdminCpc from '../pages/Administration/AdminCpc.jsx';
 import ExportHub from '../pages/Administration/ExportHub.jsx';
 import MonCompte from '../pages/MonCompte/MonCompte.jsx';
+import Audit from '../pages/MonCompte/Audit.jsx';
 import MesProduits from '../pages/MesProduits/MesProduits.jsx';
 import MesTransactions from '../pages/MesTransactions/MesTransactions.jsx';
 import MesSites from '../pages/MesSites/MesSites.jsx';
@@ -56,6 +58,7 @@ export const privateRoutes = [
     { path: '/retrait', element: Retrait, role: 'Utilisateur,Admin', userValidated: true, icon: AccountBalanceWallet },
     { path: '/panier', element: Panier, role: 'Utilisateur,Admin', userValidated: true, icon: ShoppingBag },
     { path: '/mon-compte', element: MonCompte, role: 'Utilisateur,Admin', userValidated: [true, false], icon: Person },
+    { path: '/mon-compte/audit', element: Audit, role: 'Utilisateur,Admin', userValidated: true, icon: Assessment, label: 'Audit' },
     { path: '/mes-produits', element: MesProduits, role: 'Utilisateur,Admin', userValidated: true, icon: Inventory },
     { path: '/mes-transactions', element: MesTransactions, role: 'Utilisateur,Admin', userValidated: true, icon: ReceiptLong },
     { path: '/operations-a-valider', element: OperationsAValider, role: 'Utilisateur,Admin', userValidated: true, icon: FactCheck, label: 'Opérations à valider' },

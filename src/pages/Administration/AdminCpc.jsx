@@ -36,6 +36,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { updateCpc } from '../../services/cpc.service';
 import { deleteCpc } from '../../services/cpc.service';
 import { importCpcs } from '../../services/cpc.service';
+import ExportButton from '../../components/commons/ExportButton.jsx';
+import { exportAndDownloadCPC } from '../../services/export.service.js';
 
 const AdminCpc = () => {
     usePageTitle('CPC');
@@ -300,15 +302,24 @@ const AdminCpc = () => {
                                 onChange={handleFileChange}
                             />
                         </Dialog>
-                        <Button
-                            variant="outline"
-                            status={importing ? "loading" : "inactive"}
-                            className="border-violet-600 text-violet-700 hover:bg-violet-50"
-                            onClick={handleImportClick}
-                            disabled={importing}
-                        >
-                            {importing ? 'Importation...' : 'Importer CSV/Excel'}
-                        </Button>
+                            <Button
+                                variant="outline"
+                                status={importing ? "loading" : "inactive"}
+                                className="bg-white border-violet-600 text-violet-700 hover:bg-violet-50"
+                                onClick={handleImportClick}
+                                disabled={importing}
+                            >
+                                {importing ? 'Importation...' : 'Importer CSV/Excel'}
+                            </Button>
+                            <ExportButton
+                                exportFunction={exportAndDownloadCPC}
+                                formats={[
+                                    { label: 'CSV', value: 'csv', description: 'Fichier CSV' }
+                                ]}
+                                title="Exporter CPC"
+                                buttonLabel="Exporter"
+                                buttonVariant="outline"
+                            />
                     </div>
                 </div>
 
