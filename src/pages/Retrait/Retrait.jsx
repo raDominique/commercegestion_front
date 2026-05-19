@@ -128,8 +128,8 @@ const Retrait = () => {
 					setDetentaireSites(sites);
 				})
 				.catch(error => {
-					console.error('Erreur lors de la récupération des sites du détentaire:', error);
-					toast.error('Erreur lors du chargement des sites du détentaire');
+					console.error('Erreur lors de la récupération des sites du détenteur:', error);
+					toast.error('Erreur lors du chargement des sites du détenteur');
 					setDetentaireSites([]);
 				});
 		} else {
@@ -337,10 +337,10 @@ const Retrait = () => {
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 										{/* 1. Détentaire avec recherche */}
 										<div className="space-y-2 md:col-span-2">
-											<Label required>1. Détentaire</Label>
+											<Label required>1. Détenteur</Label>
 											<div className="relative">
 												<Input
-													placeholder="Rechercher un détentaire..."
+													placeholder="Rechercher un détenteur..."
 													value={detentaireSearch || ''}
 													onChange={e => { setDetentaireSearch(e.target.value); setDetentaireHighlighted(0); }}
 													onFocus={() => { setDetentaireOpen(true); setDetentaireHighlighted(0); }}
@@ -401,7 +401,7 @@ const Retrait = () => {
 										{/* 2. Site d'origine avec recherche */}
 										{withdrawalForm.detentaire && (
 											<div className="space-y-2 md:col-span-2">
-												<Label required>2. Site du détentaire</Label>
+												<Label required>2. Site du détenteur</Label>
 												<div className="relative">
 													<Input
 														placeholder={detentaireSites.length === 0 ? "Aucun site disponible" : "Rechercher le site..."}
@@ -552,7 +552,7 @@ const Retrait = () => {
 										{/* 5. Observation */}
 										{withdrawalForm.productId && (
 											<div className="space-y-2 md:col-span-2">
-												<Label>5. Observation</Label>
+												<Label>5. Observations</Label>
 												<Input
 													name="observations"
 												value={withdrawalForm.observations || ''}
