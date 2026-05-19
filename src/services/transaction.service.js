@@ -248,12 +248,14 @@ export const initializeTransaction = async (params, token) => {
  * @returns {Promise} - Résultat de l'API contenant la liste des transactions
  */
 export const getUserTransactions = async (userId, params = {}, token) => {
+    const { page = 1, limit = 10, status, type, ...rest } = params || {};
     const query = {
-        page: params.page || 1,
-        limit: params.limit || 10,
+        page,
+        limit,
+        ...(status ? { status } : {}),
+        ...(type ? { type } : {}),
+        ...rest,
     };
-    if (params.status) query.status = params.status;
-    if (params.type) query.type = params.type;
 
     return axiosInstance.get(
         `/api/v1/transactions/user/${userId}`,

@@ -77,7 +77,7 @@ function Sidebar({ user, isDesktop = true }) {
   );
 
   return (
-    <aside className={`${isDesktop ? 'block w-64' : 'hidden'} bg-gray-900 border-r border-neutral-200 sticky top-16`}>
+    <aside className={`${isDesktop ? 'block w-64' : 'hidden'} bg-gray-900 border-r border-neutral-200 sticky top-16 self-start h-[calc(100vh-4rem)] overflow-auto`}>
       <div className="p-4 space-y-1">
         {/* Navigation Group */}
         <CollapsibleGroup

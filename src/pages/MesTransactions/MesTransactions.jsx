@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
-import { getUserLedger } from '../../services/ledger.service';
 import { getProfile } from '../../services/auth.service';
+import { getUserTransactions } from '../../services/transaction.service';
+import { getAccessToken } from '../../services/token.service';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { toast } from 'sonner';
@@ -24,6 +26,7 @@ const MesTransactions = () => {
   const [limit] = useState(10);
   const [total, setTotal] = useState(0);
   const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [order, setOrder] = useState('desc');
   const [productIdFilter, setProductIdFilter] = useState('');
 
@@ -34,12 +37,15 @@ const MesTransactions = () => {
     const fetchTransactions = async () => {
       setLoading(true);
       try {
+        const token = getAccessToken() || localStorage.getItem('token');
+
         const params = {
           limit,
           page,
           sortBy: 'createdAt',
           order,
           type: typeFilter !== 'all' ? typeFilter : undefined,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
           productId: productIdFilter || undefined,
         };
 
@@ -53,29 +59,17 @@ const MesTransactions = () => {
             throw new Error("Impossible de récupérer l'identifiant utilisateur");
           }
         }
-        const res = await getUserLedger(userId, params);
 
-        // Traiter la réponse - axios enveloppe dans res.data
-        // Structure: res.data = { info, movements: { actifs[], passifs[], all[] } }
-        let items = [];
-        let totalCount = 0;
+        const res = await getUserTransactions(userId, params, token);
 
-        if (res?.data?.movements) {
-          // Sélectionner TOUS les mouvements (actifs + passifs)
-          items = res.data.movements.all || [];
-          totalCount = items.length;
-        } else if (Array.isArray(res?.data)) {
-          items = res.data;
-          totalCount = res.data.length;
-        } else if (Array.isArray(res)) {
-          items = res;
-          totalCount = res.length;
-        }
+        // Traiter la réponse similaire aux autres services
+        const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+        const totalCount = Number(res?.pagination?.total ?? res?.total ?? items.length);
 
         setTransactions(Array.isArray(items) ? items : []);
         setTotal(Number.isFinite(totalCount) ? totalCount : 0);
       } catch (err) {
-        console.error('getUserLedger error', err);
+        console.error('getUserTransactions error', err);
         toast.error('Erreur lors du chargement des transactions');
       } finally {
         setLoading(false);
@@ -83,7 +77,7 @@ const MesTransactions = () => {
     };
 
     fetchTransactions();
-  }, [page, limit, typeFilter, order, productIdFilter]);
+  }, [page, limit, typeFilter, statusFilter, order, productIdFilter]);
 
   if (user && user.userValidated === false) {
     return (
@@ -99,6 +93,47 @@ const MesTransactions = () => {
       <p className="text-sm text-neutral-600">
         Liste de vos transactions
       </p>
+      <div className="flex flex-wrap items-center gap-3 mt-4 mb-4">
+        <div className="w-44">
+          <Select value={typeFilter} onValueChange={value => { setPage(1); setTypeFilter(value); }}>
+            <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent className="z-50">
+              <SelectItem value="all">Tous types</SelectItem>
+              <SelectItem value="Dépôt">Dépôt</SelectItem>
+              <SelectItem value="Retrait">Retrait</SelectItem>
+              <SelectItem value="Initialisation">Initialisation</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-40">
+          <Select value={statusFilter} onValueChange={value => { setPage(1); setStatusFilter(value); }}>
+            <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
+              <SelectValue placeholder="Statut" />
+            </SelectTrigger>
+            <SelectContent className="z-50">
+              <SelectItem value="all">Tous statuts</SelectItem>
+              <SelectItem value="PENDING">PENDING</SelectItem>
+              <SelectItem value="APPROVED">APPROVED</SelectItem>
+              <SelectItem value="REJECTED">REJECTED</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-36 ml-auto">
+          <Select value={order} onValueChange={value => { setPage(1); setOrder(value); }}>
+            <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
+              <SelectValue placeholder="Ordre" />
+            </SelectTrigger>
+            <SelectContent className="z-50">
+              <SelectItem value="desc">Plus récentes</SelectItem>
+              <SelectItem value="asc">Plus anciennes</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       {loading ? (
         <div className="p-6 text-neutral-500">Chargement...</div>
       ) : (
