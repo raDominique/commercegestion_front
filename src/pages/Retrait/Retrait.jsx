@@ -10,8 +10,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { returnStockToAMember } from '../../services/transaction.service';
-import { getWithdrawals } from '../../services/stocks_move.service.js';
+import { returnStockToAMember, getUserTransactions } from '../../services/transaction.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAllUsersSelect } from '../../services/user.service';
 import { getSitesByUser, getActifsBySite } from '../../services/site.service';
@@ -82,9 +81,26 @@ const Retrait = () => {
 	const fetchPassifs = async () => {
 		setLoading(true);
 		try {
-			const token = localStorage.getItem('token');
-			const params = { limit, page };
-			const res = await getWithdrawals(params, token);
+			const token = getAccessToken() || localStorage.getItem('token');
+
+			let userId = (user && (user._id || user.id));
+			if (!userId) {
+				try {
+					const profile = await getProfile();
+					userId = profile?._id || profile?.id;
+				} catch (err) {
+					console.debug('Impossible de récupérer le profil pour fetchPassifs:', err);
+				}
+			}
+
+			if (!userId) {
+				setPassifs([]);
+				setTotal(0);
+				return;
+			}
+
+			const params = { limit, page, type: 'Retrait' };
+			const res = await getUserTransactions(userId, params, token);
 
 			const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
 			const totalCount = Number(res?.pagination?.total ?? res?.total ?? items.length);

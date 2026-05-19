@@ -15,8 +15,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { getDeposits } from '../../services/stocks_move.service';
-import { depositStockToAMember } from '../../services/transaction.service';
+import { depositStockToAMember, getUserTransactions } from '../../services/transaction.service';
 import { getProfile } from '../../services/auth.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
@@ -105,12 +104,31 @@ const Depot = () => {
 	const fetchActifs = async () => {
 		setLoading(true);
 		try {
-			const token = localStorage.getItem('token');
+			const token = getAccessToken() || localStorage.getItem('token');
+
+			let userId = (user && (user._id || user.id));
+			if (!userId) {
+				try {
+					const profile = await getProfile();
+					userId = profile?._id || profile?.id;
+				} catch (err) {
+					console.debug('Impossible de récupérer le profil pour fetchActifs:', err);
+				}
+			}
+
+			if (!userId) {
+				setActifs([]);
+				setTotal(0);
+				return;
+			}
+
 			const params = {
 				limit,
 				page,
+				type: 'Dépôt',
 			};
-			const res = await getDeposits(params, token);
+
+			const res = await getUserTransactions(userId, params, token);
 			const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
 			const totalCount = Number(res?.pagination?.total ?? res?.total ?? items.length);
 			setActifs(items);

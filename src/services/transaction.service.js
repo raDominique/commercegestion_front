@@ -235,3 +235,34 @@ export const initializeTransaction = async (params, token) => {
         }
     );
 };
+
+/**
+ * Récupère les transactions d'un utilisateur (GET /api/v1/transactions/user/:userId)
+ * @param {string} userId - ID de l'utilisateur
+ * @param {Object} [params] - Paramètres de la requête
+ * @param {number} [params.page] - Numéro de page (défaut: 1)
+ * @param {number} [params.limit] - Nombre d'éléments par page (défaut: 10)
+ * @param {string} [params.status] - Filtrer par statut: PENDING, APPROVED, REJECTED (optionnel)
+ * @param {string} [params.type] - Filtrer par type (optionnel)
+ * @param {string} token - Token d'authentification
+ * @returns {Promise} - Résultat de l'API contenant la liste des transactions
+ */
+export const getUserTransactions = async (userId, params = {}, token) => {
+    const query = {
+        page: params.page || 1,
+        limit: params.limit || 10,
+    };
+    if (params.status) query.status = params.status;
+    if (params.type) query.type = params.type;
+
+    return axiosInstance.get(
+        `/api/v1/transactions/user/${userId}`,
+        {
+            params: query,
+            headers: {
+                Authorization: `Bearer ${token}`,
+                accept: 'application/json',
+            },
+        }
+    );
+};
