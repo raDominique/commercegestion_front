@@ -12,3 +12,22 @@ html,
 body {
   font-family: 'Inter', Arial, Helvetica, sans-serif;
 }
+
+/* Visible scrollbars for modal details (WebKit + Firefox) */
+.show-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.28) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.show-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.show-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.show-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.22);
+  border-radius: 9999px;
+  border: 2px solid rgba(255,255,255,0.6);
+}

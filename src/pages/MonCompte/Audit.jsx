@@ -12,18 +12,8 @@ import { toast } from 'sonner';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../components/ui/dialog';
-import { ScrollArea } from '../../components/ui/scroll-area';
 import { Badge } from '../../components/ui/badge';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
-
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import LoginIcon from '@mui/icons-material/Login';
-import LogoutIcon from '@mui/icons-material/Logout';
-import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import InfoIcon from '@mui/icons-material/Info';
 
 const Audit = () => {
   const { user } = useAuth();
@@ -131,15 +121,15 @@ const Audit = () => {
   };
 
   const actionMeta = {
-    CREATE: { label: 'Création', bg: 'bg-primary', icon: AddCircleIcon },
-    LOGIN: { label: 'Connexion', bg: 'bg-secondary', icon: LoginIcon },
-    LOGOUT: { label: 'Déconnexion', bg: 'bg-secondary', icon: LogoutIcon },
-    PASSWORD_CHANGED: { label: 'Mot de passe modifié', bg: 'bg-secondary', icon: VpnKeyIcon },
-    PASSWORD_RESET: { label: 'Mot de passe réinitialisé', bg: 'bg-destructive', icon: VpnKeyIcon },
-    REFRESH_TOKEN: { label: 'Token rafraîchi', bg: 'bg-primary', icon: RefreshIcon },
-    UPDATE: { label: 'Modification', bg: 'bg-secondary', icon: EditIcon },
-    DELETE: { label: 'Suppression', bg: 'bg-destructive', icon: DeleteIcon },
-    DEFAULT: { label: 'Action', bg: 'bg-muted', icon: InfoIcon },
+    CREATE: { label: 'Création', bg: 'bg-primary', iconName: 'add_circle' },
+    LOGIN: { label: 'Connexion', bg: 'bg-secondary', iconName: 'login' },
+    LOGOUT: { label: 'Déconnexion', bg: 'bg-secondary', iconName: 'logout' },
+    PASSWORD_CHANGED: { label: 'Mot de passe modifié', bg: 'bg-secondary', iconName: 'lock' },
+    PASSWORD_RESET: { label: 'Mot de passe réinitialisé', bg: 'bg-destructive', iconName: 'lock_reset' },
+    REFRESH_TOKEN: { label: 'Token rafraîchi', bg: 'bg-primary', iconName: 'autorenew' },
+    UPDATE: { label: 'Modification', bg: 'bg-secondary', iconName: 'edit' },
+    DELETE: { label: 'Suppression', bg: 'bg-destructive', iconName: 'delete' },
+    DEFAULT: { label: 'Action', bg: 'bg-muted', iconName: 'info' },
   };
 
   const getActorName = (item) => {
@@ -282,9 +272,9 @@ const Audit = () => {
     return (
       <div className="space-y-3">
         {Object.entries(obj).map(([k, v]) => (
-          <div key={k} className="flex justify-between items-start gap-4">
-            <div className="text-sm text-neutral-600">{humanKey(k)}</div>
-            <div className="text-sm font-medium text-right wrap-break-words max-w-[60%]">{formatDetailValue(k, v)}</div>
+          <div key={k} className="grid grid-cols-3 gap-4 items-start">
+            <div className="text-sm text-neutral-600 col-span-1">{humanKey(k)}</div>
+            <div className="text-sm font-medium col-span-2 text-right wrap-break-words whitespace-normal overflow-x-auto">{formatDetailValue(k, v)}</div>
           </div>
         ))}
       </div>
@@ -342,14 +332,12 @@ const Audit = () => {
                   const entityName = getEntityDisplayName(item);
                   const verb = (item.action === 'CREATE') ? 'a créé' : (item.action === 'LOGIN' ? "s'est connecté" : (item.action === 'LOGOUT' ? "s'est déconnecté" : (item.action === 'PASSWORD_CHANGED' ? 'a modifié le mot de passe' : (item.action === 'PASSWORD_RESET' ? 'a réinitialisé le mot de passe' : (item.action === 'UPDATE' ? 'a modifié' : (item.action === 'DELETE' ? 'a supprimé' : 'a effectué une action'))))));
 
-                  const Icon = meta.icon || InfoIcon;
-
                   return (
                     <li key={item._id || item.id || idx} className="p-3 rounded-lg hover:bg-neutral-50">
                       <div className="flex items-start gap-3">
                         <div className="shrink-0">
                           <div className={`${meta.bg} w-10 h-10 rounded-full flex items-center justify-center`}>
-                            <Icon className="w-5 h-5 text-white" />
+                            <span className="material-icons size-4 text-white">{meta.iconName || 'info'}</span>
                           </div>
                         </div>
                         <div className="flex-1">
@@ -387,7 +375,7 @@ const Audit = () => {
             <DialogTitle>{selectedAudit ? `${selectedAudit.action || '-'} — ${getEntityDisplayName(selectedAudit)}` : 'Détails'}</DialogTitle>
             <DialogDescription>{selectedAudit ? `${getActorName(selectedAudit)} • ${selectedAudit.entityType || ''} • ${selectedAudit.entityId || ''}` : ''}</DialogDescription>
           </DialogHeader>
-          <ScrollArea className="p-4 max-h-[60vh]">
+          <div className="p-4 max-h-[70vh] overflow-y-auto show-scrollbar">
             {selectedAudit ? (
               <div className="text-sm space-y-4">
                 <div className="flex items-center justify-between gap-4">
@@ -411,7 +399,7 @@ const Audit = () => {
 
                 <div>
                   <div className="text-sm text-neutral-600 mb-2">Détails (affiche le <strong>newState</strong>)</div>
-                  <div className="bg-white border rounded-md p-3">
+                  <div className="bg-white border rounded-md p-3 overflow-x-auto">
                     {selectedAudit.newState ? (
                       renderDetails(sanitizeNewState(selectedAudit.newState))
                     ) : (
@@ -423,7 +411,7 @@ const Audit = () => {
             ) : (
               <div className="text-sm text-neutral-500">Aucun détail sélectionné</div>
             )}
-          </ScrollArea>
+          </div>
           <DialogFooter>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Fermer</Button>
