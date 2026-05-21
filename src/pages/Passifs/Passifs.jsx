@@ -19,8 +19,17 @@ import { exportAndDownloadPassifs } from '../../services/export.service.js';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
-import { getTransactionTypeBadgeProps } from '../../constants/transaction.enums';
+import { getFullMediaUrl } from '../../services/media.service';
 import InfoIcon from '@mui/icons-material/Info';
+const renderPerson = (person) => {
+	if (!person) return '-';
+	if (typeof person === 'string') return person;
+	if (person.userNickName) return person.userNickName;
+	if (person.userName) return person.userName;
+	if (person.name) return person.name;
+	return '-';
+};
+
 
 const Passifs = () => {
 	const dateFormat = useDateFormat();
@@ -42,7 +51,6 @@ const Passifs = () => {
 	const fetchPassifs = async () => {
 		setLoading(true);
 		try {
-			// Récupérer l'userId via le contexte ou l'API getProfile si nécessaire
 			let userId = user?._id;
 			if (!userId) {
 				try {
@@ -54,10 +62,13 @@ const Passifs = () => {
 			}
 			const params = { limit, page };
 			const res = await getPassifs(userId, params);
-			setPassifs(Array.isArray(res.data) ? res.data : []);
-			setTotal(res.total || 0);
+			const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+			setPassifs(items);
+			const totalCount = Number(res?.total ?? res?.pagination?.total ?? items.length);
+			setTotal(Number.isFinite(totalCount) ? totalCount : 0);
 		} catch (err) {
 			setPassifs([]);
+			setTotal(0);
 		} finally {
 			setLoading(false);
 		}
@@ -89,7 +100,7 @@ const Passifs = () => {
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
-                <>
+				<>
 					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 						<div>
 							<h1 className="text-2xl text-neutral-900 mb-2">Mes Passifs</h1>
@@ -155,45 +166,46 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 					<TableHeader>
 						<TableRow>
 							<TableHead className="text-xs text-neutral-600">Produit</TableHead>
-							<TableHead className="text-xs text-neutral-600">Type</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Quantité</TableHead>
-							{/* <TableHead className="text-xs text-neutral-600 text-right">Prix unitaire</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Montant</TableHead> */}
-							<TableHead className="text-xs text-neutral-600">Départ</TableHead>
-							<TableHead className="text-xs text-neutral-600">Arrivée</TableHead>
+							<TableHead className="text-xs text-neutral-600">Code</TableHead>
+							<TableHead className="text-xs text-neutral-600">Image</TableHead>
+							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
+							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
+							{/* <TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right">Total (Ar)</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right p-4">Action</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{passifs.map((item, idx) => {
-							const produit = item.productId?.productName || item.productId?.codeCPC || '-';
-							const quantite = item.quantite ?? '-';
-							// const prixUnitaire = item.prixUnitaire ?? null;
-							// const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
-							const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
-							const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
-							const detenteur = item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
-							const ayantDroit = item.ayant_droit?.userNickName || '-';
-							const date = item.createdAt;
 							return (
-								<TableRow key={idx}>
-									<TableCell className="text-sm truncate max-w-xs">{produit}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{item.type || '-'}</TableCell>
-									<TableCell className="text-sm text-right">{quantite}</TableCell>
-									{/* <TableCell className="text-sm text-right">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
-									<TableCell className="text-sm text-right">{montant !== null ? formatThousands(montant) : '-'}</TableCell> */}
-									<TableCell className="text-sm truncate max-w-xs">{depart}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{arrivee}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{detenteur}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{ayantDroit}</TableCell>
-									<TableCell className="text-sm">{date ? dateFormat(date) : '-'}</TableCell>
+								<TableRow key={item.id || item._id || idx}>
+									<TableCell className="text-sm truncate max-w-xs">{item.productName || '-'}</TableCell>
+									<TableCell className="text-sm text-neutral-500 truncate max-w-xs">{item.productCode || '-'}</TableCell>
+									<TableCell>
+										{item.productImage ? (
+											<img src={getFullMediaUrl(item.productImage)} alt={item.productName || 'product'} className="w-12 h-12 rounded object-cover" />
+										) : (
+											<span className="text-neutral-400">-</span>
+										)}
+									</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
+									<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
+									{/* <TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
+									<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell> */}
+									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
+									<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 									<TableCell className="text-sm text-right">
-										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}>
-											<InfoIcon className="w-5 h-5 text-violet-600" />
-										</Button>
+										<div className="flex gap-2 justify-end">
+											<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id || item._id)}>
+												<InfoIcon className="w-5 h-5 text-violet-600" />
+											</Button>
+										</div>
 									</TableCell>
 								</TableRow>
 							);
@@ -207,18 +219,18 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 	return (
 		<div className="space-y-3 p-4">
 			{passifs.map((item, idx) => {
-				const produit = item.productId?.productName || item.productId?.codeCPC || '-';
+				const produit = item.productName || (item.productId && (item.productId.productName || item.productId)) || '-';
 				const quantite = item.quantite ?? '-';
 				const prixUnitaire = item.prixUnitaire ?? null;
 				const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
-				const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
-				const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
-				const detenteur = item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
-				const ayantDroit = item.ayant_droit?.userNickName || '-';
-				const date = item.createdAt;
+				const depart = item.depot || item.siteOrigineId?.siteName || '-';
+				const arrivee = item.depotAdresse || item.siteDestinationId?.siteName || '-';
+				const detenteur = item.detentaire || item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
+				const ayantDroit = item.ayantDroit || item.ayant_droit || item.ayant_droit?.userNickName || '-';
+				const date = item.dateCreation || item.createdAt || item.approvedAt;
 
 				return (
-					<Card key={idx} className="p-4">
+					<Card key={item._id || item.id || idx} className="p-4">
 						<div className="flex items-start justify-between gap-4">
 							<div className="flex-1 min-w-0">
 								<div className="font-medium text-neutral-900 truncate">{produit}</div>
@@ -233,13 +245,12 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 								</div>
 							</div>
 							<div className="flex flex-col items-end gap-2">
-									{(() => {
-										const typeBadge = getTransactionTypeBadgeProps(item.type);
-										return (
-											<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>{typeBadge.label || item.type || '-'}</Badge>
-										);
-									})()}
-								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}>
+								{item.isActive ? (
+									<Badge className={`text-xs bg-emerald-50 text-emerald-700 border-emerald-200 px-2 py-0.5 rounded`}>Actif</Badge>
+								) : (
+									<Badge className={`text-xs bg-neutral-100 text-neutral-700 border-neutral-200 px-2 py-0.5 rounded`}>Inactif</Badge>
+								)}
+								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id || item.id)}>
 									<InfoIcon className="w-5 h-5 text-violet-600" />
 								</Button>
 							</div>
