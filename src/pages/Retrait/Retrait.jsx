@@ -103,8 +103,17 @@ const Retrait = () => {
 			const params = { limit, page, type: TransactionType.RETRAIT };
 			const res = await getUserTransactions(userId, params, token);
 
-			const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-			const totalCount = Number(res?.pagination?.total ?? res?.total ?? items.length);
+			const payload = res?.data ?? res;
+			let items = [];
+			if (Array.isArray(payload?.data)) {
+				items = payload.data;
+			} else if (Array.isArray(payload)) {
+				items = payload;
+			} else {
+				items = [];
+			}
+
+			const totalCount = Number(payload?.total ?? payload?.pagination?.total ?? items.length);
 			setPassifs(items);
 			setTotal(Number.isFinite(totalCount) ? totalCount : 0);
 		} catch (err) {
