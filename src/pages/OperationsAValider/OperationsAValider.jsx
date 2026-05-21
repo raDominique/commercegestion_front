@@ -15,6 +15,7 @@ import useDateFormat from '../../utils/useDateFormat.jsx';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
+import { getTransactionTypeBadgeProps, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
 import { formatThousands } from '../../utils/formatNumber.js';
 import {
   Dialog,
@@ -424,21 +425,13 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
           </TableHeader>
           <TableBody>
             {transactions.map((item, idx) => {
-              const badgeClass = item.type === 'RETOUR'
-                ? 'bg-blue-600 text-white border-blue-700'
-                : item.type === 'DÉPÔT'
-                  ? 'bg-violet-600 text-white border-violet-700'
-                  : item.type === 'RETRAIT'
-                    ? 'bg-red-600 text-white border-red-700'
-                    : 'bg-neutral-200 text-neutral-700';
-              
-              const statusClass = item.status === 'PENDING'
-                ? 'bg-orange-600 text-white border-orange-700'
-                : item.status === 'APPROVED'
-                  ? 'bg-violet-600 text-white border-violet-700'
-                  : item.status === 'REJECTED'
-                    ? 'bg-red-600 text-white border-red-700'
-                    : 'bg-neutral-200 text-neutral-700';
+              const typeBadge = getTransactionTypeBadgeProps(item.type);
+              const badgeClass = typeBadge.className;
+              const typeLabel = typeBadge.label;
+
+              const statusBadge = getTransactionStatusBadgeProps(item.status);
+              const statusClass = statusBadge.className;
+              const statusLabel = statusBadge.label;
 
               const initiatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || '-';
               const productName = item.productId?.productName || '-';
@@ -449,10 +442,10 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                 <TableRow key={item._id || item.id || idx}>
                   <TableCell className="text-sm font-mono truncate max-w-xs">{item.transactionNumber || '-'}</TableCell>
                   <TableCell className="text-sm truncate max-w-xs">{productName}</TableCell>
-                  <TableCell className="text-sm"><Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{item.type || '-'}</Badge></TableCell>
+                  <TableCell className="text-sm"><Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{typeLabel || item.type || '-'}</Badge></TableCell>
                   <TableCell className="text-sm text-right">{quantite ? formatThousands(quantite) : '-'}</TableCell>
                   <TableCell className="text-sm truncate max-w-xs">{initiatorName}</TableCell>
-                  <TableCell className="text-sm"><Badge className={`text-xs ${statusClass} px-2 py-0.5 rounded`}>{item.status || '-'}</Badge></TableCell>
+                  <TableCell className="text-sm"><Badge className={`text-xs ${statusClass} px-2 py-0.5 rounded`}>{statusLabel || item.status || '-'}</Badge></TableCell>
                   <TableCell className="text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</TableCell>
                   <TableCell className="text-sm">
                     {item.status === 'PENDING' && (
@@ -490,21 +483,13 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
   return (
     <div className="space-y-3 p-4">
       {transactions.map((item, idx) => {
-        const badgeClass = item.type === 'RETOUR'
-          ? 'bg-blue-600 text-white border-blue-700'
-          : item.type === 'DÉPÔT'
-            ? 'bg-violet-600 text-white border-violet-700'
-            : item.type === 'RETRAIT'
-              ? 'bg-red-600 text-white border-red-700'
-              : 'bg-neutral-200 text-neutral-700';
-        
-        const statusClass = item.status === 'PENDING'
-          ? 'bg-orange-600 text-white border-orange-700'
-          : item.status === 'APPROVED'
-            ? 'bg-violet-600 text-white border-violet-700'
-            : item.status === 'REJECTED'
-              ? 'bg-red-600 text-white border-red-700'
-              : 'bg-neutral-200 text-neutral-700';
+        const typeBadge = getTransactionTypeBadgeProps(item.type);
+        const badgeClass = typeBadge.className;
+        const typeLabel = typeBadge.label;
+
+        const statusBadge = getTransactionStatusBadgeProps(item.status);
+        const statusClass = statusBadge.className;
+        const statusLabel = statusBadge.label;
 
         const initiatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || '-';
         const productName = item.productId?.productName || '-';
@@ -547,8 +532,8 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                 )}
               </div>
               <div className="flex flex-col items-end gap-2">
-                <Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{item.type || '-'}</Badge>
-                <Badge className={`text-xs ${statusClass} px-2 py-0.5 rounded`}>{item.status || '-'}</Badge>
+                <Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{typeLabel || item.type || '-'}</Badge>
+                <Badge className={`text-xs ${statusClass} px-2 py-0.5 rounded`}>{statusLabel || item.status || '-'}</Badge>
               </div>
             </div>
           </Card>

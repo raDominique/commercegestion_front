@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import { getAllUsersSelect } from '../../services/user.service';
 import { getMySites, getActifsBySite, getSitesByUser } from '../../services/site.service';
 import { getAccessToken } from '../../services/token.service';
+import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
 
 const Depot = () => {
 	const { user } = useAuth();
@@ -125,12 +126,21 @@ const Depot = () => {
 			const params = {
 				limit,
 				page,
-				type: 'Dépôt',
+				type: TransactionType.DEPOT,
 			};
 
 			const res = await getUserTransactions(userId, params, token);
-			const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-			const totalCount = Number(res?.pagination?.total ?? res?.total ?? items.length);
+			const apiPayload = res?.data ?? res;
+			let items = [];
+			if (Array.isArray(apiPayload)) {
+				items = apiPayload;
+			} else if (Array.isArray(apiPayload?.data)) {
+				items = apiPayload.data;
+			} else {
+				items = [];
+			}
+
+			const totalCount = Number(apiPayload?.total ?? apiPayload?.pagination?.total ?? items.length);
 			setActifs(items);
 			setTotal(Number.isFinite(totalCount) ? totalCount : 0);
 		} catch (err) {
@@ -791,10 +801,16 @@ function DepotTableOrList({ loading, actifs, dateFormat }) {
 					</TableHeader>
 					<TableBody>
 						{actifs.map((item) => {
-							const validationVariant = item.isValide ? 'default' : 'secondary';
-							const operatorName = item.operatorId?.userNickName || item.operatorId?.userName || '-';
-							const detenteurName = item.detentaire?.userNickName || item.detentaire?.userName || '-';
-							const ayantDroitName = item.ayant_droit?.userNickName || item.ayant_droit?.userName || '-';
+							const statusBadge = getTransactionStatusBadgeProps(item?.status, { isValide: item?.isValide });
+							const validationText = statusBadge.label;
+							const validationClass = statusBadge.className;
+
+							const operatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || item.operatorId?.userNickName || item.operatorId?.userName || '-';
+							const detenteurName = item.recipientId?.userNickName || item.recipientId?.userName || (typeof item.detentaire === 'string' ? item.detentaire : (item.detentaire?.userNickName || item.detentaire?.userName)) || '-';
+							const ayantDroitName = item.ayant_droit?.userNickName || item.ayant_droit?.userName || item.initiatorId?.userNickName || item.initiatorId?.userName || (typeof item.ayant_droit === 'string' ? item.ayant_droit : '-') ;
+
+							const dateToShow = item.approvedAt || item.createdAt;
+
 							return (
 								<TableRow key={item._id}>
 									<TableCell className="text-sm truncate max-w-xs">{item.productId?.productName || '-'}</TableCell>
@@ -812,8 +828,8 @@ function DepotTableOrList({ loading, actifs, dateFormat }) {
 									<TableCell className="text-sm truncate max-w-xs">{item.siteDestinationId?.siteName || '-'}</TableCell>
 									<TableCell className="text-sm text-right">{item.quantite !== undefined && item.quantite !== null ? formatThousands(item.quantite) : '-'}</TableCell>
 									{/* <TableCell className="text-sm text-right">{item.prixUnitaire !== undefined && item.prixUnitaire !== null ? formatThousands(item.prixUnitaire) : '-'}</TableCell> */}
-									<TableCell className="text-sm"><Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge></TableCell>
-									<TableCell className="text-sm">{item.createdAt ? dateFormat(item.createdAt) : '-'}</TableCell>
+									<TableCell className="text-sm"><Badge className={`text-xs ${validationClass} px-2 py-0.5 rounded`}>{validationText}</Badge></TableCell>
+									<TableCell className="text-sm">{dateToShow ? dateFormat(dateToShow) : '-'}</TableCell>
 								</TableRow>
 							);
 						})}
@@ -826,11 +842,17 @@ function DepotTableOrList({ loading, actifs, dateFormat }) {
 	// Mobile cards
 	return (
 		<div className="space-y-3 p-4">
-			{actifs.map((item) => {
-				const validationVariant = item.isValide ? 'default' : 'secondary';
-				const operatorName = item.operatorId?.userNickName || item.operatorId?.userName || '-';
-				const detenteurName = item.detentaire?.userNickName || item.detentaire?.userName || '-';
-				const ayantDroitName = item.ayant_droit?.userNickName || item.ayant_droit?.userName || '-';
+				{actifs.map((item) => {
+				const statusBadge = getTransactionStatusBadgeProps(item?.status, { isValide: item?.isValide });
+				const validationText = statusBadge.label;
+				const validationClass = statusBadge.className;
+
+				const operatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || item.operatorId?.userNickName || item.operatorId?.userName || '-';
+				const detenteurName = item.recipientId?.userNickName || item.recipientId?.userName || (typeof item.detentaire === 'string' ? item.detentaire : (item.detentaire?.userNickName || item.detentaire?.userName)) || '-';
+				const ayantDroitName = item.ayant_droit?.userNickName || item.ayant_droit?.userName || item.initiatorId?.userNickName || item.initiatorId?.userName || (typeof item.ayant_droit === 'string' ? item.ayant_droit : '-') ;
+
+				const dateToShow = item.approvedAt || item.createdAt;
+
 				return (
 					<Card key={item._id} className="p-4">
 						<div className="flex items-start justify-between gap-4">
@@ -867,11 +889,11 @@ function DepotTableOrList({ loading, actifs, dateFormat }) {
 									</div>
 								</div>
 								<div className="mt-2">
-									<Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge>
+									<Badge className={`text-xs ${validationClass} px-2 py-0.5 rounded`}>{validationText}</Badge>
 								</div>
 							</div>
 							<div className="text-xs text-neutral-500 text-right">
-								{item.createdAt ? dateFormat(item.createdAt) : '-'}
+								{dateToShow ? dateFormat(dateToShow) : '-'}
 							</div>
 						</div>
 					</Card>

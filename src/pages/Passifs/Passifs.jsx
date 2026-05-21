@@ -19,6 +19,7 @@ import { exportAndDownloadPassifs } from '../../services/export.service.js';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
+import { getTransactionTypeBadgeProps } from '../../constants/transaction.enums';
 import InfoIcon from '@mui/icons-material/Info';
 
 const Passifs = () => {
@@ -232,7 +233,12 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 								</div>
 							</div>
 							<div className="flex flex-col items-end gap-2">
-								<Badge variant={item.type === 'RETRAIT' ? 'destructive' : item.type === 'DEPOT' ? 'secondary' : 'default'}>{item.type || '-'}</Badge>
+									{(() => {
+										const typeBadge = getTransactionTypeBadgeProps(item.type);
+										return (
+											<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>{typeBadge.label || item.type || '-'}</Badge>
+										);
+									})()}
 								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id)}>
 									<InfoIcon className="w-5 h-5 text-violet-600" />
 								</Button>

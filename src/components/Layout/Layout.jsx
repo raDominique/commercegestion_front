@@ -50,6 +50,7 @@ export function Layout({ children }) {
         userNavItems={userNavItems}
         accountNavItems={accountNavItems}
         adminNavItems={adminNavItems}
+        isDesktop={isDesktop}
         isActive={isActive}
       />
       {user ? (

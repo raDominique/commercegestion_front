@@ -22,7 +22,7 @@ import { getFullMediaUrl } from '../../services/media.service';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader } from '../ui/sheet';
 
-function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
+function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isDesktop }) {
     const [notifications, setNotifications] = useState([]);
     const [profile, setProfile] = useState(null);
     const socketInitialized = useRef(false);
@@ -100,13 +100,15 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive }) {
 
                     {user && (
                         <>
-                            <button
-                                className="md:hidden p-2"
-                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                aria-label="Open mobile menu"
-                            >
-                                {mobileMenuOpen ? <Close className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                            </button>
+                            {!isDesktop && (
+                                <button
+                                    className="p-2"
+                                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                    aria-label="Open mobile menu"
+                                >
+                                    {mobileMenuOpen ? <Close className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                                </button>
+                            )}
 
                             <div className="hidden md:flex items-center gap-4">
                                 {/* <div className="flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg">

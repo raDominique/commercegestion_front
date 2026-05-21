@@ -15,6 +15,7 @@ import PaginationControls from '../../components/commons/PaginationControls.jsx'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
+import { getMovementTypeBadgeProps } from '../../constants/transaction.enums';
 
 const MesTransactions = () => {
   const { user } = useAuth();
@@ -180,17 +181,15 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
               const lieu = item.title || '-';
               const date = item.dateTime;
 
-              const badgeClass = item.movementType === 'ACTIF'
-                ? 'bg-violet-600 text-white border-violet-700'
-                : item.movementType === 'PASSIF'
-                  ? 'bg-red-600 text-white border-red-700'
-                  : 'bg-neutral-200 text-neutral-700';
+              const mvBadge = getMovementTypeBadgeProps(item.movementType);
+              const badgeClass = mvBadge.className;
+              const mvLabel = mvBadge.label;
 
               return (
                 <TableRow key={item._id || item.transactionId || idx}>
                   <TableCell className="text-sm font-mono truncate max-w-xs">{transNumber}</TableCell>
                   <TableCell className="text-sm truncate max-w-xs">{produit}</TableCell>
-                  <TableCell className="text-sm"><Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{item.movementType || '-'}</Badge></TableCell>
+                  <TableCell className="text-sm"><Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{mvLabel || item.movementType || '-'}</Badge></TableCell>
                   <TableCell className="text-sm text-right">{quantity !== '-' ? formatThousands(quantity) : '-'}</TableCell>
                   <TableCell className="text-sm text-right">{initialStock !== '-' ? formatThousands(initialStock) : '-'}</TableCell>
                   <TableCell className="text-sm text-right">{finalStock !== '-' ? formatThousands(finalStock) : '-'}</TableCell>
@@ -216,11 +215,9 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
         const lieu = item.title || '-';
         const date = item.dateTime;
 
-        const badgeClass = item.movementType === 'ACTIF'
-          ? 'bg-violet-600 text-white border-violet-700'
-          : item.movementType === 'PASSIF'
-            ? 'bg-red-600 text-white border-red-700'
-            : 'bg-neutral-200 text-neutral-700';
+        const mvBadge = getMovementTypeBadgeProps(item.movementType);
+        const badgeClass = mvBadge.className;
+        const mvLabel = mvBadge.label;
 
         return (
           <Card key={item._id || item.transactionId || idx} className="p-4">
@@ -237,7 +234,7 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{item.movementType || '-'}</Badge>
+                <Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{mvLabel || item.movementType || '-'}</Badge>
               </div>
             </div>
           </Card>
