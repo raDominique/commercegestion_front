@@ -22,6 +22,7 @@ import PaginationControls from '../../components/commons/PaginationControls.jsx'
 import { getProfile } from '../../services/auth.service.js';
 import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
+import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
 
 const Retrait = () => {
 	const { user } = useAuth();
@@ -99,7 +100,7 @@ const Retrait = () => {
 				return;
 			}
 
-			const params = { limit, page, type: 'Retrait' };
+			const params = { limit, page, type: TransactionType.RETRAIT };
 			const res = await getUserTransactions(userId, params, token);
 
 			const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
@@ -625,8 +626,7 @@ const Retrait = () => {
 function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 
 	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
-	if (!passifs || passifs.length === 0)
-		return <div className="p-8 text-center text-neutral-400">Aucun retrait trouvé</div>;
+	if (!passifs || passifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun retrait trouvé</div>;
 
 	if (isDesktop) {
 		return (
@@ -639,30 +639,28 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 							<TableHead className="text-xs text-neutral-600">Opérateur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
-							<TableHead className="text-xs text-neutral-600">Départ</TableHead>
-							<TableHead className="text-xs text-neutral-600">Arrivée</TableHead>
+							<TableHead className="text-xs text-neutral-600">Site origine</TableHead>
+							<TableHead className="text-xs text-neutral-600">Site destination</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Quantité</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Prix unitaire</TableHead>
 							<TableHead className="text-xs text-neutral-600">Validation</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{passifs.map((item) => {
-							const produit = item.productId?.productName || item.productId?.codeCPC || '-';
-							const quantite = item.quantite ?? '-';
-							const prixUnitaire = item.prixUnitaire ?? null;
-							const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
-							const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
-							const operatorName = item.operatorId?.userNickName || item.operatorId?.userName || '-';
-							const detenteur = item.detentaire?.userNickName || item.detentaire?.userName || '-';
-							const ayantDroit = item.ayant_droit?.userNickName || item.ayant_droit?.userName || '-';
-							const date = item.createdAt;
-							const validationVariant = item.isValide ? 'default' : 'secondary';
+							const statusBadge = getTransactionStatusBadgeProps(item?.status, { isValide: item?.isValide });
+							const validationText = statusBadge.label;
+							const validationClass = statusBadge.className;
+
+							const operatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || item.operatorId?.userNickName || item.operatorId?.userName || '-';
+							const detenteurName = item.recipientId?.userNickName || item.recipientId?.userName || (typeof item.detentaire === 'string' ? item.detentaire : (item.detentaire?.userNickName || item.detentaire?.userName)) || '-';
+							const ayantDroitName = item.ayant_droit?.userNickName || item.ayant_droit?.userName || item.initiatorId?.userNickName || item.initiatorId?.userName || (typeof item.ayant_droit === 'string' ? item.ayant_droit : '-') ;
+
+							const dateToShow = item.approvedAt || item.createdAt;
 
 							return (
 								<TableRow key={item._id}>
-									<TableCell className="text-sm truncate max-w-xs">{produit}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{item.productId?.productName || '-'}</TableCell>
 									<TableCell>
 										{item.productId?.productImage ? (
 											<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-12 h-12 object-cover rounded" />
@@ -671,14 +669,13 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 										)}
 									</TableCell>
 									<TableCell className="text-sm truncate max-w-xs">{operatorName}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{detenteur}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{ayantDroit}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{depart}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{arrivee}</TableCell>
-									<TableCell className="text-sm text-right">{quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</TableCell>
-									<TableCell className="text-sm text-right">{prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</TableCell>
-									<TableCell className="text-sm"><Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge></TableCell>
-									<TableCell className="text-sm">{date ? dateFormat(date) : '-'}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{detenteurName}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{ayantDroitName}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{item.siteOrigineId?.siteName || '-'}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{item.siteDestinationId?.siteName || '-'}</TableCell>
+									<TableCell className="text-sm text-right">{item.quantite !== undefined && item.quantite !== null ? formatThousands(item.quantite) : '-'}</TableCell>
+									<TableCell className="text-sm"><Badge className={`text-xs ${validationClass} px-2 py-0.5 rounded`}>{validationText}</Badge></TableCell>
+									<TableCell className="text-sm">{dateToShow ? dateFormat(dateToShow) : '-'}</TableCell>
 								</TableRow>
 							);
 						})}
@@ -688,20 +685,19 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 		);
 	}
 
+	// Mobile cards
 	return (
 		<div className="space-y-3 p-4">
 			{passifs.map((item) => {
-				const produit = item.productId?.productName || item.productId?.codeCPC || '-';
-				const quantite = item.quantite ?? '-';
-				const prixUnitaire = item.prixUnitaire ?? null;
-				const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
-				const depart = item.siteOrigineId?.siteName || item.siteOrigineId || '-';
-				const arrivee = item.siteDestinationId?.siteName || item.siteDestinationId || '-';
-				const operatorName = item.operatorId?.userNickName || item.operatorId?.userName || '-';
-				const detenteur = item.detentaire?.userNickName || item.detentaire?.userName || '-';
-				const ayantDroit = item.ayant_droit?.userNickName || item.ayant_droit?.userName || '-';
-				const date = item.createdAt;
-				const validationVariant = item.isValide ? 'default' : 'secondary';
+				const statusBadge = getTransactionStatusBadgeProps(item?.status, { isValide: item?.isValide });
+				const validationText = statusBadge.label;
+				const validationClass = statusBadge.className;
+
+				const operatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || item.operatorId?.userNickName || item.operatorId?.userName || '-';
+				const detenteurName = item.recipientId?.userNickName || item.recipientId?.userName || (typeof item.detentaire === 'string' ? item.detentaire : (item.detentaire?.userNickName || item.detentaire?.userName)) || '-';
+				const ayantDroitName = item.ayant_droit?.userNickName || item.ayant_droit?.userName || item.initiatorId?.userNickName || item.initiatorId?.userName || (typeof item.ayant_droit === 'string' ? item.ayant_droit : '-') ;
+
+				const dateToShow = item.approvedAt || item.createdAt;
 
 				return (
 					<Card key={item._id} className="p-4">
@@ -716,26 +712,34 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 										)}
 									</div>
 									<div className="min-w-0">
-										<div className="font-medium text-neutral-900 truncate">{produit}</div>
-										<div className="text-xs text-neutral-500 truncate">{depart}</div>
-										<div className="text-xs text-neutral-500 truncate">{arrivee}</div>
+										<div className="font-medium text-neutral-900 truncate">{item.productId?.productName || '-'}</div>
+										<div className="text-xs text-neutral-500 truncate">{item.siteOrigineId?.siteName || '-'}</div>
 									</div>
 								</div>
-								<div className="mt-3 flex flex-wrap items-center gap-2">
-									<div className="text-sm text-neutral-900">Quantité: {quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</div>
-									<div className="text-sm text-neutral-600">Prix: {prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</div>
-									<div className="text-sm text-neutral-600">Opérateur: {operatorName}</div>
-									<div className="text-sm text-neutral-600">Détenteur: {detenteur}</div>
-									<div className="text-sm text-neutral-600">Ayant droit: {ayantDroit}</div>
-									<div className="text-sm text-neutral-600"><Badge variant={validationVariant}>{item.isValide ? 'Validé' : 'Non validé'}</Badge></div>
-									<div className="text-sm text-neutral-600">Montant: {montant !== null ? formatThousands(montant) : '-'}</div>
-									<div className="text-sm text-neutral-600">{date ? dateFormat(date) : '-'}</div>
+								<div className="grid grid-cols-2 gap-2 mt-3 text-xs">
+									<div>
+										<span className="text-neutral-600">Opérateur:</span>
+										<div className="font-medium text-neutral-900">{operatorName}</div>
+									</div>
+									<div>
+										<span className="text-neutral-600">Détenteur:</span>
+										<div className="font-medium text-neutral-900">{detenteurName}</div>
+									</div>
+									<div>
+										<span className="text-neutral-600">Quantité:</span>
+										<div className="font-medium text-neutral-900">{item.quantite !== undefined && item.quantite !== null ? formatThousands(item.quantite) : '-'}</div>
+									</div>
+									<div>
+										<span className="text-neutral-600">Prix unitaire:</span>
+										<div className="font-medium text-neutral-900">{item.prixUnitaire !== undefined && item.prixUnitaire !== null ? formatThousands(item.prixUnitaire) : '-'}</div>
+									</div>
+								</div>
+								<div className="mt-2">
+									<Badge className={`text-xs ${validationClass} px-2 py-0.5 rounded`}>{validationText}</Badge>
 								</div>
 							</div>
-							<div className="flex flex-col items-end gap-2">
-								<Button variant="ghost" size="sm" aria-label={`Détail ${item._id}`}>
-									<InfoIcon className="w-5 h-5 text-violet-600" />
-								</Button>
+							<div className="text-xs text-neutral-500 text-right">
+								{dateToShow ? dateFormat(dateToShow) : '-'}
 							</div>
 						</div>
 					</Card>
