@@ -48,7 +48,7 @@ function Sidebar({ user, isDesktop = true }) {
   const dashboardItem = privateRoutes.filter(r => r.path === '/dashboard');
   
   const userNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
-    '/actifs', '/passifs', '/boutique', '/depot', '/retrait', '/panier'
+    '/actifs', '/passifs', '/boutique', '/depot', '/retrait', '/virement-droit', '/panier'
   ].includes(r.path));
 
   const accountNavItems = privateRoutes.filter(r => {

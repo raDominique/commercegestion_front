@@ -25,6 +25,7 @@ import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
 import InfoIcon from '@mui/icons-material/Info';
 import AddHomeIcon from '@mui/icons-material/AddHome';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType';
 import { getFullMediaUrl } from '../../services/media.service';
@@ -67,6 +68,12 @@ const Actifs = () => {
 	const [selectedActifForStock, setSelectedActifForStock] = useState(null);
 	const [stockForm, setStockForm] = useState({ quantite: '', observations: '' });
 	const [loadingAddStock, setLoadingAddStock] = useState(false);
+
+	// Modal et état pour "Mettre en vente"
+	const [sellModalOpen, setSellModalOpen] = useState(false);
+	const [selectedActifForSale, setSelectedActifForSale] = useState(null);
+	const [sellForm, setSellForm] = useState({ quantite: '', prixUnitaire: '' });
+	const [loadingSell, setLoadingSell] = useState(false);
 
 	const [addProductModalOpen, setAddProductModalOpen] = useState(false);
 	const [addProductForm, setAddProductForm] = useState({ productId: '', siteId: '', quantite: '', prixUnitaire: '' });
@@ -174,6 +181,35 @@ const Actifs = () => {
 		}
 	};
 
+	const handleOpenSellModal = (actif) => {
+		setSelectedActifForSale(actif);
+		setSellForm({ quantite: '', prixUnitaire: actif?.prixUnitaire || '' });
+		setSellModalOpen(true);
+	};
+
+	const handleSell = async () => {
+		if (!sellForm.quantite || !sellForm.prixUnitaire || !selectedActifForSale) {
+			toast.error('Veuillez renseigner la quantité et le prix');
+			return;
+		}
+
+		try {
+			setLoadingSell(true);
+			// Pas d'API encore — on affiche seulement une confirmation
+			toast.success('Produit mis en vente (interface uniquement)');
+			setSellModalOpen(false);
+			setSellForm({ quantite: '', prixUnitaire: '' });
+			setSelectedActifForSale(null);
+			// Optionnel : rafraîchir la liste
+			await fetchActifs();
+		} catch (err) {
+			console.error('Erreur lors de la mise en vente :', err);
+			toast.error('Erreur lors de la mise en vente');
+		} finally {
+			setLoadingSell(false);
+		}
+	};
+
 	const handleOpenAddProductModal = async () => {
 		setAddProductModalOpen(true);
 		setProductSearch('');
@@ -273,7 +309,7 @@ const Actifs = () => {
 					</div>
 
 					<Card className="border-neutral-200 bg-white">
-						<ActifsTableOrList loading={loading} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} onOpenStockModal={handleOpenStockModal} />
+						<ActifsTableOrList loading={loading} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} onOpenStockModal={handleOpenStockModal} onOpenSellModal={handleOpenSellModal} />
 					</Card>
 
 					<PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
@@ -321,6 +357,71 @@ const Actifs = () => {
 									</div>
 								</div>
 							)}
+						</DialogContent>
+					</Dialog>
+
+					{/* MODAL METTRE EN VENTE (interface uniquement) */}
+					<Dialog open={sellModalOpen} onOpenChange={setSellModalOpen}>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Mettre en vente</DialogTitle>
+								<DialogDescription>
+									{selectedActifForSale?.productName}
+								</DialogDescription>
+							</DialogHeader>
+
+							<div className="space-y-4">
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Produit</label>
+									<Input
+										disabled
+										value={selectedActifForSale?.productName || ''}
+										className="border-neutral-300 bg-neutral-50"
+									/>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité à vendre</label>
+									<Input
+										type="number"
+										min="1"
+										placeholder="0"
+										value={sellForm.quantite}
+										onChange={(e) => setSellForm({ ...sellForm, quantite: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</label>
+									<Input
+										type="number"
+										min="0"
+										step="0.01"
+										value={sellForm.prixUnitaire}
+										onChange={(e) => setSellForm({ ...sellForm, prixUnitaire: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div className="flex justify-end gap-2 pt-4">
+									<Button
+										variant="outline"
+										status="inactive"
+										onClick={() => setSellModalOpen(false)}
+									>
+										Annuler
+									</Button>
+									<Button
+										status={loadingSell ? "loading" : "active"}
+										onClick={handleSell}
+										disabled={loadingSell}
+										color="default"
+									>
+										{loadingSell ? 'En cours...' : 'Mettre en vente'}
+									</Button>
+								</div>
+							</div>
 						</DialogContent>
 					</Dialog>
 
@@ -608,7 +709,7 @@ const Actifs = () => {
 
 export default Actifs;
 
-function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal }) {
+function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal }) {
 	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
 	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
 
@@ -653,13 +754,20 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								<TableCell className="text-sm text-right">
-									<div className="flex gap-2 justify-end">
-										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
-											<InfoIcon className="w-5 h-5 text-violet-600" />
-										</Button>
-										<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
-											<AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock
-										</Button>
+									<div className="flex flex-col items-end gap-2">
+										<div className="flex gap-2 justify-end">
+											<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
+												<InfoIcon className="w-5 h-5 text-violet-600" />
+											</Button>
+											<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
+												<AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock
+											</Button>
+										</div>
+										<div>
+											<Button variant="ghost" size="sm" onClick={() => onOpenSellModal(item)}>
+												<LocalOfferIcon className="w-4 h-4 text-green-600" /> Mettre en vente
+											</Button>
+										</div>
 									</div>
 								</TableCell>
 							</TableRow>
@@ -696,6 +804,9 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<div className="flex gap-2 mt-2">
 								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
 								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}><AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock</Button>
+							</div>
+							<div>
+								<Button variant="ghost" size="sm" onClick={() => onOpenSellModal(item)}><LocalOfferIcon className="w-4 h-4 text-green-600" /> Mettre en vente</Button>
 							</div>
 						</div>
 					</div>

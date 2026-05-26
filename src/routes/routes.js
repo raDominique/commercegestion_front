@@ -24,6 +24,7 @@ import ResetPassword from '../pages/ResetPassword/ResetPassword.jsx';
 import DashboardPage from '../pages/Dashboard/Dashboard.jsx';
 import Depot from '../pages/Depot/Depot.jsx';
 import Retrait from '../pages/Retrait/Retrait.jsx';
+import VirementDroit from '../pages/VirementDroit/VirementDroit.jsx';
 import Boutique from '../pages/Boutique/Boutique.jsx';
 import Actifs from '../pages/Actifs/Actifs.jsx';
 import Passifs from '../pages/Passifs/Passifs.jsx';
@@ -56,6 +57,7 @@ export const privateRoutes = [
     { path: '/boutique', element: Boutique, role: 'Utilisateur,Admin', userValidated: true, icon: Store },
     { path: '/depot', element: Depot, role: 'Utilisateur,Admin', userValidated: true, icon: CreditCard },
     { path: '/retrait', element: Retrait, role: 'Utilisateur,Admin', userValidated: true, icon: AccountBalanceWallet },
+    { path: '/virement-droit', element: VirementDroit, role: 'Utilisateur,Admin', userValidated: true, icon: AccountBalanceWallet, label: 'Virement de droit' },
     { path: '/panier', element: Panier, role: 'Utilisateur,Admin', userValidated: true, icon: ShoppingBag },
     { path: '/mon-compte', element: MonCompte, role: 'Utilisateur,Admin', userValidated: [true, false], icon: Person },
     { path: '/mon-compte/audit', element: Audit, role: 'Utilisateur,Admin', userValidated: true, icon: Assessment, label: 'Audit' },
