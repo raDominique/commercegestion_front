@@ -14,6 +14,7 @@ import {
 import { Logout, Menu, Close, AccountBalanceWallet, ShoppingCart, Notifications as BellIcon } from '@mui/icons-material';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { privateRoutes } from '../../routes/routes';
+import { useCart } from '../../context/CartContext';
 import LogoImage from '../../assets/logo/logo.png';
 import { useEffect, useState, useRef } from 'react';
 import { initSocket, onSocketEvent, offSocketEvent, disconnectSocket } from '../../services/socket.service';
@@ -25,6 +26,7 @@ import { Sheet, SheetContent, SheetHeader } from '../ui/sheet';
 function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isDesktop }) {
     const [notifications, setNotifications] = useState([]);
     const [profile, setProfile] = useState(null);
+    const { getTotalItems } = useCart();
     const socketInitialized = useRef(false);
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
     const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
@@ -148,6 +150,21 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                         </div>
                                     </PopoverContent>
                                 </Popover>
+
+                                <Link to="/panier" aria-label="Panier">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="relative text-neutral-600"
+                                    >
+                                        <ShoppingCart className="w-5 h-5" />
+                                        {getTotalItems() > 0 && (
+                                            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
+                                                {getTotalItems()}
+                                            </span>
+                                        )}
+                                    </Button>
+                                </Link>
 
                                 <div className="flex items-center gap-2">
                                     {user.userType === 'Entreprise' && user.logo ? (

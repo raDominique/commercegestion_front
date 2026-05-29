@@ -75,6 +75,43 @@ export const withdrawStock = async (params, token) => {
 };
 
 /**
+ * Effectue un virement de stock (transfert de droit)
+ * @param {Object} params - Paramètres du virement
+ * @param {string} params.siteOrigineId - ID du site d'origine
+ * @param {string} params.siteDestinationId - ID du site de destination
+ * @param {string} params.productId - ID du produit
+ * @param {number} params.quantite - Quantité à transférer
+ * @param {number} params.prixUnitaire - Prix unitaire
+ * @param {string} [params.detentaire] - Détenteur
+ * @param {string} [params.ayant_droit] - Ayant droit destinataire
+ * @param {string} [params.observations] - Observations facultatives
+ * @param {string} token - Token d'authentification
+ * @returns {Promise}
+ */
+export const virementStock = async (params, token) => {
+    return axiosInstance.post(
+        '/api/v1/stocks/virement',
+        {
+            siteOrigineId: params.siteOrigineId,
+            siteDestinationId: params.siteDestinationId,
+            productId: params.productId,
+            quantite: Number(params.quantite),
+            detentaire: params.detentaire,
+            ayant_droit: params.ayant_droit,
+            prixUnitaire: params.prixUnitaire != null ? Number(params.prixUnitaire) : params.prixUnitaire,
+            observations: params.observations || '',
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                accept: '*/*',
+            },
+        }
+    );
+};
+
+/**
  * Récupère les actifs de stock de l'utilisateur connecté
  * @param {string} token - Le token d'authentification Bearer
  * @returns {Promise}

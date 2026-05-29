@@ -16,6 +16,8 @@ import ShoppingBag from '@mui/icons-material/ShoppingBag';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import FileDownload from '@mui/icons-material/FileDownload';
 import Assessment from '@mui/icons-material/Assessment';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import Outbox from '@mui/icons-material/Outbox';
 
 import Login from '../pages/Login/Login.jsx';
 import Register from '../pages/Register/Register.jsx';
@@ -27,6 +29,7 @@ import Retrait from '../pages/Retrait/Retrait.jsx';
 import VirementDroit from '../pages/VirementDroit/VirementDroit.jsx';
 import Boutique from '../pages/Boutique/Boutique.jsx';
 import Actifs from '../pages/Actifs/Actifs.jsx';
+import AppelOffre from '../pages/AppelOffre/AppelOffre.jsx';
 import Passifs from '../pages/Passifs/Passifs.jsx';
 import Panier from '../pages/Panier/Panier.jsx';
 import AdminUsers from '../pages/Administration/AdminUsers.jsx';
@@ -57,7 +60,8 @@ export const privateRoutes = [
     { path: '/boutique', element: Boutique, role: 'Utilisateur,Admin', userValidated: true, icon: Store },
     { path: '/depot', element: Depot, role: 'Utilisateur,Admin', userValidated: true, icon: CreditCard },
     { path: '/retrait', element: Retrait, role: 'Utilisateur,Admin', userValidated: true, icon: AccountBalanceWallet },
-    { path: '/virement-droit', element: VirementDroit, role: 'Utilisateur,Admin', userValidated: true, icon: AccountBalanceWallet, label: 'Virement de droit' },
+    { path: '/virement-droit', element: VirementDroit, role: 'Utilisateur,Admin', userValidated: true, icon: Outbox, label: 'Virement de droit' },
+    { path: '/appel-offre', element: AppelOffre, role: 'Utilisateur,Admin', userValidated: true, icon: CampaignIcon, label: "Appels d'offre" },
     { path: '/panier', element: Panier, role: 'Utilisateur,Admin', userValidated: true, icon: ShoppingBag },
     { path: '/mon-compte', element: MonCompte, role: 'Utilisateur,Admin', userValidated: [true, false], icon: Person },
     { path: '/mon-compte/audit', element: Audit, role: 'Utilisateur,Admin', userValidated: true, icon: Assessment, label: 'Audit' },
