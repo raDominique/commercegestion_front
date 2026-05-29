@@ -6,6 +6,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/ca
 import { Badge } from '../../components/ui/badge.jsx';
 import { Button } from '../../components/ui/button.jsx';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
+import { toast } from 'sonner';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Input } from '../../components/ui/input.jsx';
 import {
@@ -30,7 +32,8 @@ const orderOptions = [
 ];
 
 const Boutique = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const { addToCart } = useCart();
   usePageTitle('Boutique');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -174,6 +177,32 @@ const Boutique = () => {
                   <div className="flex flex-col gap-2">
                     <div className="text-sm text-neutral-700"><span className="font-medium">Code CPC:</span> {product.codeCPC || '-'}</div>
                     <div className="text-sm text-neutral-700"><span className="font-medium">Créateur:</span> {vendeur?.userNickName || product.productOwnerId || '-'}</div>
+                  </div>
+                  <div className="mt-3">
+                    <Button
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          toast.error('Veuillez vous connecter pour ajouter au panier');
+                          return;
+                        }
+                        const id = key || (product._id || product.id);
+                        const cartProduct = {
+                          id,
+                          name: product.productName || product.name || item.productName || '',
+                          price: Number(item.prixUnitaire ?? product.prixUnitaire ?? 0),
+                          stock: Number(product.stock ?? item.quantite ?? 9999),
+                          category: product.productCategory || '',
+                          image: product.productImage || ''
+                        };
+                        addToCart(cartProduct);
+                        toast.success('Produit ajouté au panier');
+                      }}
+                      className="w-full"
+                      status="active"
+                      color="default"
+                    >
+                      Ajouter au panier
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
