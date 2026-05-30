@@ -13,6 +13,8 @@ import Dashboard from '@mui/icons-material/Dashboard';
 import Group from '@mui/icons-material/Group';
 import FactCheck from '@mui/icons-material/FactCheck';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
+import SwapHoriz from '@mui/icons-material/SwapHoriz';
+import ShoppingCart from '@mui/icons-material/ShoppingCart';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import FileDownload from '@mui/icons-material/FileDownload';
 import Assessment from '@mui/icons-material/Assessment';
@@ -43,6 +45,8 @@ import MesTransactions from '../pages/MesTransactions/MesTransactions.jsx';
 import MesSites from '../pages/MesSites/MesSites.jsx';
 import Parrainages from '../pages/Parrainages/Parrainages.jsx';
 import OperationsAValider from '../pages/OperationsAValider/OperationsAValider.jsx';
+import EchangeActifs from '../pages/EchangeActifs/EchangeActifs.jsx';
+import AchatVente from '../pages/AchatVente/AchatVente.jsx';
 
 export const publicRoutes = [
     { path: '/login', element: Login },
@@ -60,8 +64,10 @@ export const privateRoutes = [
     { path: '/boutique', element: Boutique, role: 'Utilisateur,Admin', userValidated: true, icon: Store },
     { path: '/depot', element: Depot, role: 'Utilisateur,Admin', userValidated: true, icon: CreditCard },
     { path: '/retrait', element: Retrait, role: 'Utilisateur,Admin', userValidated: true, icon: AccountBalanceWallet },
-    { path: '/virement-droit', element: VirementDroit, role: 'Utilisateur,Admin', userValidated: true, icon: Outbox, label: 'Virement de droit' },
-    { path: '/appel-offre', element: AppelOffre, role: 'Utilisateur,Admin', userValidated: true, icon: CampaignIcon, label: "Appels d'offre" },
+    { path: '/virement-droit', element: VirementDroit, role: 'Utilisateur,Admin', userValidated: true, icon: Outbox, label: 'Virement de droit auprès d\'un détenteur tiers' },
+    { path: '/echange-actifs', element: EchangeActifs, role: 'Utilisateur,Admin', userValidated: true, icon: SwapHoriz, label: "Echange d'actifs entre deux membres" },
+    { path: '/appel-offre', element: AppelOffre, role: 'Utilisateur,Admin', userValidated: true, icon: CampaignIcon, label: "Appel d'offres" },
+    { path: '/achat-vente', element: AchatVente, role: 'Utilisateur,Admin', userValidated: true, icon: ShoppingCart, label: 'Achat/Vente' },
     { path: '/panier', element: Panier, role: 'Utilisateur,Admin', userValidated: true, icon: ShoppingBag },
     { path: '/mon-compte', element: MonCompte, role: 'Utilisateur,Admin', userValidated: [true, false], icon: Person },
     { path: '/mon-compte/audit', element: Audit, role: 'Utilisateur,Admin', userValidated: true, icon: Assessment, label: 'Audit' },

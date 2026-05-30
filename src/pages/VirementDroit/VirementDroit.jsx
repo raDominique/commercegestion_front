@@ -217,7 +217,7 @@ const VirementDroit = () => {
         productId: pid,
         quantite: quantiteVal,
         prixUnitaire: prixVal,
-        detentaire: (selectedActifForVirement?.detentaire && (selectedActifForVirement.detentaire._id || selectedActifForVirement.detentaire)) || null,
+        detentaire: user?._id || user?.id || null,
         ayant_droit: selectedRecipient._id || selectedRecipient.id || selectedRecipient,
         observations: form.observations || `Virement de droit vers ${selectedRecipient.name || selectedRecipient.userName || selectedRecipient.userNickName}`,
       };
