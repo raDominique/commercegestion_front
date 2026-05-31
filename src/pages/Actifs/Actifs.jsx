@@ -6,6 +6,7 @@ import { getActifs } from '../../services/ledger.service';
 import { getActifById } from '../../services/actifs.service';
 import { getProfile } from '../../services/auth.service';
 import { initializeTransaction } from '../../services/transaction.service';
+import { addShopItem } from '../../services/shop-available.service';
 import { selectAllProduits } from '../../services/product.service';
 import { getMySites } from '../../services/site.service';
 import { Label } from '../../components/ui/label';
@@ -72,7 +73,7 @@ const Actifs = () => {
 	// Modal et état pour "Mettre en vente"
 	const [sellModalOpen, setSellModalOpen] = useState(false);
 	const [selectedActifForSale, setSelectedActifForSale] = useState(null);
-	const [sellForm, setSellForm] = useState({ quantite: '', prixUnitaire: '' });
+	const [sellForm, setSellForm] = useState({ quantite: '', prixUnitaire: '', description: '' });
 	const [loadingSell, setLoadingSell] = useState(false);
 
 	const [addProductModalOpen, setAddProductModalOpen] = useState(false);
@@ -183,28 +184,61 @@ const Actifs = () => {
 
 	const handleOpenSellModal = (actif) => {
 		setSelectedActifForSale(actif);
-		setSellForm({ quantite: '', prixUnitaire: actif?.prixUnitaire || '' });
+		setSellForm({ quantite: '', prixUnitaire: actif?.prixUnitaire || '', description: '' });
 		setSellModalOpen(true);
 	};
 
 	const handleSell = async () => {
+		const qty = Number(sellForm.quantite);
+		const available = Number(selectedActifForSale?.quantite ?? 0);
+
 		if (!sellForm.quantite || !sellForm.prixUnitaire || !selectedActifForSale) {
 			toast.error('Veuillez renseigner la quantité et le prix');
 			return;
 		}
 
+		if (isNaN(qty) || qty <= 0) {
+			toast.error('Quantité invalide');
+			return;
+		}
+
+		if (qty > available) {
+			toast.error('La quantité demandée dépasse la quantité disponible');
+			return;
+		}
+
 		try {
 			setLoadingSell(true);
-			// Pas d'API encore — on affiche seulement une confirmation
-			toast.success('Produit mis en vente (interface uniquement)');
+			const token = user?.token || localStorage.getItem('authToken');
+
+			// Extract identifiers with fallbacks (support both string and populated objects)
+			const productId = selectedActifForSale?.productId && typeof selectedActifForSale.productId === 'object'
+				? (selectedActifForSale.productId._id || selectedActifForSale.productId.id || selectedActifForSale.productId)
+				: (selectedActifForSale?.productId || selectedActifForSale?._id || selectedActifForSale?.id);
+
+			const siteId = selectedActifForSale?.depotId || selectedActifForSale?.siteOrigineId || selectedActifForSale?.siteId;
+			const actifId = selectedActifForSale?.id || selectedActifForSale?._id || selectedActifForSale?.actifId;
+
+			const payload = {
+				productId,
+				siteId,
+				actifId,
+				quantite: qty,
+				prixUnitaire: Number(sellForm.prixUnitaire),
+				description: sellForm.description && sellForm.description.trim().length > 0
+					? sellForm.description.trim()
+					: `Mise en vente de ${qty} unité(s) via l'interface`,
+			};
+
+			await addShopItem(payload, token);
+			toast.success('Produit mis en vente avec succès');
 			setSellModalOpen(false);
-			setSellForm({ quantite: '', prixUnitaire: '' });
+			setSellForm({ quantite: '', prixUnitaire: '', description: '' });
 			setSelectedActifForSale(null);
-			// Optionnel : rafraîchir la liste
 			await fetchActifs();
 		} catch (err) {
 			console.error('Erreur lors de la mise en vente :', err);
-			toast.error('Erreur lors de la mise en vente');
+			toast.error(err?.response?.data?.message || 'Erreur lors de la mise en vente');
 		} finally {
 			setLoadingSell(false);
 		}
@@ -385,11 +419,28 @@ const Actifs = () => {
 									<Input
 										type="number"
 										min="1"
+										max={selectedActifForSale?.quantite ?? undefined}
 										placeholder="0"
 										value={sellForm.quantite}
-										onChange={(e) => setSellForm({ ...sellForm, quantite: e.target.value })}
+										onChange={(e) => {
+											const val = e.target.value;
+											if (val === '') {
+												setSellForm({ ...sellForm, quantite: '' });
+												return;
+											}
+											let num = Number(val);
+											const max = Number(selectedActifForSale?.quantite ?? Infinity);
+											if (isNaN(num)) {
+												setSellForm({ ...sellForm, quantite: '' });
+												return;
+											}
+											if (num > max) num = max;
+											if (num < 1) num = 1;
+											setSellForm({ ...sellForm, quantite: String(num) });
+										}}
 										className="border-neutral-300"
 									/>
+									<div className="text-xs text-neutral-500 mt-1">Disponible: {selectedActifForSale?.quantite ?? 0}</div>
 								</div>
 
 								<div>
@@ -400,6 +451,16 @@ const Actifs = () => {
 										step="0.01"
 										value={sellForm.prixUnitaire}
 										onChange={(e) => setSellForm({ ...sellForm, prixUnitaire: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Description</label>
+									<Input
+										placeholder="Description (optionnel)"
+										value={sellForm.description}
+										onChange={(e) => setSellForm({ ...sellForm, description: e.target.value })}
 										className="border-neutral-300"
 									/>
 								</div>
