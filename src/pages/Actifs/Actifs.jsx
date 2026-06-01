@@ -6,7 +6,7 @@ import { getActifs } from '../../services/ledger.service';
 import { getActifById } from '../../services/actifs.service';
 import { getProfile } from '../../services/auth.service';
 import { initializeTransaction } from '../../services/transaction.service';
-import { addShopItem, getMyShopItems } from '../../services/shop-available.service';
+import { addShopItem, getMyShopItems, deleteShopItem } from '../../services/shop-available.service';
 import { selectAllProduits } from '../../services/product.service';
 import { getMySites } from '../../services/site.service';
 import { Label } from '../../components/ui/label';
@@ -27,6 +27,7 @@ import { useAuth } from '../../context/AuthContext';
 import InfoIcon from '@mui/icons-material/Info';
 import AddHomeIcon from '@mui/icons-material/AddHome';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import DeleteIcon from '@mui/icons-material/Delete';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType';
 import { getFullMediaUrl } from '../../services/media.service';
@@ -84,6 +85,11 @@ const Actifs = () => {
 	const [selectedActifForSale, setSelectedActifForSale] = useState(null);
 	const [sellForm, setSellForm] = useState({ quantite: '', prixUnitaire: '', description: '' });
 	const [loadingSell, setLoadingSell] = useState(false);
+
+	// Modal et état pour suppression d'une annonce
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [selectedSellItemToDelete, setSelectedSellItemToDelete] = useState(null);
+	const [deleting, setDeleting] = useState(false);
 
 	const [addProductModalOpen, setAddProductModalOpen] = useState(false);
 	const [addProductForm, setAddProductForm] = useState({ productId: '', siteId: '', quantite: '', prixUnitaire: '' });
@@ -157,6 +163,27 @@ const Actifs = () => {
 		fetchMyShopItems();
 	}, [shopPage, shopLimit, shopSearch, user]);
 
+	// Map shop item shape to the actif shape used by ActifsTableOrList
+	const mapShopItemToActif = (item) => ({
+		id: item.actifId || item._id || item.id,
+		productName: item.productId?.productName || item.productName || '-',
+		productCode: item.productId?.codeCPC || item.productCode || '-',
+		productImage: item.productId?.productImage || item.productImage || null,
+		depot: item.siteId?.siteName || item.depot || '-',
+		depotAdresse: item.siteId?.siteAddress || item.depotAdresse || '-',
+		quantite: item.quantite ?? 0,
+		prixUnitaire: item.prixUnitaire ?? 0,
+		statut: item.statut || item.status || null,
+		valeurTotale: (item.quantite ?? 0) * (item.prixUnitaire ?? 0),
+		detentaire: item.vendeurId || item.vendeur || null,
+		ayant_droit: item.ayant_droit || item.ayantDroit || null,
+		dateCreation: item.createdAt || item.createdAt,
+		productId: item.productId,
+		depotId: item.siteId,
+		siteOrigineId: item.siteId?._id || item.siteId,
+		actifId: item.actifId || item._id,
+	});
+
 	const handleShowDetail = async id => {
 		try {
 			setLoadingDetail(true);
@@ -218,6 +245,30 @@ const Actifs = () => {
 		setSelectedActifForSale(actif);
 		setSellForm({ quantite: '', prixUnitaire: actif?.prixUnitaire || '', description: '' });
 		setSellModalOpen(true);
+	};
+
+	const handleOpenDeleteModal = (actif) => {
+		setSelectedSellItemToDelete(actif);
+		setDeleteModalOpen(true);
+	};
+
+	const handleConfirmDeleteShopItem = async () => {
+		if (!selectedSellItemToDelete) return;
+		try {
+			setDeleting(true);
+			const token = user?.token || localStorage.getItem('authToken');
+			const id = selectedSellItemToDelete?.id || selectedSellItemToDelete?.actifId || selectedSellItemToDelete?._id;
+			await deleteShopItem(id, token);
+			toast.success('Annonce supprimée');
+			setDeleteModalOpen(false);
+			setSelectedSellItemToDelete(null);
+			await fetchMyShopItems();
+		} catch (err) {
+			console.error('Erreur suppression annonce :', err);
+			toast.error(err?.response?.data?.message || 'Erreur lors de la suppression');
+		} finally {
+			setDeleting(false);
+		}
 	};
 
 	const handleSell = async () => {
@@ -348,7 +399,6 @@ const Actifs = () => {
 							<div className="flex justify-between items-center mb-6">
 						<div>
 							<h1 className="text-2xl text-neutral-900 mb-2">Mes Actifs</h1>
-							<p className="text-sm text-neutral-600">Historique de vos actifs</p>
 						</div>
 
 						<div className="flex gap-3 items-center">
@@ -370,7 +420,6 @@ const Actifs = () => {
 							/>
 							<Input
 								placeholder="Rechercher..."
-								value={search}
 								onChange={e => {
 									setPage(1);
 									setSearch(e.target.value);
@@ -523,6 +572,25 @@ const Actifs = () => {
 							</div>
 						</DialogContent>
 					</Dialog>
+
+						{/* MODAL SUPPRIMER ANNONCE */}
+						<Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+							<DialogContent>
+								<DialogHeader>
+									<DialogTitle>Supprimer l'annonce</DialogTitle>
+									<DialogDescription>
+										Êtes-vous sûr de vouloir supprimer l'annonce {selectedSellItemToDelete?.productName || ''} ? Cette action est irréversible.
+									</DialogDescription>
+								</DialogHeader>
+
+								<div className="flex justify-end gap-2 pt-4">
+									<Button variant="outline" status="inactive" onClick={() => setDeleteModalOpen(false)}>Annuler</Button>
+									<Button status={deleting ? 'loading' : 'active'} onClick={handleConfirmDeleteShopItem} disabled={deleting} color="default">
+										{deleting ? 'Suppression...' : 'Supprimer'}
+									</Button>
+								</div>
+							</DialogContent>
+						</Dialog>
 
 					{/* MODAL AJOUT STOCK */}
 					<Dialog open={stockModalOpen} onOpenChange={setStockModalOpen}>
@@ -819,42 +887,16 @@ const Actifs = () => {
 					</div>
 
 					<Card className="border-neutral-200 bg-white">
-						{shopLoading ? (
-							<div className="p-8 text-center text-neutral-400">Chargement...</div>
-						) : shopItems.length === 0 ? (
-							<div className="p-8 text-center text-neutral-400">Aucune annonce</div>
-						) : (
-							<div className="overflow-x-auto">
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead className="text-xs text-neutral-600">Produit</TableHead>
-											<TableHead className="text-xs text-neutral-600">Code</TableHead>
-											<TableHead className="text-xs text-neutral-600">Site</TableHead>
-											<TableHead className="text-xs text-neutral-600">Adresse</TableHead>
-											<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
-											<TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
-											<TableHead className="text-xs text-neutral-600">Statut</TableHead>
-											<TableHead className="text-xs text-neutral-600">Date</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{shopItems.map(item => (
-											<TableRow key={item._id}>
-												<TableCell className="text-sm truncate max-w-xs">{item.productId?.productName || '-'}</TableCell>
-												<TableCell className="text-sm text-neutral-500 truncate max-w-xs">{item.productId?.codeCPC || '-'}</TableCell>
-												<TableCell className="text-sm truncate max-w-xs">{item.siteId?.siteName || '-'}</TableCell>
-												<TableCell className="text-sm truncate max-w-xs">{item.siteId?.siteAddress || '-'}</TableCell>
-												<TableCell className="text-sm text-right">{formatThousands(item.quantite ?? 0)}</TableCell>
-												<TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire ?? 0)}</TableCell>
-												<TableCell className="text-sm truncate max-w-xs">{item.statut || '-'}</TableCell>
-												<TableCell className="text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</div>
-						)}
+						<SellItemsTableOrList
+							loading={shopLoading}
+							actifs={shopItems.map(mapShopItemToActif)}
+							dateFormat={dateFormat}
+							isDesktop={isDesktop}
+							onShowDetail={handleShowDetail}
+							onOpenStockModal={handleOpenStockModal}
+							onOpenSellModal={handleOpenSellModal}
+							onOpenDeleteModal={handleOpenDeleteModal}
+						/>
 					</Card>
 
 					<PaginationControls page={shopPage} total={shopTotal} limit={shopLimit} loading={shopLoading} onPageChange={setShopPage} onLimitChange={setShopLimit} className="mt-4" />
@@ -884,8 +926,6 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
-							{/* <TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Total (Ar)</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
@@ -907,9 +947,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
-								{/* <TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
-								<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell> */}
-								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId || item.detentaire)}</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								<TableCell className="text-sm text-right">
@@ -958,14 +996,109 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 						</div>
 						<div className="flex flex-col items-end gap-2">
 							<div className="text-sm font-medium text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
-							<div className="text-xs text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
-							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
+							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
 							<div className="flex gap-2 mt-2">
 								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
 								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}><AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock</Button>
 							</div>
 							<div>
 								<Button variant="ghost" size="sm" onClick={() => onOpenSellModal(item)}><LocalOfferIcon className="w-4 h-4 text-green-600" /> Mettre en vente</Button>
+							</div>
+						</div>
+					</div>
+				</Card>
+			))}
+		</div>
+	);
+}
+
+function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal, onOpenDeleteModal }) {
+	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
+
+	if (isDesktop) {
+		return (
+			<div className="overflow-x-auto">
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead className="text-xs text-neutral-600">Produit</TableHead>
+							<TableHead className="text-xs text-neutral-600">Code</TableHead>
+							<TableHead className="text-xs text-neutral-600">Image</TableHead>
+							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
+							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
+							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
+							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
+							<TableHead className="text-xs text-neutral-600">Date</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
+						</TableRow>
+						</TableHeader>
+					<TableBody>
+						{actifs.map(item => (
+							<TableRow key={item.id}>
+								<TableCell className="text-sm truncate max-w-xs">{item.productName || '-'}</TableCell>
+								<TableCell className="text-sm text-neutral-500 truncate max-w-xs">{item.productCode || '-'}</TableCell>
+								<TableCell>
+									{item.productImage ? (
+										<img src={getFullMediaUrl(item.productImage)} className="w-12 h-12 rounded object-cover" />
+									) : (
+										<span className="text-neutral-400">-</span>
+									)}
+								</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
+								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
+								<TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{item.statut || '-'}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell>
+								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
+								<TableCell className="text-sm text-right">
+									<div className="flex gap-2 justify-end">
+										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
+											<InfoIcon className="w-4 h-4 text-violet-600 mr-1" />
+										</Button>
+										<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
+											<DeleteIcon className="w-4 h-4 text-red-600 mr-1" />
+										</Button>
+									</div>
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-3 p-4">
+			{actifs.map(item => (
+				<Card key={item.id} className="p-4">
+					<div className="flex items-start justify-between gap-4">
+						<div className="flex items-center gap-3">
+							<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
+								{item.productImage ? (
+									<img src={getFullMediaUrl(item.productImage)} alt={item.productName} className="w-full h-full object-cover" />
+								) : (
+									<span className="text-neutral-400">-</span>
+								)}
+							</div>
+							<div className="min-w-0">
+								<div className="font-medium text-neutral-900 truncate">{item.productName || '-'}</div>
+								<div className="text-xs text-neutral-500">{item.productCode || '-'}</div>
+								<div className="text-xs text-neutral-500 mt-1">{item.depot || '-'}</div>
+							</div>
+						</div>
+						<div className="flex flex-col items-end gap-2">
+							<div className="text-sm font-medium text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
+							<div className="text-xs text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
+							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
+							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
+							<div className="flex gap-2 mt-2">
+								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600 mr-1" /> Détails</Button>
+								<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}><DeleteIcon className="w-4 h-4 text-red-600 mr-1" /> Supprimer</Button>
 							</div>
 						</div>
 					</div>

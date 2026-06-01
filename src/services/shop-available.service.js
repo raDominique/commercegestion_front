@@ -84,8 +84,25 @@ export const getMyShopItems = async (params = {}, token) => {
   return response.data;
 };
 
+/**
+ * Supprime une annonce de la boutique (DELETE /shop/shop-items/:id)
+ * @param {string} id - Identifiant de l'annonce à supprimer
+ * @param {string} token - Token d'authentification (Bearer)
+ * @returns {Promise<Object>} Résultat de l'API
+ */
+export const deleteShopItem = async (id, token) => {
+  const headers = {
+    accept: '*/*',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+
+  const response = await axiosInstance.delete(`/api/v1/shop/shop-items/${id}`, { headers });
+  return response.data;
+};
+
 export default {
   addShopItem,
   getShopItems,
   getMyShopItems,
+  deleteShopItem,
 };
