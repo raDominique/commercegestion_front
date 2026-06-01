@@ -6,7 +6,7 @@ import { getActifs } from '../../services/ledger.service';
 import { getActifById } from '../../services/actifs.service';
 import { getProfile } from '../../services/auth.service';
 import { initializeTransaction } from '../../services/transaction.service';
-import { addShopItem, getMyShopItems, deleteShopItem } from '../../services/shop-available.service';
+import { addShopItem, getMyShopItems, deleteShopItem, getShopItem } from '../../services/shop-available.service';
 import { selectAllProduits } from '../../services/product.service';
 import { getMySites } from '../../services/site.service';
 import { Label } from '../../components/ui/label';
@@ -166,6 +166,7 @@ const Actifs = () => {
 	// Map shop item shape to the actif shape used by ActifsTableOrList
 	const mapShopItemToActif = (item) => ({
 		id: item.actifId || item._id || item.id,
+		shopItemId: item._id || item.shopItemId || item.id,
 		productName: item.productId?.productName || item.productName || '-',
 		productCode: item.productId?.codeCPC || item.productCode || '-',
 		productImage: item.productId?.productImage || item.productImage || null,
@@ -187,12 +188,81 @@ const Actifs = () => {
 	const handleShowDetail = async id => {
 		try {
 			setLoadingDetail(true);
+	        console.log('handleShowDetail called with id:', id);
 			const token = user?.token || localStorage.getItem('authToken');
 			const data = await getActifById(id, token);
 			setDetailActif(data || null);
 			setDetailOpen(true);
 		} catch (err) {
 			console.error('Erreur lors du chargement du détail de l\'actif :', err);
+			toast.error('Erreur lors du chargement du détail');
+		} finally {
+			setLoadingDetail(false);
+		}
+	};
+
+	const handleShowShopItemDetail = async (itemOrId) => {
+		try {
+			setLoadingDetail(true);
+	        console.log('handleShowShopItemDetail called with', itemOrId);
+			const token = user?.token || localStorage.getItem('authToken');
+
+			let shopItemId = null;
+			if (typeof itemOrId === 'string') {
+				shopItemId = itemOrId;
+			} else if (itemOrId && typeof itemOrId === 'object') {
+				shopItemId = itemOrId._id || itemOrId.shopItemId || itemOrId.id;
+			}
+
+			if (shopItemId) {
+				const res = await getShopItem(shopItemId, token);
+				// API may return { status, data: [item] } or { data: item } or item directly
+				let shopItem = res;
+				if (res && typeof res === 'object') {
+					if (Array.isArray(res.data)) shopItem = res.data[0];
+					else if (res.data) shopItem = res.data;
+				}
+
+				if (Array.isArray(shopItem)) shopItem = shopItem[0];
+
+				const actif = mapShopItemToActif(shopItem || {});
+				// keep raw shop item data for modal rendering
+				const detail = {
+					...actif,
+					_shopRaw: shopItem || {},
+					vendeurId: (shopItem && shopItem.vendeurId) || (actif && actif.detentaire) || null,
+					shopItemId: (shopItem && (shopItem._id || shopItem.id)) || actif.shopItemId,
+					quantiteOriginale: shopItem?.quantiteOriginale ?? shopItem?.quantite ?? actif.quantite,
+					description: shopItem?.description ?? actif.description,
+					createdAt: shopItem?.createdAt ?? actif.dateCreation,
+					updatedAt: shopItem?.updatedAt ?? null,
+				};
+
+				setDetailActif(detail);
+				setDetailOpen(true);
+				return;
+			}
+
+			if (typeof itemOrId === 'object') {
+				setDetailActif(itemOrId);
+				setDetailOpen(true);
+				return;
+			}
+		} catch (err) {
+			// fallback: try fetching asset detail by actifId or id
+			try {
+				const assetId = typeof itemOrId === 'object' ? (itemOrId.actifId || itemOrId.id) : null;
+				if (assetId) {
+					const data = await getActifById(assetId, user?.token || localStorage.getItem('authToken'));
+					setDetailActif(data || null);
+					setDetailOpen(true);
+					return;
+				}
+			} catch (e) {
+				// ignore
+			}
+
+			console.error("Erreur lors du chargement du détail de l'annonce :", err);
 			toast.error('Erreur lors du chargement du détail');
 		} finally {
 			setLoadingDetail(false);
@@ -257,7 +327,8 @@ const Actifs = () => {
 		try {
 			setDeleting(true);
 			const token = user?.token || localStorage.getItem('authToken');
-			const id = selectedSellItemToDelete?.id || selectedSellItemToDelete?.actifId || selectedSellItemToDelete?._id;
+			// Prefer the shop listing id when available
+			const id = selectedSellItemToDelete?.shopItemId || selectedSellItemToDelete?.id || selectedSellItemToDelete?.actifId || selectedSellItemToDelete?._id;
 			await deleteShopItem(id, token);
 			toast.success('Annonce supprimée');
 			setDeleteModalOpen(false);
@@ -434,52 +505,6 @@ const Actifs = () => {
 					</Card>
 
 					<PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
-
-					{/* MODAL DETAIL */}
-					<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-						<DialogContent>
-							<DialogHeader>
-								<DialogTitle>Détail actif</DialogTitle>
-								<DialogDescription>
-									Informations détaillées
-								</DialogDescription>
-							</DialogHeader>
-
-							{loadingDetail ? (
-								<div>Chargement...</div>
-							) : detailActif && (
-								<div className="space-y-3 text-sm">
-									<div>
-										<b>Code produit :</b> {detailActif.productId?.codeCPC || detailActif.productCode || '-'}
-									</div>
-									<div>
-										<b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}
-									</div>
-									<div>
-										<b>Dépôt :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}
-									</div>
-									<div>
-										<b>Adresse dépôt :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}
-									</div>
-									<div>
-										<b>Quantité :</b> {formatThousands(detailActif.quantite ?? 0)}
-									</div>
-									{/* <div>
-										<b>Prix unitaire :</b> {formatThousands(detailActif.prixUnitaire ?? 0)} Ar
-									</div> */}
-									{/* <div>
-										<b>Valeur totale :</b> {formatThousands(((detailActif.quantite || 0) * (detailActif.prixUnitaire || 0)) ?? 0)} Ar
-									</div> */}
-									<div>
-										<b>Détenteur :</b> {renderPerson(detailActif.detentaire)}
-									</div>
-									<div>
-										<b>Ayant droit :</b> {renderPerson(detailActif.ayant_droit || detailActif.ayantDroit)}
-									</div>
-								</div>
-							)}
-						</DialogContent>
-					</Dialog>
 
 					{/* MODAL METTRE EN VENTE (interface uniquement) */}
 					<Dialog open={sellModalOpen} onOpenChange={setSellModalOpen}>
@@ -892,7 +917,7 @@ const Actifs = () => {
 							actifs={shopItems.map(mapShopItemToActif)}
 							dateFormat={dateFormat}
 							isDesktop={isDesktop}
-							onShowDetail={handleShowDetail}
+							onShowDetail={handleShowShopItemDetail}
 							onOpenStockModal={handleOpenStockModal}
 							onOpenSellModal={handleOpenSellModal}
 							onOpenDeleteModal={handleOpenDeleteModal}
@@ -902,7 +927,62 @@ const Actifs = () => {
 					<PaginationControls page={shopPage} total={shopTotal} limit={shopLimit} loading={shopLoading} onPageChange={setShopPage} onLimitChange={setShopLimit} className="mt-4" />
 				</TabsContent>
 			</Tabs>
-				</>
+
+			{/* MODAL DETAIL (global) */}
+			<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Détail actif</DialogTitle>
+						<DialogDescription>Informations détaillées</DialogDescription>
+					</DialogHeader>
+
+					{loadingDetail ? (
+						<div>Chargement...</div>
+					) : detailActif ? (
+						<div className="space-y-3 text-sm">
+							{(detailActif._shopRaw || detailActif.shopItemId) ? (
+								<>
+									<div className="flex items-start gap-4">
+										<div className="w-20 h-20 bg-neutral-100 rounded overflow-hidden">
+											{(detailActif.productId?.productImage || detailActif.productImage) ? (
+												<img src={getFullMediaUrl(detailActif.productId?.productImage || detailActif.productImage)} alt={detailActif.productId?.productName || detailActif.productName} className="w-full h-full object-cover" />
+											) : (
+												<span className="text-neutral-400">-</span>
+											)}
+										</div>
+										<div>
+											<div><b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}</div>
+											<div><b>Code produit :</b> {detailActif.productId?.codeCPC || detailActif.productCode || '-'}</div>
+											<div><b>Site :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}</div>
+											<div><b>Adresse site :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
+										</div>
+									</div>
+
+									<div><b>Vendeur :</b> {renderPerson(detailActif.vendeurId || detailActif.detentaire)}</div>
+									<div><b>Quantité à vendre :</b> {formatThousands(detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0)}</div>
+									<div><b>Quantité originale :</b> {formatThousands(detailActif.quantiteOriginale ?? detailActif._shopRaw?.quantiteOriginale ?? 0)}</div>
+									<div><b>Prix unitaire (Ar) :</b> {formatThousands(detailActif.prixUnitaire ?? detailActif._shopRaw?.prixUnitaire ?? 0)}</div>
+									<div><b>Valeur totale :</b> {formatThousands(((detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0) * (detailActif.prixUnitaire ?? detailActif._shopRaw?.prixUnitaire ?? 0)) ?? 0)}</div>
+									<div><b>Description :</b> {detailActif.description || detailActif._shopRaw?.description || '-'}</div>
+									<div><b>Date création :</b> {detailActif.createdAt ? dateFormat(detailActif.createdAt) : (detailActif._shopRaw?.createdAt ? dateFormat(detailActif._shopRaw.createdAt) : '-')}</div>
+									<div><b>Date mise à jour :</b> {detailActif.updatedAt ? dateFormat(detailActif.updatedAt) : (detailActif._shopRaw?.updatedAt ? dateFormat(detailActif._shopRaw.updatedAt) : '-')}</div>
+								</>
+							) : (
+								<>
+									<div><b>Code produit :</b> {detailActif.productId?.codeCPC || detailActif.productCode || '-'}</div>
+									<div><b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}</div>
+									<div><b>Dépôt :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}</div>
+									<div><b>Adresse dépôt :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
+									<div><b>Quantité :</b> {formatThousands(detailActif.quantite ?? 0)}</div>
+									<div><b>Détenteur :</b> {renderPerson(detailActif.detentaire)}</div>
+									<div><b>Ayant droit :</b> {renderPerson(detailActif.ayant_droit || detailActif.ayantDroit)}</div>
+								</>
+							)}
+						</div>
+					) : null}
+				</DialogContent>
+			</Dialog>
+			</>
 			)}
 		</div>
 	);
@@ -1056,7 +1136,7 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								<TableCell className="text-sm text-right">
 									<div className="flex gap-2 justify-end">
-										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
+										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}>
 											<InfoIcon className="w-4 h-4 text-violet-600 mr-1" />
 										</Button>
 										<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
@@ -1097,7 +1177,7 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
 							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
 							<div className="flex gap-2 mt-2">
-								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600 mr-1" /> Détails</Button>
+								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}><InfoIcon className="w-4 h-4 text-violet-600 mr-1" /> Détails</Button>
 								<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}><DeleteIcon className="w-4 h-4 text-red-600 mr-1" /> Supprimer</Button>
 							</div>
 						</div>

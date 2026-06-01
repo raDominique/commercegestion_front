@@ -100,9 +100,26 @@ export const deleteShopItem = async (id, token) => {
   return response.data;
 };
 
+/**
+ * Récupère une annonce par son identifiant (GET /shop/shop-items/:id)
+ * @param {string} id - Identifiant de l'annonce
+ * @param {string} token - Token d'authentification (Bearer)
+ * @returns {Promise<Object>} Résultat de l'API
+ */
+export const getShopItem = async (id, token) => {
+  const headers = {
+    accept: '*/*',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+
+  const response = await axiosInstance.get(`/api/v1/shop/shop-items/${id}`, { headers });
+  return response.data;
+};
+
 export default {
   addShopItem,
   getShopItems,
   getMyShopItems,
   deleteShopItem,
+  getShopItem,
 };
