@@ -35,6 +35,22 @@ export const addShopItem = async (data, token) => {
   return response.data;
 };
 
+export const getShopItems = async (params = {}, token) => {
+  const headers = {
+    accept: '*/*',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+
+  if (!params || Object.keys(params).length === 0) {
+    const response = await axiosInstance.get('/api/v1/shop/shop-items', { headers });
+    return response.data;
+  }
+
+  const response = await axiosInstance.get('/api/v1/shop/shop-items', { params, headers });
+  return response.data;
+};
+
 export default {
   addShopItem,
+  getShopItems,
 };

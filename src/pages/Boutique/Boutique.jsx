@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
-import { getShopProducts } from '../../services/product.service.js';
+import { getShopItems } from '../../services/shop-available.service.js';
 import { getFullMediaUrl } from '../../services/media.service.js';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card.jsx';
 import { Badge } from '../../components/ui/badge.jsx';
@@ -49,9 +49,18 @@ const Boutique = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const params = { page, limit, search, sort, order };
-        if (fournisseurId && fournisseurId !== 'all') params.fournisseurId = fournisseurId;
-        const res = await getShopProducts(params);
+        const params = {
+          page,
+          limit,
+          search,
+          sortBy: sort,
+          order: order === 1 ? 'asc' : 'desc',
+        };
+        if (fournisseurId && fournisseurId !== 'all') {
+          params.fournisseurId = fournisseurId;
+          params.vendeurId = fournisseurId;
+        }
+        const res = await getShopItems(params);
         setProducts(res.data || []);
         setTotal(res.total || 0);
       } catch (err) {
@@ -65,7 +74,7 @@ const Boutique = () => {
 
   const vendors = Array.from(new Map(
     products
-      .map(i => i.vendeur)
+      .map(i => i.vendeurId || i.vendeur)
       .filter(Boolean)
       .map(v => [v._id, v])
   ).values());
@@ -150,9 +159,10 @@ const Boutique = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map(item => {
-            const product = item.produit || {};
-            const vendeur = item.vendeur || null;
-            const key = item.id || product._id;
+            const product = item.productId || item.produit || {};
+            const vendeur = item.vendeurId || item.vendeur || null;
+            const site = item.siteId || item.site || {};
+            const key = item._id || item.id || product._id || product.id;
             return (
               <Card key={key} className="border border-neutral-200 bg-white rounded-lg overflow-hidden">
                 <CardHeader className="p-0">
@@ -162,7 +172,7 @@ const Boutique = () => {
                       alt={product.productName}
                       className="w-full h-40 object-cover"
                     />
-                    <div className="absolute top-3 right-3 bg-white/95 text-sm text-neutral-900 px-2 py-1 rounded-md border border-neutral-200">
+                    <div className="absolute top-3 right-3 bg-white/95 text-sm text-neutral-900 px-2 py-1 rounded-md border border-neutral-200 font-bold">
                       {item.prixUnitaire != null ? `${formatThousands(item.prixUnitaire)} Ar` : '-'}
                     </div>
                   </div>
@@ -175,8 +185,9 @@ const Boutique = () => {
                 </CardHeader>
                 <CardContent className="px-4 py-3">
                   <div className="flex flex-col gap-2">
-                    <div className="text-sm text-neutral-700"><span className="font-medium">Code CPC:</span> {product.codeCPC || '-'}</div>
-                    <div className="text-sm text-neutral-700"><span className="font-medium">Créateur:</span> {vendeur?.userNickName || product.productOwnerId || '-'}</div>
+                    <div className="text-sm text-neutral-700"><span className="font-bold">Code CPC:</span> {product.codeCPC || '-'}</div>
+                    <div className="text-sm text-neutral-700"><span className="font-bold">Fournisseur:</span> {vendeur?.userNickName || product.productOwnerId || '-'}</div>
+                    <div className="text-sm text-neutral-700"><span className="font-bold">Adresse:</span> {site?.siteAddress || '-'}</div>
                   </div>
                   <div className="mt-3">
                     <Button
