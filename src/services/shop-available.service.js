@@ -35,6 +35,15 @@ export const addShopItem = async (data, token) => {
   return response.data;
 };
 
+
+/**
+ * Récupère les annonces du vendeur courant (GET /shop/shop-items/mine)
+ * @param {Object} params - Paramètres optionnels (limit, page, search, sortBy, order)
+ * @param {number} params.limit - Nombre d'éléments par page (query)
+ * @param {number} params.page - Numéro de page (query)
+ * @param {string} token - Token d'authentification (Bearer)
+ * @returns {Promise<Object>} Résultat de l'API
+ */
 export const getShopItems = async (params = {}, token) => {
   const headers = {
     accept: '*/*',
@@ -52,7 +61,9 @@ export const getShopItems = async (params = {}, token) => {
 
 /**
  * Récupère les annonces du vendeur courant (GET /shop/shop-items/mine)
- * @param {Object} params - Paramètres optionnels (search, limit, page, sortBy, order)
+ * @param {Object} params - Paramètres optionnels (limit, page, search, sortBy, order)
+ * @param {number} params.limit - Nombre d'éléments par page (query)
+ * @param {number} params.page - Numéro de page (query)
  * @param {string} token - Token d'authentification (Bearer)
  * @returns {Promise<Object>} Résultat de l'API
  */
@@ -62,7 +73,14 @@ export const getMyShopItems = async (params = {}, token) => {
     ...(token && { Authorization: `Bearer ${token}` }),
   };
 
-  const response = await axiosInstance.get('/api/v1/shop/shop-items/mine', { params, headers });
+  const { limit, page, ...rest } = params || {};
+  const query = {
+    ...(limit !== undefined ? { limit } : { limit: 10 }),
+    ...(page !== undefined ? { page } : { page: 1 }),
+    ...rest,
+  };
+
+  const response = await axiosInstance.get('/api/v1/shop/shop-items/mine', { params: query, headers });
   return response.data;
 };
 
