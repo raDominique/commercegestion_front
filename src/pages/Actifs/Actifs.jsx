@@ -6,7 +6,7 @@ import { getActifs } from '../../services/ledger.service';
 import { getActifById } from '../../services/actifs.service';
 import { getProfile } from '../../services/auth.service';
 import { initializeTransaction } from '../../services/transaction.service';
-import { addShopItem } from '../../services/shop-available.service';
+import { addShopItem, getMyShopItems } from '../../services/shop-available.service';
 import { selectAllProduits } from '../../services/product.service';
 import { getMySites } from '../../services/site.service';
 import { Label } from '../../components/ui/label';
@@ -32,6 +32,7 @@ import useScreenType from '../../utils/useScreenType';
 import { getFullMediaUrl } from '../../services/media.service';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 
 const renderPerson = (person) => {
 	if (!person) return '-';
@@ -59,6 +60,14 @@ const Actifs = () => {
 	const [page, setPage] = useState(1);
 	const limit = 10;
 	const [total, setTotal] = useState(0);
+
+	// États pour les annonces (onglet Mes Annonces)
+	const [shopItems, setShopItems] = useState([]);
+	const [shopLoading, setShopLoading] = useState(false);
+	const [shopPage, setShopPage] = useState(1);
+	const [shopLimit, setShopLimit] = useState(10);
+	const [shopTotal, setShopTotal] = useState(0);
+	const [shopSearch, setShopSearch] = useState('');
 
 	const [detailOpen, setDetailOpen] = useState(false);
 
@@ -124,6 +133,29 @@ const Actifs = () => {
 	useEffect(() => {
 		fetchActifs();
 	}, [page, search]);
+
+	// Chargement des annonces (mes annonces / boutique)
+	const fetchMyShopItems = async () => {
+		setShopLoading(true);
+		try {
+			const token = user?.token || localStorage.getItem('authToken');
+			const params = { page: shopPage, limit: shopLimit, search: shopSearch };
+			const res = await getMyShopItems(params, token);
+			const items = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : (res?.data || []));
+			setShopItems(items);
+			const totalCount = Number(res?.total ?? res?.pagination?.total ?? items.length);
+			setShopTotal(Number.isFinite(totalCount) ? totalCount : 0);
+		} catch (err) {
+			console.error('Erreur lors du chargement des annonces:', err);
+			setShopItems([]);
+		} finally {
+			setShopLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchMyShopItems();
+	}, [shopPage, shopLimit, shopSearch, user]);
 
 	const handleShowDetail = async id => {
 		try {
@@ -307,7 +339,13 @@ const Actifs = () => {
 				<UserNotValidatedBanner />
 			) : (
 				<>
-					<div className="flex justify-between items-center mb-6">
+					<Tabs defaultValue="list">
+						<TabsList>
+							<TabsTrigger value="list">Mes Actifs</TabsTrigger>
+							<TabsTrigger value="annonces">Mes Produits en vente</TabsTrigger>
+						</TabsList>
+						<TabsContent value="list" className="space-y-6">
+							<div className="flex justify-between items-center mb-6">
 						<div>
 							<h1 className="text-2xl text-neutral-900 mb-2">Mes Actifs</h1>
 							<p className="text-sm text-neutral-600">Historique de vos actifs</p>
@@ -762,6 +800,66 @@ const Actifs = () => {
 							</div>
 						</DialogContent>
 					</Dialog>
+				</TabsContent>
+
+				<TabsContent value="annonces" className="space-y-6">
+					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+						<div>
+							<h1 className="text-2xl text-neutral-900 mb-2">Mes Produits en vente</h1>
+							<p className="text-sm text-neutral-600">Liste des produits mises en vente</p>
+						</div>
+						<div className="flex gap-3 items-center">
+							<Input
+								placeholder="Rechercher..."
+								value={shopSearch}
+								onChange={e => { setShopPage(1); setShopSearch(e.target.value); }}
+								className="max-w-xs border-black bg-white"
+							/>
+						</div>
+					</div>
+
+					<Card className="border-neutral-200 bg-white">
+						{shopLoading ? (
+							<div className="p-8 text-center text-neutral-400">Chargement...</div>
+						) : shopItems.length === 0 ? (
+							<div className="p-8 text-center text-neutral-400">Aucune annonce</div>
+						) : (
+							<div className="overflow-x-auto">
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead className="text-xs text-neutral-600">Produit</TableHead>
+											<TableHead className="text-xs text-neutral-600">Code</TableHead>
+											<TableHead className="text-xs text-neutral-600">Site</TableHead>
+											<TableHead className="text-xs text-neutral-600">Adresse</TableHead>
+											<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
+											<TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
+											<TableHead className="text-xs text-neutral-600">Statut</TableHead>
+											<TableHead className="text-xs text-neutral-600">Date</TableHead>
+										</TableRow>
+									</TableHeader>
+									<TableBody>
+										{shopItems.map(item => (
+											<TableRow key={item._id}>
+												<TableCell className="text-sm truncate max-w-xs">{item.productId?.productName || '-'}</TableCell>
+												<TableCell className="text-sm text-neutral-500 truncate max-w-xs">{item.productId?.codeCPC || '-'}</TableCell>
+												<TableCell className="text-sm truncate max-w-xs">{item.siteId?.siteName || '-'}</TableCell>
+												<TableCell className="text-sm truncate max-w-xs">{item.siteId?.siteAddress || '-'}</TableCell>
+												<TableCell className="text-sm text-right">{formatThousands(item.quantite ?? 0)}</TableCell>
+												<TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire ?? 0)}</TableCell>
+												<TableCell className="text-sm truncate max-w-xs">{item.statut || '-'}</TableCell>
+												<TableCell className="text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</div>
+						)}
+					</Card>
+
+					<PaginationControls page={shopPage} total={shopTotal} limit={shopLimit} loading={shopLoading} onPageChange={setShopPage} onLimitChange={setShopLimit} className="mt-4" />
+				</TabsContent>
+			</Tabs>
 				</>
 			)}
 		</div>
