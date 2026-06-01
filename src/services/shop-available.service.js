@@ -50,7 +50,24 @@ export const getShopItems = async (params = {}, token) => {
   return response.data;
 };
 
+/**
+ * Récupère les annonces du vendeur courant (GET /shop/shop-items/mine)
+ * @param {Object} params - Paramètres optionnels (search, limit, page, sortBy, order)
+ * @param {string} token - Token d'authentification (Bearer)
+ * @returns {Promise<Object>} Résultat de l'API
+ */
+export const getMyShopItems = async (params = {}, token) => {
+  const headers = {
+    accept: '*/*',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+
+  const response = await axiosInstance.get('/api/v1/shop/shop-items/mine', { params, headers });
+  return response.data;
+};
+
 export default {
   addShopItem,
   getShopItems,
+  getMyShopItems,
 };
