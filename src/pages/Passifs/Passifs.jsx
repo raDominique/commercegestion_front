@@ -173,7 +173,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
 							{/* <TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Total (Ar)</TableHead> */}
-							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
+							{/* <TableHead className="text-xs text-neutral-600">Détenteur</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
@@ -239,7 +239,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<div>Quantité: {quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</div>
 									<div>Prix: {prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</div>
 									<div>Montant: {montant !== null ? formatThousands(montant) : '-'}</div>
-									<div>Détenteur: {detenteur}</div>
+									{/* <div>Détenteur: {detenteur}</div> */}
 									<div>Ayant droit: {ayantDroit}</div>
 									<div>{date ? dateFormat(date) : '-'}</div>
 								</div>

@@ -1029,7 +1029,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
-							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
+							{/* <TableHead className="text-xs text-neutral-600">Ayant droit</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
 						</TableRow>
