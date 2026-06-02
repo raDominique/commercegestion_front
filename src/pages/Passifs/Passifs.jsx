@@ -197,7 +197,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
 									{/* <TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
 									<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell> */}
-									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell>
+									{/* <TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell> */}
 									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
 									<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 									<TableCell className="text-sm text-right">
@@ -225,7 +225,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 				const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
 				const depart = item.depot || item.siteOrigineId?.siteName || '-';
 				const arrivee = item.depotAdresse || item.siteDestinationId?.siteName || '-';
-				const detenteur = item.detentaire || item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
+				// const detenteur = item.detentaire || item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
 				const ayantDroit = item.ayantDroit || item.ayant_droit || item.ayant_droit?.userNickName || '-';
 				const date = item.dateCreation || item.createdAt || item.approvedAt;
 
