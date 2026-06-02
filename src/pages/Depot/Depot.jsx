@@ -761,7 +761,7 @@ const Depot = () => {
 									type="submit"
 									disabled={!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire}
 								>
-									Valider le transfert
+									Valider le dépôt
 								</Button>
 							</div>
 						</form>
