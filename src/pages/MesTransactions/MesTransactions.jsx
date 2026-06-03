@@ -159,7 +159,9 @@ const MesTransactions = () => {
 
   return (
     <div className="px-6 mx-auto">
-      <h1 className="text-2xl font-semibold mb-2">Mes transactions</h1>
+      <div>
+        <h1 className="text-2xl text-neutral-900 mb-2">Mes Transactions</h1>
+      </div>
       <p className="text-sm text-neutral-600">
         Liste de vos transactions passées et en cours
       </p>
