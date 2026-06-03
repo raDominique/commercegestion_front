@@ -3,10 +3,18 @@ import usePageTitle from '../../utils/usePageTitle.jsx';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { getProfile } from '../../services/auth.service';
-import { getUserTransactions } from '../../services/transaction.service';
+import { getUserTransactions, getTransactionById } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Card } from '../../components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
 import { toast } from 'sonner';
 import useScreenType from '../../utils/useScreenType';
@@ -16,7 +24,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
 
-// IMPORTATION DES ICÔNES MATERIAL DES SOUHAITÉES
+// IMPORTATION DES ICÔNES MATERIAL
 import SettingsIcon from '@mui/icons-material/Settings';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -28,6 +36,8 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SyncIcon from '@mui/icons-material/Sync';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import InfoIcon from '@mui/icons-material/Info';
 
 // --- CONFIGURATION DU DESIGN SYSTEM ET DES TRADUCTIONS EN FR ---
 
@@ -62,6 +72,10 @@ const MesTransactions = () => {
 
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [selectedTransactionDetails, setSelectedTransactionDetails] = useState(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [total, setTotal] = useState(0);
@@ -116,6 +130,24 @@ const MesTransactions = () => {
 
     fetchTransactions();
   }, [page, limit, typeFilter, statusFilter, order, productIdFilter]);
+
+  // Fonction de gestion de l'action "Voir détails"
+  const handleViewDetails = async (transactionId) => {
+    setActionLoadingId(transactionId);
+    try {
+      const token = getAccessToken() || localStorage.getItem('token');
+      const res = await getTransactionById(transactionId, token);
+      const raw = res?.data?.data || res?.data || res;
+      const details = Array.isArray(raw) ? raw[0] : raw;
+      setSelectedTransactionDetails(details || null);
+      setDetailOpen(true);
+    } catch (err) {
+      console.error('getTransactionById error', err);
+      toast.error('Erreur lors de la récupération des détails');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
 
   if (user && user.userValidated === false) {
     return (
@@ -182,8 +214,48 @@ const MesTransactions = () => {
       ) : (
         <>
           <Card className="border-neutral-200 bg-white shadow-sm overflow-hidden">
-            <TransactionsTableOrList loading={loading} transactions={transactions} isDesktop={isDesktop} dateFormat={dateFormat} />
+            <TransactionsTableOrList
+              loading={loading}
+              transactions={transactions}
+              isDesktop={isDesktop}
+              dateFormat={dateFormat}
+              onViewDetails={handleViewDetails}
+              actionLoadingId={actionLoadingId}
+            />
           </Card>
+          {/* Modal détail transaction */}
+          <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Détails de la transaction</DialogTitle>
+                <DialogDescription>Informations complètes de la transaction sélectionnée</DialogDescription>
+              </DialogHeader>
+              {selectedTransactionDetails ? (
+                <div className="space-y-3 text-sm">
+                  <div><b>N° transaction :</b> {selectedTransactionDetails.transactionNumber || selectedTransactionDetails._id}</div>
+                  <div><b>Type :</b> {selectedTransactionDetails.type || '-'}</div>
+                  <div><b>Statut :</b> {selectedTransactionDetails.status || '-'}</div>
+                  <div><b>Produit :</b> {selectedTransactionDetails.productId?.productName || selectedTransactionDetails.productName || '-'}</div>
+                  <div><b>Code produit :</b> {selectedTransactionDetails.productId?.codeCPC || '-'}</div>
+                  <div><b>Quantité :</b> {selectedTransactionDetails.quantite ?? '-'}</div>
+                  <div><b>Prix unitaire :</b> {selectedTransactionDetails.prixUnitaire ?? '-'}</div>
+                  <div><b>Initiateur :</b> {selectedTransactionDetails.initiatorId?.userNickName || selectedTransactionDetails.initiatorId?.userName || '-'}</div>
+                  <div><b>Destinataire :</b> {selectedTransactionDetails.recipientId?.userNickName || selectedTransactionDetails.recipientId?.userName || '-'}</div>
+                  <div><b>Site origine :</b> {selectedTransactionDetails.siteOrigineId?.siteName || '-'}</div>
+                  <div><b>Date création :</b> {selectedTransactionDetails.createdAt ? dateFormat(selectedTransactionDetails.createdAt) : '-'}</div>
+                  <div><b>Date approbation :</b> {selectedTransactionDetails.approvedAt ? dateFormat(selectedTransactionDetails.approvedAt) : '-'}</div>
+                  <div><b>Observations :</b> {selectedTransactionDetails.observations || '-'}</div>
+                </div>
+              ) : (
+                <div>Chargement...</div>
+              )}
+              <div className="flex justify-end gap-2 pt-4">
+                <DialogClose asChild>
+                  <Button variant="outline" status="inactive">Fermer</Button>
+                </DialogClose>
+              </div>
+            </DialogContent>
+          </Dialog>
           <PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
         </>
       )}
@@ -195,7 +267,7 @@ export default MesTransactions;
 
 // --- TABLEAU ET VUE MOBILE INTELLIGENTE ---
 
-function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat }) {
+function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat, onViewDetails, actionLoadingId }) {
   if (loading) return null;
   if (!transactions || transactions.length === 0) {
     return (
@@ -221,18 +293,18 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
               <TableHead className="text-xs font-semibold text-neutral-600">Produit</TableHead>
               <TableHead className="text-xs font-semibold text-neutral-600">Type de transaction</TableHead>
               <TableHead className="text-xs font-semibold text-neutral-600 text-right">Quantité</TableHead>
-              {/* <TableHead className="text-xs font-semibold text-neutral-600 text-right">Prix Unitaire</TableHead> */}
               <TableHead className="text-xs font-semibold text-neutral-600">Statut</TableHead>
               <TableHead className="text-xs font-semibold text-neutral-600">Lieu d'origine</TableHead>
               <TableHead className="text-xs font-semibold text-neutral-600">Date</TableHead>
+              <TableHead className="text-xs font-semibold text-neutral-600 text-center w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {transactions.map((item, idx) => {
+              const transId = item._id || item.transactionId;
               const transNumber = item.transactionNumber || item._id || '-';
               const produit = item.productId?.productName || item.productName || '-';
               const quantity = item.quantite ?? item.quantity ?? '-';
-              // const prixUnitaire = item.prixUnitaire ?? '-';
               const type = item.type || item.movementType || '-';
               const status = item.status || '-';
               const lieu = item.siteOrigineId?.siteName || item.siteName || '-';
@@ -240,9 +312,10 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
 
               const typeBadge = getTypeBadgeProps(type);
               const statusBadge = getStatusBadgeProps(status);
+              const isItemLoading = actionLoadingId === transId;
 
               return (
-                <TableRow key={item._id || item.transactionId || idx} className="hover:bg-neutral-50/50">
+                <TableRow key={transId || idx} className="hover:bg-neutral-50/50">
                   <TableCell className="text-sm font-mono text-neutral-700 truncate max-w-35" title={transNumber}>
                     {transNumber}
                   </TableCell>
@@ -254,9 +327,6 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm font-medium text-neutral-900 text-right">{safeFormat(quantity)} unité(s)</TableCell>
-                  {/* <TableCell className="text-sm text-neutral-600 text-right">
-                    {prixUnitaire !== '-' && prixUnitaire !== null ? `${safeFormat(prixUnitaire)} Ar` : '-'}
-                  </TableCell> */}
                   <TableCell className="text-sm">
                     <Badge variant="outline" className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 ${statusBadge.className}`}>
                       <statusBadge.Icon sx={{ fontSize: 14 }} />
@@ -265,6 +335,21 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
                   </TableCell>
                   <TableCell className="text-sm text-neutral-600 truncate max-w-xs">{lieu}</TableCell>
                   <TableCell className="text-sm text-neutral-500">{date ? dateFormat(date) : '-'}</TableCell>
+                  <TableCell className="text-sm text-center">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="h-7 px-2 text-xs font-medium flex items-center gap-1 mx-auto"
+                      disabled={isItemLoading || !transId}
+                      onClick={() => onViewDetails(transId)}
+                    >
+                      {isItemLoading ? (
+                        <SyncIcon className="animate-spin" sx={{ fontSize: 14 }} />
+                      ) : (
+                        <InfoIcon className="w-4 h-4 text-violet-600" />
+                      )}
+                    </Button>
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -278,10 +363,10 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
   return (
     <div className="space-y-3 p-4 bg-neutral-50/50">
       {transactions.map((item, idx) => {
+        const transId = item._id || item.transactionId;
         const transNumber = item.transactionNumber || item._id || '-';
         const produit = item.productId?.productName || item.productName || '-';
         const quantity = item.quantite ?? item.quantity ?? '-';
-        // const prixUnitaire = item.prixUnitaire ?? '-';
         const type = item.type || item.movementType || '-';
         const status = item.status || '-';
         const lieu = item.siteOrigineId?.siteName || item.siteName || '-';
@@ -289,9 +374,10 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
 
         const typeBadge = getTypeBadgeProps(type);
         const statusBadge = getStatusBadgeProps(status);
+        const isItemLoading = actionLoadingId === transId;
 
         return (
-          <Card key={item._id || item.transactionId || idx} className="p-4 border-neutral-200 bg-white shadow-sm">
+          <Card key={transId || idx} className="p-4 border-neutral-200 bg-white shadow-sm">
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -309,15 +395,9 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
                   <span className="text-xs text-neutral-400 block">Quantité</span>
                   <span className="font-medium text-neutral-900">{safeFormat(quantity)} unité(s)</span>
                 </div>
-                {/* <div>
-                  <span className="text-xs text-neutral-400 block">Prix Unitaire</span>
-                  <span className="font-medium text-neutral-900">
-                    {prixUnitaire !== '-' && prixUnitaire !== null ? `${safeFormat(prixUnitaire)} Ar` : '-'}
-                  </span>
-                </div> */}
-                <div className="col-span-2">
+                <div>
                   <span className="text-xs text-neutral-400 block">Lieu d'origine</span>
-                  <span className="text-neutral-700">{lieu}</span>
+                  <span className="text-neutral-700 truncate block max-w-35">{lieu}</span>
                 </div>
               </div>
 
@@ -326,10 +406,27 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat 
                   <CalendarTodayIcon sx={{ fontSize: 12 }} className="text-neutral-400" />
                   {date ? dateFormat(date) : '-'}
                 </div>
-                <Badge variant="outline" className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 ${statusBadge.className}`}>
-                  <statusBadge.Icon sx={{ fontSize: 14 }} />
-                  {statusBadge.label}
-                </Badge>
+
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 ${statusBadge.className}`}>
+                    <statusBadge.Icon sx={{ fontSize: 14 }} />
+                    {statusBadge.label}
+                  </Badge>
+
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-7 px-2 text-xs font-medium flex items-center gap-1"
+                    disabled={isItemLoading || !transId}
+                    onClick={() => onViewDetails(transId)}
+                  >
+                    {isItemLoading ? (
+                      <SyncIcon className="animate-spin" sx={{ fontSize: 12 }} />
+                    ) : (
+                      <InfoIcon className="w-4 h-4 text-violet-600 mr-1" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>
