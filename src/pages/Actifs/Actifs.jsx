@@ -118,7 +118,6 @@ const Actifs = () => {
 	const fetchActifs = async () => {
 		try {
 			setLoading(true);
-			// Récupérer l'userId via le contexte ou l'API getProfile si nécessaire
 			let userId = user?._id;
 			if (!userId) {
 				try {
@@ -183,7 +182,6 @@ const Actifs = () => {
 		statut: item.statut || item.status || null,
 		valeurTotale: (item.quantite ?? 0) * (item.prixUnitaire ?? 0),
 		detentaire: item.vendeurId || item.vendeur || null,
-		// ayant_droit: item.ayant_droit || item.ayantDroit || null,
 		dateCreation: item.createdAt || item.createdAt,
 		productId: item.productId,
 		depotId: item.siteId,
@@ -220,7 +218,6 @@ const Actifs = () => {
 
 			if (shopItemId) {
 				const res = await getShopItem(shopItemId, token);
-				// API may return { status, data: [item] } or { data: item } or item directly
 				let shopItem = res;
 				if (res && typeof res === 'object') {
 					if (Array.isArray(res.data)) shopItem = res.data[0];
@@ -230,7 +227,6 @@ const Actifs = () => {
 				if (Array.isArray(shopItem)) shopItem = shopItem[0];
 
 				const actif = mapShopItemToActif(shopItem || {});
-				// keep raw shop item data for modal rendering
 				const detail = {
 					...actif,
 					_shopRaw: shopItem || {},
@@ -253,7 +249,6 @@ const Actifs = () => {
 				return;
 			}
 		} catch (err) {
-			// fallback: try fetching asset detail by actifId or id
 			try {
 				const assetId = typeof itemOrId === 'object' ? (itemOrId.actifId || itemOrId.id) : null;
 				if (assetId) {
@@ -332,11 +327,9 @@ const Actifs = () => {
 		try {
 			setDeleting(true);
 			const token = user?.token || localStorage.getItem('authToken');
-			// Prefer the shop listing id when available
 			const id = selectedSellItemToDelete?.shopItemId || selectedSellItemToDelete?.id || selectedSellItemToDelete?.actifId || selectedSellItemToDelete?._id;
 			await deleteShopItem(id, token);
 
-			// Optimistic UI update: remove the deleted item locally for snappy UX
 			setShopItems(prev => prev ? prev.filter(item => {
 				const ids = [item._id, item.shopItemId, item.id, item.actifId].filter(Boolean).map(String);
 				return !ids.includes(String(id));
@@ -347,7 +340,6 @@ const Actifs = () => {
 			toast.success('Annonce supprimée');
 			setDeleteModalOpen(false);
 			setSelectedSellItemToDelete(null);
-			// Refresh in background to ensure consistency with server
 			fetchMyShopItems().catch(e => console.error('Erreur rafraîchissement annonces après suppression:', e));
 		} catch (err) {
 			console.error('Erreur suppression annonce :', err);
@@ -380,7 +372,6 @@ const Actifs = () => {
 			setLoadingSell(true);
 			const token = user?.token || localStorage.getItem('authToken');
 
-			// Extract identifiers with fallbacks (support both string and populated objects)
 			const productId = selectedActifForSale?.productId && typeof selectedActifForSale.productId === 'object'
 				? (selectedActifForSale.productId._id || selectedActifForSale.productId.id || selectedActifForSale.productId)
 				: (selectedActifForSale?.productId || selectedActifForSale?._id || selectedActifForSale?.id);
@@ -523,7 +514,7 @@ const Actifs = () => {
 
 							<PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
 
-							{/* MODAL METTRE EN VENTE (interface uniquement) */}
+							{/* MODAL METTRE EN VENTE */}
 							<Dialog open={sellModalOpen} onOpenChange={setSellModalOpen}>
 								<DialogContent>
 									<DialogHeader>
@@ -615,7 +606,7 @@ const Actifs = () => {
 								</DialogContent>
 							</Dialog>
 
-							{/* MODAL SUPPRIMER ANNONCE (AdminUsers style) */}
+							{/* MODAL SUPPRIMER ANNONCE */}
 							<Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
 								<DialogContent>
 									<DialogHeader>
@@ -659,7 +650,8 @@ const Actifs = () => {
 											/>
 										</div>
 
-										<div>								<label className="block text-sm font-medium text-neutral-700 mb-1">Site d'origine</label>
+										<div>
+											<label className="block text-sm font-medium text-neutral-700 mb-1">Site d'origine</label>
 											<Input
 												disabled
 												value={selectedActifForStock?.siteOrigineId || selectedActifForStock?.depot || ''}
@@ -667,16 +659,8 @@ const Actifs = () => {
 											/>
 										</div>
 
-										{/* <div>
-									<label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</label>
-									<Input
-										disabled
-										value={selectedActifForStock?.prixUnitaire || '0'}
-										className="border-neutral-300 bg-neutral-50"
-									/>
-								</div> */}
-
-										<div>									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</label>
+										<div>
+											<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</label>
 											<Input
 												type="number"
 												min="1"
@@ -759,7 +743,6 @@ const Actifs = () => {
 																	setAddProductForm(prev => ({
 																		...prev,
 																		productId: product._id,
-																		// prixUnitaire: product.prixUnitaire || 0
 																	}));
 																	setProductSearch(product.productName);
 																	setProductOpen(false);
@@ -781,7 +764,6 @@ const Actifs = () => {
 																	setAddProductForm(prev => ({
 																		...prev,
 																		productId: product._id,
-																		// prixUnitaire: product.prixUnitaire || 0
 																	}));
 																	setProductSearch(product.productName);
 																	setProductOpen(false);
@@ -882,18 +864,6 @@ const Actifs = () => {
 												className="border-neutral-300"
 											/>
 										</div>
-
-										{/* <div>
-									<Label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</Label>
-									<Input
-										type="number"
-										min="0"
-										step="0.01"
-										value={addProductForm.prixUnitaire}
-										onChange={(e) => setAddProductForm({ ...addProductForm, prixUnitaire: e.target.value })}
-										className="border-neutral-300"
-									/>
-								</div> */}
 
 										<div className="flex justify-end gap-2 pt-4">
 											<Button
@@ -997,7 +967,6 @@ const Actifs = () => {
 											<div><b>Adresse dépôt :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
 											<div><b>Quantité :</b> {formatThousands(detailActif.quantite ?? 0)}</div>
 											<div><b>Détenteur :</b> {renderPerson(detailActif.detentaire)}</div>
-											{/* <div><b>Ayant droit :</b> {renderPerson(detailActif.ayant_droit || detailActif.ayantDroit)}</div> */}
 										</>
 									)}
 								</div>
@@ -1029,7 +998,6 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
-							{/* <TableHead className="text-xs text-neutral-600">Ayant droit</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
 						</TableRow>
@@ -1049,15 +1017,17 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
-								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId || item.detentaire)}</TableCell>
-								{/* <TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell> */}
+								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								<TableCell className="text-sm text-right">
+									{/* ✅ UN SEUL bouton Détails, design cohérent avec les autres */}
 									<div className="flex flex-col items-end gap-2">
-										<div className="flex gap-2 justify-end">
+										<div>
 											<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
-												<InfoIcon className="w-5 h-5 text-violet-600" />
+												<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
 											</Button>
+										</div>
+										<div>
 											<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
 												<AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock
 											</Button>
@@ -1099,12 +1069,17 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 						<div className="flex flex-col items-end gap-2">
 							<div className="text-sm font-medium text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
 							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
-							<div className="flex gap-2 mt-2">
-								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}><InfoIcon className="w-4 h-4 text-violet-600" /></Button>
-								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}><AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock</Button>
-							</div>
-							<div>
-								<Button variant="ghost" size="sm" onClick={() => onOpenSellModal(item)}><LocalOfferIcon className="w-4 h-4 text-green-600" /> Mettre en vente</Button>
+							<div className="flex flex-col gap-1 mt-2">
+								{/* ✅ UN SEUL bouton Détails, design cohérent avec les autres */}
+								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
+									<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
+								</Button>
+								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
+									<AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock
+								</Button>
+								<Button variant="ghost" size="sm" onClick={() => onOpenSellModal(item)}>
+									<LocalOfferIcon className="w-4 h-4 text-green-600" /> Mettre en vente
+								</Button>
 							</div>
 						</div>
 					</div>
@@ -1159,10 +1134,10 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 								<TableCell className="text-sm text-right">
 									<div className="flex gap-2 justify-end">
 										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}>
-											<InfoIcon className="w-4 h-4 text-violet-600 mr-1" />
+											<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
 										</Button>
 										<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
-											<DeleteIcon className="w-4 h-4 text-red-600 mr-1" />
+											<DeleteIcon className="w-4 h-4 text-red-600" /> Supprimer
 										</Button>
 									</div>
 								</TableCell>
@@ -1198,9 +1173,13 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 							<div className="text-xs text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
 							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
 							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
-							<div className="flex gap-2 mt-2">
-								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}><InfoIcon className="w-4 h-4 text-violet-600 mr-1" /> Détails</Button>
-										<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}><DeleteIcon className="w-4 h-4 text-red-600 mr-1" /> Supprimer</Button>
+							<div className="flex flex-col gap-1 mt-2">
+								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}>
+									<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
+								</Button>
+								<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
+									<DeleteIcon className="w-4 h-4 text-red-600" /> Supprimer
+								</Button>
 							</div>
 						</div>
 					</div>
