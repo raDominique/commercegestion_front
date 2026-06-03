@@ -137,7 +137,12 @@ const VirementDroit = () => {
 
   const handleOpenVirementFromActif = (actif) => {
     const pid = (actif?.productId && (actif.productId._id || actif.productId)) || actif.productId || actif.id || '';
-    setForm(prev => ({ ...prev, produit: actif.productName || '', productId: pid, quantite: '', prixUnitaire: actif?.prixUnitaire || '' }));
+    // Prefill deposit (site destination) from the actif when opening
+    const rawDepot = actif?.depotId || actif?.siteOrigineId || actif?.siteId || actif?.depot || null;
+    const depotId = rawDepot && (rawDepot._id || rawDepot.id || rawDepot) || '';
+    const depotName = rawDepot && (rawDepot.siteName || rawDepot.name || actif?.depot || '') || '';
+    setForm(prev => ({ ...prev, produit: actif.productName || '', productId: pid, quantite: '', prixUnitaire: actif?.prixUnitaire || '', siteDestinationId: depotId }));
+    setSiteDestinationSearch(depotName);
     setSelectedActifForVirement(actif);
     setSelectedRecipient(null);
     setRecipientSearch('');
@@ -338,14 +343,14 @@ const VirementDroit = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">Site de destination</label>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-neutral-700 mb-1">Dépôt</label>
                   <div className="relative">
                     <Input
-                      placeholder={loadingDestinationSites ? 'Chargement...' : (destinationSites.length === 0 ? 'Aucun site trouvé' : 'Rechercher un site...')}
+                      placeholder={loadingDestinationSites ? 'Chargement...' : (destinationSites.length === 0 ? 'Aucun site trouvé' : 'Dépôt pré-rempli')}
                       value={siteDestinationSearch}
                       onChange={(e) => { setSiteDestinationSearch(e.target.value); setSiteDestinationHighlighted(0); }}
-                      onFocus={() => { setSiteDestinationOpen(true); setSiteDestinationHighlighted(0); }}
+                      onFocus={() => { /* keep searchable if needed */ setSiteDestinationOpen(true); setSiteDestinationHighlighted(0); }}
                       onBlur={() => setTimeout(() => setSiteDestinationOpen(false), 150)}
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') return setSiteDestinationOpen(false);
@@ -410,6 +415,7 @@ const VirementDroit = () => {
                     )}
                   </div>
 
+                  {/*
                   <div>
                     <label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire</label>
                     <Input
@@ -420,6 +426,7 @@ const VirementDroit = () => {
                       className="w-full border-neutral-300"
                     />
                   </div>
+                  */}
                 </div>
 
                 <div>
