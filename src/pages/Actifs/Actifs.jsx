@@ -514,377 +514,6 @@ const Actifs = () => {
 
 							<PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
 
-							{/* MODAL METTRE EN VENTE */}
-							<Dialog open={sellModalOpen} onOpenChange={setSellModalOpen}>
-								<DialogContent>
-									<DialogHeader>
-										<DialogTitle>Mettre en vente</DialogTitle>
-										<DialogDescription>
-											{selectedActifForSale?.productName}
-										</DialogDescription>
-									</DialogHeader>
-
-									<div className="space-y-4">
-										<div>
-											<label className="block text-sm font-medium text-neutral-700 mb-1">Produit</label>
-											<Input
-												disabled
-												value={selectedActifForSale?.productName || ''}
-												className="border-neutral-300 bg-neutral-50"
-											/>
-										</div>
-
-										<div>
-											<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité à vendre</label>
-											<Input
-												type="number"
-												min="1"
-												max={selectedActifForSale?.quantite ?? undefined}
-												placeholder="0"
-												value={sellForm.quantite}
-												onChange={(e) => {
-													const val = e.target.value;
-													if (val === '') {
-														setSellForm({ ...sellForm, quantite: '' });
-														return;
-													}
-													let num = Number(val);
-													const max = Number(selectedActifForSale?.quantite ?? Infinity);
-													if (isNaN(num)) {
-														setSellForm({ ...sellForm, quantite: '' });
-														return;
-													}
-													if (num > max) num = max;
-													if (num < 1) num = 1;
-													setSellForm({ ...sellForm, quantite: String(num) });
-												}}
-												className="border-neutral-300"
-											/>
-											<div className="text-xs text-neutral-500 mt-1">Disponible: {selectedActifForSale?.quantite ?? 0}</div>
-										</div>
-
-										<div>
-											<label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</label>
-											<Input
-												type="number"
-												min="0"
-												step="0.01"
-												value={sellForm.prixUnitaire}
-												onChange={(e) => setSellForm({ ...sellForm, prixUnitaire: e.target.value })}
-												className="border-neutral-300"
-											/>
-										</div>
-
-										<div>
-											<label className="block text-sm font-medium text-neutral-700 mb-1">Description</label>
-											<Input
-												placeholder="Description (optionnel)"
-												value={sellForm.description}
-												onChange={(e) => setSellForm({ ...sellForm, description: e.target.value })}
-												className="border-neutral-300"
-											/>
-										</div>
-
-										<div className="flex justify-end gap-2 pt-4">
-											<Button
-												variant="outline"
-												status="inactive"
-												onClick={() => setSellModalOpen(false)}
-											>
-												Annuler
-											</Button>
-											<Button
-												status={loadingSell ? "loading" : "active"}
-												onClick={handleSell}
-												disabled={loadingSell}
-												color="default"
-											>
-												{loadingSell ? 'En cours...' : 'Mettre en vente'}
-											</Button>
-										</div>
-									</div>
-								</DialogContent>
-							</Dialog>
-
-							{/* MODAL SUPPRIMER ANNONCE */}
-							<Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-								<DialogContent>
-									<DialogHeader>
-										<DialogTitle>Supprimer l'annonce</DialogTitle>
-										<DialogDescription>Êtes-vous sûr de vouloir supprimer l'annonce « {productToDeleteName} » ? Cette action est irréversible.</DialogDescription>
-									</DialogHeader>
-									<div className="flex justify-end gap-2 mt-4">
-										<DialogClose asChild>
-											<Button variant="outline" status="inactive">Annuler</Button>
-										</DialogClose>
-										<Button
-											variant="default"
-											status={deleting ? 'loading' : 'active'}
-											color="default"
-											disabled={deleting}
-											onClick={handleConfirmDeleteShopItem}
-										>
-											{deleting ? 'Suppression...' : 'Supprimer'}
-										</Button>
-									</div>
-								</DialogContent>
-							</Dialog>
-
-							{/* MODAL AJOUT STOCK */}
-							<Dialog open={stockModalOpen} onOpenChange={setStockModalOpen}>
-								<DialogContent>
-									<DialogHeader>
-										<DialogTitle>Ajouter du stock</DialogTitle>
-										<DialogDescription>
-											{selectedActifForStock?.productName}
-										</DialogDescription>
-									</DialogHeader>
-
-									<div className="space-y-4">
-										<div>
-											<label className="block text-sm font-medium text-neutral-700 mb-1">Produit</label>
-											<Input
-												disabled
-												value={selectedActifForStock?.productName || ''}
-												className="border-neutral-300 bg-neutral-50"
-											/>
-										</div>
-
-										<div>
-											<label className="block text-sm font-medium text-neutral-700 mb-1">Site d'origine</label>
-											<Input
-												disabled
-												value={selectedActifForStock?.siteOrigineId || selectedActifForStock?.depot || ''}
-												className="border-neutral-300 bg-neutral-50"
-											/>
-										</div>
-
-										<div>
-											<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</label>
-											<Input
-												type="number"
-												min="1"
-												placeholder="0"
-												value={stockForm.quantite}
-												onChange={(e) => setStockForm({ ...stockForm, quantite: e.target.value })}
-												className="border-neutral-300"
-											/>
-										</div>
-
-										<div>
-											<label className="block text-sm font-medium text-neutral-700 mb-1">Observations</label>
-											<Input
-												placeholder="Observations facultatives"
-												value={stockForm.observations}
-												onChange={(e) => setStockForm({ ...stockForm, observations: e.target.value })}
-												className="border-neutral-300"
-											/>
-										</div>
-
-										<div className="flex justify-end gap-2 pt-4">
-											<Button
-												variant="outline"
-												status="inactive"
-												onClick={() => setStockModalOpen(false)}
-											>
-												Annuler
-											</Button>
-											<Button
-												status={loadingAddStock ? "loading" : "active"}
-												onClick={handleAddStock}
-												disabled={loadingAddStock}
-												color="default"
-											>
-												{loadingAddStock ? 'Ajout en cours...' : 'Ajouter'}
-											</Button>
-										</div>
-									</div>
-								</DialogContent>
-							</Dialog>
-
-							{/* MODAL INITIALISER PRODUIT À UN SITE */}
-							<Dialog open={addProductModalOpen} onOpenChange={setAddProductModalOpen}>
-								<DialogContent>
-									<DialogHeader>
-										<DialogTitle>Initialiser un produit à un site</DialogTitle>
-										<DialogDescription>
-											Sélectionnez un produit et un site pour l'initialiser
-										</DialogDescription>
-									</DialogHeader>
-
-									<div className="space-y-4">
-										<div className="space-y-2">
-											<Label>Produit</Label>
-											<div className="relative">
-												<Input
-													placeholder={products.length === 0 ? "Aucun produit disponible" : "Rechercher un produit..."}
-													value={productSearch}
-													onChange={e => { setProductSearch(e.target.value); setProductHighlighted(0); }}
-													onFocus={() => { setProductOpen(true); setProductHighlighted(0); }}
-													onBlur={() => setTimeout(() => setProductOpen(false), 150)}
-													onKeyDown={(e) => {
-														if (e.key === 'Escape') return setProductOpen(false);
-														if (!productOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-															setProductOpen(true);
-															e.preventDefault();
-															return;
-														}
-														if (productOpen) {
-															if (e.key === 'ArrowDown') {
-																e.preventDefault();
-																setProductHighlighted(i => Math.min(i + 1, Math.max(filteredProducts.length - 1, 0)));
-															} else if (e.key === 'ArrowUp') {
-																e.preventDefault();
-																setProductHighlighted(i => Math.max(i - 1, 0));
-															} else if (e.key === 'Enter') {
-																e.preventDefault();
-																const product = filteredProducts[productHighlighted];
-																if (product) {
-																	setAddProductForm(prev => ({
-																		...prev,
-																		productId: product._id,
-																	}));
-																	setProductSearch(product.productName);
-																	setProductOpen(false);
-																}
-															}
-														}
-													}}
-													className="w-full"
-													disabled={products.length === 0}
-												/>
-												{productOpen && filteredProducts.length > 0 && (
-													<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-														{filteredProducts.map((product, idx) => (
-															<button
-																type="button"
-																key={product._id}
-																onMouseEnter={() => setProductHighlighted(idx)}
-																onClick={() => {
-																	setAddProductForm(prev => ({
-																		...prev,
-																		productId: product._id,
-																	}));
-																	setProductSearch(product.productName);
-																	setProductOpen(false);
-																}}
-																className={`w-full text-left px-3 py-2 text-sm ${idx === productHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
-															>
-																{product.productName} - {product.codeCPC}
-															</button>
-														))}
-													</div>
-												)}
-												{productOpen && filteredProducts.length === 0 && products.length > 0 && (
-													<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-														<div className="px-3 py-2 text-sm text-neutral-500">Aucun produit trouvé</div>
-													</div>
-												)}
-											</div>
-										</div>
-
-										<div className="space-y-2">
-											<Label>Site</Label>
-											<div className="relative">
-												<Input
-													placeholder={sites.length === 0 ? "Aucun site disponible" : "Rechercher un site..."}
-													value={siteSearch}
-													onChange={e => { setSiteSearch(e.target.value); setSiteHighlighted(0); }}
-													onFocus={() => { setSiteOpen(true); setSiteHighlighted(0); }}
-													onBlur={() => setTimeout(() => setSiteOpen(false), 150)}
-													onKeyDown={(e) => {
-														if (e.key === 'Escape') return setSiteOpen(false);
-														if (!siteOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-															setSiteOpen(true);
-															e.preventDefault();
-															return;
-														}
-														if (siteOpen) {
-															if (e.key === 'ArrowDown') {
-																e.preventDefault();
-																setSiteHighlighted(i => Math.min(i + 1, Math.max(filteredSites.length - 1, 0)));
-															} else if (e.key === 'ArrowUp') {
-																e.preventDefault();
-																setSiteHighlighted(i => Math.max(i - 1, 0));
-															} else if (e.key === 'Enter') {
-																e.preventDefault();
-																const site = filteredSites[siteHighlighted];
-																if (site) {
-																	setAddProductForm(prev => ({
-																		...prev,
-																		siteId: site._id
-																	}));
-																	setSiteSearch(site.siteName);
-																	setSiteOpen(false);
-																}
-															}
-														}
-													}}
-													className="w-full"
-													disabled={sites.length === 0}
-												/>
-												{siteOpen && filteredSites.length > 0 && (
-													<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-														{filteredSites.map((site, idx) => (
-															<button
-																type="button"
-																key={site._id}
-																onMouseEnter={() => setSiteHighlighted(idx)}
-																onClick={() => {
-																	setAddProductForm(prev => ({
-																		...prev,
-																		siteId: site._id
-																	}));
-																	setSiteSearch(site.siteName);
-																	setSiteOpen(false);
-																}}
-																className={`w-full text-left px-3 py-2 text-sm ${idx === siteHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
-															>
-																{site.siteName}
-															</button>
-														))}
-													</div>
-												)}
-												{siteOpen && filteredSites.length === 0 && sites.length > 0 && (
-													<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-														<div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
-													</div>
-												)}
-											</div>
-										</div>
-
-										<div>
-											<Label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</Label>
-											<Input
-												type="number"
-												min="1"
-												placeholder="0"
-												value={addProductForm.quantite}
-												onChange={(e) => setAddProductForm({ ...addProductForm, quantite: e.target.value })}
-												className="border-neutral-300"
-											/>
-										</div>
-
-										<div className="flex justify-end gap-2 pt-4">
-											<Button
-												variant="outline"
-												status="inactive"
-												onClick={() => setAddProductModalOpen(false)}
-											>
-												Annuler
-											</Button>
-											<Button
-												status={loadingAddProduct ? "loading" : "active"}
-												onClick={handleAddProductToSite}
-												disabled={loadingAddProduct}
-												color="default"
-											>
-												{loadingAddProduct ? 'Ajout en cours...' : 'Ajouter'}
-											</Button>
-										</div>
-									</div>
-								</DialogContent>
-							</Dialog>
 						</TabsContent>
 
 						<TabsContent value="annonces" className="space-y-6">
@@ -919,6 +548,378 @@ const Actifs = () => {
 							<PaginationControls page={shopPage} total={shopTotal} limit={shopLimit} loading={shopLoading} onPageChange={setShopPage} onLimitChange={setShopLimit} className="mt-4" />
 						</TabsContent>
 					</Tabs>
+
+					{/* MODAL METTRE EN VENTE */}
+					<Dialog open={sellModalOpen} onOpenChange={setSellModalOpen}>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Mettre en vente</DialogTitle>
+								<DialogDescription>
+									{selectedActifForSale?.productName}
+								</DialogDescription>
+							</DialogHeader>
+
+							<div className="space-y-4">
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Produit</label>
+									<Input
+										disabled
+										value={selectedActifForSale?.productName || ''}
+										className="border-neutral-300 bg-neutral-50"
+									/>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité à vendre</label>
+									<Input
+										type="number"
+										min="1"
+										max={selectedActifForSale?.quantite ?? undefined}
+										placeholder="0"
+										value={sellForm.quantite}
+										onChange={(e) => {
+											const val = e.target.value;
+											if (val === '') {
+												setSellForm({ ...sellForm, quantite: '' });
+												return;
+											}
+											let num = Number(val);
+											const max = Number(selectedActifForSale?.quantite ?? Infinity);
+											if (isNaN(num)) {
+												setSellForm({ ...sellForm, quantite: '' });
+												return;
+											}
+											if (num > max) num = max;
+											if (num < 1) num = 1;
+											setSellForm({ ...sellForm, quantite: String(num) });
+										}}
+										className="border-neutral-300"
+									/>
+									<div className="text-xs text-neutral-500 mt-1">Disponible: {selectedActifForSale?.quantite ?? 0}</div>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</label>
+									<Input
+										type="number"
+										min="0"
+										step="0.01"
+										value={sellForm.prixUnitaire}
+										onChange={(e) => setSellForm({ ...sellForm, prixUnitaire: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Description</label>
+									<Input
+										placeholder="Description (optionnel)"
+										value={sellForm.description}
+										onChange={(e) => setSellForm({ ...sellForm, description: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div className="flex justify-end gap-2 pt-4">
+									<Button
+										variant="outline"
+										status="inactive"
+										onClick={() => setSellModalOpen(false)}
+									>
+										Annuler
+									</Button>
+									<Button
+										status={loadingSell ? "loading" : "active"}
+										onClick={handleSell}
+										disabled={loadingSell}
+										color="default"
+									>
+										{loadingSell ? 'En cours...' : 'Mettre en vente'}
+									</Button>
+								</div>
+							</div>
+						</DialogContent>
+					</Dialog>
+
+					{/* MODAL SUPPRIMER ANNONCE */}
+					<Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Supprimer l'annonce</DialogTitle>
+								<DialogDescription>Êtes-vous sûr de vouloir supprimer l'annonce « {productToDeleteName} » ? Cette action est irréversible.</DialogDescription>
+							</DialogHeader>
+							<div className="flex justify-end gap-2 mt-4">
+								<DialogClose asChild>
+									<Button variant="outline" status="inactive">Annuler</Button>
+								</DialogClose>
+								<Button
+									variant="default"
+									status={deleting ? 'loading' : 'active'}
+									color="default"
+									disabled={deleting}
+									onClick={handleConfirmDeleteShopItem}
+								>
+									{deleting ? 'Suppression...' : 'Supprimer'}
+								</Button>
+							</div>
+						</DialogContent>
+					</Dialog>
+
+					{/* MODAL AJOUT STOCK */}
+					<Dialog open={stockModalOpen} onOpenChange={setStockModalOpen}>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Ajouter du stock</DialogTitle>
+								<DialogDescription>
+									{selectedActifForStock?.productName}
+								</DialogDescription>
+							</DialogHeader>
+
+							<div className="space-y-4">
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Produit</label>
+									<Input
+										disabled
+										value={selectedActifForStock?.productName || ''}
+										className="border-neutral-300 bg-neutral-50"
+									/>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Site d'origine</label>
+									<Input
+										disabled
+										value={selectedActifForStock?.siteOrigineId || selectedActifForStock?.depot || ''}
+										className="border-neutral-300 bg-neutral-50"
+									/>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</label>
+									<Input
+										type="number"
+										min="1"
+										placeholder="0"
+										value={stockForm.quantite}
+										onChange={(e) => setStockForm({ ...stockForm, quantite: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div>
+									<label className="block text-sm font-medium text-neutral-700 mb-1">Observations</label>
+									<Input
+										placeholder="Observations facultatives"
+										value={stockForm.observations}
+										onChange={(e) => setStockForm({ ...stockForm, observations: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div className="flex justify-end gap-2 pt-4">
+									<Button
+										variant="outline"
+										status="inactive"
+										onClick={() => setStockModalOpen(false)}
+									>
+										Annuler
+									</Button>
+									<Button
+										status={loadingAddStock ? "loading" : "active"}
+										onClick={handleAddStock}
+										disabled={loadingAddStock}
+										color="default"
+									>
+										{loadingAddStock ? 'Ajout en cours...' : 'Ajouter'}
+									</Button>
+								</div>
+							</div>
+						</DialogContent>
+					</Dialog>
+
+					{/* MODAL INITIALISER PRODUIT À UN SITE */}
+					<Dialog open={addProductModalOpen} onOpenChange={setAddProductModalOpen}>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Initialiser un produit à un site</DialogTitle>
+								<DialogDescription>
+									Sélectionnez un produit et un site pour l'initialiser
+								</DialogDescription>
+							</DialogHeader>
+
+							<div className="space-y-4">
+								<div className="space-y-2">
+									<Label>Produit</Label>
+									<div className="relative">
+										<Input
+											placeholder={products.length === 0 ? "Aucun produit disponible" : "Rechercher un produit..."}
+											value={productSearch}
+											onChange={e => { setProductSearch(e.target.value); setProductHighlighted(0); }}
+											onFocus={() => { setProductOpen(true); setProductHighlighted(0); }}
+											onBlur={() => setTimeout(() => setProductOpen(false), 150)}
+											onKeyDown={(e) => {
+												if (e.key === 'Escape') return setProductOpen(false);
+												if (!productOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+													setProductOpen(true);
+													e.preventDefault();
+													return;
+												}
+												if (productOpen) {
+													if (e.key === 'ArrowDown') {
+														e.preventDefault();
+														setProductHighlighted(i => Math.min(i + 1, Math.max(filteredProducts.length - 1, 0)));
+													} else if (e.key === 'ArrowUp') {
+														e.preventDefault();
+														setProductHighlighted(i => Math.max(i - 1, 0));
+													} else if (e.key === 'Enter') {
+														e.preventDefault();
+														const product = filteredProducts[productHighlighted];
+														if (product) {
+															setAddProductForm(prev => ({
+																...prev,
+																productId: product._id,
+															}));
+															setProductSearch(product.productName);
+															setProductOpen(false);
+														}
+													}
+												}
+											}}
+											className="w-full"
+											disabled={products.length === 0}
+										/>
+										{productOpen && filteredProducts.length > 0 && (
+											<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+												{filteredProducts.map((product, idx) => (
+													<button
+														type="button"
+														key={product._id}
+														onMouseEnter={() => setProductHighlighted(idx)}
+														onClick={() => {
+															setAddProductForm(prev => ({
+																...prev,
+																productId: product._id,
+															}));
+															setProductSearch(product.productName);
+															setProductOpen(false);
+														}}
+														className={`w-full text-left px-3 py-2 text-sm ${idx === productHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+													>
+														{product.productName} - {product.codeCPC}
+													</button>
+												))}
+											</div>
+										)}
+										{productOpen && filteredProducts.length === 0 && products.length > 0 && (
+											<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+												<div className="px-3 py-2 text-sm text-neutral-500">Aucun produit trouvé</div>
+											</div>
+										)}
+									</div>
+								</div>
+
+								<div className="space-y-2">
+									<Label>Site</Label>
+									<div className="relative">
+										<Input
+											placeholder={sites.length === 0 ? "Aucun site disponible" : "Rechercher un site..."}
+											value={siteSearch}
+											onChange={e => { setSiteSearch(e.target.value); setSiteHighlighted(0); }}
+											onFocus={() => { setSiteOpen(true); setSiteHighlighted(0); }}
+											onBlur={() => setTimeout(() => setSiteOpen(false), 150)}
+											onKeyDown={(e) => {
+												if (e.key === 'Escape') return setSiteOpen(false);
+												if (!siteOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+													setSiteOpen(true);
+													e.preventDefault();
+													return;
+												}
+												if (siteOpen) {
+													if (e.key === 'ArrowDown') {
+														e.preventDefault();
+														setSiteHighlighted(i => Math.min(i + 1, Math.max(filteredSites.length - 1, 0)));
+													} else if (e.key === 'ArrowUp') {
+														e.preventDefault();
+														setSiteHighlighted(i => Math.max(i - 1, 0));
+													} else if (e.key === 'Enter') {
+														e.preventDefault();
+														const site = filteredSites[siteHighlighted];
+														if (site) {
+															setAddProductForm(prev => ({
+																...prev,
+																siteId: site._id
+															}));
+															setSiteSearch(site.siteName);
+															setSiteOpen(false);
+														}
+													}
+												}
+											}}
+											className="w-full"
+											disabled={sites.length === 0}
+										/>
+										{siteOpen && filteredSites.length > 0 && (
+											<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+												{filteredSites.map((site, idx) => (
+													<button
+														type="button"
+														key={site._id}
+														onMouseEnter={() => setSiteHighlighted(idx)}
+														onClick={() => {
+															setAddProductForm(prev => ({
+																...prev,
+																siteId: site._id
+															}));
+															setSiteSearch(site.siteName);
+															setSiteOpen(false);
+														}}
+														className={`w-full text-left px-3 py-2 text-sm ${idx === siteHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+													>
+														{site.siteName}
+													</button>
+												))}
+											</div>
+										)}
+										{siteOpen && filteredSites.length === 0 && sites.length > 0 && (
+											<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+												<div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
+											</div>
+										)}
+									</div>
+								</div>
+
+								<div>
+									<Label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</Label>
+									<Input
+										type="number"
+										min="1"
+										placeholder="0"
+										value={addProductForm.quantite}
+										onChange={(e) => setAddProductForm({ ...addProductForm, quantite: e.target.value })}
+										className="border-neutral-300"
+									/>
+								</div>
+
+								<div className="flex justify-end gap-2 pt-4">
+									<Button
+										variant="outline"
+										status="inactive"
+										onClick={() => setAddProductModalOpen(false)}
+									>
+										Annuler
+									</Button>
+									<Button
+										status={loadingAddProduct ? "loading" : "active"}
+										onClick={handleAddProductToSite}
+										disabled={loadingAddProduct}
+										color="default"
+									>
+										{loadingAddProduct ? 'Ajout en cours...' : 'Ajouter'}
+									</Button>
+								</div>
+							</div>
+						</DialogContent>
+					</Dialog>
 
 					{/* MODAL DETAIL (global) */}
 					<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
@@ -1132,13 +1133,17 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								<TableCell className="text-sm text-right">
-									<div className="flex gap-2 justify-end">
-										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}>
-											<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
-										</Button>
-										<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
-											<DeleteIcon className="w-4 h-4 text-red-600" /> Supprimer
-										</Button>
+									<div className="flex flex-col items-end gap-2">
+										<div>
+											<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}>
+												<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
+											</Button>
+										</div>
+										<div>
+											<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
+												<DeleteIcon className="w-4 h-4 text-red-600" /> Retirer
+											</Button>
+										</div>
 									</div>
 								</TableCell>
 							</TableRow>
@@ -1178,7 +1183,7 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 									<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
 								</Button>
 								<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
-									<DeleteIcon className="w-4 h-4 text-red-600" /> Supprimer
+									<DeleteIcon className="w-4 h-4 text-red-600" /> Retirer
 								</Button>
 							</div>
 						</div>
