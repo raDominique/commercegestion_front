@@ -27,6 +27,7 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
 import { getTenders, getMyTenders, createTender } from '../../services/appeloffre.service';
+import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
 import { selectAllProduits } from '../../services/product.service';
 import { getMySites } from '../../services/site.service';
@@ -63,6 +64,17 @@ const AppelOffre = () => {
 };
 
 export default AppelOffre;
+
+const statusColor = (statut) => {
+  const map = {
+    OUVERT: 'bg-green-100 text-green-800 border-green-200',
+    EN_ATTENTE: 'bg-amber-100 text-amber-800 border-amber-200',
+    DEPOUILLE: 'bg-blue-100 text-blue-800 border-blue-200',
+    ATTRIBUE: 'bg-purple-100 text-purple-800 border-purple-200',
+    ANNULE: 'bg-red-100 text-red-800 border-red-200',
+  };
+  return map[statut] || 'bg-neutral-100 text-neutral-800 border-neutral-200';
+};
 
 function TendersList() {
   const [tenders, setTenders] = useState([]);
@@ -148,37 +160,34 @@ function TendersList() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {tenders.map(item => (
-          <Card key={item._id} className="border border-neutral-200 bg-white rounded-lg overflow-hidden">
-            <CardHeader className="p-0">
-              <div className="px-4 py-3">
-                <CardTitle className="text-lg font-semibold text-neutral-900 truncate mb-1">{item.titre}</CardTitle>
-                <Badge variant={item.statut === 'OUVERT' ? 'default' : item.statut === 'FERMÉ' ? 'destructive' : 'secondary'} className="mt-1">
-                  {item.statut}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="px-4 py-3">
-              <p className="text-sm text-neutral-600 mb-3 line-clamp-2">{item.description || '-'}</p>
-              <div className="flex flex-col gap-2">
-                <div className="text-sm text-neutral-700"><span className="font-bold">Produit:</span> {item.productId?.productName || '-'}</div>
-                <div className="text-sm text-neutral-700"><span className="font-bold">Quantité:</span> {item.quantite} {item.unite}</div>
-                {item.lanceurId?.userNickName && <div className="text-sm text-neutral-700"><span className="font-bold">Lanceur:</span> {item.lanceurId.userNickName} {item.lanceurId.userName || ''}</div>}
-                <div className="text-sm text-neutral-700"><span className="font-bold">Livraison:</span> {item.siteLivraison?.siteName || '-'}</div>
-                <div className="text-sm text-neutral-700"><span className="font-bold">Date limite:</span> {item.dateLimite ? new Date(item.dateLimite).toLocaleDateString('fr-FR') : '-'}</div>
-                {item.conditionsPaiement && <div className="text-sm text-neutral-700"><span className="font-bold">Paiement:</span> {item.conditionsPaiement}</div>}
-              </div>
-              {item.documentPieces && (
-                <a href={item.documentPieces} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline mt-2 inline-block">
-                  Voir le document
-                </a>
-              )}
-              <div className="mt-3">
-                <Button className="w-full" status="active" color="default">Voir</Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {tenders.map(item => {
+          const product = item.productId || {};
+          return (
+            <Card key={item._id} className="border border-neutral-200 bg-white rounded-lg overflow-hidden">
+              <CardHeader className="p-0">
+                <div className="px-4 py-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-lg font-semibold text-neutral-900 truncate">{item.titre}</CardTitle>
+                    <Badge className={`shrink-0 mt-0.5 ${statusColor(item.statut)}`}>
+                      {item.statut.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="px-4 py-3 pt-0">
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm text-neutral-700"><span className="font-bold">Produit:</span> {product.productName || '-'}</div>
+                  <div className="text-sm text-neutral-700"><span className="font-bold">Quantité:</span> {item.quantite} {item.unite}</div>
+                  <div className="text-sm text-neutral-700"><span className="font-bold">Date limite:</span> {item.dateLimite ? new Date(item.dateLimite).toLocaleDateString('fr-FR') : '-'}</div>
+                  {item.lanceurId?.userNickName && <div className="text-sm text-neutral-700"><span className="font-bold">Lanceur:</span> {item.lanceurId.userNickName}</div>}
+                </div>
+                <div className="mt-3">
+                  <Button className="w-full" status="active" color="default">Voir</Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="mt-6">
@@ -248,7 +257,9 @@ function MyTendersList() {
               {tenders.map((t) => (
                 <tr key={t._id} className="border-t">
                   <td className="py-3">{t.titre || t._id}</td>
-                  <td className="py-3">{t.statut || '-'}</td>
+                  <td className="py-3">
+                    <Badge className={statusColor(t.statut)}>{t.statut.replace('_', ' ')}</Badge>
+                  </td>
                   <td className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</td>
                 </tr>
               ))}
