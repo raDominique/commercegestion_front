@@ -84,6 +84,7 @@ function TendersList() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('createdAt');
   const [order, setOrder] = useState('desc');
+  const [statut, setStatut] = useState('ALL');
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
@@ -92,6 +93,7 @@ function TendersList() {
       try {
         const token = getAccessToken() || localStorage.getItem('token');
         const params = { page, limit, search, sortBy: sort, order };
+        if (statut && statut !== 'ALL') params.statut = statut;
         const res = await getTenders(params, token);
         const items = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []));
         setTenders(items || []);
@@ -103,7 +105,7 @@ function TendersList() {
       }
     };
     fetch();
-  }, [page, limit]);
+  }, [page, limit, statut]);
 
   if (loading) return <div className="p-6">Chargement des appels d'offre...</div>;
   if (!tenders || tenders.length === 0) return <div className="text-center text-neutral-400 py-12">Aucun appel d'offre trouvé</div>;
@@ -154,6 +156,22 @@ function TendersList() {
               {[10, 20, 50].map(n => (
                 <SelectItem key={n} value={String(n)}>{n} / page</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="w-full md:w-44">
+          <Select value={statut} onValueChange={v => { setPage(1); setStatut(v); }}>
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Tous les statuts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Tous les statuts</SelectItem>
+              <SelectItem value="OUVERT">OUVERT</SelectItem>
+              <SelectItem value="EN_ATTENTE">EN ATTENTE</SelectItem>
+              <SelectItem value="DEPOUILLE">DEPOUILLE</SelectItem>
+              <SelectItem value="ATTRIBUE">ATTRIBUE</SelectItem>
+              <SelectItem value="ANNULE">ANNULE</SelectItem>
             </SelectContent>
           </Select>
         </div>
