@@ -1,8 +1,9 @@
 import React from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { useEffect, useState, useCallback } from 'react';
-import { Card } from '../../components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import {
   Dialog,
@@ -20,7 +21,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
 import { getTenders, getMyTenders, createTender } from '../../services/appeloffre.service';
 import { getAccessToken } from '../../services/token.service';
-import { getProducts } from '../../services/product.service';
+import { selectAllProduits } from '../../services/product.service';
 import { getMySites } from '../../services/site.service';
 
 const AppelOffre = () => {
@@ -124,15 +125,34 @@ function TendersList() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {tenders.map(item => (
-          <Card key={item._id || item.id} className="border border-neutral-200 bg-white rounded-lg overflow-hidden">
-            <div className="p-4">
-              <div className="font-semibold text-neutral-900 truncate mb-2">{item.title || item.name || item._id}</div>
-              <div className="text-sm text-neutral-700 mb-2">{item.description ? (item.description.length > 120 ? item.description.slice(0, 120) + '...' : item.description) : '-'}</div>
-              <div className="text-xs text-neutral-500 mb-3">Statut: {item.statut || item.status || '-'}</div>
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm">Voir</Button>
+          <Card key={item._id} className="border border-neutral-200 bg-white rounded-lg overflow-hidden">
+            <CardHeader className="p-0">
+              <div className="px-4 py-3">
+                <CardTitle className="text-lg font-semibold text-neutral-900 truncate mb-1">{item.titre}</CardTitle>
+                <Badge variant={item.statut === 'OUVERT' ? 'default' : item.statut === 'FERMÉ' ? 'destructive' : 'secondary'} className="mt-1">
+                  {item.statut}
+                </Badge>
               </div>
-            </div>
+            </CardHeader>
+            <CardContent className="px-4 py-3">
+              <p className="text-sm text-neutral-600 mb-3 line-clamp-2">{item.description || '-'}</p>
+              <div className="flex flex-col gap-2">
+                <div className="text-sm text-neutral-700"><span className="font-bold">Produit:</span> {item.productId?.productName || '-'}</div>
+                <div className="text-sm text-neutral-700"><span className="font-bold">Quantité:</span> {item.quantite} {item.unite}</div>
+                {item.lanceurId?.userNickName && <div className="text-sm text-neutral-700"><span className="font-bold">Lanceur:</span> {item.lanceurId.userNickName} {item.lanceurId.userName || ''}</div>}
+                <div className="text-sm text-neutral-700"><span className="font-bold">Livraison:</span> {item.siteLivraison?.siteName || '-'}</div>
+                <div className="text-sm text-neutral-700"><span className="font-bold">Date limite:</span> {item.dateLimite ? new Date(item.dateLimite).toLocaleDateString('fr-FR') : '-'}</div>
+                {item.conditionsPaiement && <div className="text-sm text-neutral-700"><span className="font-bold">Paiement:</span> {item.conditionsPaiement}</div>}
+              </div>
+              {item.documentPieces && (
+                <a href={item.documentPieces} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline mt-2 inline-block">
+                  Voir le document
+                </a>
+              )}
+              <div className="mt-3">
+                <Button className="w-full" status="active" color="default">Voir</Button>
+              </div>
+            </CardContent>
           </Card>
         ))}
       </div>
@@ -202,10 +222,10 @@ function MyTendersList() {
             </thead>
             <tbody>
               {tenders.map((t) => (
-                <tr key={t._id || t.id} className="border-t">
-                  <td className="py-3">{t.title || t.name || t._id}</td>
-                  <td className="py-3">{t.statut || t.status || '-'}</td>
-                  <td className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString() : '-'}</td>
+                <tr key={t._id} className="border-t">
+                  <td className="py-3">{t.titre || t._id}</td>
+                  <td className="py-3">{t.statut || '-'}</td>
+                  <td className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</td>
                 </tr>
               ))}
             </tbody>
@@ -232,16 +252,25 @@ function CreateTenderModal({ onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
   const [products, setProducts] = useState([]);
   const [sites, setSites] = useState([]);
+  const [productSearch, setProductSearch] = useState('');
+  const [productOpen, setProductOpen] = useState(false);
+  const [productHighlighted, setProductHighlighted] = useState(0);
+  const [siteSearch, setSiteSearch] = useState('');
+  const [siteOpen, setSiteOpen] = useState(false);
+  const [siteHighlighted, setSiteHighlighted] = useState(0);
+
+  const filteredProducts = products.filter(p => (p.productName || '').toLowerCase().includes(productSearch.toLowerCase()) || (p.codeCPC || '').toLowerCase().includes(productSearch.toLowerCase()));
+
+  const filteredSites = sites.filter(s => (s.siteName || '').toLowerCase().includes(siteSearch.toLowerCase()));
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = getAccessToken() || localStorage.getItem('token');
         const [prodRes, siteRes] = await Promise.all([
-          getProducts({ limit: 200 }, token),
-          getMySites({ limit: 200 }),
+          selectAllProduits(),
+          getMySites({ limit: 100, page: 1 }),
         ]);
-        setProducts(Array.isArray(prodRes?.data) ? prodRes.data : Array.isArray(prodRes) ? prodRes : []);
+        setProducts(Array.isArray(prodRes.data) ? prodRes.data : []);
         setSites(Array.isArray(siteRes?.data?.data) ? siteRes.data.data : Array.isArray(siteRes?.data) ? siteRes.data : Array.isArray(siteRes) ? siteRes : []);
       } catch (err) {
         console.error('Erreur chargement produits/sites', err);
@@ -306,23 +335,131 @@ function CreateTenderModal({ onSuccess }) {
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="productId" required>Produit</Label>
-          <select id="productId" name="productId" value={form.productId} onChange={handleChange} required className="w-full p-2 border rounded bg-white h-9">
-            <option value="">Sélectionner un produit</option>
-            {products.map(p => (
-              <option key={p._id || p.id} value={p._id || p.id}>{p.name || p.title || p._id}</option>
-            ))}
-          </select>
+          <Label required>Produit</Label>
+          <div className="relative">
+            <Input
+              placeholder={products.length === 0 ? "Aucun produit disponible" : "Rechercher un produit..."}
+              value={productSearch}
+              onChange={e => { setProductSearch(e.target.value); setForm(prev => ({ ...prev, productId: '' })); }}
+              onFocus={() => { setProductOpen(true); setProductHighlighted(0); }}
+              onBlur={() => setTimeout(() => setProductOpen(false), 150)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') return setProductOpen(false);
+                if (!productOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                  setProductOpen(true);
+                  e.preventDefault();
+                  return;
+                }
+                if (productOpen) {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setProductHighlighted(i => Math.min(i + 1, Math.max(filteredProducts.length - 1, 0)));
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setProductHighlighted(i => Math.max(i - 1, 0));
+                  } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const product = filteredProducts[productHighlighted];
+                    if (product) {
+                      setForm(prev => ({ ...prev, productId: product._id }));
+                      setProductSearch(product.productName);
+                      setProductOpen(false);
+                    }
+                  }
+                }
+              }}
+              className="w-full"
+              disabled={products.length === 0}
+            />
+            {productOpen && filteredProducts.length > 0 && (
+              <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                {filteredProducts.map((product, idx) => (
+                  <button
+                    type="button"
+                    key={product._id}
+                    onMouseEnter={() => setProductHighlighted(idx)}
+                    onClick={() => {
+                      setForm(prev => ({ ...prev, productId: product._id }));
+                      setProductSearch(product.productName);
+                      setProductOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-sm ${idx === productHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+                  >
+                    {product.productName} - {product.codeCPC}
+                  </button>
+                ))}
+              </div>
+            )}
+            {productOpen && filteredProducts.length === 0 && products.length > 0 && (
+              <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                <div className="px-3 py-2 text-sm text-neutral-500">Aucun produit trouvé</div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="siteLivraison" required>Site de livraison</Label>
-          <select id="siteLivraison" name="siteLivraison" value={form.siteLivraison} onChange={handleChange} required className="w-full p-2 border rounded bg-white h-9">
-            <option value="">Sélectionner un site</option>
-            {sites.map(s => (
-              <option key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name || s._id}</option>
-            ))}
-          </select>
+          <Label required>Site de livraison</Label>
+          <div className="relative">
+            <Input
+              placeholder={sites.length === 0 ? "Aucun site disponible" : "Rechercher un site..."}
+              value={siteSearch}
+              onChange={e => { setSiteSearch(e.target.value); setForm(prev => ({ ...prev, siteLivraison: '' })); }}
+              onFocus={() => { setSiteOpen(true); setSiteHighlighted(0); }}
+              onBlur={() => setTimeout(() => setSiteOpen(false), 150)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') return setSiteOpen(false);
+                if (!siteOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                  setSiteOpen(true);
+                  e.preventDefault();
+                  return;
+                }
+                if (siteOpen) {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setSiteHighlighted(i => Math.min(i + 1, Math.max(filteredSites.length - 1, 0)));
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setSiteHighlighted(i => Math.max(i - 1, 0));
+                  } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const site = filteredSites[siteHighlighted];
+                    if (site) {
+                      setForm(prev => ({ ...prev, siteLivraison: site._id }));
+                      setSiteSearch(site.siteName);
+                      setSiteOpen(false);
+                    }
+                  }
+                }
+              }}
+              className="w-full"
+              disabled={sites.length === 0}
+            />
+            {siteOpen && filteredSites.length > 0 && (
+              <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                {filteredSites.map((site, idx) => (
+                  <button
+                    type="button"
+                    key={site._id}
+                    onMouseEnter={() => setSiteHighlighted(idx)}
+                    onClick={() => {
+                      setForm(prev => ({ ...prev, siteLivraison: site._id }));
+                      setSiteSearch(site.siteName);
+                      setSiteOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-sm ${idx === siteHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+                  >
+                    {site.siteName} - {site.siteAddress}
+                  </button>
+                ))}
+              </div>
+            )}
+            {siteOpen && filteredSites.length === 0 && sites.length > 0 && (
+              <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                <div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid gap-2">
