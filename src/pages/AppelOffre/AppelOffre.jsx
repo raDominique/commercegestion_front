@@ -26,7 +26,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
-import { getTenders, getTenderById, getMyTenders, createTender } from '../../services/appeloffre.service';
+import { getTenders, getTenderById, getMyTenders, createTender, deleteTender } from '../../services/appeloffre.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
 import { selectAllProduits } from '../../services/product.service';
@@ -302,6 +302,45 @@ function MyTendersList() {
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [modalOpen, setModalOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailTender, setDetailTender] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleView = async (id) => {
+    setDetailLoading(true);
+    setDetailOpen(true);
+    try {
+      const token = getAccessToken() || localStorage.getItem('token');
+      const res = await getTenderById(id, token);
+      const tenderData = res?.data?.data || res?.data || res;
+      setDetailTender(Array.isArray(tenderData) ? tenderData[0] : tenderData);
+    } catch (err) {
+      console.error('getTenderById error', err);
+      setDetailTender(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTargetId) return;
+    setDeleteLoading(true);
+    try {
+      const token = getAccessToken() || localStorage.getItem('token');
+      await deleteTender(deleteTargetId, token);
+      toast.success("Appel d'offre annulé avec succès");
+      setDeleteConfirmOpen(false);
+      setDeleteTargetId(null);
+      fetchTenders();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Erreur lors de l'annulation");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   const fetchTenders = useCallback(async () => {
     setLoading(true);
@@ -344,6 +383,7 @@ function MyTendersList() {
                 <th className="py-2">Titre</th>
                 <th className="py-2">Statut</th>
                 <th className="py-2">Créé le</th>
+                <th className="py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -354,12 +394,93 @@ function MyTendersList() {
                     <Badge className={statusColor(t.statut || '')}>{(t.statut || '').replace('_', ' ')}</Badge>
                   </td>
                   <td className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</td>
+                  <td className="py-3">
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleView(t._id)}>Voir</Button>
+                      <Button variant="outline" size="sm" color="destructive" onClick={() => { setDeleteTargetId(t._id); setDeleteConfirmOpen(true); }}>Annuler</Button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <Dialog open={detailOpen} onOpenChange={(open) => { setDetailOpen(open); if (!open) setDetailTender(null); }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Détail de l'appel d'offre</DialogTitle>
+            <DialogDescription>Informations détaillées</DialogDescription>
+          </DialogHeader>
+
+          {detailLoading ? (
+            <div className="py-8 text-center text-neutral-500">Chargement...</div>
+          ) : detailTender ? (
+            <div className="space-y-3 text-sm">
+              {detailTender.productId?.productImage && (
+                <div className="flex justify-center mb-4">
+                  <img
+                    src={getFullMediaUrl(detailTender.productId.productImage)}
+                    alt={detailTender.productId.productName}
+                    className="w-full max-h-48 object-cover rounded"
+                  />
+                </div>
+              )}
+              <div className="flex items-start justify-between gap-2">
+                <div className="font-bold text-base text-neutral-900">{detailTender.titre}</div>
+                <Badge className={`shrink-0 mt-0.5 ${statusColor(detailTender.statut || '')}`}>
+                  {(detailTender.statut || '').replace('_', ' ')}
+                </Badge>
+              </div>
+              <div><b>Description :</b> {detailTender.description || '-'}</div>
+              <div><b>Produit :</b> {detailTender.productId?.productName || '-'}</div>
+              <div><b>Code CPC :</b> {detailTender.productId?.codeCPC || '-'}</div>
+              <div><b>Quantité :</b> {detailTender.quantite} {detailTender.unite}</div>
+              <div><b>Lanceur :</b> {detailTender.lanceurId?.userNickName} {detailTender.lanceurId?.userName || ''}</div>
+              <div><b>Site de livraison :</b> {detailTender.siteLivraison?.siteName || '-'}</div>
+              <div><b>Adresse :</b> {detailTender.siteLivraison?.siteAddress || '-'}</div>
+              <div><b>Conditions de paiement :</b> {detailTender.conditionsPaiement || '-'}</div>
+              <div><b>Délai de livraison :</b> {detailTender.delaiLivraisonSouhaite || '-'}</div>
+              <div><b>Date limite :</b> {detailTender.dateLimite ? new Date(detailTender.dateLimite).toLocaleDateString('fr-FR') : '-'}</div>
+              <div><b>Date de dépouillement :</b> {detailTender.dateDepouillement ? new Date(detailTender.dateDepouillement).toLocaleDateString('fr-FR') : '-'}</div>
+              <div><b>Date de création :</b> {detailTender.createdAt ? new Date(detailTender.createdAt).toLocaleDateString('fr-FR') : '-'}</div>
+              {detailTender.documentPieces && (
+                <div>
+                  <a href={detailTender.documentPieces} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Voir le document
+                  </a>
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" status="inactive">Fermer</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer l'annulation</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir annuler cet appel d'offre ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" status="inactive">Non</Button>
+            </DialogClose>
+            <Button color="destructive" status={deleteLoading ? 'loading' : 'active'} disabled={deleteLoading} onClick={handleDelete}>
+              {deleteLoading ? 'Annulation...' : 'Oui, annuler'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
