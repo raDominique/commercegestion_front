@@ -26,6 +26,8 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
+import InfoIcon from '@mui/icons-material/Info';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { getTenders, getTenderById, getMyTenders, createTender, deleteTender } from '../../services/appeloffre.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
@@ -395,9 +397,13 @@ function MyTendersList() {
                   </td>
                   <td className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</td>
                   <td className="py-3">
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleView(t._id)}>Voir</Button>
-                      <Button variant="outline" size="sm" color="destructive" onClick={() => { setDeleteTargetId(t._id); setDeleteConfirmOpen(true); }}>Annuler</Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleView(t._id)}>
+                        <InfoIcon className="w-4 h-4 text-violet-600" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => { setDeleteTargetId(t._id); setDeleteConfirmOpen(true); }}>
+                        <DeleteIcon className="w-4 h-4 text-red-600" />
+                      </Button>
                     </div>
                   </td>
                 </tr>
