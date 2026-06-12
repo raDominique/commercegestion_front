@@ -26,7 +26,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
-import { getTenders, getMyTenders, createTender } from '../../services/appeloffre.service';
+import { getTenders, getTenderById, getMyTenders, createTender } from '../../services/appeloffre.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
 import { selectAllProduits } from '../../services/product.service';
@@ -86,6 +86,25 @@ function TendersList() {
   const [order, setOrder] = useState('desc');
   const [statut, setStatut] = useState('ALL');
   const [total, setTotal] = useState(0);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailTender, setDetailTender] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const handleView = async (id) => {
+    setDetailLoading(true);
+    setDetailOpen(true);
+    try {
+      const token = getAccessToken() || localStorage.getItem('token');
+      const res = await getTenderById(id, token);
+      const tenderData = res?.data?.data || res?.data || res;
+      setDetailTender(Array.isArray(tenderData) ? tenderData[0] : tenderData);
+    } catch (err) {
+      console.error('getTenderById error', err);
+      setDetailTender(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -186,8 +205,8 @@ function TendersList() {
                 <div className="px-4 py-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg font-semibold text-neutral-900 truncate">{item.titre}</CardTitle>
-                    <Badge className={`shrink-0 mt-0.5 ${statusColor(item.statut)}`}>
-                      {item.statut.replace('_', ' ')}
+                    <Badge className={`shrink-0 mt-0.5 ${statusColor(item.statut || '')}`}>
+                      {(item.statut || '').replace('_', ' ')}
                     </Badge>
                   </div>
                 </div>
@@ -200,7 +219,7 @@ function TendersList() {
                   {item.lanceurId?.userNickName && <div className="text-sm text-neutral-700"><span className="font-bold">Lanceur:</span> {item.lanceurId.userNickName}</div>}
                 </div>
                 <div className="mt-3">
-                  <Button className="w-full" status="active" color="default">Voir</Button>
+                  <Button className="w-full" status="active" color="default" onClick={() => handleView(item._id)}>Voir</Button>
                 </div>
               </CardContent>
             </Card>
@@ -216,6 +235,62 @@ function TendersList() {
           <button className="px-3 py-1 border rounded" onClick={() => setPage(p => p + 1)}>Suivant</button>
         </div>
       </div>
+
+      <Dialog open={detailOpen} onOpenChange={(open) => { setDetailOpen(open); if (!open) setDetailTender(null); }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Détail de l'appel d'offre</DialogTitle>
+            <DialogDescription>Informations détaillées</DialogDescription>
+          </DialogHeader>
+
+          {detailLoading ? (
+            <div className="py-8 text-center text-neutral-500">Chargement...</div>
+          ) : detailTender ? (
+            <div className="space-y-3 text-sm">
+              {detailTender.productId?.productImage && (
+                <div className="flex justify-center mb-4">
+                  <img
+                    src={getFullMediaUrl(detailTender.productId.productImage)}
+                    alt={detailTender.productId.productName}
+                    className="w-full max-h-48 object-cover rounded"
+                  />
+                </div>
+              )}
+              <div className="flex items-start justify-between gap-2">
+                <div className="font-bold text-base text-neutral-900">{detailTender.titre}</div>
+                <Badge className={`shrink-0 mt-0.5 ${statusColor(detailTender.statut || '')}`}>
+                  {(detailTender.statut || '').replace('_', ' ')}
+                </Badge>
+              </div>
+              <div><b>Description :</b> {detailTender.description || '-'}</div>
+              <div><b>Produit :</b> {detailTender.productId?.productName || '-'}</div>
+              <div><b>Code CPC :</b> {detailTender.productId?.codeCPC || '-'}</div>
+              <div><b>Quantité :</b> {detailTender.quantite} {detailTender.unite}</div>
+              <div><b>Lanceur :</b> {detailTender.lanceurId?.userNickName} {detailTender.lanceurId?.userName || ''}</div>
+              <div><b>Site de livraison :</b> {detailTender.siteLivraison?.siteName || '-'}</div>
+              <div><b>Adresse :</b> {detailTender.siteLivraison?.siteAddress || '-'}</div>
+              <div><b>Conditions de paiement :</b> {detailTender.conditionsPaiement || '-'}</div>
+              <div><b>Délai de livraison :</b> {detailTender.delaiLivraisonSouhaite || '-'}</div>
+              <div><b>Date limite :</b> {detailTender.dateLimite ? new Date(detailTender.dateLimite).toLocaleDateString('fr-FR') : '-'}</div>
+              <div><b>Date de dépouillement :</b> {detailTender.dateDepouillement ? new Date(detailTender.dateDepouillement).toLocaleDateString('fr-FR') : '-'}</div>
+              <div><b>Date de création :</b> {detailTender.createdAt ? new Date(detailTender.createdAt).toLocaleDateString('fr-FR') : '-'}</div>
+              {detailTender.documentPieces && (
+                <div>
+                  <a href={detailTender.documentPieces} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    Voir le document
+                  </a>
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" status="inactive">Fermer</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -276,7 +351,7 @@ function MyTendersList() {
                 <tr key={t._id} className="border-t">
                   <td className="py-3">{t.titre || t._id}</td>
                   <td className="py-3">
-                    <Badge className={statusColor(t.statut)}>{t.statut.replace('_', ' ')}</Badge>
+                    <Badge className={statusColor(t.statut || '')}>{(t.statut || '').replace('_', ' ')}</Badge>
                   </td>
                   <td className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</td>
                 </tr>
