@@ -6,6 +6,13 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '../../components/ui/select';
+import {
   Dialog,
   DialogTrigger,
   DialogContent,
@@ -93,33 +100,50 @@ function TendersList() {
     <div>
       <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
         <div className="w-full md:w-64">
-          <input
+          <Input
             type="text"
             placeholder="Rechercher par titre"
-            className="w-full p-2 border rounded bg-white"
+            className="bg-white"
             value={search}
             onChange={e => { setPage(1); setSearch(e.target.value); }}
           />
         </div>
 
         <div className="w-full md:w-48">
-          <select value={sort} onChange={e => { setPage(1); setSort(e.target.value); }} className="w-full p-2 border rounded bg-white">
-            <option value="createdAt">Date de création</option>
-            <option value="title">Titre</option>
-          </select>
+          <Select value={sort} onValueChange={v => { setPage(1); setSort(v); }}>
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Trier par" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt">Date de création</SelectItem>
+              <SelectItem value="title">Titre</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="w-full md:w-40">
-          <select value={order} onChange={e => { setPage(1); setOrder(e.target.value); }} className="w-full p-2 border rounded bg-white">
-            <option value="desc">Descendant</option>
-            <option value="asc">Ascendant</option>
-          </select>
+          <Select value={order} onValueChange={v => { setPage(1); setOrder(v); }}>
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Ordre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Descendant</SelectItem>
+              <SelectItem value="asc">Ascendant</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="w-full md:w-24">
-          <select value={String(limit)} onChange={e => { setPage(1); setLimit(Number(e.target.value)); }} className="w-full p-2 border rounded bg-white">
-            {[10, 20, 50].map(n => (<option key={n} value={String(n)}>{n} / page</option>))}
-          </select>
+          <Select value={String(limit)} onValueChange={v => { setPage(1); setLimit(Number(v)); }}>
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Limite" />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 50].map(n => (
+                <SelectItem key={n} value={String(n)}>{n} / page</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
