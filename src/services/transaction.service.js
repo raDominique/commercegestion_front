@@ -218,7 +218,7 @@ export const rejectTransaction = async (transactionId, params, token) => {
  */
 export const initializeTransaction = async (params, token) => {
     return axiosInstance.post(
-        '/api/v1/transactions//initialization',
+        '/api/v1/transactions/initialization',
         {
             productId: params.productId,
             siteOrigineId: params.siteOrigineId,

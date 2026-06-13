@@ -28,7 +28,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
 import InfoIcon from '@mui/icons-material/Info';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { getTenders, getTenderById, getMyTenders, createTender, deleteTender } from '../../services/appeloffre.service';
+import { getTenders, getTenderById, getMyTenders, createTender, deleteTender, createBid } from '../../services/appeloffre.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
 import { selectAllProduits } from '../../services/product.service';
@@ -91,6 +91,8 @@ function TendersList() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailTender, setDetailTender] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [bidOpen, setBidOpen] = useState(false);
+  const [bidTenderId, setBidTenderId] = useState(null);
 
   const handleView = async (id) => {
     setDetailLoading(true);
@@ -220,8 +222,9 @@ function TendersList() {
                   <div className="text-sm text-neutral-700"><span className="font-bold">Date limite:</span> {item.dateLimite ? new Date(item.dateLimite).toLocaleDateString('fr-FR') : '-'}</div>
                   {item.lanceurId?.userNickName && <div className="text-sm text-neutral-700"><span className="font-bold">Lanceur:</span> {item.lanceurId.userNickName}</div>}
                 </div>
-                <div className="mt-3">
-                  <Button className="w-full" status="active" color="default" onClick={() => handleView(item._id)}>Voir</Button>
+                <div className="mt-3 flex gap-2">
+                  <Button className="flex-1" status="active" color="default" onClick={() => handleView(item._id)}>Voir</Button>
+                  <Button className="flex-1" status="active" color="default" onClick={() => { setBidTenderId(item._id); setBidOpen(true); }}>Soumissionner</Button>
                 </div>
               </CardContent>
             </Card>
@@ -293,9 +296,16 @@ function TendersList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BidModal
+        open={bidOpen}
+        onOpenChange={(open) => { setBidOpen(open); if (!open) setBidTenderId(null); }}
+        tenderId={bidTenderId}
+      />
     </div>
   );
 }
+
 
 
 function MyTendersList() {
@@ -747,5 +757,86 @@ function CreateTenderModal({ onSuccess }) {
         </DialogFooter>
       </form>
     </DialogContent>
+  );
+}
+
+function BidModal({ open, onOpenChange, tenderId }) {
+  const [form, setForm] = useState({
+    prixUnitaire: '',
+    quantite: '',
+    delaiLivraison: '',
+    observations: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!tenderId) return;
+    setSubmitting(true);
+    try {
+      const token = getAccessToken() || localStorage.getItem('token');
+      const payload = {
+        appelOffreId: tenderId,
+        prixUnitaire: Number(form.prixUnitaire),
+        quantite: Number(form.quantite),
+        delaiLivraison: form.delaiLivraison,
+        observations: form.observations,
+      };
+      await createBid(tenderId, payload, token);
+      toast.success('Soumission envoyée avec succès');
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Erreur lors de l'envoi de la soumission");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Soumettre une offre</DialogTitle>
+          <DialogDescription>
+            Remplissez les informations ci-dessous pour soumissionner à cet appel d'offre.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-2">
+            <Label htmlFor="prixUnitaire" required>Prix unitaire</Label>
+            <Input id="prixUnitaire" name="prixUnitaire" type="number" step="0.01" value={form.prixUnitaire} onChange={handleChange} required placeholder="Prix unitaire proposé" />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="quantite" required>Quantité</Label>
+            <Input id="quantite" name="quantite" type="number" value={form.quantite} onChange={handleChange} required min="1" placeholder="Quantité proposée" />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="delaiLivraison" required>Délai de livraison</Label>
+            <Input id="delaiLivraison" name="delaiLivraison" value={form.delaiLivraison} onChange={handleChange} required placeholder="Délai de livraison proposé" />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="observations">Observations</Label>
+            <Textarea id="observations" name="observations" value={form.observations} onChange={handleChange} placeholder="Observations / commentaires" rows={3} />
+          </div>
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline" status="inactive">Annuler</Button>
+            </DialogClose>
+            <Button type="submit" color="default" status={submitting ? 'loading' : 'active'} disabled={submitting}>
+              {submitting ? 'Envoi...' : 'Soumettre'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
