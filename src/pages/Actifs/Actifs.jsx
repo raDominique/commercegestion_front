@@ -165,7 +165,6 @@ const Actifs = () => {
 	}, [shopPage, shopLimit, shopSearch, user]);
 
 	useEffect(() => {
-		console.log('deleteModalOpen changed:', deleteModalOpen, 'selectedSellItemToDelete:', selectedSellItemToDelete);
 	}, [deleteModalOpen, selectedSellItemToDelete]);
 
 	// Map shop item shape to the actif shape used by ActifsTableOrList
@@ -317,7 +316,6 @@ const Actifs = () => {
 	};
 
 	const handleOpenDeleteModal = (actif) => {
-		console.log('handleOpenDeleteModal called with', actif);
 		setSelectedSellItemToDelete(actif);
 		setDeleteModalOpen(true);
 	};

@@ -1278,10 +1278,10 @@ const MesProduits = () => {
                     <div className="font-medium">{detailProduct.codeCPC || '-'}</div>
                   </div>
 
-                  <div>
+                  {/* <div>
                     <div className="text-neutral-500">État</div>
                     <div className="font-medium">{detailProduct.productState || '-'}</div>
-                  </div>
+                  </div> */}
 
                   <div>
                     <div className="text-neutral-500">Volume</div>

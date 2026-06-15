@@ -189,6 +189,50 @@ export const getBids = async (id, token) => {
   );
 };
 
+/**
+ * Ouvre le dépouillement d'un appel d'offre
+ * PATCH /api/v1/tenders/tenders/:id/open-sealed
+ * @param {string} id - ID de l'appel d'offre
+ * @param {string} token - Token d'authentification
+ * @returns {Promise}
+ */
+export const openSealedBids = async (id, token) => {
+  return axiosInstance.patch(
+    `/api/v1/tenders/tenders/${id}/open-sealed`,
+    null,
+    {
+      headers: {
+        accept: '*/*',
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+};
+
+/**
+ * Attribue un appel d'offre à une soumission
+ * PATCH /api/v1/tenders/tenders/:id/award
+ * @param {string} id - ID de l'appel d'offre
+ * @param {Object} data - Données d'attribution
+ * @param {string} data.soumissionId - ID de la soumission retenue
+ * @param {string} data.commentaire - Commentaire sur l'attribution
+ * @param {string} token - Token d'authentification
+ * @returns {Promise}
+ */
+export const awardTender = async (id, data, token) => {
+  return axiosInstance.patch(
+    `/api/v1/tenders/tenders/${id}/award`,
+    data,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        accept: '*/*',
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+};
+
 export default {
   getTenders,
   getMyTenders,
@@ -197,4 +241,6 @@ export default {
   deleteTender,
   createBid,
   getBids,
+  openSealedBids,
+  awardTender,
 };

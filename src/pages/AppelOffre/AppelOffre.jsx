@@ -28,7 +28,9 @@ import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
 import InfoIcon from '@mui/icons-material/Info';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { getTenders, getTenderById, getMyTenders, createTender, deleteTender, createBid } from '../../services/appeloffre.service';
+import HowToVoteIcon from '@mui/icons-material/HowToVote';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { getTenders, getTenderById, getMyTenders, createTender, deleteTender, createBid, openSealedBids, awardTender, getBids } from '../../services/appeloffre.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
 import { selectAllProduits } from '../../services/product.service';
@@ -128,10 +130,7 @@ function TendersList() {
       }
     };
     fetch();
-  }, [page, limit, statut]);
-
-  if (loading) return <div className="p-6">Chargement des appels d'offre...</div>;
-  if (!tenders || tenders.length === 0) return <div className="text-center text-neutral-400 py-12">Aucun appel d'offre trouvé</div>;
+  }, [page, limit, statut, search, sort, order]);
 
   return (
     <div>
@@ -200,7 +199,13 @@ function TendersList() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {loading ? (
+        <div className="p-6 text-center text-neutral-500">Chargement des appels d'offre...</div>
+      ) : !tenders || tenders.length === 0 ? (
+        <div className="text-center text-neutral-400 py-12">Aucun appel d'offre trouvé</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {tenders.map(item => {
           const product = item.productId || {};
           return (
@@ -240,6 +245,8 @@ function TendersList() {
           <button className="px-3 py-1 border rounded" onClick={() => setPage(p => p + 1)}>Suivant</button>
         </div>
       </div>
+        </>
+      )}
 
       <Dialog open={detailOpen} onOpenChange={(open) => { setDetailOpen(open); if (!open) setDetailTender(null); }}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -320,6 +327,12 @@ function MyTendersList() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [bidsOpen, setBidsOpen] = useState(false);
+  const [bidsTenderId, setBidsTenderId] = useState(null);
+  const [bids, setBids] = useState([]);
+  const [bidsLoading, setBidsLoading] = useState(false);
+  const [awardTarget, setAwardTarget] = useState(null);
+  const [awardLoading, setAwardLoading] = useState(false);
 
   const handleView = async (id) => {
     setDetailLoading(true);
@@ -351,6 +364,51 @@ function MyTendersList() {
       toast.error(err?.response?.data?.message || "Erreur lors de l'annulation");
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const handleOpenSealed = async (id) => {
+    try {
+      const token = getAccessToken() || localStorage.getItem('token');
+      await openSealedBids(id, token);
+      toast.success("Dépouillement ouvert avec succès");
+      fetchTenders();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Erreur lors de l'ouverture du dépouillement");
+    }
+  };
+
+  const handleViewBids = async (id) => {
+    setBidsTenderId(id);
+    setBidsLoading(true);
+    setBidsOpen(true);
+    try {
+      const token = getAccessToken() || localStorage.getItem('token');
+      const res = await getBids(id, token);
+      const items = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []));
+      setBids(items || []);
+    } catch (err) {
+      console.error('getBids error', err);
+      setBids([]);
+    } finally {
+      setBidsLoading(false);
+    }
+  };
+
+  const handleAward = async () => {
+    if (!awardTarget) return;
+    setAwardLoading(true);
+    try {
+      const token = getAccessToken() || localStorage.getItem('token');
+      await awardTender(awardTarget.tenderId, { soumissionId: awardTarget.bidId, commentaire: awardTarget.commentaire }, token);
+      toast.success("Appel d'offre attribué avec succès");
+      setAwardTarget(null);
+      setBidsOpen(false);
+      fetchTenders();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Erreur lors de l'attribution");
+    } finally {
+      setAwardLoading(false);
     }
   };
 
@@ -407,12 +465,20 @@ function MyTendersList() {
                   </td>
                   <td className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</td>
                   <td className="py-3">
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 items-center">
                       <Button variant="ghost" size="sm" onClick={() => handleView(t._id)}>
                         <InfoIcon className="w-4 h-4 text-violet-600" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => { setDeleteTargetId(t._id); setDeleteConfirmOpen(true); }}>
-                        <DeleteIcon className="w-4 h-4 text-red-600" />
+                      {t.statut === 'OUVERT' && (
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenSealed(t._id)}>
+                          <HowToVoteIcon className="w-4 h-4 text-orange-500" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" disabled={t.statut !== 'OUVERT'} className={t.statut !== 'OUVERT' ? 'opacity-50 cursor-not-allowed' : ''} onClick={() => handleViewBids(t._id)}>
+                        <CheckCircleIcon className={`w-4 h-4 ${t.statut !== 'OUVERT' ? 'text-neutral-400' : 'text-green-600'}`} />
+                      </Button>
+                      <Button variant="ghost" size="sm" disabled={t.statut !== 'OUVERT'} className={t.statut !== 'OUVERT' ? 'opacity-50 cursor-not-allowed' : ''} onClick={() => { setDeleteTargetId(t._id); setDeleteConfirmOpen(true); }}>
+                        <DeleteIcon className={`w-4 h-4 ${t.statut !== 'OUVERT' ? 'text-neutral-400' : 'text-red-600'}`} />
                       </Button>
                     </div>
                   </td>
@@ -493,6 +559,92 @@ function MyTendersList() {
             </DialogClose>
             <Button color="destructive" status={deleteLoading ? 'loading' : 'active'} disabled={deleteLoading} onClick={handleDelete}>
               {deleteLoading ? 'Annulation...' : 'Oui, annuler'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={bidsOpen} onOpenChange={(open) => { setBidsOpen(open); if (!open) setBidsTenderId(null); }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Soumissions reçues</DialogTitle>
+            <DialogDescription>Liste des soumissions pour cet appel d'offre</DialogDescription>
+          </DialogHeader>
+
+          {bidsLoading ? (
+            <div className="py-8 text-center text-neutral-500">Chargement...</div>
+          ) : bids.length === 0 ? (
+            <div className="py-8 text-center text-neutral-500">Aucune soumission pour le moment</div>
+          ) : (
+            <div className="space-y-4">
+              {bids.map((bid) => {
+                const soumissionnaire = bid.soumissionnaireId || bid.userId || {};
+                return (
+                  <div key={bid._id} className="border rounded-lg p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-semibold text-neutral-900">{soumissionnaire.userNickName || soumissionnaire.userName || 'Anonyme'}</div>
+                      <Badge variant="outline" className="shrink-0">{bid.statut || 'SOUMIS'}</Badge>
+                    </div>
+                    <div className="text-sm text-neutral-700 space-y-1">
+                      <div><b>Prix unitaire :</b> {bid.prixUnitaire != null ? `${bid.prixUnitaire} Ar` : '-'}</div>
+                      <div><b>Quantité :</b> {bid.quantite || '-'}</div>
+                      <div><b>Délai de livraison :</b> {bid.delaiLivraison || '-'}</div>
+                      {bid.observations && <div><b>Observations :</b> {bid.observations}</div>}
+                    </div>
+                    {bid.statut !== 'RETENUE' && (
+                      <div className="flex justify-end pt-2 border-t">
+                        <Button
+                          size="sm"
+                          color="default"
+                          onClick={() => setAwardTarget({ tenderId: bidsTenderId, bidId: bid._id, commentaire: '' })}
+                        >
+                          <CheckCircleIcon className="w-4 h-4 mr-1" /> Attribuer
+                        </Button>
+                      </div>
+                    )}
+                    {bid.statut === 'RETENUE' && (
+                      <div className="flex justify-end pt-2 border-t">
+                        <Badge className="bg-green-100 text-green-800 border-green-200">RETENUE</Badge>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" status="inactive">Fermer</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={awardTarget !== null} onOpenChange={(open) => { if (!open) setAwardTarget(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer l'attribution</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir attribuer cet appel d'offre à cette soumission ?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="commentaire">Commentaire (optionnel)</Label>
+            <Textarea
+              id="commentaire"
+              value={awardTarget?.commentaire || ''}
+              onChange={(e) => setAwardTarget(prev => prev ? { ...prev, commentaire: e.target.value } : null)}
+              placeholder="Commentaire sur l'attribution"
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" status="inactive">Annuler</Button>
+            </DialogClose>
+            <Button color="default" status={awardLoading ? 'loading' : 'active'} disabled={awardLoading} onClick={handleAward}>
+              {awardLoading ? 'Attribution...' : 'Confirmer l\'attribution'}
             </Button>
           </DialogFooter>
         </DialogContent>
