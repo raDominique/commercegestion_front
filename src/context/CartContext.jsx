@@ -1,146 +1,120 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { getCart, addToCart as addToCartApi, removeCartItem, updateCartItem, clearCart as clearCartApi, checkoutCart } from '../services/cart.service';
+import { getAccessToken } from '../services/token.service';
+import { toast } from 'sonner';
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Load cart from localStorage for the current user
-  useEffect(() => {
-    const getUserIds = (u) => {
-      if (!u) return [];
-      return Array.from(new Set([u._id, u.id, u.userId, u.sub].filter(Boolean)));
-    };
-
-    const normalizeItem = (it) => {
-      if (!it) return null;
-      const id = it.id || it._id || it.productId || (it.produit && (it.produit._id || it.produit.id)) || null;
-      const price = Number(it.price ?? it.prixUnitaire ?? it.prix ?? it.unitPrice ?? (it.produit && (it.produit.prixUnitaire ?? it.produit.price)) ?? 0);
-      const name = it.name || it.productName || (it.produit && it.produit.productName) || (it.product && it.product.productName) || '';
-      const stock = Number(it.stock ?? it.quantite ?? it.available ?? 0) || 0;
-      const category = it.category || it.productCategory || (it.produit && it.produit.productCategory) || '';
-      const image = it.image || it.productImage || (it.produit && it.produit.productImage) || '';
-      const quantity = Number(it.quantity ?? it.qty ?? 1) || 1;
-      return { id, name, price, stock, category, image, quantity };
-    };
-
+  const refreshCart = useCallback(async () => {
     try {
-      const ids = getUserIds(user);
-      let parsed = null;
-      // Try all candidate user ids
-      for (const id of ids) {
-        const key = `cart_${id}`;
-        const stored = localStorage.getItem(key);
-        if (stored) {
-          parsed = JSON.parse(stored);
-          break;
-        }
-      }
-      // Fallback to generic cart key
-      if (!parsed) {
-        const stored = localStorage.getItem('cart');
-        if (stored) parsed = JSON.parse(stored);
-      }
-      const normalized = Array.isArray(parsed) ? parsed.map(normalizeItem).filter(Boolean) : [];
+      const token = getAccessToken();
+      if (!token) { setItems([]); return; }
+      const res = await getCart(token);
+      const itemsArr = Array.isArray(res?.data?.data?.items) ? res.data.data.items : (Array.isArray(res?.data) ? res.data : []);
+      const normalized = itemsArr.map(item => ({
+        id: item.shopItemId || item._id || item.id,
+        shopItemId: item.shopItemId || item._id,
+        name: item.productName || '',
+        price: Number(item.prixUnitaire ?? 0),
+        quantity: Number(item.quantite ?? 1),
+        stock: 999,
+        category: item.productCategory || '',
+        image: item.productImage || '',
+      }));
       setItems(normalized);
-    } catch (e) {
-      console.error('Erreur parsing cart from localStorage', e);
+    } catch (err) {
       setItems([]);
     }
-  }, [user]);
+  }, []);
 
-  // Save cart to localStorage for the current user
   useEffect(() => {
-    const getUserIds = (u) => {
-      if (!u) return [];
-      return Array.from(new Set([u._id, u.id, u.userId, u.sub].filter(Boolean)));
-    };
-    try {
-      const ids = getUserIds(user);
-      if (ids.length > 0) {
-        for (const id of ids) {
-          localStorage.setItem(`cart_${id}`, JSON.stringify(items));
-        }
-      } else {
-        // fallback generic cart for anonymous users
-        localStorage.setItem('cart', JSON.stringify(items));
-      }
-    } catch (e) {
-      console.error('Erreur saving cart to localStorage', e);
+    if (user && user.userValidated !== false) {
+      refreshCart();
+    } else {
+      setItems([]);
     }
-  }, [items, user]);
+  }, [user, refreshCart]);
 
-  const addToCart = (product) => {
-    // normalize incoming product
-    const normalize = (it) => {
-      if (!it) return null;
-      const id = it.id || it._id || it.productId || (it.produit && (it.produit._id || it.produit.id)) || null;
-      const price = Number(it.price ?? it.prixUnitaire ?? it.prix ?? it.unitPrice ?? (it.produit && (it.produit.prixUnitaire ?? it.produit.price)) ?? 0);
-      const name = it.name || it.productName || (it.produit && it.produit.productName) || (it.product && it.product.productName) || '';
-      const stock = Number(it.stock ?? it.quantite ?? it.available ?? 0) || 0;
-      const category = it.category || it.productCategory || (it.produit && it.produit.productCategory) || '';
-      const image = it.image || it.productImage || (it.produit && it.produit.productImage) || '';
-      return { id, name, price, stock, category, image };
-    };
-    const p = normalize(product);
-    if (!p || !p.id) return;
-
-    setItems((prevItems) => {
-      const existingItem = prevItems.find((item) => item.id === p.id);
-      if (existingItem) {
-        if (existingItem.quantity >= (p.stock || existingItem.stock || Infinity)) return prevItems;
-        return prevItems.map((item) =>
-          item.id === p.id
-            ? { ...item, quantity: (item.quantity || 0) + 1 }
-            : item
-        );
-      }
-      return [...prevItems, { ...p, quantity: 1 }];
-    });
+  const addToCart = async (shopItemId, quantite = 1) => {
+    try {
+      const token = getAccessToken();
+      if (!token) { toast.error('Veuillez vous connecter'); return; }
+      await addToCartApi({ shopItemId, quantite }, token);
+      await refreshCart();
+      toast.success('Produit ajouté au panier');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Erreur lors de l'ajout au panier");
+    }
   };
 
-  const removeFromCart = (productId) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== productId));
+  const removeFromCart = async (itemId) => {
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+      await removeCartItem(itemId, token);
+      setItems(prev => prev.filter(i => i.id !== itemId));
+    } catch (err) {
+      console.error('removeFromCart error', err);
+    }
   };
 
-  const updateQuantity = (productId, quantity) => {
+  const updateQuantity = async (itemId, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(itemId);
       return;
     }
-    setItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === productId
-          ? { ...item, quantity: Math.min(quantity, item.stock) }
-          : item
-      )
-    );
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+      await updateCartItem(itemId, { quantite: quantity }, token);
+      setItems(prev => prev.map(i => i.id === itemId ? { ...i, quantity } : i));
+    } catch (err) {
+      console.error('updateQuantity error', err);
+    }
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+      await clearCartApi(token);
+      setItems([]);
+      toast.success('Panier vidé');
+    } catch (err) {
+      console.error('clearCart error', err);
+    }
+  };
+
+  const checkout = async (data) => {
+    const token = getAccessToken();
+    if (!token) { toast.error('Veuillez vous connecter'); return false; }
+    await checkoutCart(data, token);
     setItems([]);
+    return true;
   };
 
-  const getTotalItems = () => {
-    return items.reduce((total, item) => total + item.quantity, 0);
-  };
-
-  const getTotalPrice = () => {
-    return items.reduce((total, item) => total + item.price * item.quantity, 0);
-  };
+  const getTotalItems = () => items.reduce((total, item) => total + item.quantity, 0);
+  const getTotalPrice = () => items.reduce((total, item) => total + item.price * item.quantity, 0);
 
   return (
     <CartContext.Provider
       value={{
         items,
+        loading,
         addToCart,
         removeFromCart,
         updateQuantity,
         clearCart,
+        checkout,
         getTotalItems,
         getTotalPrice,
+        refreshCart,
       }}
     >
       {children}

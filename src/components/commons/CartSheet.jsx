@@ -16,6 +16,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import { useNavigate } from 'react-router';
 import { ImageWithFallback } from './ImageWithFallback';
+import { getFullMediaUrl } from '../../services/media.service';
 
 export function CartSheet({ open, onOpenChange }) {
   const { items, removeFromCart, updateQuantity, getTotalPrice } = useCart();
@@ -71,7 +72,7 @@ export function CartSheet({ open, onOpenChange }) {
                   >
                     <div className="w-20 h-20 bg-muted rounded-md overflow-hidden shrink-0">
                       <ImageWithFallback
-                        src={`https://images.unsplash.com/photo-1600000000000-00000000?w=200&q=80`}
+                        src={item.image ? getFullMediaUrl(item.image) : undefined}
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />

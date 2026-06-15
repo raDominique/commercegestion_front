@@ -196,17 +196,7 @@ const Boutique = () => {
                           toast.error('Veuillez vous connecter pour ajouter au panier');
                           return;
                         }
-                        const id = key || (product._id || product.id);
-                        const cartProduct = {
-                          id,
-                          name: product.productName || product.name || item.productName || '',
-                          price: Number(item.prixUnitaire ?? product.prixUnitaire ?? 0),
-                          stock: Number(product.stock ?? item.quantite ?? 9999),
-                          category: product.productCategory || '',
-                          image: product.productImage || ''
-                        };
-                        addToCart(cartProduct);
-                        toast.success('Produit ajouté au panier');
+                        addToCart(item._id || item.id, 1);
                       }}
                       className="w-full"
                       status="active"
