@@ -37,7 +37,7 @@ export default function Panier() {
     const fetchSites = async () => {
       try {
         const res = await getMySites({ limit: 100, page: 1 });
-        const data = Array.isArray(res?.data?.data) ? res.data.data : Array.isArray(res?.data) ? res.data : [];
+        const data = Array.isArray(res?.data?.data) ? res.data.data : Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
         setSites(data);
       } catch (err) {
         console.error('Erreur chargement sites', err);
@@ -250,11 +250,15 @@ export default function Panier() {
                   <SelectValue placeholder="Sélectionner un site" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sites.map(site => (
-                    <SelectItem key={site._id || site.id} value={site._id || site.id}>
-                      {site.siteName || site.name}
-                    </SelectItem>
-                  ))}
+                  {sites.length === 0 ? (
+                    <div className="px-2 py-4 text-sm text-neutral-500 text-center">Aucun site de livraison disponible</div>
+                  ) : (
+                    sites.map(site => (
+                      <SelectItem key={site._id || site.id} value={site._id || site.id}>
+                        {site.siteName || site.name || site.siteAddress || site._id}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
