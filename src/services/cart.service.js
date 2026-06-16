@@ -157,5 +157,3 @@ export const getCart = async (token) => {
     }
   );
 };
-
-

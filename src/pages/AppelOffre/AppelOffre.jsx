@@ -576,40 +576,53 @@ function MyTendersList() {
           ) : bids.length === 0 ? (
             <div className="py-8 text-center text-neutral-500">Aucune soumission pour le moment</div>
           ) : (
-            <div className="space-y-4">
-              {bids.map((bid) => {
-                const soumissionnaire = bid.soumissionnaireId || bid.userId || {};
-                return (
-                  <div key={bid._id} className="border rounded-lg p-4 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="font-semibold text-neutral-900">{soumissionnaire.userNickName || soumissionnaire.userName || 'Anonyme'}</div>
-                      <Badge variant="outline" className="shrink-0">{bid.statut || 'SOUMIS'}</Badge>
-                    </div>
-                    <div className="text-sm text-neutral-700 space-y-1">
-                      <div><b>Prix unitaire :</b> {bid.prixUnitaire != null ? `${bid.prixUnitaire} Ar` : '-'}</div>
-                      <div><b>Quantité :</b> {bid.quantite || '-'}</div>
-                      <div><b>Délai de livraison :</b> {bid.delaiLivraison || '-'}</div>
-                      {bid.observations && <div><b>Observations :</b> {bid.observations}</div>}
-                    </div>
-                    {bid.statut !== 'RETENUE' && (
-                      <div className="flex justify-end pt-2 border-t">
-                        <Button
-                          size="sm"
-                          color="default"
-                          onClick={() => setAwardTarget({ tenderId: bidsTenderId, bidId: bid._id, commentaire: '' })}
-                        >
-                          <CheckCircleIcon className="w-4 h-4 mr-1" /> Attribuer
-                        </Button>
-                      </div>
-                    )}
-                    {bid.statut === 'RETENUE' && (
-                      <div className="flex justify-end pt-2 border-t">
-                        <Badge className="bg-green-100 text-green-800 border-green-200">RETENUE</Badge>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-xs text-neutral-500 uppercase border-b">
+                    <th className="py-2 pr-2 text-left">Soumissionnaire</th>
+                    <th className="py-2 px-2 text-left">Prix unitaire</th>
+                    <th className="py-2 px-2 text-left">Qté</th>
+                    <th className="py-2 px-2 text-left">Total</th>
+                    <th className="py-2 px-2 text-left">Délai</th>
+                    <th className="py-2 px-2 text-left">Statut</th>
+                    <th className="py-2 pl-2 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bids.map((bid) => {
+                    const soumissionnaire = bid.soumissionnaireId || bid.userId || {};
+                    const total = bid.prixTotal ?? (bid.prixUnitaire * bid.quantite);
+                    return (
+                      <tr key={bid._id} className="border-b last:border-b-0 hover:bg-neutral-50">
+                        <td className="py-3 pr-2 font-medium text-neutral-900">{soumissionnaire.userNickName || soumissionnaire.userName || 'Anonyme'}</td>
+                        <td className="py-3 px-2">{bid.prixUnitaire != null ? `${bid.prixUnitaire.toLocaleString()} Ar` : '-'}</td>
+                        <td className="py-3 px-2">{bid.quantite || '-'}</td>
+                        <td className="py-3 px-2 font-medium">{total ? `${total.toLocaleString()} Ar` : '-'}</td>
+                        <td className="py-3 px-2">{bid.delaiLivraison || '-'}</td>
+                        <td className="py-3 px-2">
+                          <Badge className={bid.statut === 'RETENUE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200'}>
+                            {bid.statut || 'SOUMIS'}
+                          </Badge>
+                        </td>
+                        <td className="py-3 pl-2 text-right">
+                          {bid.statut !== 'RETENUE' ? (
+                            <Button
+                              size="sm"
+                              color="default"
+                              onClick={() => setAwardTarget({ tenderId: bidsTenderId, bidId: bid._id, commentaire: '' })}
+                            >
+                              <CheckCircleIcon className="w-4 h-4 mr-1" /> Attribuer
+                            </Button>
+                          ) : (
+                            <span className="text-green-700 text-xs font-semibold">RETENUE</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
 
