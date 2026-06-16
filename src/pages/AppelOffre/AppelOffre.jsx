@@ -222,7 +222,7 @@ function TendersList() {
               </CardHeader>
               <CardContent className="px-4 py-3 pt-0">
                 <div className="flex flex-col gap-2">
-                  <div className="text-sm text-neutral-700"><span className="font-bold">Produit:</span> {product.productName || '-'}</div>
+                  <div className="text-sm text-neutral-700"><span className="font-bold">Produit:</span> <span className="truncate">{product.productName || '-'}</span></div>
                   <div className="text-sm text-neutral-700"><span className="font-bold">Quantité:</span> {item.quantite} {item.unite}</div>
                   <div className="text-sm text-neutral-700"><span className="font-bold">Date limite:</span> {item.dateLimite ? new Date(item.dateLimite).toLocaleDateString('fr-FR') : '-'}</div>
                   {item.lanceurId?.userNickName && <div className="text-sm text-neutral-700"><span className="font-bold">Lanceur:</span> {item.lanceurId.userNickName}</div>}

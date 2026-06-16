@@ -178,7 +178,7 @@ const Boutique = () => {
                     </div>
                   </div>
                   <div className="px-4 py-3">
-                    <CardTitle className="text-lg font-semibold text-neutral-900 truncate mb-1">{product.productName}</CardTitle>
+                    <CardTitle className="text-lg font-semibold text-neutral-900 line-clamp-2 mb-1">{product.productName}</CardTitle>
                     {product.productCategory && (
                       <Badge variant="secondary" className="mt-1">{product.productCategory}</Badge>
                     )}
