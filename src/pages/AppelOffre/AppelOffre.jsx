@@ -238,11 +238,10 @@ function TendersList() {
       </div>
 
       <div className="mt-6">
-        {/* simple pagination controls */}
         <div className="flex items-center justify-end gap-2">
-          <button className="px-3 py-1 border rounded" onClick={() => setPage(p => Math.max(1, p - 1))}>Précédent</button>
-          <div className="text-sm text-neutral-600">Page {page}</div>
-          <button className="px-3 py-1 border rounded" onClick={() => setPage(p => p + 1)}>Suivant</button>
+          <button className="px-3 py-1 border rounded disabled:opacity-40 disabled:cursor-not-allowed" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Précédent</button>
+          <div className="text-sm text-neutral-600">Page {page} / {Math.max(1, Math.ceil(total / limit))}</div>
+          <button className="px-3 py-1 border rounded disabled:opacity-40 disabled:cursor-not-allowed" disabled={page >= Math.ceil(total / limit)} onClick={() => setPage(p => p + 1)}>Suivant</button>
         </div>
       </div>
         </>
@@ -320,6 +319,7 @@ function MyTendersList() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
+  const [total, setTotal] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailTender, setDetailTender] = useState(null);
@@ -419,6 +419,7 @@ function MyTendersList() {
       const res = await getMyTenders({ page, limit }, token);
       const items = Array.isArray(res?.data?.data) ? res.data.data : (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []));
       setTenders(items || []);
+      setTotal(Number(res?.data?.total ?? res?.total ?? 0));
     } catch (err) {
       console.error('getMyTenders error', err);
     } finally {
@@ -466,19 +467,19 @@ function MyTendersList() {
                   <td className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</td>
                   <td className="py-3">
                     <div className="flex gap-1 items-center">
-                      <Button variant="ghost" size="sm" onClick={() => handleView(t._id)}>
-                        <InfoIcon className="w-4 h-4 text-violet-600" />
+                      <Button variant="ghost" size="sm" onClick={() => handleView(t._id)} className="text-xs gap-1">
+                        <InfoIcon className="w-4 h-4 text-violet-600" /> Détails
                       </Button>
                       {t.statut === 'OUVERT' && (
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenSealed(t._id)}>
-                          <HowToVoteIcon className="w-4 h-4 text-orange-500" />
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenSealed(t._id)} className="text-xs gap-1">
+                          <HowToVoteIcon className="w-4 h-4 text-orange-500" /> Dépouiller
                         </Button>
                       )}
-                      <Button variant="ghost" size="sm" disabled={t.statut !== 'OUVERT'} className={t.statut !== 'OUVERT' ? 'opacity-50 cursor-not-allowed' : ''} onClick={() => handleViewBids(t._id)}>
-                        <CheckCircleIcon className={`w-4 h-4 ${t.statut !== 'OUVERT' ? 'text-neutral-400' : 'text-green-600'}`} />
+                      <Button variant="ghost" size="sm" disabled={t.statut !== 'OUVERT'} className={`text-xs gap-1 ${t.statut !== 'OUVERT' ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => handleViewBids(t._id)}>
+                        <CheckCircleIcon className={`w-4 h-4 ${t.statut !== 'OUVERT' ? 'text-neutral-400' : 'text-green-600'}`} /> Soumissions
                       </Button>
-                      <Button variant="ghost" size="sm" disabled={t.statut !== 'OUVERT'} className={t.statut !== 'OUVERT' ? 'opacity-50 cursor-not-allowed' : ''} onClick={() => { setDeleteTargetId(t._id); setDeleteConfirmOpen(true); }}>
-                        <DeleteIcon className={`w-4 h-4 ${t.statut !== 'OUVERT' ? 'text-neutral-400' : 'text-red-600'}`} />
+                      <Button variant="ghost" size="sm" disabled={t.statut !== 'OUVERT'} className={`text-xs gap-1 ${t.statut !== 'OUVERT' ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => { setDeleteTargetId(t._id); setDeleteConfirmOpen(true); }}>
+                        <DeleteIcon className={`w-4 h-4 ${t.statut !== 'OUVERT' ? 'text-neutral-400' : 'text-red-600'}`} /> Supprimer
                       </Button>
                     </div>
                   </td>
@@ -488,6 +489,12 @@ function MyTendersList() {
           </table>
         </div>
       )}
+
+      <div className="mt-4 flex items-center justify-end gap-2">
+        <button className="px-3 py-1 border rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Précédent</button>
+        <span className="text-sm text-neutral-600">Page {page} / {Math.max(1, Math.ceil(total / limit))}</span>
+        <button className="px-3 py-1 border rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed" disabled={page >= Math.ceil(total / limit)} onClick={() => setPage(p => p + 1)}>Suivant</button>
+      </div>
 
       <Dialog open={detailOpen} onOpenChange={(open) => { setDetailOpen(open); if (!open) setDetailTender(null); }}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
