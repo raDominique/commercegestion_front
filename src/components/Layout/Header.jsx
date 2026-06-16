@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import {
@@ -72,6 +72,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
     }, [profile]);
 
     const user = profile;
+    const navigate = useNavigate();
 
     // build nav lists (same logic as Sidebar)
     const userNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
@@ -166,7 +167,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                     </Button>
                                 </Link>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/mon-compte')}>
                                     {user.userType === 'Entreprise' && user.logo ? (
                                         <img
                                             src={getFullMediaUrl(user.logo)}

@@ -216,13 +216,23 @@ const VirementDroit = () => {
         return;
       }
 
+      let detentaire = user?._id || user?.id;
+      if (!detentaire) {
+        try {
+          const profile = await getProfile();
+          detentaire = profile?._id || profile?.id;
+        } catch (e) {
+          console.debug("Impossible de récupérer l'identifiant utilisateur pour le virement:", e);
+        }
+      }
+
       const payload = {
         siteOrigineId,
         siteDestinationId,
         productId: pid,
         quantite: quantiteVal,
         prixUnitaire: prixVal,
-        detentaire: user?._id || user?.id || null,
+        detentaire,
         ayant_droit: selectedRecipient._id || selectedRecipient.id || selectedRecipient,
         observations: form.observations || `Virement de droit vers ${selectedRecipient.name || selectedRecipient.userName || selectedRecipient.userNickName}`,
       };
