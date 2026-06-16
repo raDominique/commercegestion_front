@@ -237,6 +237,42 @@ export const initializeTransaction = async (params, token) => {
 };
 
 /**
+ * Crée une transaction de vente
+ * POST /api/v1/transactions/vente
+ * @param {Object} params - Paramètres de la vente
+ * @param {string} params.vendeurId - ID du vendeur
+ * @param {string} params.productId - ID du produit
+ * @param {string} params.siteOrigineId - ID du site d'origine
+ * @param {string} params.siteDestinationId - ID du site de destination
+ * @param {number} params.quantite - Quantité
+ * @param {number} params.prixUnitaire - Prix unitaire
+ * @param {string} [params.observations] - Observations facultatives
+ * @param {string} token - Token d'authentification
+ * @returns {Promise}
+ */
+export const createVenteTransaction = async (params, token) => {
+    return axiosInstance.post(
+        '/api/v1/transactions/vente',
+        {
+            vendeurId: params.vendeurId,
+            productId: params.productId,
+            siteOrigineId: params.siteOrigineId,
+            siteDestinationId: params.siteDestinationId,
+            quantite: Number(params.quantite),
+            prixUnitaire: Number(params.prixUnitaire),
+            observations: params.observations || '',
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                accept: '*/*',
+            },
+        }
+    );
+};
+
+/**
  * Récupère les transactions d'un utilisateur (GET /api/v1/transactions/user/:userId)
  * @param {string} userId - ID de l'utilisateur
  * @param {Object} [params] - Paramètres de la requête
