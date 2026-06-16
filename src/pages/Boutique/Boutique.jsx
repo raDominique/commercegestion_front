@@ -44,6 +44,7 @@ const Boutique = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('createdAt');
   const [order, setOrder] = useState(-1);
+  const [addingId, setAddingId] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -191,18 +192,22 @@ const Boutique = () => {
                   </div>
                   <div className="mt-3">
                     <Button
-                      onClick={() => {
+                      onClick={async () => {
                         if (!isAuthenticated) {
                           toast.error('Veuillez vous connecter pour ajouter au panier');
                           return;
                         }
-                        addToCart(item._id || item.id, 1);
+                        const shopId = item._id || item.id;
+                        setAddingId(shopId);
+                        await addToCart(shopId, 1);
+                        setAddingId(null);
                       }}
-                      className="w-full"
-                      status="active"
+                      disabled={addingId === (item._id || item.id)}
+                      status={addingId === (item._id || item.id) ? 'loading' : 'active'}
                       color="default"
+                      className="w-full"
                     >
-                      Ajouter au panier
+                      {addingId === (item._id || item.id) ? 'Ajout...' : 'Ajouter au panier'}
                     </Button>
                   </div>
                 </CardContent>
