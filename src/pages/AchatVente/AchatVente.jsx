@@ -83,86 +83,88 @@ const AchatVente = () => {
     }
   };
 
-  if (user && user.userValidated === false) {
-    return <div className="px-6 mx-auto"><UserNotValidatedBanner /></div>;
-  }
-
   return (
     <div className="px-6 mx-auto">
-      <h1 className="text-2xl text-neutral-900 mb-6">Achat / Vente</h1>
-      <Card className="border-neutral-200 bg-white">
-        <div className="p-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-2">
-            <Label htmlFor="vendeurId">Vendeur *</Label>
-            <Select value={form.vendeurId} onValueChange={v => setForm(prev => ({ ...prev, vendeurId: v }))}>
-              <SelectTrigger id="vendeurId" className="bg-white"><SelectValue placeholder="Sélectionner un vendeur" /></SelectTrigger>
-              <SelectContent>
-                {users.map(u => (
-                  <SelectItem key={u._id || u.id} value={u._id || u.id}>{u.name || u.userNickName || u.userName || u.email}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {user && user.userValidated === false ? (
+        <UserNotValidatedBanner />
+      ) : (
+        <>
+          <h1 className="text-2xl text-neutral-900 mb-6">Achat / Vente</h1>
+          <Card className="border-neutral-200 bg-white">
+            <div className="p-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="vendeurId">Vendeur *</Label>
+                <Select value={form.vendeurId} onValueChange={v => setForm(prev => ({ ...prev, vendeurId: v }))}>
+                  <SelectTrigger id="vendeurId" className="bg-white"><SelectValue placeholder="Sélectionner un vendeur" /></SelectTrigger>
+                  <SelectContent>
+                    {users.map(u => (
+                      <SelectItem key={u._id || u.id} value={u._id || u.id}>{u.name || u.userNickName || u.userName || u.email}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="siteOrigineId">Site d'origine *</Label>
-            <Select value={form.siteOrigineId} onValueChange={v => setForm(prev => ({ ...prev, siteOrigineId: v }))}>
-              <SelectTrigger id="siteOrigineId" className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
-              <SelectContent>
-                {sites.map(s => (
-                  <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="grid gap-2">
+                <Label htmlFor="siteOrigineId">Site d'origine *</Label>
+                <Select value={form.siteOrigineId} onValueChange={v => setForm(prev => ({ ...prev, siteOrigineId: v }))}>
+                  <SelectTrigger id="siteOrigineId" className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
+                  <SelectContent>
+                    {sites.map(s => (
+                      <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="productId">Produit *</Label>
-            <Select value={form.productId} onValueChange={handleSelectProduct} disabled={!form.siteOrigineId}>
-              <SelectTrigger id="productId" className="bg-white"><SelectValue placeholder={form.siteOrigineId ? "Sélectionner un produit" : "Choisissez d'abord un site"} /></SelectTrigger>
-              <SelectContent>
-                {products.map(p => (
-                  <SelectItem key={p.productId || p._id} value={p.productId || p._id}>{p.productName || p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="grid gap-2">
+                <Label htmlFor="productId">Produit *</Label>
+                <Select value={form.productId} onValueChange={handleSelectProduct} disabled={!form.siteOrigineId}>
+                  <SelectTrigger id="productId" className="bg-white"><SelectValue placeholder={form.siteOrigineId ? "Sélectionner un produit" : "Choisissez d'abord un site"} /></SelectTrigger>
+                  <SelectContent>
+                    {products.map(p => (
+                      <SelectItem key={p.productId || p._id} value={p.productId || p._id}>{p.productName || p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="siteDestinationId">Site de destination *</Label>
-            <Select value={form.siteDestinationId} onValueChange={v => setForm(prev => ({ ...prev, siteDestinationId: v }))}>
-              <SelectTrigger id="siteDestinationId" className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
-              <SelectContent>
-                {sites.map(s => (
-                  <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="grid gap-2">
+                <Label htmlFor="siteDestinationId">Site de destination *</Label>
+                <Select value={form.siteDestinationId} onValueChange={v => setForm(prev => ({ ...prev, siteDestinationId: v }))}>
+                  <SelectTrigger id="siteDestinationId" className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
+                  <SelectContent>
+                    {sites.map(s => (
+                      <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="quantite">Quantité *</Label>
-              <Input id="quantite" type="number" min="1" value={form.quantite} onChange={e => setForm(prev => ({ ...prev, quantite: e.target.value }))} className="bg-white" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="quantite">Quantité *</Label>
+                  <Input id="quantite" type="number" min="1" value={form.quantite} onChange={e => setForm(prev => ({ ...prev, quantite: e.target.value }))} className="bg-white" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="prixUnitaire">Prix unitaire (Ar)</Label>
+                  <Input id="prixUnitaire" type="number" min="0" value={form.prixUnitaire} onChange={e => setForm(prev => ({ ...prev, prixUnitaire: e.target.value }))} className="bg-white" />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="observations">Observations</Label>
+                <Textarea id="observations" value={form.observations} onChange={e => setForm(prev => ({ ...prev, observations: e.target.value }))} placeholder="Observations facultatives" rows={3} />
+              </div>
+
+              <Button type="submit" status={saving ? 'loading' : 'active'} color="default" disabled={saving} className="w-full">
+                {saving ? 'Traitement...' : 'Effectuer la transaction'}
+              </Button>
+            </form>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="prixUnitaire">Prix unitaire (Ar)</Label>
-              <Input id="prixUnitaire" type="number" min="0" value={form.prixUnitaire} onChange={e => setForm(prev => ({ ...prev, prixUnitaire: e.target.value }))} className="bg-white" />
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="observations">Observations</Label>
-            <Textarea id="observations" value={form.observations} onChange={e => setForm(prev => ({ ...prev, observations: e.target.value }))} placeholder="Observations facultatives" rows={3} />
-          </div>
-
-          <Button type="submit" status={saving ? 'loading' : 'active'} color="default" disabled={saving} className="w-full">
-            {saving ? 'Traitement...' : 'Effectuer la transaction'}
-          </Button>
-        </form>
-        </div>
-      </Card>
+          </Card>
+        </>
+      )}
     </div>
   );
 };

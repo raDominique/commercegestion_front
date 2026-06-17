@@ -30,6 +30,8 @@ import InfoIcon from '@mui/icons-material/Info';
 import DeleteIcon from '@mui/icons-material/Delete';
 import HowToVoteIcon from '@mui/icons-material/HowToVote';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { useAuth } from '../../context/AuthContext';
+import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { getTenders, getTenderById, getMyTenders, createTender, deleteTender, createBid, openSealedBids, awardTender, getBids } from '../../services/appeloffre.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
@@ -38,31 +40,36 @@ import { getMySites } from '../../services/site.service';
 
 const AppelOffre = () => {
   usePageTitle("Appels d'offre");
+  const { user } = useAuth();
 
   return (
     <div className="px-6 mx-auto">
-      <Tabs defaultValue="list">
-        <TabsList>
-          <TabsTrigger value="list">Tous les appels d'offres</TabsTrigger>
-          <TabsTrigger value="form">Mes appels d'offre</TabsTrigger>
-        </TabsList>
+      {user && user.userValidated === false ? (
+        <UserNotValidatedBanner />
+      ) : (
+        <Tabs defaultValue="list">
+          <TabsList>
+            <TabsTrigger value="list">Tous les appels d'offres</TabsTrigger>
+            <TabsTrigger value="form">Mes appels d'offre</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="list">
-          <Card className="border-neutral-200 bg-white">
-            <div className="p-4">
-              <TendersList />
-            </div>
-          </Card>
-        </TabsContent>
+          <TabsContent value="list">
+            <Card className="border-neutral-200 bg-white">
+              <div className="p-4">
+                <TendersList />
+              </div>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="form">
-          <Card className="border-neutral-200 bg-white">
-            <div className="p-4">
-              <MyTendersList />
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="form">
+            <Card className="border-neutral-200 bg-white">
+              <div className="p-4">
+                <MyTendersList />
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 };
