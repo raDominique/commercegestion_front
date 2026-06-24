@@ -273,6 +273,40 @@ export const createVenteTransaction = async (params, token) => {
 };
 
 /**
+ * Effectue un virement de droit auprès d'un bénéficiaire tiers
+ * POST /api/v1/transactions/virement-droit
+ * @param {Object} params - Paramètres du virement
+ * @param {string} params.beneficiaryId - ID du bénéficiaire (Z)
+ * @param {string} params.detentaireId - ID du détenteur (Y)
+ * @param {string} params.siteId - ID du site où le produit est déposé
+ * @param {string} params.productId - ID du produit
+ * @param {number} params.quantite - Quantité à transférer
+ * @param {string} [params.observations] - Observations facultatives
+ * @param {string} token - Token d'authentification
+ * @returns {Promise}
+ */
+export const virementDroit = async (params, token) => {
+  return axiosInstance.post(
+    '/api/v1/transactions/virement-droit',
+    {
+      beneficiaryId: params.beneficiaryId,
+      detentaireId: params.detentaireId,
+      siteId: params.siteId,
+      productId: params.productId,
+      quantite: Number(params.quantite),
+      observations: params.observations || '',
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        accept: '*/*',
+      },
+    }
+  );
+};
+
+/**
  * Récupère les transactions d'un utilisateur (GET /api/v1/transactions/user/:userId)
  * @param {string} userId - ID de l'utilisateur
  * @param {Object} [params] - Paramètres de la requête
