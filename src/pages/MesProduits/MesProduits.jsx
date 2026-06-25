@@ -36,13 +36,6 @@ const MesProduits = () => {
   // Gestion des erreurs pour le formulaire dépôt
   const [depositErrors, setDepositErrors] = useState({});
   const { user } = useAuth();
-  if (user && user.userValidated === false) {
-    return (
-      <div className="px-6 mx-auto">
-        <UserNotValidatedBanner />
-      </div>
-    );
-  }
   // Options CPC pour édition
   const [editCpcOptions, setEditCpcOptions] = useState([]);
   // Ouvrir le modal dépôt
@@ -610,6 +603,14 @@ const MesProduits = () => {
       </div>
     );
   };
+
+  if (user && user.userValidated === false) {
+    return (
+      <div className="px-6 mx-auto">
+        <UserNotValidatedBanner />
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 mx-auto">

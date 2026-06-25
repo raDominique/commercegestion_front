@@ -17,13 +17,6 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 
 const Audit = () => {
   const { user } = useAuth();
-  if (user && user.userValidated === false) {
-    return (
-      <div className="px-6 mx-auto">
-        <UserNotValidatedBanner />
-      </div>
-    );
-  }
 
   usePageTitle('Audit');
 
@@ -89,7 +82,7 @@ const Audit = () => {
       if (disposition) {
         const match = disposition.match(/filename\*?=(?:UTF-8'')?"?([^;\n"]+)/i);
         if (match && match[1]) {
-          filename = decodeURIComponent(match[1].replace(/['\"]/g, ''));
+          filename = decodeURIComponent(match[1].replace(/['"]/g, ''));
         }
       }
 
@@ -247,7 +240,7 @@ const Audit = () => {
     };
     if (map[key]) return map[key];
     // fallback: split camelCase/underscores
-    const s = key.replace(/([A-Z])/g, ' $1').replace(/[_\-]/g, ' ');
+    const s = key.replace(/([A-Z])/g, ' $1').replace(/[_-]/g, ' ');
     return s.charAt(0).toUpperCase() + s.slice(1);
   };
 
@@ -280,6 +273,14 @@ const Audit = () => {
       </div>
     );
   };
+
+  if (user && user.userValidated === false) {
+    return (
+      <div className="px-6 mx-auto">
+        <UserNotValidatedBanner />
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 mx-auto space-y-6">

@@ -32,13 +32,6 @@ import { TransactionType, getTransactionStatusBadgeProps } from '../../constants
 
 const Depot = () => {
 	const { user } = useAuth();
-	if (user && user.userValidated === false) {
-		return (
-			<div className="px-6 mx-auto">
-				<UserNotValidatedBanner />
-			</div>
-		);
-	}
 	const dateFormat = useDateFormat();
 	usePageTitle('Dépôt');
 	const { isDesktop } = useScreenType();
@@ -313,6 +306,14 @@ const Depot = () => {
 			setSaving(false);
 		}
 	};
+
+	if (user && user.userValidated === false) {
+		return (
+			<div className="px-6 mx-auto">
+				<UserNotValidatedBanner />
+			</div>
+		);
+	}
 
 	return (
 		<div className="px-6 mx-auto">

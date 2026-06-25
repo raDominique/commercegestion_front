@@ -953,7 +953,7 @@ const Actifs = () => {
 											<div><b>Quantité à vendre :</b> {formatThousands(detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0)}</div>
 											<div><b>Quantité originale :</b> {formatThousands(detailActif.quantiteOriginale ?? detailActif._shopRaw?.quantiteOriginale ?? 0)}</div>
 											<div><b>Prix unitaire (Ar) :</b> {formatThousands(detailActif.prixUnitaire ?? detailActif._shopRaw?.prixUnitaire ?? 0)}</div>
-											<div><b>Valeur totale :</b> {formatThousands(((detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0) * (detailActif.prixUnitaire ?? detailActif._shopRaw?.prixUnitaire ?? 0)) ?? 0)}</div>
+											<div><b>Valeur totale :</b> {formatThousands((detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0) * (detailActif.prixUnitaire ?? detailActif._shopRaw?.prixUnitaire ?? 0))}</div>
 											<div><b>Description :</b> {detailActif.description || detailActif._shopRaw?.description || '-'}</div>
 											<div><b>Date création :</b> {detailActif.createdAt ? dateFormat(detailActif.createdAt) : (detailActif._shopRaw?.createdAt ? dateFormat(detailActif._shopRaw.createdAt) : '-')}</div>
 											<div><b>Date mise à jour :</b> {detailActif.updatedAt ? dateFormat(detailActif.updatedAt) : (detailActif._shopRaw?.updatedAt ? dateFormat(detailActif._shopRaw.updatedAt) : '-')}</div>

@@ -119,6 +119,16 @@ const EchangeActifs = () => {
     label: productLabel(product),
   })).filter((product) => product.id), [products]);
 
+  const userOptions = useMemo(() => users.map((member) => ({
+    id: getId(member),
+    label: userLabel(member),
+  })).filter((member) => member.id), [users]);
+
+  const detenteurSiteOptions = useMemo(() => detenteurSites.map((site) => ({
+    id: getId(site),
+    label: siteLabel(site),
+  })).filter((site) => site.id), [detenteurSites]);
+
   const actifOptions = useMemo(() => siteActifs.map((actif) => {
     const product = actif.productId || actif.produit || actif.product || {};
     const id = getId(product) || actif.productId || actif.id || actif._id;
@@ -357,9 +367,9 @@ const EchangeActifs = () => {
                     <SelectValue placeholder="Sélectionner le détenteur du produit A" />
                   </SelectTrigger>
                   <SelectContent>
-                    {users.map((member) => (
-                      <SelectItem key={getId(member)} value={getId(member)}>
-                        {userLabel(member)}
+                    {userOptions.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -380,9 +390,9 @@ const EchangeActifs = () => {
                     <SelectValue placeholder={offerForm.detenteurAId ? 'Sélectionner le dépôt' : "Choisissez d'abord le détenteur"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {detenteurSites.map((site) => (
-                      <SelectItem key={getId(site)} value={getId(site)}>
-                        {siteLabel(site)}
+                    {detenteurSiteOptions.map((site) => (
+                      <SelectItem key={site.id} value={site.id}>
+                        {site.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -464,15 +474,15 @@ const EchangeActifs = () => {
               <div className="p-4">
                 <Label>Détenteurs Y acceptés pour le produit B</Label>
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-56 overflow-auto">
-                  {users.map((member) => {
-                    const id = getId(member);
+                  {userOptions.map((member) => {
+                    const id = member.id;
                     return (
                       <label key={id} className="flex items-center gap-2 text-sm text-neutral-700">
                         <Checkbox
                           checked={offerForm.acceptedDetenteurBIds.includes(id)}
                           onCheckedChange={(checked) => toggleAcceptedDetenteur(id, checked === true)}
                         />
-                        <span className="min-w-0 wrap-wrap-break-word">{userLabel(member)}</span>
+                        <span className="min-w-0 wrap-wrap-break-word">{member.label}</span>
                       </label>
                     );
                   })}
@@ -514,8 +524,8 @@ const EchangeActifs = () => {
               <SelectTrigger className="bg-white"><SelectValue placeholder="Détenteur W" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les détenteurs W</SelectItem>
-                {users.map((member) => (
-                  <SelectItem key={getId(member)} value={getId(member)}>{userLabel(member)}</SelectItem>
+                {userOptions.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>{member.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -524,8 +534,8 @@ const EchangeActifs = () => {
               <SelectTrigger className="bg-white"><SelectValue placeholder="Détenteur Y" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les détenteurs Y</SelectItem>
-                {users.map((member) => (
-                  <SelectItem key={getId(member)} value={getId(member)}>{userLabel(member)}</SelectItem>
+                {userOptions.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>{member.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

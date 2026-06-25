@@ -20,13 +20,6 @@ import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBan
 
 const MesSites = () => {
   const { user } = useAuth();
-  if (user && user.userValidated === false) {
-    return (
-      <div className="px-6 mx-auto">
-        <UserNotValidatedBanner />
-      </div>
-    );
-  }
   const isMobile = useIsMobile();
   usePageTitle('Mes sites');
   const [sites, setSites] = useState([]);
@@ -159,6 +152,14 @@ const MesSites = () => {
       setLoadingDelete(false);
     }
   };
+
+  if (user && user.userValidated === false) {
+    return (
+      <div className="px-6 mx-auto">
+        <UserNotValidatedBanner />
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 mx-auto">

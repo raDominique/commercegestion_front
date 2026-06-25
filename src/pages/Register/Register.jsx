@@ -259,9 +259,6 @@ const Register = () => {
       const p2 = (prev.parrain2ID || '').trim();
       const newP1 = p1.length === 8 ? (usersMap[p1] || '') : '';
       const newP2 = p2.length === 8 ? (usersMap[p2] || '') : '';
-      // Log when parrain codes are provided for debugging
-      if (p1.length === 8 || p2.length === 8) {
-      }
       if (prev.parrain1Name === newP1 && prev.parrain2Name === newP2) return prev;
       return { ...prev, parrain1Name: newP1, parrain2Name: newP2 };
     });

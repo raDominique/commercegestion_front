@@ -160,12 +160,8 @@ export async function refreshToken() {
 
 // Récupère le profil utilisateur : GET /getProfile
 export async function getProfile() {
-  try {
-    const response = await axiosInstance.get('/api/v1/auth/profile');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await axiosInstance.get('/api/v1/auth/profile');
+  return response.data;
 }
 
 // Déconnexion : POST /auth/logout (refreshToken supprimé côté backend)

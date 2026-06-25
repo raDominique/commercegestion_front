@@ -226,24 +226,6 @@ const Retrait = () => {
 		setMaxWithdrawalQty(actif?.quantite || null);
 	};
 
-	const handleSelectPassifForWithdrawal = passifId => {
-		const item = passifsList.find(p => p._id === passifId);
-
-		setWithdrawalForm({
-			actifId: passifId,
-			productId: item?.productId?._id || item?.productId || '',
-			siteOrigineId: item?.departDeId || item?.siteOrigineId?._id || item?.siteOriginId?._id || '',
-			siteDestinationId: '',
-			quantite: '',
-			prixUnitaire: item?.prixUnitaire || '',
-			detentaire: '',
-			ayant_droit: '',
-			observations: ''
-		});
-
-		setMaxWithdrawalQty(item?.quantite || item?.solde || undefined);
-	};
-
 	const handleWithdrawalSubmit = async e => {
 		e.preventDefault();
 

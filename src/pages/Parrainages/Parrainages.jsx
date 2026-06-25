@@ -22,10 +22,10 @@ import usePageTitle from '@/utils/usePageTitle';
 import PaginationControls from '@/components/commons/PaginationControls.jsx';
 
 function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, onApprove, actionLoading }) {
+    const dateFormat = useDateFormat();
+
     if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
     if (!referrals || referrals.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun parrain trouvé</div>;
-
-    const dateFormat = useDateFormat();
 
     if (isDesktop) {
         return (
