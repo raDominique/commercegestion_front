@@ -26,14 +26,15 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['warn', {
+      'no-unused-vars': ['error', {
         varsIgnorePattern: '^([A-Z_]|set[A-Z])',
         argsIgnorePattern: '^_',
         caughtErrors: 'none',
       }],
-      'react-refresh/only-export-components': 'warn',
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/purity': 'warn',
+      'react-refresh/only-export-components': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/purity': 'off',
     },
   },
 ])

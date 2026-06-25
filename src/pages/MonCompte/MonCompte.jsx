@@ -13,8 +13,7 @@ import { updateUser } from '../../services/user.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
-import { Switch } from '../../components/ui/switch';
-import { Person as UserIcon, Security as ShieldIcon, Notifications as BellIcon } from '@mui/icons-material';
+import { Person as UserIcon, Security as ShieldIcon } from '@mui/icons-material';
 import { Badge } from '../../components/ui/badge';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
@@ -35,12 +34,6 @@ export default function MonCompte() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const [notifications, setNotifications] = useState({
-    email: true,
-    transactions: true,
-    promotions: false,
-  });
-
   useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -52,7 +45,7 @@ export default function MonCompte() {
         setPhone(data.userPhone || '');
         setError(null);
       })
-      .catch((err) => {
+      .catch(() => {
         if (!mounted) return;
         setError('Impossible de charger le profil');
       })

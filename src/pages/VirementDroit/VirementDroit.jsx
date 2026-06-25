@@ -50,7 +50,6 @@ const VirementDroit = () => {
   const { user } = useAuth();
 
   const [form, setForm] = useState({ quantite: '', observations: '' });
-  const [saving, setSaving] = useState(false);
 
   const [virerModalOpen, setVirerModalOpen] = useState(false);
   const [selectedActifForVirement, setSelectedActifForVirement] = useState(null);
@@ -61,7 +60,7 @@ const VirementDroit = () => {
   const [recipientHighlighted, setRecipientHighlighted] = useState(0);
   const [filteredRecipients, setFilteredRecipients] = useState([]);
   const [selectedRecipient, setSelectedRecipient] = useState(null);
-  const [loadingRecipients, setLoadingRecipients] = useState(false);
+  const [, setLoadingRecipients] = useState(false);
   const [loadingVirement, setLoadingVirement] = useState(false);
 
   const [detenteurSearch, setDetenteurSearch] = useState('');

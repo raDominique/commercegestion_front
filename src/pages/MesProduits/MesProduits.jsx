@@ -20,7 +20,7 @@ import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType.jsx';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
-import { getMyProducts, toggleProductStocker, getProductById, createProduct, updateProduct, deleteProduct } from '../../services/product.service';
+import { getMyProducts, getProductById, createProduct, updateProduct, deleteProduct } from '../../services/product.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '../../components/ui/dialog';
 import { Label } from '../../components/ui/label';
@@ -118,7 +118,6 @@ const MesProduits = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
-  const [stockerLoadingId, setStockerLoadingId] = useState(null);
   const [validationFilter, setValidationFilter] = useState('all'); // 'all', 'true', 'false'
   const [isStockerFilter, setIsStockerFilter] = useState('all'); // 'all', 'true', 'false'
   const [detailOpen, setDetailOpen] = useState(false);
@@ -385,24 +384,6 @@ const MesProduits = () => {
       toast.error('Erreur lors du chargement de vos produits');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleToggleStocker = async (id) => {
-    setStockerLoadingId(id);
-    try {
-      const token = localStorage.getItem('token');
-      await toggleProductStocker(id, token);
-      setProducts(
-        products.map((p) =>
-          p._id === id ? { ...p, isStocker: !p.isStocker } : p
-        )
-      );
-      toast.success('État stocké modifié');
-    } catch (err) {
-      toast.error('Erreur lors du changement de stocké');
-    } finally {
-      setStockerLoadingId(null);
     }
   };
 

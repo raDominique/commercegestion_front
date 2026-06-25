@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 import { loginUser, refreshToken, logoutUser, getProfile } from '../services/auth.service';
-import { getAccessToken, setAccessToken, clearAccessToken, getRefreshToken } from '../services/token.service';
+import { setAccessToken, clearAccessToken, getRefreshToken } from '../services/token.service';
 import { setAxiosBootstrapping } from '../services/axios.config';
 
 const AuthContext = createContext();

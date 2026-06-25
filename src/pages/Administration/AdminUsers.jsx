@@ -78,7 +78,7 @@ export default function AdminUsers() {
 
     useEffect(() => {
         fetchUsers();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [searchTerm, page, limit, isVerified, isActive, userType]);
 
     // Les filtres sont maintenant côté API, donc on affiche users directement

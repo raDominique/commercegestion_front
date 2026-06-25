@@ -686,8 +686,6 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 
 				const operatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || item.operatorId?.userNickName || item.operatorId?.userName || '-';
 				const detenteurName = item.recipientId?.userNickName || item.recipientId?.userName || (typeof item.detentaire === 'string' ? item.detentaire : (item.detentaire?.userNickName || item.detentaire?.userName)) || '-';
-				const ayantDroitName = item.ayant_droit?.userNickName || item.ayant_droit?.userName || item.initiatorId?.userNickName || item.initiatorId?.userName || (typeof item.ayant_droit === 'string' ? item.ayant_droit : '-') ;
-
 				const dateToShow = item.approvedAt || item.createdAt;
 
 				return (

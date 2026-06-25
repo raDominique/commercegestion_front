@@ -6,7 +6,7 @@ import { Label } from '../../components/ui/label';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import usePageTitle from '../../utils/usePageTitle.jsx';
-import { getPendingTransactionsList, approveTransaction, rejectTransaction, getTransactionById } from '../../services/transaction.service';
+import { getPendingTransactionsList, approveTransaction, rejectTransaction } from '../../services/transaction.service';
 import { getProfile } from '../../services/auth.service';
 import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';

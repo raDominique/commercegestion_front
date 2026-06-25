@@ -44,6 +44,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const sortOptions = [
   { value: 'createdAt', label: 'Date de création' },
@@ -76,6 +77,8 @@ const Boutique = () => {
   const [siteDestinationId, setSiteDestinationId] = useState('');
   const [observations, setObservations] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [cartQuantityDrafts, setCartQuantityDrafts] = useState({});
+  const [updatingQuantityId, setUpdatingQuantityId] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -116,6 +119,16 @@ const Boutique = () => {
     };
     fetchSites();
   }, []);
+
+  useEffect(() => {
+    setCartQuantityDrafts(prev => {
+      const next = {};
+      items.forEach(item => {
+        next[item.id] = prev[item.id] ?? String(item.quantity);
+      });
+      return next;
+    });
+  }, [items]);
 
   const vendors = Array.from(new Map(
     products
@@ -164,6 +177,39 @@ const Boutique = () => {
       toast.error(err?.response?.data?.message || 'Erreur lors de la validation de la commande');
     } finally {
       setCheckoutLoading(false);
+    }
+  };
+
+  const handleCartQuantityChange = (itemId, value) => {
+    setCartQuantityDrafts(prev => ({ ...prev, [itemId]: value }));
+  };
+
+  const handleValidateCartQuantity = async (item) => {
+    const draftValue = cartQuantityDrafts[item.id] ?? String(item.quantity);
+    const quantity = Number(draftValue);
+
+    if (!Number.isFinite(quantity) || quantity < 1 || !Number.isInteger(quantity)) {
+      toast.error('Veuillez saisir une quantité entière supérieure à 0');
+      return;
+    }
+
+    if (item.stock != null && quantity > Number(item.stock)) {
+      toast.error('Quantité supérieure au stock disponible');
+      return;
+    }
+
+    if (quantity === item.quantity) {
+      return;
+    }
+
+    setUpdatingQuantityId(item.id);
+    try {
+      const updated = await updateQuantity(item.id, quantity);
+      if (updated !== false) {
+        setCartQuantityDrafts(prev => ({ ...prev, [item.id]: String(quantity) }));
+      }
+    } finally {
+      setUpdatingQuantityId(null);
     }
   };
 
@@ -429,47 +475,69 @@ const Boutique = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="whitespace-nowrap">Désignation</TableHead>
-                        <TableHead className="w-24 text-right whitespace-nowrap">Qté</TableHead>
+                        <TableHead className="w-36 text-right whitespace-nowrap">Qté</TableHead>
                         <TableHead className="w-28 text-right whitespace-nowrap">P.U.</TableHead>
                         <TableHead className="w-32 text-right whitespace-nowrap">Montant</TableHead>
                         <TableHead className="w-16 text-right whitespace-nowrap">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {items.map(item => (
-                        <TableRow key={item.id} className="odd:bg-neutral-50">
-                          <TableCell className="font-medium text-neutral-900 whitespace-nowrap truncate">{item.name || '-'}</TableCell>
-                          <TableCell className="text-right">
-                            <Input
-                              type="number"
-                              min="1"
-                              max={item.stock}
-                              value={item.quantity}
-                              onChange={(event) => {
-                                const quantity = Number(event.target.value);
-                                if (Number.isFinite(quantity) && quantity > 0) {
-                                  updateQuantity(item.id, quantity);
-                                }
-                              }}
-                              className="h-8 bg-white text-right"
-                            />
-                          </TableCell>
-                          <TableCell className="text-right whitespace-nowrap">{formatThousands(item.price)}</TableCell>
-                          <TableCell className="text-right font-medium whitespace-nowrap">{formatThousands(item.price * item.quantity)}</TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeFromCart(item.id)}
-                              title="Retirer du panier"
-                              aria-label="Retirer du panier"
-                              className="size-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <DeleteOutlineIcon className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {items.map(item => {
+                        const draftQuantity = cartQuantityDrafts[item.id] ?? String(item.quantity);
+                        const quantityChanged = draftQuantity !== String(item.quantity);
+                        const quantityIsUpdating = updatingQuantityId === item.id;
+
+                        return (
+                          <TableRow key={item.id} className="odd:bg-neutral-50">
+                            <TableCell className="font-medium text-neutral-900 whitespace-nowrap truncate">{item.name || '-'}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max={item.stock}
+                                  step="1"
+                                  value={draftQuantity}
+                                  onChange={(event) => handleCartQuantityChange(item.id, event.target.value)}
+                                  onKeyDown={(event) => {
+                                    if (event.key === 'Enter') {
+                                      event.preventDefault();
+                                      handleValidateCartQuantity(item);
+                                    }
+                                  }}
+                                  className="h-8 w-20 bg-white text-right"
+                                />
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  status={quantityIsUpdating ? 'loading' : null}
+                                  disabled={quantityIsUpdating || !quantityChanged}
+                                  onClick={() => handleValidateCartQuantity(item)}
+                                  title="Valider la quantité"
+                                  aria-label="Valider la quantité"
+                                  className="size-8 border-neutral-300"
+                                >
+                                  <CheckCircleOutlineIcon className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right whitespace-nowrap">{formatThousands(item.price)}</TableCell>
+                            <TableCell className="text-right font-medium whitespace-nowrap">{formatThousands(item.price * item.quantity)}</TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeFromCart(item.id)}
+                                title="Retirer du panier"
+                                aria-label="Retirer du panier"
+                                className="size-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <DeleteOutlineIcon className="w-4 h-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}

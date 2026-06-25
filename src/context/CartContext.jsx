@@ -66,16 +66,19 @@ export function CartProvider({ children }) {
 
   const updateQuantity = async (itemId, quantity) => {
     if (quantity <= 0) {
-      removeFromCart(itemId);
-      return;
+      await removeFromCart(itemId);
+      return true;
     }
     try {
       const token = getAccessToken();
-      if (!token) return;
+      if (!token) return false;
       await updateCartItem(itemId, { quantite: quantity }, token);
       setItems(prev => prev.map(i => i.id === itemId ? { ...i, quantity } : i));
+      return true;
     } catch (err) {
       console.error('updateQuantity error', err);
+      toast.error(err?.response?.data?.message || 'Erreur lors de la mise à jour de la quantité');
+      return false;
     }
   };
 

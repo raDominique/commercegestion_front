@@ -98,7 +98,7 @@ const AdminCpc = () => {
 
     useEffect(() => {
         fetchCpc();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [searchTerm, page, limit, niveau]);
 
     const handleFormChange = (e) => {

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -1088,7 +1087,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 	);
 }
 
-function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal, onOpenDeleteModal }) {
+function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenDeleteModal }) {
 	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
 	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
 

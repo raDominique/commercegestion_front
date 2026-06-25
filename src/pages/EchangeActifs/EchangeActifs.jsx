@@ -54,6 +54,9 @@ const initialFilters = {
   maxTaux: '',
 };
 
+const productSelectContentClassName = 'w-[var(--radix-select-trigger-width)] min-w-0 max-w-[var(--radix-select-trigger-width)]';
+const productSelectItemClassName = 'overflow-hidden';
+
 const asArray = (value) => {
   if (Array.isArray(value)) return value;
   if (Array.isArray(value?.data)) return value.data;
@@ -399,7 +402,7 @@ const EchangeActifs = () => {
                 </Select>
               </div>
 
-              <div className="grid gap-2">
+              <div className="grid min-w-0 gap-2">
                 <Label htmlFor="productAId">Produit A vendu * {selectedProductA?.quantite != null && (
                   <div className="text-xs text-neutral-500">Disponible: {formatThousands(selectedProductA.quantite)}</div>
                 )}</Label>
@@ -408,12 +411,12 @@ const EchangeActifs = () => {
                   onValueChange={(value) => setOfferForm((prev) => ({ ...prev, productAId: value }))}
                   disabled={!offerForm.depotAId || loadingActifs}
                 >
-                  <SelectTrigger id="productAId" className="bg-white">
+                  <SelectTrigger id="productAId" className="bg-white min-w-0 max-w-full">
                     <SelectValue placeholder={offerForm.depotAId ? 'Sélectionner le produit A' : "Choisissez d'abord le dépôt"} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className={productSelectContentClassName}>
                     {actifOptions.map((actif) => (
-                      <SelectItem key={actif.id} value={actif.id}>
+                      <SelectItem key={actif.id} value={actif.id} className={productSelectItemClassName}>
                         {actif.label}{actif.quantite != null ? ` - Qté: ${formatThousands(actif.quantite)}` : ''}
                       </SelectItem>
                     ))}
@@ -435,19 +438,19 @@ const EchangeActifs = () => {
                 />
               </div>
 
-              <div className="grid gap-2">
+              <div className="grid min-w-0 gap-2">
                 <Label htmlFor="productBId">Produit B de contrepartie *</Label>
                 <Select
                   value={offerForm.productBId}
                   onValueChange={(value) => setOfferForm((prev) => ({ ...prev, productBId: value }))}
                   disabled={loadingLookups}
                 >
-                  <SelectTrigger id="productBId" className="bg-white">
+                  <SelectTrigger id="productBId" className="bg-white min-w-0 max-w-full">
                     <SelectValue placeholder="Sélectionner le produit B" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className={productSelectContentClassName}>
                     {productOptions.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
+                      <SelectItem key={product.id} value={product.id} className={productSelectItemClassName}>
                         {product.label}
                       </SelectItem>
                     ))}
@@ -501,21 +504,21 @@ const EchangeActifs = () => {
         <TabsContent value="offers" className="space-y-6">
           <form onSubmit={handleFilterSubmit} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3 mb-5">
             <Select value={filters.productAId} onValueChange={(value) => setFilters((prev) => ({ ...prev, productAId: value }))}>
-              <SelectTrigger className="bg-white"><SelectValue placeholder="Produit A" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les produits A</SelectItem>
+              <SelectTrigger className="bg-white min-w-0 max-w-full"><SelectValue placeholder="Produit A" /></SelectTrigger>
+              <SelectContent className={productSelectContentClassName}>
+                <SelectItem value="all" className={productSelectItemClassName}>Tous les produits A</SelectItem>
                 {productOptions.map((product) => (
-                  <SelectItem key={product.id} value={product.id}>{product.label}</SelectItem>
+                  <SelectItem key={product.id} value={product.id} className={productSelectItemClassName}>{product.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
             <Select value={filters.productBId} onValueChange={(value) => setFilters((prev) => ({ ...prev, productBId: value }))}>
-              <SelectTrigger className="bg-white"><SelectValue placeholder="Produit B" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les contreparties</SelectItem>
+              <SelectTrigger className="bg-white min-w-0 max-w-full"><SelectValue placeholder="Produit B" /></SelectTrigger>
+              <SelectContent className={productSelectContentClassName}>
+                <SelectItem value="all" className={productSelectItemClassName}>Toutes les contreparties</SelectItem>
                 {productOptions.map((product) => (
-                  <SelectItem key={product.id} value={product.id}>{product.label}</SelectItem>
+                  <SelectItem key={product.id} value={product.id} className={productSelectItemClassName}>{product.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

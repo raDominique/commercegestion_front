@@ -38,22 +38,18 @@ const MesSites = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [siteToDelete, setSiteToDelete] = useState(null);
   const [loadingDelete, setLoadingDelete] = useState(false);
-  const [loadingSites, setLoadingSites] = useState(true);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     const fetchSites = async () => {
-      setLoadingSites(true);
       try {
         const data = await getMySites({ limit, page, search });
         setSites(Array.isArray(data.data) ? data.data : []);
         setTotal(typeof data.total === 'number' ? data.total : 0);
       } catch (e) {
         setSites([]);
-      } finally {
-        setLoadingSites(false);
       }
     };
     fetchSites();

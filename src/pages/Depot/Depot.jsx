@@ -34,7 +34,6 @@ const Depot = () => {
 	const { user } = useAuth();
 	const dateFormat = useDateFormat();
 	usePageTitle('Dépôt');
-	const { isDesktop } = useScreenType();
 
 	// Historique dépôts
 	const [actifs, setActifs] = useState([]);
@@ -77,11 +76,6 @@ const Depot = () => {
 	const [detentaireOpen, setDetentaireOpen] = useState(false);
 	const [detentaireHighlighted, setDetentaireHighlighted] = useState(0);
 
-	// États pour les recherches - Ayant droit
-	const [ayantDroitSearch, setAyantDroitSearch] = useState('');
-	const [ayantDroitOpen, setAyantDroitOpen] = useState(false);
-	const [ayantDroitHighlighted, setAyantDroitHighlighted] = useState(0);
-
 	// États pour les recherches - Site de destination
 	const [siteDestinationSearch, setSiteDestinationSearch] = useState('');
 	const [siteDestinationOpen, setSiteDestinationOpen] = useState(false);
@@ -92,7 +86,6 @@ const Depot = () => {
 	const filteredOriginSites = allSites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
 	const filteredProducts = productsOnSite.filter(item => (item.productName || '').toLowerCase().includes(productSearch.toLowerCase()));
 	const filteredDetentaires = usersOptions.filter(user => user.name.toLowerCase().includes(detentaireSearch.toLowerCase()));
-	const filteredAyantDroits = usersOptions.filter(user => user.name.toLowerCase().includes(ayantDroitSearch.toLowerCase()));
 	const filteredDestinationSites = detentaireSites.filter(site => site.siteName.toLowerCase().includes(siteDestinationSearch.toLowerCase()));
 
 	const fetchActifs = async () => {
@@ -748,7 +741,6 @@ const Depot = () => {
 									setSiteOriginSearch('');
 									setProductSearch('');
 									setDetentaireSearch('');
-									setAyantDroitSearch('');
 									setSiteDestinationSearch('');
 									setProductsOnSite([]);
 									setMaxTransferQty(null);
@@ -850,8 +842,6 @@ function DepotTableOrList({ loading, actifs, dateFormat }) {
 
 				const operatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || item.operatorId?.userNickName || item.operatorId?.userName || '-';
 				const detenteurName = item.recipientId?.userNickName || item.recipientId?.userName || (typeof item.detentaire === 'string' ? item.detentaire : (item.detentaire?.userNickName || item.detentaire?.userName)) || '-';
-				const ayantDroitName = item.ayant_droit?.userNickName || item.ayant_droit?.userName || item.initiatorId?.userNickName || item.initiatorId?.userName || (typeof item.ayant_droit === 'string' ? item.ayant_droit : '-') ;
-
 				const dateToShow = item.approvedAt || item.createdAt;
 
 				return (

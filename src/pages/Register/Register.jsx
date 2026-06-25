@@ -264,24 +264,6 @@ const Register = () => {
     });
   }, [usersMap, form.parrain1ID, form.parrain2ID]);
 
-  // Add/remove file input for carteFiscal/documents
-  const handleAddFile = (field) => {
-    setForm((prev) => {
-      if (prev[field].length < 5) {
-        return { ...prev, [field]: [...prev[field], null] };
-      }
-      return prev;
-    });
-  };
-  const handleRemoveFile = (field, idx) => {
-    setForm((prev) => {
-      if (prev[field].length > 1) {
-        const arr = prev[field].filter((_, i) => i !== idx);
-        return { ...prev, [field]: arr };
-      }
-      return prev;
-    });
-  };
   return (
     <div className={`min-h-screen w-full bg-linear-to-br from-neutral-50 to-neutral-100 flex items-center ${isMobile ? 'justify-start pt-6 pb-8' : 'justify-center p-0'}`}>
       <Card className="w-full h-full max-w-none rounded-none p-0 border-none shadow-none overflow-auto">

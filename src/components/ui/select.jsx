@@ -1,3 +1,4 @@
+import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 
 import { cn } from "./utils";
@@ -23,6 +24,31 @@ function getSelectPortalContainer() {
   }
 
   return selectPortalContainer;
+}
+
+function normalizeSearchText(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function getNodeText(node) {
+  if (node === null || node === undefined || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(getNodeText).join(" ");
+  if (React.isValidElement(node)) return getNodeText(node.props.children);
+  return "";
+}
+
+function filterSelectChildren(children, search) {
+  const normalizedSearch = normalizeSearchText(search);
+  if (!normalizedSearch) return children;
+
+  return React.Children.toArray(children).filter((child) => (
+    normalizeSearchText(getNodeText(child)).includes(normalizedSearch)
+  ));
 }
 
 function Select({
@@ -73,8 +99,14 @@ function SelectContent({
   className,
   children,
   position = "popper",
+  searchable = true,
+  searchPlaceholder = "Rechercher...",
   ...props
 }) {
+  const [search, setSearch] = React.useState("");
+  const visibleChildren = filterSelectChildren(children, search);
+  const hasVisibleChildren = React.Children.count(visibleChildren) > 0;
+
   return (
     <SelectPrimitive.Portal container={getSelectPortalContainer()}>
       <SelectPrimitive.Content
@@ -82,7 +114,7 @@ function SelectContent({
         translate="no"
         className={cn(
           // z-[1002] pour être au-dessus du modal Dialog (overlay z-1000, content z-1001)
-          "bg-white text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-1002 max-h-[var(--radix-select-content-available-height)] w-[var(--radix-select-trigger-width)] min-w-[var(--radix-select-trigger-width)] max-w-[var(--radix-select-trigger-width)] origin-[var(--radix-select-content-transform-origin)] overflow-x-hidden overflow-y-auto rounded-md border shadow-md",
+          "bg-white text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-1002 max-h-[var(--radix-select-content-available-height)] w-[var(--radix-select-trigger-width)] min-w-[var(--radix-select-trigger-width)] max-w-[var(--radix-select-trigger-width)] origin-[var(--radix-select-content-transform-origin)] overflow-hidden rounded-md border shadow-md",
           position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className,
@@ -91,14 +123,29 @@ function SelectContent({
         {...props}
       >
         <SelectScrollUpButton />
+        {searchable && (
+          <div className="sticky top-0 z-10 border-b bg-white p-1">
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              onKeyDownCapture={(event) => event.stopPropagation()}
+              onPointerDownCapture={(event) => event.stopPropagation()}
+              placeholder={searchPlaceholder}
+              className="h-8 w-full min-w-0 rounded border border-neutral-300 bg-white px-2 text-sm outline-none placeholder:text-neutral-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+            />
+          </div>
+        )}
         <SelectPrimitive.Viewport
           className={cn(
             "p-1",
             position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-0 scroll-my-1",
+            "max-h-[calc(var(--radix-select-content-available-height)-2.75rem)] w-full min-w-0 overflow-y-auto scroll-my-1",
           )}
         >
-          {children}
+          {hasVisibleChildren ? visibleChildren : (
+            <div className="px-2 py-2 text-sm text-neutral-500">Aucun résultat</div>
+          )}
         </SelectPrimitive.Viewport>
         <SelectScrollDownButton />
       </SelectPrimitive.Content>

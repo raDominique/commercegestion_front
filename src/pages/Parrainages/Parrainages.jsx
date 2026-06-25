@@ -197,7 +197,6 @@ const Parrainage = () => {
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [total, setTotal] = useState(0);
-    const [totalPages, setTotalPages] = useState(1);
 
     // Filtres
     const [searchTerm, setSearchTerm] = useState('');
@@ -233,7 +232,6 @@ const Parrainage = () => {
                 const total = data.total ?? data.count ?? (Array.isArray(data) ? data.length : list.length);
                 setReferrals(list);
                 setTotal(Number(total) || list.length || 0);
-                setTotalPages(Math.max(1, Math.ceil((total || list.length) / limit)));
             } catch (err) {
                 console.error(err);
                 toast.error('Impossible de charger les Parrainage');
