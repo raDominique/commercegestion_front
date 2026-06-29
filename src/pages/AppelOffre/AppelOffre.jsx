@@ -236,7 +236,7 @@ function TendersList() {
                 </div>
                 <div className="mt-3 flex gap-2">
                   <Button className="flex-1" status="active" color="default" onClick={() => handleView(item._id)}>Voir</Button>
-                  <Button className="flex-1" status={item.hasBid ? 'inactive' : 'active'} color="default" disabled={item.hasBid} onClick={() => { setBidTenderId(item._id); setBidOpen(true); }}>{item.hasBid ? 'Déjà soumis' : 'Soumissionner'}</Button>
+                  <Button className="flex-1" status={item.statut !== 'OUVERT' || item.hasBid ? 'inactive' : 'active'} color="default" disabled={item.statut !== 'OUVERT' || item.hasBid} onClick={() => { setBidTenderId(item._id); setBidOpen(true); }}>{item.statut !== 'OUVERT' ? 'Fermé' : item.hasBid ? 'Déjà soumis' : 'Soumissionner'}</Button>
                 </div>
               </CardContent>
             </Card>

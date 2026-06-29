@@ -24,6 +24,16 @@ export const getActifs = async (userId, params = {}) => {
 };
 
 /**
+ * Récupère les virements de droit de l'utilisateur connecté (GET /api/v1/ledger/me/virements)
+ * @param {Object} [params] - Paramètres de filtre et pagination (optionnel)
+ * @returns {Promise<Object>} - Une promesse qui résout la liste des virements
+ */
+export const getMyVirements = async (params = {}) => {
+  const response = await axiosInstance.get('/api/v1/ledger/me/virements', { params });
+  return response.data;
+};
+
+/**
  * Récupère les mouvements de passifs d'un utilisateur (GET /api/v1/ledger/passifs/{userId})
  * @param {string} userId - L'identifiant de l'utilisateur
  * @param {Object} [params] - Paramètres additionnels pour la requête (optionnel)
@@ -37,5 +47,6 @@ export const getPassifs = async (userId, params = {}) => {
 export default {
   getUserLedger,
   getActifs,
-  getPassifs
+  getPassifs,
+  getMyVirements,
 };

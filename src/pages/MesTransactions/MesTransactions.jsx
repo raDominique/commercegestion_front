@@ -5,8 +5,10 @@ import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBan
 import { getProfile } from '../../services/auth.service';
 import { getUserTransactions, getTransactionById } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
+import { getMyVirements } from '../../services/ledger.service';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Card } from '../../components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -149,6 +151,35 @@ const MesTransactions = () => {
     }
   };
 
+  // --- Virements tab data ---
+  const [virementActifs, setVirementActifs] = useState([]);
+  const [virementPassifs, setVirementPassifs] = useState([]);
+  const [loadingVirements, setLoadingVirements] = useState(false);
+
+  const fetchVirements = async () => {
+    setLoadingVirements(true);
+    try {
+      const res = await getMyVirements();
+      const data = res?.data?.data || res?.data || res;
+      setVirementActifs(Array.isArray(data?.actifs) ? data.actifs : []);
+      setVirementPassifs(Array.isArray(data?.passifs) ? data.passifs : []);
+    } catch (err) {
+      console.error('fetchVirements error', err);
+      setVirementActifs([]);
+      setVirementPassifs([]);
+    } finally {
+      setLoadingVirements(false);
+    }
+  };
+
+  useEffect(() => { fetchVirements(); }, []);
+
+  const renderPerson = (p) => {
+    if (!p) return '-';
+    if (typeof p === 'string') return p;
+    return p.userNickName || p.userName || p.name || '-';
+  };
+
   if (user && user.userValidated === false) {
     return (
       <div className="px-6 mx-auto">
@@ -159,108 +190,145 @@ const MesTransactions = () => {
 
   return (
     <div className="px-6 mx-auto">
-      <div>
-        <h1 className="text-2xl text-neutral-900 mb-2">Mes Transactions</h1>
-      </div>
-      <p className="text-sm text-neutral-600">
-        Liste de vos transactions passées et en cours
-      </p>
+      <h1 className="text-2xl text-neutral-900 mb-2">Mes Transactions</h1>
 
-      <div className="flex flex-wrap items-center gap-3 mt-6 mb-4">
-        <div className="w-48">
-          <Select value={typeFilter} onValueChange={value => { setPage(1); setTypeFilter(value); }}>
-            <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
-              <SelectValue placeholder="Filtrer par Type" />
-            </SelectTrigger>
-            <SelectContent className="z-50">
-              <SelectItem value="all">Tous types</SelectItem>
-              <SelectItem value="DEPOT">Dépôt</SelectItem>
-              <SelectItem value="RETRAIT">Retrait</SelectItem>
-              <SelectItem value="INITIALIZATION">Initialisation</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <Tabs defaultValue="transactions" className="mt-4">
+        <TabsList>
+          <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="actifs">Mouvements des Actifs</TabsTrigger>
+          <TabsTrigger value="passifs">Mouvements des Passifs</TabsTrigger>
+        </TabsList>
 
-        <div className="w-48">
-          <Select value={statusFilter} onValueChange={value => { setPage(1); setStatusFilter(value); }}>
-            <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
-              <SelectValue placeholder="Filtrer par Statut" />
-            </SelectTrigger>
-            <SelectContent className="z-50">
-              <SelectItem value="all">Tous statuts</SelectItem>
-              <SelectItem value="PENDING">En attente</SelectItem>
-              <SelectItem value="APPROVED">Approuvé</SelectItem>
-              <SelectItem value="REJECTED">Rejeté</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <TabsContent value="transactions">
+          <p className="text-sm text-neutral-600 mb-4">
+            Liste de vos transactions passées et en cours
+          </p>
 
-        <div className="w-44 ml-auto">
-          <Select value={order} onValueChange={value => { setPage(1); setOrder(value); }}>
-            <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
-              <SelectValue placeholder="Ordre d'affichage" />
-            </SelectTrigger>
-            <SelectContent className="z-50">
-              <SelectItem value="desc">Plus récentes d'abord</SelectItem>
-              <SelectItem value="asc">Plus anciennes d'abord</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="w-48">
+              <Select value={typeFilter} onValueChange={value => { setPage(1); setTypeFilter(value); }}>
+                <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
+                  <SelectValue placeholder="Filtrer par Type" />
+                </SelectTrigger>
+                <SelectContent className="z-50">
+                  <SelectItem value="all">Tous types</SelectItem>
+                  <SelectItem value="DEPOT">Dépôt</SelectItem>
+                  <SelectItem value="RETRAIT">Retrait</SelectItem>
+                  <SelectItem value="INITIALIZATION">Initialisation</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-      {loading ? (
-        <div className="p-12 text-center text-neutral-500 flex flex-col items-center justify-center gap-2">
-          <SyncIcon className="animate-spin text-neutral-400" sx={{ fontSize: 32 }} />
-          Chargement des données...
-        </div>
-      ) : (
-        <>
+            <div className="w-48">
+              <Select value={statusFilter} onValueChange={value => { setPage(1); setStatusFilter(value); }}>
+                <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
+                  <SelectValue placeholder="Filtrer par Statut" />
+                </SelectTrigger>
+                <SelectContent className="z-50">
+                  <SelectItem value="all">Tous statuts</SelectItem>
+                  <SelectItem value="PENDING">En attente</SelectItem>
+                  <SelectItem value="APPROVED">Approuvé</SelectItem>
+                  <SelectItem value="REJECTED">Rejeté</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="w-44 ml-auto">
+              <Select value={order} onValueChange={value => { setPage(1); setOrder(value); }}>
+                <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
+                  <SelectValue placeholder="Ordre d'affichage" />
+                </SelectTrigger>
+                <SelectContent className="z-50">
+                  <SelectItem value="desc">Plus récentes d'abord</SelectItem>
+                  <SelectItem value="asc">Plus anciennes d'abord</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="p-12 text-center text-neutral-500 flex flex-col items-center justify-center gap-2">
+              <SyncIcon className="animate-spin text-neutral-400" sx={{ fontSize: 32 }} />
+              Chargement des données...
+            </div>
+          ) : (
+            <>
+              <Card className="border-neutral-200 bg-white shadow-sm overflow-hidden">
+                <TransactionsTableOrList
+                  loading={loading}
+                  transactions={transactions}
+                  isDesktop={isDesktop}
+                  dateFormat={dateFormat}
+                  onViewDetails={handleViewDetails}
+                  actionLoadingId={actionLoadingId}
+                />
+              </Card>
+              {/* Modal détail transaction */}
+              <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Détails de la transaction</DialogTitle>
+                    <DialogDescription>Informations complètes de la transaction sélectionnée</DialogDescription>
+                  </DialogHeader>
+                  {selectedTransactionDetails ? (
+                    <div className="space-y-3 text-sm">
+                      <div><b>N° transaction :</b> {selectedTransactionDetails.transactionNumber || selectedTransactionDetails._id}</div>
+                      <div><b>Type :</b> {selectedTransactionDetails.type || '-'}</div>
+                      <div><b>Statut :</b> {selectedTransactionDetails.status || '-'}</div>
+                      <div><b>Produit :</b> {selectedTransactionDetails.productId?.productName || selectedTransactionDetails.productName || '-'}</div>
+                      <div><b>Code produit :</b> {selectedTransactionDetails.productId?.codeCPC || '-'}</div>
+                      <div><b>Quantité :</b> {selectedTransactionDetails.quantite ?? '-'}</div>
+                      <div><b>Prix unitaire :</b> {selectedTransactionDetails.prixUnitaire ?? '-'}</div>
+                      <div><b>Initiateur :</b> {selectedTransactionDetails.initiatorId?.userNickName || selectedTransactionDetails.initiatorId?.userName || '-'}</div>
+                      <div><b>Destinataire :</b> {selectedTransactionDetails.recipientId?.userNickName || selectedTransactionDetails.recipientId?.userName || '-'}</div>
+                      <div><b>Site origine :</b> {selectedTransactionDetails.siteOrigineId?.siteName || '-'}</div>
+                      <div><b>Date création :</b> {selectedTransactionDetails.createdAt ? dateFormat(selectedTransactionDetails.createdAt) : '-'}</div>
+                      <div><b>Date approbation :</b> {selectedTransactionDetails.approvedAt ? dateFormat(selectedTransactionDetails.approvedAt) : '-'}</div>
+                      <div><b>Observations :</b> {selectedTransactionDetails.observations || '-'}</div>
+                    </div>
+                  ) : (
+                    <div>Chargement...</div>
+                  )}
+                  <div className="flex justify-end gap-2 pt-4">
+                    <DialogClose asChild>
+                      <Button variant="outline" status="inactive">Fermer</Button>
+                    </DialogClose>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="actifs">
+          <p className="text-sm text-neutral-600 mb-4">
+            Mouvements des actifs — droits de propriété
+          </p>
           <Card className="border-neutral-200 bg-white shadow-sm overflow-hidden">
-            <TransactionsTableOrList
-              loading={loading}
-              transactions={transactions}
-              isDesktop={isDesktop}
+            <MouvementsActifsTable
+              loading={loadingVirements}
+              actifs={virementActifs}
               dateFormat={dateFormat}
-              onViewDetails={handleViewDetails}
-              actionLoadingId={actionLoadingId}
+              renderPerson={renderPerson}
             />
           </Card>
-          {/* Modal détail transaction */}
-          <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Détails de la transaction</DialogTitle>
-                <DialogDescription>Informations complètes de la transaction sélectionnée</DialogDescription>
-              </DialogHeader>
-              {selectedTransactionDetails ? (
-                <div className="space-y-3 text-sm">
-                  <div><b>N° transaction :</b> {selectedTransactionDetails.transactionNumber || selectedTransactionDetails._id}</div>
-                  <div><b>Type :</b> {selectedTransactionDetails.type || '-'}</div>
-                  <div><b>Statut :</b> {selectedTransactionDetails.status || '-'}</div>
-                  <div><b>Produit :</b> {selectedTransactionDetails.productId?.productName || selectedTransactionDetails.productName || '-'}</div>
-                  <div><b>Code produit :</b> {selectedTransactionDetails.productId?.codeCPC || '-'}</div>
-                  <div><b>Quantité :</b> {selectedTransactionDetails.quantite ?? '-'}</div>
-                  <div><b>Prix unitaire :</b> {selectedTransactionDetails.prixUnitaire ?? '-'}</div>
-                  <div><b>Initiateur :</b> {selectedTransactionDetails.initiatorId?.userNickName || selectedTransactionDetails.initiatorId?.userName || '-'}</div>
-                  <div><b>Destinataire :</b> {selectedTransactionDetails.recipientId?.userNickName || selectedTransactionDetails.recipientId?.userName || '-'}</div>
-                  <div><b>Site origine :</b> {selectedTransactionDetails.siteOrigineId?.siteName || '-'}</div>
-                  <div><b>Date création :</b> {selectedTransactionDetails.createdAt ? dateFormat(selectedTransactionDetails.createdAt) : '-'}</div>
-                  <div><b>Date approbation :</b> {selectedTransactionDetails.approvedAt ? dateFormat(selectedTransactionDetails.approvedAt) : '-'}</div>
-                  <div><b>Observations :</b> {selectedTransactionDetails.observations || '-'}</div>
-                </div>
-              ) : (
-                <div>Chargement...</div>
-              )}
-              <div className="flex justify-end gap-2 pt-4">
-                <DialogClose asChild>
-                  <Button variant="outline" status="inactive">Fermer</Button>
-                </DialogClose>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
-        </>
-      )}
+        </TabsContent>
+
+        <TabsContent value="passifs">
+          <p className="text-sm text-neutral-600 mb-4">
+            Mouvements des passifs — dettes et obligations
+          </p>
+          <Card className="border-neutral-200 bg-white shadow-sm overflow-hidden">
+            <MouvementsPassifsTable
+              loading={loadingVirements}
+              passifs={virementPassifs}
+              dateFormat={dateFormat}
+              renderPerson={renderPerson}
+            />
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
@@ -434,6 +502,114 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat,
           </Card>
         );
       })}
+    </div>
+  );
+}
+
+const formatDateMultiline = (dateStr) => {
+  if (!dateStr) return ['-', ''];
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return ['-', ''];
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return [`${day}/${month}/${year}`, `à ${hours}:${minutes}`];
+};
+
+function MouvementsActifsTable({ loading, actifs, dateFormat, renderPerson }) {
+  if (loading) return <div className="p-8 text-center text-neutral-500">Chargement...</div>;
+  if (!actifs || actifs.length === 0) {
+    return <div className="p-8 text-center text-neutral-400">Aucun mouvement d'actif trouvé</div>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader className="bg-neutral-50/70">
+          <TableRow>
+            <TableHead className="text-xs font-semibold text-neutral-600">Membres</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">Date et Heure</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">N° transaction</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">Intitulé</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">Produit / Article</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">Détenteur</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">Site</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600 text-right">Quantité</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600 text-right">Stock initial</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600 text-right">Stock final</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {actifs.map((item, idx) => {
+            const product = item.productId || {};
+            const date = item.dateCreation || item.createdAt || item.date;
+            return (
+              <TableRow key={item._id || item.id || idx} className="hover:bg-neutral-50/50">
+                <TableCell className="text-sm text-neutral-900">{renderPerson(item.ayant_droit || item.ayantDroit || item.userId)}</TableCell>
+                <TableCell className="text-sm text-neutral-500 whitespace-nowrap align-top">{date ? <>{formatDateMultiline(date)[0]}<br />{formatDateMultiline(date)[1]}</> : '-'}</TableCell>
+                <TableCell className="text-sm font-mono text-neutral-700">{item.transactionNumber || item.numeroTransaction || item._id?.slice(-8) || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-700">{item.intitule || item.type || item.movementType || 'Virement de droit'}</TableCell>
+                <TableCell className="text-sm font-medium text-neutral-900 truncate max-w-xs">{product.productName || item.productName || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-700">{renderPerson(item.detentaire)}</TableCell>
+                <TableCell className="text-sm text-neutral-600 truncate max-w-xs">{item.depot || item.depotAdresse || product.siteName || '-'}</TableCell>
+                <TableCell className="text-sm font-medium text-right text-neutral-900">{item.quantite ?? '-'}</TableCell>
+                <TableCell className="text-sm text-right text-neutral-600">{item.stockInitial ?? item.quantiteOriginale ?? '-'}</TableCell>
+                <TableCell className="text-sm text-right text-neutral-600">{item.stockFinal ?? item.quantite ?? '-'}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function MouvementsPassifsTable({ loading, passifs, dateFormat, renderPerson }) {
+  if (loading) return <div className="p-8 text-center text-neutral-500">Chargement...</div>;
+  if (!passifs || passifs.length === 0) {
+    return <div className="p-8 text-center text-neutral-400">Aucun mouvement de passif trouvé</div>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader className="bg-neutral-50/70">
+          <TableRow>
+            <TableHead className="text-xs font-semibold text-neutral-600">Membres</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">Date et Heure</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">N° transaction</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">Intitulé</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">Produit / Article</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">Ayant droit</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600">Site</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600 text-right">Quantité</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600 text-right">Stock initial</TableHead>
+            <TableHead className="text-xs font-semibold text-neutral-600 text-right">Stock final</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {passifs.map((item, idx) => {
+            const product = item.productId || {};
+            const date = item.dateCreation || item.createdAt || item.date;
+            return (
+              <TableRow key={item._id || item.id || idx} className="hover:bg-neutral-50/50">
+                <TableCell className="text-sm text-neutral-900">{renderPerson(item.detentaire || item.userId)}</TableCell>
+                <TableCell className="text-sm text-neutral-500 whitespace-nowrap align-top">{date ? <>{formatDateMultiline(date)[0]}<br />{formatDateMultiline(date)[1]}</> : '-'}</TableCell>
+                <TableCell className="text-sm font-mono text-neutral-700">{item.transactionNumber || item.numeroTransaction || item._id?.slice(-8) || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-700">{item.intitule || item.type || item.movementType || 'Virement de droit'}</TableCell>
+                <TableCell className="text-sm font-medium text-neutral-900 truncate max-w-xs">{product.productName || item.productName || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-700">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
+                <TableCell className="text-sm text-neutral-600 truncate max-w-xs">{item.depot || item.depotAdresse || product.siteName || '-'}</TableCell>
+                <TableCell className="text-sm font-medium text-right text-neutral-900">{item.quantite ?? '-'}</TableCell>
+                <TableCell className="text-sm text-right text-neutral-600">{item.stockInitial ?? item.quantiteOriginale ?? '-'}</TableCell>
+                <TableCell className="text-sm text-right text-neutral-600">{item.stockFinal ?? item.quantite ?? '-'}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 }
