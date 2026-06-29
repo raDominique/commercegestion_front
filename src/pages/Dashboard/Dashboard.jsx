@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { ErrorOutline, TrendingUp, TrendingDown, Inventory, AccountBalanceWallet, Assessment, ArrowUpward, Groups, LocationCity } from '@mui/icons-material';
 import { Button } from '../../components/ui/button.jsx';
+import { Loader } from '../../components/ui/loader';
 
 const DashboardPage = () => {
     usePageTitle('Tableau de bord');
@@ -43,16 +44,7 @@ const DashboardPage = () => {
     }, []);
 
     if (loading) {
-        return (
-            <div className="px-6 mx-auto">
-                <div className="flex items-center justify-center h-96">
-                    <div className="text-center">
-                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                        <p className="mt-4 text-lg text-muted-foreground">Chargement du tableau de bord...</p>
-                    </div>
-                </div>
-            </div>
-        );
+        return <div className="flex items-center justify-center h-screen"><Loader message="Chargement du tableau de bord..." /></div>;
     }
 
     if (error) {

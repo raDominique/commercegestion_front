@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { Loader } from '../../components/ui/loader';
 import { Badge } from '../../components/ui/badge';
 import {
   Select,
@@ -438,7 +439,7 @@ const MesProduits = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="p-8 text-center text-neutral-400">Chargement...</TableCell>
+                  <TableCell colSpan={7} className="p-8"><div className="flex justify-center"><Loader message="Chargement..." /></div></TableCell>
                 </TableRow>
               ) : products.length > 0 ? (
                 products.map((product) => (
@@ -530,7 +531,7 @@ const MesProduits = () => {
     return (
       <div className="space-y-3">
         {loading ? (
-          <div className="p-8 text-center text-neutral-400">Chargement...</div>
+          <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
         ) : products.length > 0 ? (
           products.map((product) => (
             <Card key={product._id} className="p-4">
@@ -746,7 +747,7 @@ const MesProduits = () => {
                   <div className="flex justify-end gap-2 mt-4">
                     <Button variant="outline" type="button" status="inactive" onClick={() => setAddModalOpen(false)} disabled={adding}>Annuler</Button>
                     <Button variant="default" status={adding ? "loading" : "active"} color="default" type="submit" disabled={adding}>
-                      {adding ? 'Ajout...' : 'Ajouter'}
+                      {adding && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Ajouter
                     </Button>
                   </div>
                 </form>
@@ -941,7 +942,7 @@ const MesProduits = () => {
               <Button variant="outline" status="inactive">Annuler</Button>
             </DialogClose>
             <Button variant="default" status={deleting ? "loading" : "active"} color="destructive" onClick={confirmDeleteProduct} disabled={deleting}>
-              {deleting ? 'Suppression...' : 'Confirmer la suppression'}
+              {deleting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer la suppression
             </Button>
           </div>
         </DialogContent>
@@ -1182,7 +1183,7 @@ const MesProduits = () => {
           </DialogHeader>
 
           {loadingDetail ? (
-            <div className="p-8 text-center text-neutral-400">Chargement...</div>
+            <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
           ) : detailProduct ? (
             <Card className="border-violet-200 bg-violet-50 p-6 space-y-6">
 

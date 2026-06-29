@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog.jsx';
 import { Button } from '../../components/ui/button';
+import { Loader } from '../../components/ui/loader';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Pagination } from '../../components/ui/pagination';
@@ -242,7 +243,7 @@ const MesSites = () => {
                   className="w-full"
                   disabled={loading}
                 >
-                  {loading ? 'Ajout en cours...' : 'Ajouter le site'}
+                  {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Ajouter le site
                 </Button>
               </form>
             </DialogContent>
@@ -402,11 +403,11 @@ const MesSites = () => {
                   className="w-full"
                   disabled={loadingEdit}
                 >
-                  {loadingEdit ? 'Modification...' : 'Enregistrer les modifications'}
+                  {loadingEdit && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Enregistrer les modifications
                 </Button>
               </form>
             ) : (
-              <div className="text-center py-8">Chargement...</div>
+              <div className="py-8 flex justify-center"><Loader message="Chargement..." /></div>
             )}
           </DialogContent>
         </Dialog>
@@ -432,7 +433,7 @@ const MesSites = () => {
                 onClick={confirmDeleteSite}
                 disabled={loadingDelete}
               >
-                {loadingDelete ? 'Suppression...' : 'Supprimer'}
+                {loadingDelete && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Supprimer
               </Button>
             </div>
           </DialogContent>

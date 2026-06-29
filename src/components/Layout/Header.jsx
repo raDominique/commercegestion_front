@@ -22,6 +22,7 @@ import { getProfile } from '../../services/auth.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader } from '../ui/sheet';
+import { Loader } from '../ui/loader';
 
 function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isDesktop }) {
     const [notifications, setNotifications] = useState([]);
@@ -231,6 +232,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                                     }
                                                 }}
                                             >
+                                                {logoutLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
                                                 Se déconnecter
                                             </Button>
                                         </DialogFooter>

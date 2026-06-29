@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { Loader } from '../../components/ui/loader';
 import { Label } from '../../components/ui/label';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
@@ -258,7 +259,7 @@ const OperationsAValider = () => {
 
       {loading ? (
         <Card className="border-neutral-200 bg-white p-6">
-          <div className="text-neutral-600">Chargement...</div>
+          <div className="flex justify-center"><Loader message="Chargement..." /></div>
         </Card>
       ) : pendingTransactions.length > 0 ? (
         <>
@@ -334,7 +335,7 @@ const OperationsAValider = () => {
               onClick={handleConfirmApprove}
               disabled={actionLoading}
             >
-              {actionLoading ? 'Approbation en cours...' : 'Approuver'}
+              {actionLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Approuver
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -392,7 +393,7 @@ const OperationsAValider = () => {
               onClick={handleConfirmReject}
               disabled={actionLoading || !motifRejet.trim()}
             >
-              {actionLoading ? 'Rejet en cours...' : 'Confirmer le rejet'}
+              {actionLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer le rejet
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -404,7 +405,7 @@ const OperationsAValider = () => {
 export default OperationsAValider;
 
 function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat, onApprove, onReject, actionLoading, actionTransactionId }) {
-  if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+  if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
   if (!transactions || transactions.length === 0) return <div className="p-8 text-center text-neutral-400">Aucune opération à valider</div>;
 
   if (isDesktop) {
@@ -457,7 +458,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                           disabled={isActioning}
                           onClick={() => onApprove(item)}
                         >
-                          {isActioning ? 'En cours...' : 'Approuver'}
+                          {isActioning && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Approuver
                         </Button>
                         <Button 
                           size="xs" 
@@ -517,7 +518,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                       disabled={isActioning}
                       onClick={() => onApprove(item)}
                     >
-                      {isActioning ? 'En cours...' : 'Approuver'}
+                      {isActioning && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Approuver
                     </Button>
                     <Button 
                       size="sm" 

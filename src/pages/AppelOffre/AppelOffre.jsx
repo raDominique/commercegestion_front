@@ -3,6 +3,7 @@ import usePageTitle from '../../utils/usePageTitle.jsx';
 import { useEffect, useState, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { Loader } from '../../components/ui/loader';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import {
@@ -207,7 +208,7 @@ function TendersList() {
       </div>
 
       {loading ? (
-        <div className="p-6 text-center text-neutral-500">Chargement des appels d'offre...</div>
+        <div className="p-6 flex justify-center"><Loader message="Chargement des appels d'offre..." /></div>
       ) : !tenders || tenders.length === 0 ? (
         <div className="text-center text-neutral-400 py-12">Aucun appel d'offre trouvé</div>
       ) : (
@@ -262,7 +263,7 @@ function TendersList() {
           </DialogHeader>
 
           {detailLoading ? (
-            <div className="py-8 text-center text-neutral-500">Chargement...</div>
+            <div className="py-8 flex justify-center"><Loader message="Chargement..." /></div>
           ) : detailTender ? (
             <div className="space-y-3 text-sm">
               {detailTender.productId?.productImage && (
@@ -438,7 +439,7 @@ function MyTendersList() {
     fetchTenders();
   }, [fetchTenders]);
 
-  if (loading) return <div className="p-6">Chargement des appels d'offre...</div>;
+  if (loading) return <div className="p-6 flex justify-center"><Loader message="Chargement des appels d'offre..." /></div>;
 
   return (
     <div>
@@ -511,7 +512,7 @@ function MyTendersList() {
           </DialogHeader>
 
           {detailLoading ? (
-            <div className="py-8 text-center text-neutral-500">Chargement...</div>
+            <div className="py-8 flex justify-center"><Loader message="Chargement..." /></div>
           ) : detailTender ? (
             <div className="space-y-3 text-sm">
               {detailTender.productId?.productImage && (
@@ -572,7 +573,7 @@ function MyTendersList() {
               <Button variant="outline" status="inactive">Non</Button>
             </DialogClose>
             <Button color="destructive" status={deleteLoading ? 'loading' : 'active'} disabled={deleteLoading} onClick={handleDelete}>
-              {deleteLoading ? 'Annulation...' : 'Oui, annuler'}
+              {deleteLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Oui, annuler
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -586,7 +587,7 @@ function MyTendersList() {
           </DialogHeader>
 
           {bidsLoading ? (
-            <div className="py-8 text-center text-neutral-500">Chargement...</div>
+            <div className="py-8 flex justify-center"><Loader message="Chargement..." /></div>
           ) : bids.length === 0 ? (
             <div className="py-8 text-center text-neutral-500">Aucune soumission pour le moment</div>
           ) : (
@@ -671,7 +672,7 @@ function MyTendersList() {
               <Button variant="outline" status="inactive">Annuler</Button>
             </DialogClose>
             <Button color="default" status={awardLoading ? 'loading' : 'active'} disabled={awardLoading} onClick={handleAward}>
-              {awardLoading ? 'Attribution...' : 'Confirmer l\'attribution'}
+              {awardLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer l'attribution
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -931,7 +932,7 @@ function CreateTenderModal({ onSuccess }) {
             <Button type="button" variant="outline" status="inactive">Annuler</Button>
           </DialogClose>
           <Button type="submit" color="default" status={submitting ? 'loading' : 'active'} disabled={submitting}>
-            {submitting ? 'Création...' : 'Créer'}
+            {submitting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Créer
           </Button>
         </DialogFooter>
       </form>
@@ -1011,7 +1012,7 @@ function BidModal({ open, onOpenChange, tenderId }) {
               <Button type="button" variant="outline" status="inactive">Annuler</Button>
             </DialogClose>
             <Button type="submit" color="default" status={submitting ? 'loading' : 'active'} disabled={submitting}>
-              {submitting ? 'Envoi...' : 'Soumettre'}
+              {submitting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Soumettre
             </Button>
           </DialogFooter>
         </form>

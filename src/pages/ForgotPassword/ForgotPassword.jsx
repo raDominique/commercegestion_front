@@ -8,6 +8,7 @@ import usePageTitle from '../../utils/usePageTitle.jsx';
 import { toast } from 'sonner';
 import LogoImage from '../../assets/logo/logo.png';
 import { forgotPassword } from '../../services/auth.service';
+import { Loader } from '../../components/ui/loader';
 
 const ForgotPassword = () => {
     usePageTitle('Mot de passe oublié');
@@ -53,10 +54,8 @@ const ForgotPassword = () => {
                         className="w-full flex items-center justify-center"
                         disabled={loading}
                     >
-                        {loading ? (
-                            <span className="w-5 h-5 mr-2 animate-spin border-2 border-white border-t-violet-600 rounded-full"></span>
-                        ) : null}
-                        {loading ? 'Envoi...' : 'Envoyer'}
+                        {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                        Envoyer
                     </Button>
                 </form>
                 <div className="text-center text-sm mt-6">

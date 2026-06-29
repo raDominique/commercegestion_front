@@ -22,6 +22,7 @@ import ExportButton from '../../components/commons/ExportButton.jsx';
 import { exportAndDownloadUsers } from '../../services/export.service.js';
 import { getFullMediaUrl } from '../../services/media.service';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
+import { Loader } from '../../components/ui/loader';
 
 export default function AdminUsers() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -310,7 +311,7 @@ export default function AdminUsers() {
                                     }
                                 }}
                             >
-                                {actionLoading ? 'Traitement...' : 'Confirmer'}
+                                {actionLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer
                             </Button>
                         </div>
                     </DialogContent>
@@ -323,7 +324,7 @@ export default function AdminUsers() {
                             <DialogTitle>Détail utilisateur</DialogTitle>
                         </DialogHeader>
                         {detailLoading ? (
-                            <div className="p-8 text-center text-neutral-400">Chargement...</div>
+                            <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
                         ) : detailUser ? (
                             <div>
                                 <div className="space-y-2 text-sm">
@@ -418,7 +419,7 @@ export default function AdminUsers() {
                                             }
                                         }}
                                     >
-                                        {detailUser.userValidated ? 'Déjà approuvé' : (actionLoading ? 'Traitement...' : 'Approuver')}
+                                        {detailUser.userValidated ? 'Déjà approuvé' : <>{actionLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Approuver</>}
                                     </Button>
                                 </div>
                             </div>
@@ -439,7 +440,7 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
     const dateFormat = useDateFormat();
 
     if (loading) {
-        return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+        return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
     }
 
     if (!users || users.length === 0) {

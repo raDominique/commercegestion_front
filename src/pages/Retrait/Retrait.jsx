@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
+import { Loader } from '../../components/ui/loader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
@@ -601,7 +602,7 @@ const Retrait = () => {
 											type="submit"
 											disabled={!withdrawalForm.detentaire || !withdrawalForm.siteOrigineId || !withdrawalForm.productId || !withdrawalForm.quantite}
 										>
-											Valider le retrait
+											{saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Valider le retrait
 										</Button>
 									</div>
 								</form>
@@ -616,7 +617,7 @@ const Retrait = () => {
 
 function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 
-	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+	if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
 	if (!passifs || passifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun retrait trouvé</div>;
 
 	if (isDesktop) {

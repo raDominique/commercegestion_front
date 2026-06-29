@@ -39,6 +39,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 import LogoImage from '../../assets/logo/logo.png';
 import { createUser } from '../../services/auth.service.js';
 import { getAllUsersSelect } from '../../services/user.service';
+import { Loader } from '../../components/ui/loader';
 
 const steps = [
   "Type d'utilisateur",
@@ -725,15 +726,8 @@ const Register = () => {
               <div className="flex gap-2 pt-2 flex-wrap">
                 {step > 0 && (
                   <Button type="button" variant="outline" onClick={prevStep} disabled={loading}>
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                        </svg>
-                        Précédent
-                      </span>
-                    ) : 'Précédent'}
+                    {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                    Précédent
                   </Button>
                 )}
                 {step < steps.length - 1 && (
@@ -748,15 +742,8 @@ const Register = () => {
                     color="default"
                     disabled={loading}
                   >
-                    {loading ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                        </svg>
-                        S'inscrire
-                      </span>
-                    ) : "S'inscrire"}
+                    {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                    S'inscrire
                   </Button>
                 )}
               </div>

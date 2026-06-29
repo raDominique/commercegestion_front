@@ -14,6 +14,7 @@ import { formatThousands } from '../../utils/formatNumber.js';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../components/ui/dialog';
 import { Badge } from '../../components/ui/badge';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
+import { Loader } from '../../components/ui/loader';
 
 const Audit = () => {
   const { user } = useAuth();
@@ -313,13 +314,13 @@ const Audit = () => {
 
             <div className="flex items-center gap-2">
               <Button onClick={() => { setPage(1); setQuery(''); setActionFilter('all'); }} variant="outline">Réinitialiser</Button>
-              <Button onClick={() => handleExport('excel')} status={exporting ? 'loading' : 'active'}>Exporter Excel</Button>
-              <Button onClick={() => handleExport('pdf')} status={exporting ? 'loading' : 'active'}>Exporter PDF</Button>
+              <Button onClick={() => handleExport('excel')} status={exporting ? 'loading' : 'active'}>{exporting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Exporter Excel</Button>
+              <Button onClick={() => handleExport('pdf')} status={exporting ? 'loading' : 'active'}>{exporting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Exporter PDF</Button>
             </div>
           </div>
 
           {loading ? (
-            <div className="p-4 text-center text-neutral-500">Chargement...</div>
+            <div className="p-4 flex justify-center"><Loader message="Chargement..." /></div>
           ) : allAudits.length === 0 ? (
             <div className="mt-4 text-center text-neutral-400">Aucune donnée d'audit disponible pour le moment.</div>
           ) : filteredAudits.length === 0 ? (

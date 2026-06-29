@@ -6,6 +6,7 @@ import formatBirthDate from '@/utils/formatBirthDate';
 import { CircularProgress } from '@mui/material';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Loader } from '@/components/ui/loader';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -24,7 +25,7 @@ import PaginationControls from '@/components/commons/PaginationControls.jsx';
 function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, onApprove, actionLoading }) {
     const dateFormat = useDateFormat();
 
-    if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+    if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
     if (!referrals || referrals.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun parrain trouvé</div>;
 
     if (isDesktop) {
@@ -375,7 +376,7 @@ const Parrainage = () => {
                                     <DialogTitle>Détail utilisateur</DialogTitle>
                                 </DialogHeader>
                                 {detailLoading ? (
-                                    <div className="p-8 text-center text-neutral-400">Chargement...</div>
+                                    <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
                                 ) : detailUser ? (
                                     <div>
                                         <div className="space-y-2 text-sm">
@@ -468,7 +469,7 @@ const Parrainage = () => {
                                                 disabled={actionLoading || detailUser.userValidated}
                                                 onClick={() => { if (detailUser && detailUser._id) handleApprove(detailUser._id, true); }}
                                             >
-                                                {detailUser.userValidated ? 'Déjà approuvé' : (actionLoading ? 'Traitement...' : 'Approuver')}
+                                                {detailUser.userValidated ? 'Déjà approuvé' : <>{actionLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Approuver</>}
                                             </Button>
                                         </div>
                                     </div>

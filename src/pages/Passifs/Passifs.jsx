@@ -21,6 +21,7 @@ import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
 import { getFullMediaUrl } from '../../services/media.service';
 import InfoIcon from '@mui/icons-material/Info';
+import { Loader } from '../../components/ui/loader';
 const renderPerson = (person) => {
 	if (!person) return '-';
 	if (typeof person === 'string') return person;
@@ -136,7 +137,7 @@ const Passifs = () => {
 								Informations détaillées sur le passif sélectionné.
 							</DialogDescription>
 							{loadingDetail ? (
-								<div className="p-8 text-center text-neutral-400">Chargement...</div>
+								<div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
 							) : detailPassif ? (
 								<div className="space-y-2 text-sm">
 									<div><b>Produit :</b> {detailPassif.productId?.productName || '-'}</div>
@@ -156,7 +157,7 @@ const Passifs = () => {
 export default Passifs;
 
 function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDetail }) {
-	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+	if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
 	if (!passifs || passifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun passif trouvé</div>;
 
 	if (isDesktop) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { Loader } from '../../components/ui/loader';
 import { Label } from '../../components/ui/label';
 import {
 	Select,
@@ -755,15 +756,15 @@ const Depot = () => {
 								}}>
 									Annuler
 								</Button>
-								<Button
-									variant="default"
-									status={saving ? 'loading' : 'active'}
-									color="default"
-									type="submit"
-									disabled={!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire}
-								>
-									Valider le dépôt
-								</Button>
+							<Button
+								variant="default"
+								status={saving ? 'loading' : 'active'}
+								color="default"
+								type="submit"
+								disabled={!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire}
+							>
+								{saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Valider le dépôt
+							</Button>
 							</div>
 						</form>
 					</Card>
@@ -778,7 +779,7 @@ export default Depot;
 function DepotTableOrList({ loading, actifs, dateFormat }) {
 	const { isDesktop } = useScreenType();
 
-	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+	if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
 	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun dépôt trouvé</div>;
 
 	if (isDesktop) {

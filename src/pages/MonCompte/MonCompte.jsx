@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Squelette } from '../../components/ui/skeleton.jsx';
 import usePageTitle from '../../utils/usePageTitle.jsx';
+import { Loader } from '../../components/ui/loader';
 import { Card } from '../../components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
@@ -128,10 +128,8 @@ export default function MonCompte() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <Squelette className="w-full h-32 mb-4" />
-        <Squelette className="w-1/2 h-8 mb-2" />
-        <Squelette className="w-1/3 h-6" />
+      <div className="p-6 max-w-4xl mx-auto flex justify-center">
+        <Loader message="Chargement..." />
       </div>
     );
   }
@@ -295,7 +293,8 @@ export default function MonCompte() {
                 </div>
 
                 <Button type="submit" status={updating ? "loading" : "active"} color="default" className="w-full sm:w-auto" disabled={updating}>
-                  {updating ? 'Enregistrement...' : 'Enregistrer les modifications'}
+                  {updating && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                  Enregistrer les modifications
                 </Button>
                 {/* Modal de confirmation */}
                 <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
@@ -311,6 +310,7 @@ export default function MonCompte() {
                         Annuler
                       </Button>
                       <Button onClick={handleConfirmUpdate} status={updating ? "loading" : "active"} color="default" className="w-full sm:w-auto" disabled={updating}>
+                        {updating && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
                         Confirmer
                       </Button>
                     </DialogFooter>
@@ -357,10 +357,8 @@ export default function MonCompte() {
                 </div>
 
                 <Button type="submit" status={changingPassword ? "loading" : "active"} color="default" className="w-full sm:w-auto flex items-center justify-center" disabled={changingPassword}>
-                  {changingPassword ? (
-                    <span className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  ) : null}
-                  {changingPassword ? 'Modification...' : 'Modifier le mot de passe'}
+                  {changingPassword && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                  Modifier le mot de passe
                 </Button>
               </form>
             </Card>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { Loader } from '../../components/ui/loader';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
@@ -495,7 +496,7 @@ const EchangeActifs = () => {
 
             <div className="flex justify-end">
               <Button type="submit" status={creating ? 'loading' : 'active'} color="default" disabled={creating} className="w-full sm:w-auto">
-                {creating ? 'Création...' : "Créer l'offre d'échange"}
+                {creating && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Créer l'offre d'échange
               </Button>
             </div>
           </form>
@@ -564,13 +565,13 @@ const EchangeActifs = () => {
                 className="bg-white"
               />
               <Button type="submit" status={loadingOffers ? 'loading' : 'active'} color="default" disabled={loadingOffers} className="w-full sm:w-auto">
-                Filtrer
+                {loadingOffers && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Filtrer
               </Button>
             </div>
           </form>
 
           {loadingOffers ? (
-            <div className="text-center text-neutral-400 py-12">Chargement...</div>
+            <div className="py-12 flex justify-center"><Loader message="Chargement..." /></div>
           ) : offers.length === 0 ? (
             <div className="text-center text-neutral-400 py-12">Aucune offre d'échange trouvée</div>
           ) : (
@@ -711,7 +712,7 @@ const EchangeActifs = () => {
           <DialogFooter className="flex-col-reverse sm:flex-row">
             <Button variant="outline" status="inactive" onClick={() => setBuyDialogOpen(false)} className="w-full sm:w-auto">Annuler</Button>
             <Button status={buying ? 'loading' : 'active'} color="default" disabled={buying} onClick={handleBuyOffer} className="w-full sm:w-auto">
-              {buying ? 'Achat...' : 'Valider l\'achat'}
+              {buying && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Valider l'achat
             </Button>
           </DialogFooter>
         </DialogContent>

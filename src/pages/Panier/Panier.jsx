@@ -22,6 +22,7 @@ import { getMySites } from '../../services/site.service';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import { Loader } from '../../components/ui/loader';
 
 export default function Panier() {
   const { items, removeFromCart, updateQuantity, clearCart, getTotalPrice, checkout } = useCart();
@@ -288,7 +289,8 @@ export default function Panier() {
               <Button variant="outline" status="inactive">Annuler</Button>
             </DialogClose>
             <Button color="default" status={checkoutLoading ? 'loading' : 'active'} disabled={checkoutLoading} onClick={handleCheckout}>
-              {checkoutLoading ? 'Traitement...' : 'Confirmer la commande'}
+              {checkoutLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+              Confirmer la commande
             </Button>
           </DialogFooter>
         </DialogContent>

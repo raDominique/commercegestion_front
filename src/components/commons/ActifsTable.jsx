@@ -7,6 +7,7 @@ import { Button } from '../ui/button';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/table';
 import { formatThousands } from '../../utils/formatNumber';
 import { getFullMediaUrl } from '../../services/media.service';
+import { Loader } from '../ui/loader';
 
 const renderPerson = (person) => {
   if (!person) return '-';
@@ -18,7 +19,7 @@ const renderPerson = (person) => {
 };
 
 export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal, onVirerDroit }) {
-  if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+  if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
   if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
 
   if (isDesktop) {

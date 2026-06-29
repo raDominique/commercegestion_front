@@ -13,6 +13,7 @@ import { getMySites, getActifsBySite } from '../../services/site.service';
 import { getAccessToken } from '../../services/token.service';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import { Loader } from '../../components/ui/loader';
 
 const AchatVente = () => {
   usePageTitle('Achat / Vente');
@@ -160,7 +161,8 @@ const AchatVente = () => {
               </div>
 
               <Button type="submit" status={saving ? 'loading' : 'active'} color="default" disabled={saving} className="w-full">
-                {saving ? 'Traitement...' : 'Effectuer la transaction'}
+                {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                Effectuer la transaction
               </Button>
             </form>
             </div>

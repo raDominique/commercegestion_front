@@ -45,6 +45,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { Loader } from '../../components/ui/loader';
 
 const sortOptions = [
   { value: 'createdAt', label: 'Date de création' },
@@ -298,7 +299,7 @@ const Boutique = () => {
           </div>
 
           {loading ? (
-            <div className="text-center text-neutral-400 py-12">Chargement...</div>
+            <div className="flex justify-center py-8"><Loader message="Chargement..." /></div>
           ) : products.length === 0 ? (
             <div className="text-center text-neutral-400 py-12">Aucun produit trouvé</div>
           ) : (
@@ -343,8 +344,9 @@ const Boutique = () => {
                           color="default"
                           className="w-full"
                         >
+                          {addingId === (item._id || item.id) && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
                           <AddShoppingCartIcon className="w-4 h-4" />
-                          {addingId === (item._id || item.id) ? 'Ajout...' : 'Ajouter au panier'}
+                          Ajouter au panier
                         </Button>
                       </div>
                     </CardContent>
@@ -382,7 +384,7 @@ const Boutique = () => {
               </div>
 
               {loading ? (
-                <div className="text-center text-neutral-400 py-12">Chargement...</div>
+                <div className="flex justify-center py-8"><Loader message="Chargement..." /></div>
               ) : products.length === 0 ? (
                 <div className="text-center text-neutral-400 py-12">Aucun produit trouvé</div>
               ) : (
@@ -420,7 +422,7 @@ const Boutique = () => {
                                   aria-label="Ajouter au panier"
                                   className="size-8"
                                 >
-                                  <AddShoppingCartIcon className="w-4 h-4" />
+                                  {addingId === shopId ? <Loader size="sm" className="border-white border-t-transparent shrink-0" /> : <AddShoppingCartIcon className="w-4 h-4" />}
                                 </Button>
                                 <Button
                                   size="icon"
@@ -517,7 +519,7 @@ const Boutique = () => {
                                   aria-label="Valider la quantité"
                                   className="size-8 border-neutral-300"
                                 >
-                                  <CheckCircleOutlineIcon className="w-4 h-4" />
+                                  {quantityIsUpdating ? <Loader size="sm" className="border-white border-t-transparent shrink-0" /> : <CheckCircleOutlineIcon className="w-4 h-4" />}
                                 </Button>
                               </div>
                             </TableCell>
@@ -589,8 +591,9 @@ const Boutique = () => {
                       disabled={checkoutLoading || items.length === 0}
                       onClick={handleCheckout}
                     >
+                      {checkoutLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
                       <ShoppingCartCheckoutIcon className="w-4 h-4" />
-                      {checkoutLoading ? 'Validation...' : "Valider l'achat"}
+                      Valider l'achat
                     </Button>
                   </div>
                 </div>

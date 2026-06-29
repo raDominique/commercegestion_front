@@ -38,6 +38,7 @@ import { deleteCpc } from '../../services/cpc.service';
 import { importCpcs } from '../../services/cpc.service';
 import ExportButton from '../../components/commons/ExportButton.jsx';
 import { exportAndDownloadCPC } from '../../services/export.service.js';
+import { Loader } from '../../components/ui/loader';
 
 const AdminCpc = () => {
     usePageTitle('CPC');
@@ -289,7 +290,7 @@ const AdminCpc = () => {
                                             <Button variant="outline" type="button" status="inactive">Annuler</Button>
                                         </DialogClose>
                                         <Button variant="default" status={saving ? "loading" : "active"} color="default" type="submit" disabled={saving}>
-                                            {saving ? 'Enregistrement...' : 'Ajouter'}
+                                            {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Ajouter
                                         </Button>
                                     </DialogFooter>
                                 </form>
@@ -309,7 +310,7 @@ const AdminCpc = () => {
                                 onClick={handleImportClick}
                                 disabled={importing}
                             >
-                                {importing ? 'Importation...' : 'Importer CSV/Excel'}
+                                {importing && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Importer CSV/Excel
                             </Button>
                             <ExportButton
                                 exportFunction={exportAndDownloadCPC}
@@ -394,7 +395,7 @@ const AdminCpc = () => {
                             <div className="text-xs text-neutral-400">Modifié le : {selectedCpc.updatedAt ? new Date(selectedCpc.updatedAt).toLocaleString() : '-'}</div>
                         </Card>
                     ) : (
-                        <div>Chargement...</div>
+                        <div className="flex justify-center py-8"><Loader message="Chargement..." /></div>
                     )}
                 </DialogContent>
             </Dialog>
@@ -442,7 +443,7 @@ const AdminCpc = () => {
                             <Button variant="outline" status="inactive">Annuler</Button>
                         </DialogClose>
                         <Button variant="default" status={saving ? "loading" : "active"} color="default" onClick={handleUpdateCpc} disabled={saving}>
-                            {saving ? 'Enregistrement...' : 'Enregistrer'}
+                            {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Enregistrer
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -462,7 +463,7 @@ const AdminCpc = () => {
                             <Button variant="outline" status="inactive">Annuler</Button>
                         </DialogClose>
                         <Button variant="default" status={deleting ? "loading" : "active"} color="destructive" onClick={confirmDeleteCpc} disabled={deleting}>
-                            {deleting ? 'Suppression...' : 'Confirmer la suppression'}
+                            {deleting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer la suppression
                         </Button>
                     </div>
                 </DialogContent>
@@ -476,7 +477,7 @@ export default AdminCpc;
 function CpcTableOrList({ loading, items, handleShowInfo, handleEditCpc, handleDeleteCpc }) {
     const { isDesktop } = useScreenType();
 
-    if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+    if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
     if (!items || items.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun code trouvé</div>;
 
     if (isDesktop) {

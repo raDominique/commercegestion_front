@@ -10,6 +10,7 @@ import LogoImage from '../../assets/logo/logo.png';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { resetPassword as resetPasswordService } from '../../services/auth.service';
+import { Loader } from '../../components/ui/loader';
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -92,7 +93,8 @@ const ResetPassword = () => {
             <Input id="confirmPassword" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="border-neutral-300" />
           </div>
           <Button type="submit" status={loading ? "loading" : "active"} color="default" className="w-full" disabled={loading}>
-            {loading ? 'Envoi...' : 'Réinitialiser'}
+            {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+            Réinitialiser
           </Button>
         </form>
         <div className="text-center text-sm mt-6">

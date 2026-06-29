@@ -40,6 +40,7 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import InfoIcon from '@mui/icons-material/Info';
+import { Loader } from '../../components/ui/loader';
 
 // --- CONFIGURATION DU DESIGN SYSTEM ET DES TRADUCTIONS EN FR ---
 
@@ -247,10 +248,7 @@ const MesTransactions = () => {
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-neutral-500 flex flex-col items-center justify-center gap-2">
-              <SyncIcon className="animate-spin text-neutral-400" sx={{ fontSize: 32 }} />
-              Chargement des données...
-            </div>
+            <div className="flex justify-center py-8"><Loader message="Chargement des données..." /></div>
           ) : (
             <>
               <Card className="border-neutral-200 bg-white shadow-sm overflow-hidden">
@@ -287,7 +285,7 @@ const MesTransactions = () => {
                       <div><b>Observations :</b> {selectedTransactionDetails.observations || '-'}</div>
                     </div>
                   ) : (
-                    <div>Chargement...</div>
+                    <div className="flex justify-center py-8"><Loader message="Chargement..." /></div>
                   )}
                   <div className="flex justify-end gap-2 pt-4">
                     <DialogClose asChild>
@@ -338,7 +336,7 @@ export default MesTransactions;
 // --- TABLEAU ET VUE MOBILE INTELLIGENTE ---
 
 function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat, onViewDetails, actionLoadingId }) {
-  if (loading) return null;
+  if (loading) return <div className="flex justify-center py-8"><Loader /></div>;
   if (!transactions || transactions.length === 0) {
     return (
       <div className="p-12 text-center text-neutral-400 flex flex-col items-center justify-center gap-2">
@@ -413,11 +411,11 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat,
                       disabled={isItemLoading || !transId}
                       onClick={() => onViewDetails(transId)}
                     >
-                      {isItemLoading ? (
-                        <SyncIcon className="animate-spin" sx={{ fontSize: 14 }} />
-                      ) : (
-                        <InfoIcon className="w-4 h-4 text-violet-600" />
-                      )}
+                    {isItemLoading ? (
+                      <Loader size="sm" className="border-primary border-t-transparent shrink-0" />
+                    ) : (
+                      <InfoIcon className="w-4 h-4 text-violet-600" />
+                    )}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -491,9 +489,9 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat,
                     onClick={() => onViewDetails(transId)}
                   >
                     {isItemLoading ? (
-                      <SyncIcon className="animate-spin" sx={{ fontSize: 12 }} />
+                      <Loader size="sm" className="border-primary border-t-transparent shrink-0" />
                     ) : (
-                      <InfoIcon className="w-4 h-4 text-violet-600 mr-1" />
+                      <InfoIcon className="w-4 h-4 text-violet-600" />
                     )}
                   </Button>
                 </div>
@@ -519,7 +517,7 @@ const formatDateMultiline = (dateStr) => {
 };
 
 function MouvementsActifsTable({ loading, actifs, dateFormat, renderPerson }) {
-  if (loading) return <div className="p-8 text-center text-neutral-500">Chargement...</div>;
+  if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
   if (!actifs || actifs.length === 0) {
     return <div className="p-8 text-center text-neutral-400">Aucun mouvement d'actif trouvé</div>;
   }
@@ -567,7 +565,7 @@ function MouvementsActifsTable({ loading, actifs, dateFormat, renderPerson }) {
 }
 
 function MouvementsPassifsTable({ loading, passifs, dateFormat, renderPerson }) {
-  if (loading) return <div className="p-8 text-center text-neutral-500">Chargement...</div>;
+  if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
   if (!passifs || passifs.length === 0) {
     return <div className="p-8 text-center text-neutral-400">Aucun mouvement de passif trouvé</div>;
   }

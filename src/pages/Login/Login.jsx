@@ -12,6 +12,7 @@ import useScreenType from '../../utils/useScreenType';
 import LogoImage from '../../assets/logo/logo.png';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { Loader } from '../../components/ui/loader';
 
 
 export default function Login() {
@@ -118,9 +119,7 @@ export default function Login() {
             className={`w-full bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center`}
             disabled={loading}
           >
-            {loading ? (
-              <span className="w-5 h-5 mr-2 animate-spin border-2 border-white border-t-violet-600 rounded-full"></span>
-            ) : null}
+            {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
             Se connecter
           </Button>
         </form>

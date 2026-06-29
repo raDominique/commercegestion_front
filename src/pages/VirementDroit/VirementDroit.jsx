@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
+import { Loader } from '../../components/ui/loader';
 import { Input } from '../../components/ui/input';
 import {
   Dialog,
@@ -411,7 +412,7 @@ const VirementDroit = () => {
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" status="inactive" onClick={() => setVirerModalOpen(false)}>Annuler</Button>
                   <Button status={loadingVirement ? 'loading' : (selectedRecipient && selectedDetenteur ? 'active' : 'inactive')} onClick={handleConfirmVirement} disabled={!selectedRecipient || !selectedDetenteur || loadingVirement} color="default">
-                    {loadingVirement ? 'En cours...' : 'Confirmer le virement'}
+                    {loadingVirement && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer le virement
                   </Button>
                 </div>
               </div>

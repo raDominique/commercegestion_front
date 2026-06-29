@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
+import { Loader } from '../../components/ui/loader';
 import { getActifs } from '../../services/ledger.service';
 import { getActifById } from '../../services/actifs.service';
 import { getProfile } from '../../services/auth.service';
@@ -631,7 +632,7 @@ const Actifs = () => {
 										disabled={loadingSell}
 										color="default"
 									>
-										{loadingSell ? 'En cours...' : 'Mettre en vente'}
+										{loadingSell && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Mettre en vente
 									</Button>
 								</div>
 							</div>
@@ -656,7 +657,7 @@ const Actifs = () => {
 									disabled={deleting}
 									onClick={handleConfirmDeleteShopItem}
 								>
-									{deleting ? 'Suppression...' : 'Supprimer'}
+									{deleting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Supprimer
 								</Button>
 							</div>
 						</DialogContent>
@@ -727,7 +728,7 @@ const Actifs = () => {
 										disabled={loadingAddStock}
 										color="default"
 									>
-										{loadingAddStock ? 'Ajout en cours...' : 'Ajouter'}
+										{loadingAddStock && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Ajouter
 									</Button>
 								</div>
 							</div>
@@ -911,7 +912,7 @@ const Actifs = () => {
 										disabled={loadingAddProduct}
 										color="default"
 									>
-										{loadingAddProduct ? 'Ajout en cours...' : 'Ajouter'}
+										{loadingAddProduct && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Ajouter
 									</Button>
 								</div>
 							</div>
@@ -927,7 +928,7 @@ const Actifs = () => {
 							</DialogHeader>
 
 							{loadingDetail ? (
-								<div>Chargement...</div>
+								<div className="flex justify-center py-8"><Loader message="Chargement..." /></div>
 							) : detailActif ? (
 								<div className="space-y-3 text-sm">
 									{(detailActif._shopRaw || detailActif.shopItemId) ? (
@@ -980,7 +981,7 @@ const Actifs = () => {
 export default Actifs;
 
 function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal }) {
-	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+	if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
 	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
 
 	if (isDesktop) {
@@ -1088,7 +1089,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 }
 
 function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenDeleteModal }) {
-	if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+	if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
 	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
 
 	if (isDesktop) {

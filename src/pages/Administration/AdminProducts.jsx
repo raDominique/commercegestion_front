@@ -16,6 +16,7 @@ import useScreenType from '../../utils/useScreenType';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import ExportButton from '../../components/commons/ExportButton.jsx';
 import { exportAndDownloadProducts } from '../../services/export.service.js';
+import { Loader } from '../../components/ui/loader';
 
 const AdminProducts = () => {
   usePageTitle('Produits');
@@ -160,7 +161,7 @@ const AdminProducts = () => {
               <Button variant="outline" status="inactive">Annuler</Button>
             </DialogClose>
             <Button variant="default" status={validating ? "loading" : "active"} color="default" onClick={handleValidateProduct} disabled={validating}>
-              {validating ? 'Validation...' : 'Confirmer'}
+              {validating && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer
             </Button>
           </div>
         </DialogContent>
@@ -177,7 +178,7 @@ const AdminProducts = () => {
           </DialogHeader>
 
           {loadingDetail ? (
-            <div className="p-8 text-center text-neutral-400">Chargement...</div>
+            <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
           ) : detailProduct ? (
             <Card className="border-violet-200 bg-violet-50 p-6 space-y-6">
 
@@ -313,7 +314,7 @@ export default AdminProducts;
 function ProductTableOrList({ loading, products, handleAskValidate, handleShowDetail }) {
   const { isDesktop } = useScreenType();
 
-  if (loading) return <div className="p-8 text-center text-neutral-400">Chargement...</div>;
+  if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
   if (!products || products.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun produit trouvé</div>;
 
   if (isDesktop) {
