@@ -21,6 +21,7 @@ const AchatVente = () => {
   const [users, setUsers] = useState([]);
   const [sites, setSites] = useState([]);
   const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
   const [form, setForm] = useState({
     vendeurId: '',
@@ -42,11 +43,12 @@ const AchatVente = () => {
 
   useEffect(() => {
     if (form.siteOrigineId) {
+      setLoadingProducts(true);
       getActifsBySite(form.siteOrigineId).then(res => {
         const items = Array.isArray(res) ? res : (res?.data && Array.isArray(res.data) ? res.data : []);
         setProducts(items);
         setForm(prev => ({ ...prev, productId: '', quantite: '', prixUnitaire: '' }));
-      });
+      }).finally(() => setLoadingProducts(false));
     } else {
       setProducts([]);
     }
@@ -119,8 +121,8 @@ const AchatVente = () => {
 
               <div className="grid gap-2">
                 <Label htmlFor="productId">Produit *</Label>
-                <Select value={form.productId} onValueChange={handleSelectProduct} disabled={!form.siteOrigineId}>
-                  <SelectTrigger id="productId" className="bg-white"><SelectValue placeholder={form.siteOrigineId ? "Sélectionner un produit" : "Choisissez d'abord un site"} /></SelectTrigger>
+                <Select value={form.productId} onValueChange={handleSelectProduct} disabled={!form.siteOrigineId || loadingProducts}>
+                  <SelectTrigger id="productId" className="bg-white"><SelectValue placeholder={!form.siteOrigineId ? "Choisissez d'abord un site" : loadingProducts ? "Chargement..." : "Sélectionner un produit"} /></SelectTrigger>
                   <SelectContent>
                     {products.map(p => (
                       <SelectItem key={p.productId || p._id} value={p.productId || p._id}>{p.productName || p.name}</SelectItem>

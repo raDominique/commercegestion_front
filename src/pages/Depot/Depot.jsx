@@ -48,6 +48,8 @@ const Depot = () => {
 	const [detentaireSites, setDetentaireSites] = useState([]);
 	const [productsOnSite, setProductsOnSite] = useState([]);
 	const [maxTransferQty, setMaxTransferQty] = useState(null);
+	const [loadingDetentaireSites, setLoadingDetentaireSites] = useState(false);
+	const [loadingSiteProducts, setLoadingSiteProducts] = useState(false);
 
 	const [transferForm, setTransferForm] = useState({
 		actifId: '',
@@ -160,6 +162,7 @@ const Depot = () => {
 	// Charger les sites du détentaire sélectionné
 	useEffect(() => {
 		if (transferForm.detentaire) {
+			setLoadingDetentaireSites(true);
 			getSitesByUser(transferForm.detentaire)
 				.then(res => {
 					let sites = [];
@@ -174,7 +177,8 @@ const Depot = () => {
 					console.error('Erreur lors de la récupération des sites du détentaire:', error);
 					toast.error('Erreur lors du chargement des sites du détentaire');
 					setDetentaireSites([]);
-				});
+				})
+				.finally(() => setLoadingDetentaireSites(false));
 		} else {
 			setDetentaireSites([]);
 		}
@@ -196,6 +200,7 @@ const Depot = () => {
 			observations: ''
 		}));
 		setMaxTransferQty(null);
+		setLoadingSiteProducts(true);
 
 		try {
 			const res = await getActifsBySite(siteId);
@@ -215,6 +220,8 @@ const Depot = () => {
 			console.error('Erreur lors de la récupération des actifs:', error);
 			toast.error('Erreur lors du chargement des actifs du site');
 			setProductsOnSite([]);
+		} finally {
+			setLoadingSiteProducts(false);
 		}
 	};
 
@@ -420,39 +427,39 @@ const Depot = () => {
 									<div className="space-y-2 md:col-span-2">
 										<Label required>2. Produit du site</Label>
 										<div className="relative">
-											<Input
-												placeholder={productsOnSite.length === 0 ? "Aucun produit disponible" : "Rechercher un produit..."}
-												value={productSearch}
-												onChange={e => { setProductSearch(e.target.value); setProductHighlighted(0); }}
-												onFocus={() => { setProductOpen(true); setProductHighlighted(0); }}
-												onBlur={() => setTimeout(() => setProductOpen(false), 150)}
-												onKeyDown={(e) => {
-													if (e.key === 'Escape') return setProductOpen(false);
-													if (!productOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-														setProductOpen(true);
-														e.preventDefault();
-														return;
+									<Input
+										placeholder={loadingSiteProducts ? "Chargement..." : productsOnSite.length === 0 ? "Aucun produit disponible" : "Rechercher un produit..."}
+										value={productSearch}
+										onChange={e => { setProductSearch(e.target.value); setProductHighlighted(0); }}
+										onFocus={() => { setProductOpen(true); setProductHighlighted(0); }}
+										onBlur={() => setTimeout(() => setProductOpen(false), 150)}
+										onKeyDown={(e) => {
+											if (e.key === 'Escape') return setProductOpen(false);
+											if (!productOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+												setProductOpen(true);
+												e.preventDefault();
+												return;
+											}
+											if (productOpen) {
+												if (e.key === 'ArrowDown') {
+													e.preventDefault();
+													setProductHighlighted(i => Math.min(i + 1, Math.max(filteredProducts.length - 1, 0)));
+												} else if (e.key === 'ArrowUp') {
+													e.preventDefault();
+													setProductHighlighted(i => Math.max(i - 1, 0));
+												} else if (e.key === 'Enter') {
+													e.preventDefault();
+													const product = filteredProducts[productHighlighted];
+													if (product) {
+														handleSelectProduct(product.productId);
+														setProductSearch(product.productName);
+														setProductOpen(false);
 													}
-													if (productOpen) {
-														if (e.key === 'ArrowDown') {
-															e.preventDefault();
-															setProductHighlighted(i => Math.min(i + 1, Math.max(filteredProducts.length - 1, 0)));
-														} else if (e.key === 'ArrowUp') {
-															e.preventDefault();
-															setProductHighlighted(i => Math.max(i - 1, 0));
-														} else if (e.key === 'Enter') {
-															e.preventDefault();
-															const product = filteredProducts[productHighlighted];
-															if (product) {
-																handleSelectProduct(product.productId);
-																setProductSearch(product.productName);
-																setProductOpen(false);
-															}
-														}
-													}
-												}}
-												className="w-full"
-												disabled={productsOnSite.length === 0}
+												}
+											}
+										}}
+										className="w-full"
+										disabled={productsOnSite.length === 0 || loadingSiteProducts}
 											/>
 											{productOpen && filteredProducts.length > 0 && (
 												<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
@@ -650,38 +657,39 @@ const Depot = () => {
 									<div className="space-y-2 md:col-span-2">
 									<Label required>5. Site de destination</Label>
 										<div className="relative">
-											<Input
-												placeholder="Rechercher le site de destination..."
-												value={siteDestinationSearch}
-												onChange={e => { setSiteDestinationSearch(e.target.value); setSiteDestinationHighlighted(0); }}
-												onFocus={() => { setSiteDestinationOpen(true); setSiteDestinationHighlighted(0); }}
-												onBlur={() => setTimeout(() => setSiteDestinationOpen(false), 150)}
-												onKeyDown={(e) => {
-													if (e.key === 'Escape') return setSiteDestinationOpen(false);
-													if (!siteDestinationOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-														setSiteDestinationOpen(true);
-														e.preventDefault();
-														return;
+									<Input
+										placeholder={loadingDetentaireSites ? "Chargement..." : "Rechercher le site de destination..."}
+										value={siteDestinationSearch}
+										onChange={e => { setSiteDestinationSearch(e.target.value); setSiteDestinationHighlighted(0); }}
+										onFocus={() => { setSiteDestinationOpen(true); setSiteDestinationHighlighted(0); }}
+										onBlur={() => setTimeout(() => setSiteDestinationOpen(false), 150)}
+										onKeyDown={(e) => {
+											if (e.key === 'Escape') return setSiteDestinationOpen(false);
+											if (!siteDestinationOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+												setSiteDestinationOpen(true);
+												e.preventDefault();
+												return;
+											}
+											if (siteDestinationOpen) {
+												if (e.key === 'ArrowDown') {
+													e.preventDefault();
+													setSiteDestinationHighlighted(i => Math.min(i + 1, Math.max(filteredDestinationSites.length - 1, 0)));
+												} else if (e.key === 'ArrowUp') {
+													e.preventDefault();
+													setSiteDestinationHighlighted(i => Math.max(i - 1, 0));
+												} else if (e.key === 'Enter') {
+													e.preventDefault();
+													const site = filteredDestinationSites[siteDestinationHighlighted];
+													if (site) {
+														setTransferForm(f => ({ ...f, siteDestinationId: site._id }));
+														setSiteDestinationSearch(site.siteName);
+														setSiteDestinationOpen(false);
 													}
-													if (siteDestinationOpen) {
-														if (e.key === 'ArrowDown') {
-															e.preventDefault();
-															setSiteDestinationHighlighted(i => Math.min(i + 1, Math.max(filteredDestinationSites.length - 1, 0)));
-														} else if (e.key === 'ArrowUp') {
-															e.preventDefault();
-															setSiteDestinationHighlighted(i => Math.max(i - 1, 0));
-														} else if (e.key === 'Enter') {
-															e.preventDefault();
-															const site = filteredDestinationSites[siteDestinationHighlighted];
-															if (site) {
-																setTransferForm(f => ({ ...f, siteDestinationId: site._id }));
-																setSiteDestinationSearch(site.siteName);
-																setSiteDestinationOpen(false);
-															}
-														}
-													}
-												}}
-												className="w-full"
+												}
+											}
+										}}
+										className="w-full"
+										disabled={loadingDetentaireSites || detentaireSites.length === 0}
 											/>
 											{siteDestinationOpen && (
 												<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
