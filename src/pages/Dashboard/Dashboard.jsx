@@ -273,7 +273,7 @@ const DashboardPage = () => {
                                     ?.map((site, index) => (
                                         <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
                                             <div>
-                                                <p className="font-medium text-sm text-neutral-900">{site._id || 'Sans site'}</p>
+                                                <p className="font-medium text-sm text-neutral-900">{site.name || 'Sans site'}</p>
                                                 <p className="text-xs text-gray-600">{site.total || 0} élément(s)</p>
                                             </div>
                                             <Badge className="bg-violet-100 text-violet-800 hover:bg-violet-100">{site.total || 0}</Badge>

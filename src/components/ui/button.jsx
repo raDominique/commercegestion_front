@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "./utils";
+import { Loader } from "./loader"; // Add this import
 
 // Status variants for button states
 const statusVariants = {
@@ -59,17 +60,21 @@ function buttonVariants({ variant = "default", size = "default", status = null, 
 
 // Button component
 const Button = forwardRef(function Button(
-    { className = "", variant = "default", size = "default", status = null, color = null, asChild = false, children, ...props },
+    { className = "", variant = "default", size = "default", status = null, color = null, asChild = false, children, loading = false, disabled, ...props },
     ref
 ) {
     const Comp = asChild ? Slot : "button";
+    const buttonStatus = loading ? "loading" : status; // Prioritize loading status
+
     return (
         <Comp
             ref={ref}
             data-slot="button"
-            className={cn(buttonVariants({ variant, size, status, color, className }))}
+            className={cn(buttonVariants({ variant, size, status: buttonStatus, color, className }))}
+            disabled={loading || disabled} // Disable when loading or explicitly disabled
             {...props}
         >
+            {loading && <Loader size="sm" />} {/* Render loader when loading */}
             {children}
         </Comp>
     );

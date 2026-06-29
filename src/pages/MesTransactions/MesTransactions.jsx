@@ -411,11 +411,11 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat,
                       disabled={isItemLoading || !transId}
                       onClick={() => onViewDetails(transId)}
                     >
-                    {isItemLoading ? (
-                      <Loader size="sm" className="border-primary border-t-transparent shrink-0" />
-                    ) : (
-                      <InfoIcon className="w-4 h-4 text-violet-600" />
-                    )}
+                      {isItemLoading ? (
+                        <Loader size="sm" className="border-primary border-t-transparent shrink-0" />
+                      ) : (
+                        <InfoIcon className="w-4 h-4 text-violet-600" />
+                      )}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -541,20 +541,29 @@ function MouvementsActifsTable({ loading, actifs, dateFormat, renderPerson }) {
         </TableHeader>
         <TableBody>
           {actifs.map((item, idx) => {
-            const product = item.productId || {};
-            const date = item.dateCreation || item.createdAt || item.date;
+            const date = item.dateTime;
             return (
-              <TableRow key={item._id || item.id || idx} className="hover:bg-neutral-50/50">
-                <TableCell className="text-sm text-neutral-900">{renderPerson(item.ayant_droit || item.ayantDroit || item.userId)}</TableCell>
-                <TableCell className="text-sm text-neutral-500 whitespace-nowrap align-top">{date ? <>{formatDateMultiline(date)[0]}<br />{formatDateMultiline(date)[1]}</> : '-'}</TableCell>
-                <TableCell className="text-sm font-mono text-neutral-700">{item.transactionNumber || item.numeroTransaction || item._id?.slice(-8) || '-'}</TableCell>
-                <TableCell className="text-sm text-neutral-700">{item.intitule || item.type || item.movementType || 'Virement de droit'}</TableCell>
-                <TableCell className="text-sm font-medium text-neutral-900 truncate max-w-xs">{product.productName || item.productName || '-'}</TableCell>
-                <TableCell className="text-sm text-neutral-700">{renderPerson(item.detentaire)}</TableCell>
-                <TableCell className="text-sm text-neutral-600 truncate max-w-xs">{item.depot || item.depotAdresse || product.siteName || '-'}</TableCell>
-                <TableCell className="text-sm font-medium text-right text-neutral-900">{item.quantite ?? '-'}</TableCell>
-                <TableCell className="text-sm text-right text-neutral-600">{item.stockInitial ?? item.quantiteOriginale ?? '-'}</TableCell>
-                <TableCell className="text-sm text-right text-neutral-600">{item.stockFinal ?? item.quantite ?? '-'}</TableCell>
+              <TableRow key={item.numeroTransaction || item._id || idx} className="hover:bg-neutral-50/50">
+                <TableCell className="text-sm text-neutral-900">{renderPerson(item.membre)}</TableCell>
+                <TableCell className="text-sm text-neutral-500 whitespace-nowrap align-top">
+                  {date ? (
+                    <>
+                      {formatDateMultiline(date)[0]}
+                      <br />
+                      {formatDateMultiline(date)[1]}
+                    </>
+                  ) : '-'}
+                </TableCell>
+                <TableCell className="text-sm font-mono text-neutral-700">{item.numeroTransaction || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-700">{item.title || 'Virement de droit'}</TableCell>
+                <TableCell className="text-sm font-medium text-neutral-900 truncate max-w-xs">{item.product || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-700">{renderPerson(item.detenteur)}</TableCell>
+                <TableCell className="text-sm text-neutral-600 truncate max-w-xs">{item.site || '-'}</TableCell>
+                <TableCell className={`text-sm font-medium text-right ${item.quantite >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                  {item.quantite ?? '-'}
+                </TableCell>
+                <TableCell className="text-sm text-right text-neutral-600">{item.stockInitial ?? '-'}</TableCell>
+                <TableCell className="text-sm text-right text-neutral-600">{item.stockFinal ?? '-'}</TableCell>
               </TableRow>
             );
           })}
@@ -589,20 +598,29 @@ function MouvementsPassifsTable({ loading, passifs, dateFormat, renderPerson }) 
         </TableHeader>
         <TableBody>
           {passifs.map((item, idx) => {
-            const product = item.productId || {};
-            const date = item.dateCreation || item.createdAt || item.date;
+            const date = item.dateTime;
             return (
-              <TableRow key={item._id || item.id || idx} className="hover:bg-neutral-50/50">
-                <TableCell className="text-sm text-neutral-900">{renderPerson(item.detentaire || item.userId)}</TableCell>
-                <TableCell className="text-sm text-neutral-500 whitespace-nowrap align-top">{date ? <>{formatDateMultiline(date)[0]}<br />{formatDateMultiline(date)[1]}</> : '-'}</TableCell>
-                <TableCell className="text-sm font-mono text-neutral-700">{item.transactionNumber || item.numeroTransaction || item._id?.slice(-8) || '-'}</TableCell>
-                <TableCell className="text-sm text-neutral-700">{item.intitule || item.type || item.movementType || 'Virement de droit'}</TableCell>
-                <TableCell className="text-sm font-medium text-neutral-900 truncate max-w-xs">{product.productName || item.productName || '-'}</TableCell>
-                <TableCell className="text-sm text-neutral-700">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
-                <TableCell className="text-sm text-neutral-600 truncate max-w-xs">{item.depot || item.depotAdresse || product.siteName || '-'}</TableCell>
-                <TableCell className="text-sm font-medium text-right text-neutral-900">{item.quantite ?? '-'}</TableCell>
-                <TableCell className="text-sm text-right text-neutral-600">{item.stockInitial ?? item.quantiteOriginale ?? '-'}</TableCell>
-                <TableCell className="text-sm text-right text-neutral-600">{item.stockFinal ?? item.quantite ?? '-'}</TableCell>
+              <TableRow key={item.numeroTransaction || item._id || idx} className="hover:bg-neutral-50/50">
+                <TableCell className="text-sm text-neutral-900">{renderPerson(item.membre)}</TableCell>
+                <TableCell className="text-sm text-neutral-500 whitespace-nowrap align-top">
+                  {date ? (
+                    <>
+                      {formatDateMultiline(date)[0]}
+                      <br />
+                      {formatDateMultiline(date)[1]}
+                    </>
+                  ) : '-'}
+                </TableCell>
+                <TableCell className="text-sm font-mono text-neutral-700">{item.numeroTransaction || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-700">{item.title || 'Virement de droit'}</TableCell>
+                <TableCell className="text-sm font-medium text-neutral-900 truncate max-w-xs">{item.product || '-'}</TableCell>
+                <TableCell className="text-sm text-neutral-700">{renderPerson(item.ayantDroit)}</TableCell>
+                <TableCell className="text-sm text-neutral-600 truncate max-w-xs">{item.site || '-'}</TableCell>
+                <TableCell className={`text-sm font-medium text-right ${item.quantite >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                  {item.quantite ?? '-'}
+                </TableCell>
+                <TableCell className="text-sm text-right text-neutral-600">{item.stockInitial ?? '-'}</TableCell>
+                <TableCell className="text-sm text-right text-neutral-600">{item.stockFinal ?? '-'}</TableCell>
               </TableRow>
             );
           })}
