@@ -21,6 +21,7 @@ import { getAllUsersSelect } from '../../services/user.service';
 import { getProfile } from '../../services/auth.service';
 import { virementDroit } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
+import { getSitesByUser } from '../../services/site.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 
 const findUserByName = (name, users) => {
@@ -64,13 +65,20 @@ const VirementDroit = () => {
   const [, setLoadingRecipients] = useState(false);
   const [loadingVirement, setLoadingVirement] = useState(false);
 
-  const [detenteurSearch, setDetenteurSearch] = useState('');
-  const [detenteurOpen, setDetenteurOpen] = useState(false);
-  const [detenteurHighlighted, setDetenteurHighlighted] = useState(0);
-  const [filteredDetenteurs, setFilteredDetenteurs] = useState([]);
-  const [selectedDetenteur, setSelectedDetenteur] = useState(null);
+	const [detenteurSearch, setDetenteurSearch] = useState('');
+	const [detenteurOpen, setDetenteurOpen] = useState(false);
+	const [detenteurHighlighted, setDetenteurHighlighted] = useState(0);
+	const [filteredDetenteurs, setFilteredDetenteurs] = useState([]);
+	const [selectedDetenteur, setSelectedDetenteur] = useState(null);
 
-  const dateFormat = useDateFormat();
+	const [detentaireSites, setDetentaireSites] = useState([]);
+	const [loadingDetentaireSites, setLoadingDetentaireSites] = useState(false);
+	const [selectedDetentaireSite, setSelectedDetentaireSite] = useState(null);
+	const [siteSearch, setSiteSearch] = useState('');
+	const [siteOpen, setSiteOpen] = useState(false);
+	const [siteHighlighted, setSiteHighlighted] = useState(0);
+
+	const dateFormat = useDateFormat();
 
   const [actifs, setActifs] = useState([]);
   const [loadingActifs, setLoadingActifs] = useState(false);
@@ -124,12 +132,39 @@ const VirementDroit = () => {
     setFilteredDetenteurs(usersOptions.filter(u => (u?.name || u?.userName || u?.userNickName || '').toLowerCase().includes((detenteurSearch || '').toLowerCase())));
   }, [detenteurSearch, usersOptions]);
 
+  const filteredSites = detentaireSites.filter(site => (site?.siteName || '').toLowerCase().includes(siteSearch.toLowerCase()));
+
+  useEffect(() => {
+    const detId = selectedDetenteur?._id || selectedDetenteur?.id;
+    if (detId) {
+      setLoadingDetentaireSites(true);
+      setSelectedDetentaireSite(null);
+      setSiteSearch('');
+      getSitesByUser(detId)
+        .then(res => {
+          const sites = Array.isArray(res) ? res : (res?.data ?? []);
+          setDetentaireSites(Array.isArray(sites) ? sites : []);
+        })
+        .catch(() => {
+          toast.error('Erreur de chargement des sites du détenteur');
+          setDetentaireSites([]);
+        })
+        .finally(() => setLoadingDetentaireSites(false));
+    } else {
+      setDetentaireSites([]);
+      setSelectedDetentaireSite(null);
+      setSiteSearch('');
+    }
+  }, [selectedDetenteur]);
+
   const handleOpenVirementFromActif = (actif) => {
     setSelectedActifForVirement(actif);
     setForm({ quantite: '', observations: '' });
     setSelectedRecipient(null);
     setRecipientSearch('');
     setSelectedDetenteur(null);
+    setSelectedDetentaireSite(null);
+    setSiteSearch('');
     const detName = renderPerson(actif?.detentaire);
     setDetenteurSearch(detName);
     // try to auto-select the detenteur from usersOptions
@@ -142,6 +177,10 @@ const VirementDroit = () => {
   const handleConfirmVirement = async () => {
     if (!selectedRecipient || !selectedDetenteur || !selectedActifForVirement) {
       toast.error('Veuillez sélectionner un détenteur et un bénéficiaire');
+      return;
+    }
+    if (!selectedDetentaireSite) {
+      toast.error('Veuillez sélectionner le site de dépôt du détenteur');
       return;
     }
     try {
@@ -169,8 +208,7 @@ const VirementDroit = () => {
         return;
       }
 
-      const rawSite = actif?.depotId || actif?.departDeId || actif?.siteOrigineId || actif?.siteOriginId || actif?.siteId || actif?.depot || '';
-      const siteId = rawSite && (rawSite._id || rawSite.id || rawSite) || '';
+      const siteId = selectedDetentaireSite?._id || selectedDetentaireSite?.id || '';
       if (!siteId) {
         toast.error('Site de dépôt introuvable pour cet actif');
         setLoadingVirement(false);
@@ -374,9 +412,59 @@ const VirementDroit = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">Site de dépôt (Y)</label>
-                  <Input disabled value={actif?.depot || actif?.depotAdresse || '-'} className="border-neutral-300 bg-neutral-50" />
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">Site de dépôt (Y) <span className="text-red-500 ml-0.5">*</span></label>
+                  <div className="relative">
+                    <Input
+                      placeholder={loadingDetentaireSites ? 'Chargement...' : selectedDetenteur ? 'Rechercher le site...' : 'Sélectionnez d\'abord le détenteur'}
+                      value={siteSearch}
+                      onChange={(e) => { setSiteSearch(e.target.value); setSiteHighlighted(0); }}
+                      onFocus={() => { setSiteOpen(true); setSiteHighlighted(0); }}
+                      onBlur={() => setTimeout(() => setSiteOpen(false), 150)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') return setSiteOpen(false);
+                        if (!siteOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                          setSiteOpen(true);
+                          e.preventDefault();
+                          return;
+                        }
+                        if (siteOpen) {
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            setSiteHighlighted(i => Math.min(i + 1, Math.max(filteredSites.length - 1, 0)));
+                          } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            setSiteHighlighted(i => Math.max(i - 1, 0));
+                          } else if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const site = filteredSites[siteHighlighted];
+                            if (site) {
+                              setSelectedDetentaireSite(site);
+                              setSiteSearch(site.siteName);
+                              setSiteOpen(false);
+                            }
+                          }
+                        }
+                      }}
+                      className="w-full border-neutral-300"
+                      disabled={!selectedDetenteur || loadingDetentaireSites}
+                    />
+                    {siteOpen && filteredSites.length > 0 && (
+                      <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+                        {filteredSites.map((site, idx) => (
+                          <button
+                            type="button"
+                            key={site._id}
+                            onMouseEnter={() => setSiteHighlighted(idx)}
+                            onClick={() => { setSelectedDetentaireSite(site); setSiteSearch(site.siteName); setSiteOpen(false); }}
+                            className={`w-full text-left px-3 py-2 text-sm ${idx === siteHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+                          >
+                            {site.siteName}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -410,8 +498,8 @@ const VirementDroit = () => {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button variant="outline" status="inactive" onClick={() => setVirerModalOpen(false)}>Annuler</Button>
-                  <Button status={loadingVirement ? 'loading' : (selectedRecipient && selectedDetenteur ? 'active' : 'inactive')} onClick={handleConfirmVirement} disabled={!selectedRecipient || !selectedDetenteur || loadingVirement} color="default">
+                  <Button variant="outline" onClick={() => setVirerModalOpen(false)}>Annuler</Button>
+                  <Button status={loadingVirement ? 'loading' : (selectedRecipient && selectedDetenteur && selectedDetentaireSite ? 'active' : 'inactive')} onClick={handleConfirmVirement} disabled={!selectedRecipient || !selectedDetenteur || !selectedDetentaireSite || loadingVirement} color="default">
                     {loadingVirement && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer le virement
                   </Button>
                 </div>
