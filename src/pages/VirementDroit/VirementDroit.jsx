@@ -16,10 +16,8 @@ import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import ActifsTable from '../../components/commons/ActifsTable';
-import { getActifs } from '../../services/ledger.service';
 import { getAllUsersSelect } from '../../services/user.service';
-import { getProfile } from '../../services/auth.service';
-import { virementDroit } from '../../services/transaction.service';
+import { virementDroit, getMyDepositsAtOthers } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
 import { getSitesByUser } from '../../services/site.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
@@ -86,19 +84,31 @@ const VirementDroit = () => {
   const fetchActifs = async () => {
     try {
       setLoadingActifs(true);
-      let userId = user?._id;
-      if (!userId) {
-        try {
-          const profile = await getProfile();
-          userId = profile?._id || profile?.id;
-        } catch (e) {
-          console.debug("Impossible de récupérer l'identifiant utilisateur pour actifs:", e);
-        }
+      const token = getAccessToken() || localStorage.getItem('token');
+      if (!token) {
+        setActifs([]);
+        return;
       }
 
       const params = { page: 1, limit: 100 };
-      const res = await getActifs(userId, params);
-      const actifsList = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      const res = await getMyDepositsAtOthers(params, token);
+      const body = res?.data;
+      const rawList = Array.isArray(body?.data) ? body.data : (Array.isArray(body) ? body : []);
+      const actifsList = rawList.map(item => ({
+        _id: item._id,
+        productName: item.productId?.productName || '-',
+        productCode: item.productId?.codeCPC || '',
+        productImage: item.productId?.productImage || null,
+        depot: item.siteDestinationId?.siteName || item.siteOrigineId?.siteName || '-',
+        depotAdresse: item.siteDestinationId?.siteAddress || item.siteOrigineId?.siteAddress || '-',
+        quantite: item.quantite,
+        detentaire: item.detentaire,
+        ayant_droit: item.ayant_droit,
+        dateCreation: item.createdAt,
+        prixUnitaire: item.prixUnitaire,
+        transactionNumber: item.transactionNumber,
+        depotId: item.siteDestinationId?._id || item.siteOrigineId?._id,
+      }));
       setActifs(actifsList);
     } catch (err) {
       console.error('Erreur fetchActifs:', err);

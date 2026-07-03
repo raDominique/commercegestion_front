@@ -317,6 +317,39 @@ export const virementDroit = async (params, token) => {
  * @param {string} token - Token d'authentification
  * @returns {Promise} - Résultat de l'API contenant la liste des transactions
  */
+/**
+ * Récupère les dépôts effectués chez d'autres membres (GET /api/v1/transactions/deposit-at-others/me)
+ * @param {Object} [params] - Paramètres de filtrage
+ * @param {number} [params.page] - Numéro de page (défaut: 1)
+ * @param {number} [params.limit] - Nombre d'éléments par page (défaut: 10)
+ * @param {string} [params.search] - Recherche par nom de produit ou numéro de transaction
+ * @param {string} [params.siteId] - Filtrer par site (ID du site d'origine ou de destination)
+ * @param {string} [params.productId] - Filtrer par produit
+ * @param {string} [params.detentaireId] - Filtrer par détenteur
+ * @param {string} token - Token d'authentification
+ * @returns {Promise}
+ */
+export const getMyDepositsAtOthers = async (params = {}, token) => {
+  const { page = 1, limit = 10, search, siteId, productId, detentaireId } = params;
+  return axiosInstance.get(
+    '/api/v1/transactions/deposit-at-others/me',
+    {
+      params: {
+        page,
+        limit,
+        ...(search ? { search } : {}),
+        ...(siteId ? { siteId } : {}),
+        ...(productId ? { productId } : {}),
+        ...(detentaireId ? { detentaireId } : {}),
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        accept: '*/*',
+      },
+    }
+  );
+};
+
 export const getUserTransactions = async (userId, params = {}, token) => {
     const { page = 1, limit = 10, status, type, ...rest } = params || {};
     const query = {
