@@ -69,17 +69,21 @@ const VirementDroit = () => {
 	const [filteredDetenteurs, setFilteredDetenteurs] = useState([]);
 	const [selectedDetenteur, setSelectedDetenteur] = useState(null);
 
-	const [detentaireSites, setDetentaireSites] = useState([]);
-	const [loadingDetentaireSites, setLoadingDetentaireSites] = useState(false);
-	const [selectedDetentaireSite, setSelectedDetentaireSite] = useState(null);
+	const [recipientSites, setRecipientSites] = useState([]);
+	const [loadingRecipientSites, setLoadingRecipientSites] = useState(false);
+	const [selectedRecipientSite, setSelectedRecipientSite] = useState(null);
 	const [siteSearch, setSiteSearch] = useState('');
 	const [siteOpen, setSiteOpen] = useState(false);
 	const [siteHighlighted, setSiteHighlighted] = useState(0);
 
-	const dateFormat = useDateFormat();
+  const dateFormat = useDateFormat();
 
   const [actifs, setActifs] = useState([]);
   const [loadingActifs, setLoadingActifs] = useState(false);
+
+  // Filtres
+  const [filterSearch, setFilterSearch] = useState('');
+  const [filterDetenteurId, setFilterDetenteurId] = useState('');
 
   const fetchActifs = async () => {
     try {
@@ -90,7 +94,7 @@ const VirementDroit = () => {
         return;
       }
 
-      const params = { page: 1, limit: 100 };
+      const params = { page: 1, limit: 100, search: filterSearch || undefined, detentaireId: filterDetenteurId || undefined };
       const res = await getMyDepositsAtOthers(params, token);
       const body = res?.data;
       const rawList = Array.isArray(body?.data) ? body.data : (Array.isArray(body) ? body : []);
@@ -118,7 +122,7 @@ const VirementDroit = () => {
     }
   };
 
-  useEffect(() => { fetchActifs(); }, []);
+  useEffect(() => { fetchActifs(); }, [filterSearch, filterDetenteurId]);
 
   const fetchUsers = async () => {
     try {
@@ -142,30 +146,30 @@ const VirementDroit = () => {
     setFilteredDetenteurs(usersOptions.filter(u => (u?.name || u?.userName || u?.userNickName || '').toLowerCase().includes((detenteurSearch || '').toLowerCase())));
   }, [detenteurSearch, usersOptions]);
 
-  const filteredSites = detentaireSites.filter(site => (site?.siteName || '').toLowerCase().includes(siteSearch.toLowerCase()));
+  const filteredSites = recipientSites.filter(site => (site?.siteName || '').toLowerCase().includes(siteSearch.toLowerCase()));
 
   useEffect(() => {
-    const detId = selectedDetenteur?._id || selectedDetenteur?.id;
-    if (detId) {
-      setLoadingDetentaireSites(true);
-      setSelectedDetentaireSite(null);
+    const recId = selectedRecipient?._id || selectedRecipient?.id;
+    if (recId) {
+      setLoadingRecipientSites(true);
+      setSelectedRecipientSite(null);
       setSiteSearch('');
-      getSitesByUser(detId)
+      getSitesByUser(recId)
         .then(res => {
           const sites = Array.isArray(res) ? res : (res?.data ?? []);
-          setDetentaireSites(Array.isArray(sites) ? sites : []);
+          setRecipientSites(Array.isArray(sites) ? sites : []);
         })
         .catch(() => {
-          toast.error('Erreur de chargement des sites du détenteur');
-          setDetentaireSites([]);
+          toast.error('Erreur de chargement des sites du bénéficiaire');
+          setRecipientSites([]);
         })
-        .finally(() => setLoadingDetentaireSites(false));
+        .finally(() => setLoadingRecipientSites(false));
     } else {
-      setDetentaireSites([]);
-      setSelectedDetentaireSite(null);
+      setRecipientSites([]);
+      setSelectedRecipientSite(null);
       setSiteSearch('');
     }
-  }, [selectedDetenteur]);
+  }, [selectedRecipient]);
 
   const handleOpenVirementFromActif = (actif) => {
     setSelectedActifForVirement(actif);
@@ -173,7 +177,7 @@ const VirementDroit = () => {
     setSelectedRecipient(null);
     setRecipientSearch('');
     setSelectedDetenteur(null);
-    setSelectedDetentaireSite(null);
+    setSelectedRecipientSite(null);
     setSiteSearch('');
     const detName = renderPerson(actif?.detentaire);
     setDetenteurSearch(detName);
@@ -189,8 +193,8 @@ const VirementDroit = () => {
       toast.error('Veuillez sélectionner un détenteur et un bénéficiaire');
       return;
     }
-    if (!selectedDetentaireSite) {
-      toast.error('Veuillez sélectionner le site de dépôt du détenteur');
+    if (!selectedRecipientSite) {
+      toast.error('Veuillez sélectionner le site du bénéficiaire');
       return;
     }
     try {
@@ -218,9 +222,9 @@ const VirementDroit = () => {
         return;
       }
 
-      const siteId = selectedDetentaireSite?._id || selectedDetentaireSite?.id || '';
+      const siteId = selectedRecipientSite?._id || selectedRecipientSite?.id || '';
       if (!siteId) {
-        toast.error('Site de dépôt introuvable pour cet actif');
+        toast.error('Site du bénéficiaire introuvable');
         setLoadingVirement(false);
         return;
       }
@@ -278,7 +282,17 @@ const VirementDroit = () => {
           </div>
 
           <Card className="border-neutral-200 bg-white">
-            <div className="p-4">
+            <div className="p-4 space-y-4">
+              <div className="flex flex-wrap gap-4">
+                <div className="flex-1 min-w-50">
+                  <Input
+                    placeholder="Rechercher par produit ou transaction..."
+                    value={filterSearch}
+                    onChange={e => setFilterSearch(e.target.value)}
+                    className="border-neutral-300"
+                  />
+                </div>
+              </div>
               <ActifsTable loading={loadingActifs} actifs={actifs} dateFormat={dateFormat} isDesktop={true} onVirerDroit={handleOpenVirementFromActif} />
             </div>
           </Card>
@@ -423,10 +437,10 @@ const VirementDroit = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">Site de dépôt (Y) <span className="text-red-500 ml-0.5">*</span></label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">Site du bénéficiaire (Z) <span className="text-red-500 ml-0.5">*</span></label>
                   <div className="relative">
                     <Input
-                      placeholder={loadingDetentaireSites ? 'Chargement...' : selectedDetenteur ? 'Rechercher le site...' : 'Sélectionnez d\'abord le détenteur'}
+                      placeholder={loadingRecipientSites ? 'Chargement...' : selectedRecipient ? 'Rechercher le site...' : 'Sélectionnez d\'abord le bénéficiaire'}
                       value={siteSearch}
                       onChange={(e) => { setSiteSearch(e.target.value); setSiteHighlighted(0); }}
                       onFocus={() => { setSiteOpen(true); setSiteHighlighted(0); }}
@@ -449,7 +463,7 @@ const VirementDroit = () => {
                             e.preventDefault();
                             const site = filteredSites[siteHighlighted];
                             if (site) {
-                              setSelectedDetentaireSite(site);
+                              setSelectedRecipientSite(site);
                               setSiteSearch(site.siteName);
                               setSiteOpen(false);
                             }
@@ -457,7 +471,7 @@ const VirementDroit = () => {
                         }
                       }}
                       className="w-full border-neutral-300"
-                      disabled={!selectedDetenteur || loadingDetentaireSites}
+                      disabled={!selectedRecipient || loadingRecipientSites}
                     />
                     {siteOpen && filteredSites.length > 0 && (
                       <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
@@ -466,7 +480,7 @@ const VirementDroit = () => {
                             type="button"
                             key={site._id}
                             onMouseEnter={() => setSiteHighlighted(idx)}
-                            onClick={() => { setSelectedDetentaireSite(site); setSiteSearch(site.siteName); setSiteOpen(false); }}
+                            onClick={() => { setSelectedRecipientSite(site); setSiteSearch(site.siteName); setSiteOpen(false); }}
                             className={`w-full text-left px-3 py-2 text-sm ${idx === siteHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
                           >
                             {site.siteName}
@@ -509,7 +523,7 @@ const VirementDroit = () => {
 
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setVirerModalOpen(false)}>Annuler</Button>
-                  <Button status={loadingVirement ? 'loading' : (selectedRecipient && selectedDetenteur && selectedDetentaireSite ? 'active' : 'inactive')} onClick={handleConfirmVirement} disabled={!selectedRecipient || !selectedDetenteur || !selectedDetentaireSite || loadingVirement} color="default">
+                  <Button status={loadingVirement ? 'loading' : (selectedRecipient && selectedDetenteur && selectedRecipientSite ? 'active' : 'inactive')} onClick={handleConfirmVirement} disabled={!selectedRecipient || !selectedDetenteur || !selectedRecipientSite || loadingVirement} color="default">
                     {loadingVirement && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer le virement
                   </Button>
                 </div>
