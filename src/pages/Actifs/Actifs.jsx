@@ -484,7 +484,7 @@ const Actifs = () => {
 										status="active"
 										color="default"
 									>
-										Initialisation du stock
+										Opération hors plateforme
 									</Button>
 									<ExportButton
 										exportFunction={exportAndDownloadActifs}

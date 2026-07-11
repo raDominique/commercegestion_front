@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import InfoIcon from '@mui/icons-material/Info';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DoneIcon from '@mui/icons-material/Done';
+import DownloadIcon from '@mui/icons-material/Download';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { useAuth } from '@/context/AuthContext';
 import useScreenType from '@/utils/useScreenType';
@@ -21,6 +22,7 @@ import useDateFormat from '@/utils/useDateFormat';
 import UserNotValidatedBanner from '@/components/commons/UserNotValidatedBanner';
 import usePageTitle from '@/utils/usePageTitle';
 import PaginationControls from '@/components/commons/PaginationControls.jsx';
+import axiosConfig from '@/services/axios.config';
 
 function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, onApprove, actionLoading }) {
     const dateFormat = useDateFormat();
@@ -209,8 +211,31 @@ const Parrainage = () => {
     const [detailUser, setDetailUser] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
+    const [downloadingDoc, setDownloadingDoc] = useState(null);
 
     const { isDesktop } = useScreenType();
+
+    const downloadDocument = async (filePath) => {
+      const url = getFullMediaUrl(filePath);
+      if (!url) return;
+      setDownloadingDoc(url);
+      try {
+        const res = await axiosConfig.get(url, { responseType: 'blob' });
+        const blob = res.data;
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filePath.split('/').pop() || 'document';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        toast.error('Échec du téléchargement du document');
+      } finally {
+        setDownloadingDoc(null);
+      }
+    };
 
     useEffect(() => {
         const fetchReferrals = async () => {
@@ -251,7 +276,8 @@ const Parrainage = () => {
         setDetailOpen(true);
         try {
             const res = await getUserById(userId);
-            const detail = Array.isArray(res.data) ? res.data[0] : res.data;
+            const raw = res?.data ?? res;
+            const detail = Array.isArray(raw) ? raw[0] : raw;
             setDetailUser(detail);
         } catch (err) {
             console.error(err);
@@ -421,7 +447,10 @@ const Parrainage = () => {
                                                     <ul className="list-disc ml-6">
                                                         {detailUser.identityDocument.map((file, idx) => (
                                                             <li key={idx}>
-                                                                <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger document {idx + 1}</a>
+                                                                <Button variant="link" size="sm" className="p-0 h-auto text-violet-600 underline text-sm" onClick={() => downloadDocument(file)} disabled={downloadingDoc === getFullMediaUrl(file)}>
+                                                                    {downloadingDoc === getFullMediaUrl(file) ? <Loader size="sm" className="border-violet-600 border-t-transparent shrink-0" /> : <DownloadIcon className="w-4 h-4 mr-1" />}
+                                                                    Télécharger document {idx + 1}
+                                                                </Button>
                                                             </li>
                                                         ))}
                                                     </ul>
@@ -437,7 +466,10 @@ const Parrainage = () => {
                                                             <ul className="list-disc ml-6">
                                                                 {detailUser.carteStat.map((file, idx) => (
                                                                     <li key={idx}>
-                                                                        <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a>
+                                                                        <Button variant="link" size="sm" className="p-0 h-auto text-violet-600 underline text-sm" onClick={() => downloadDocument(file)} disabled={downloadingDoc === getFullMediaUrl(file)}>
+                                                                            {downloadingDoc === getFullMediaUrl(file) ? <Loader size="sm" className="border-violet-600 border-t-transparent shrink-0" /> : <DownloadIcon className="w-4 h-4 mr-1" />}
+                                                                            Télécharger fichier {idx + 1}
+                                                                        </Button>
                                                                     </li>
                                                                 ))}
                                                             </ul>
@@ -449,7 +481,10 @@ const Parrainage = () => {
                                                             <ul className="list-disc ml-6">
                                                                 {detailUser.carteFiscal.map((file, idx) => (
                                                                     <li key={idx}>
-                                                                        <a href={getFullMediaUrl(file)} download target="_blank" rel="noopener noreferrer" className="text-violet-600 underline">Télécharger fichier {idx + 1}</a>
+                                                                        <Button variant="link" size="sm" className="p-0 h-auto text-violet-600 underline text-sm" onClick={() => downloadDocument(file)} disabled={downloadingDoc === getFullMediaUrl(file)}>
+                                                                            {downloadingDoc === getFullMediaUrl(file) ? <Loader size="sm" className="border-violet-600 border-t-transparent shrink-0" /> : <DownloadIcon className="w-4 h-4 mr-1" />}
+                                                                            Télécharger fichier {idx + 1}
+                                                                        </Button>
                                                                     </li>
                                                                 ))}
                                                             </ul>
