@@ -76,8 +76,6 @@ const Depot = () => {
 
 	// États pour les recherches - Détentaire
 	const [detentaireSearch, setDetentaireSearch] = useState('');
-	const [detentaireOpen, setDetentaireOpen] = useState(false);
-	const [detentaireHighlighted, setDetentaireHighlighted] = useState(0);
 
 	// États pour les recherches - Site de destination
 	const [siteDestinationSearch, setSiteDestinationSearch] = useState('');
@@ -531,59 +529,26 @@ const Depot = () => {
 											<Input
 												placeholder="Rechercher un détenteur..."
 												value={detentaireSearch}
-												onChange={e => { setDetentaireSearch(e.target.value); setDetentaireHighlighted(0); }}
-												onFocus={() => { setDetentaireOpen(true); setDetentaireHighlighted(0); }}
-												onBlur={() => setTimeout(() => setDetentaireOpen(false), 150)}
-												onKeyDown={(e) => {
-													if (e.key === 'Escape') return setDetentaireOpen(false);
-													if (!detentaireOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-														setDetentaireOpen(true);
-														e.preventDefault();
-														return;
+												onChange={e => { setDetentaireSearch(e.target.value); }}
+												onBlur={() => {
+													const match = filteredDetentaires.find(u => u.name === detentaireSearch);
+													if (!match) {
+														setTransferForm(f => ({ ...f, detentaire: '' }));
+														setDetentaireSearch('');
 													}
-													if (detentaireOpen) {
-														if (e.key === 'ArrowDown') {
-															e.preventDefault();
-															setDetentaireHighlighted(i => Math.min(i + 1, Math.max(filteredDetentaires.length - 1, 0)));
-														} else if (e.key === 'ArrowUp') {
-															e.preventDefault();
-															setDetentaireHighlighted(i => Math.max(i - 1, 0));
-														} else if (e.key === 'Enter') {
-															e.preventDefault();
-															const user = filteredDetentaires[detentaireHighlighted];
-															if (user) {
-																setTransferForm(f => ({ ...f, detentaire: user._id }));
-																setDetentaireSearch(user.name);
-																setDetentaireOpen(false);
-															}
+												}}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter') {
+														e.preventDefault();
+														const user = filteredDetentaires[0];
+														if (user) {
+															setTransferForm(f => ({ ...f, detentaire: user._id }));
+															setDetentaireSearch(user.name);
 														}
 													}
 												}}
 												className="w-full"
 											/>
-											{detentaireOpen && (
-												<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-													{filteredDetentaires.length > 0 ? (
-														filteredDetentaires.map((user, idx) => (
-															<button
-																type="button"
-																key={user._id}
-																onMouseEnter={() => setDetentaireHighlighted(idx)}
-																onClick={() => {
-																	setTransferForm(f => ({ ...f, detentaire: user._id }));
-																	setDetentaireSearch(user.name);
-																	setDetentaireOpen(false);
-																}}
-																className={`w-full text-left px-3 py-2 text-sm ${idx === detentaireHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
-															>
-																{user.name}
-															</button>
-														))
-													) : (
-														<div className="px-3 py-2 text-sm text-neutral-500">Aucun utilisateur trouvé</div>
-													)}
-												</div>
-											)}
 										</div>
 									</div>
 								)}

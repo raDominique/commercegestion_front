@@ -335,50 +335,38 @@ const VirementDroit = () => {
                       value={recipientSearch}
                       onChange={(e) => { setRecipientSearch(e.target.value); setRecipientHighlighted(0); }}
                       onFocus={() => { setRecipientOpen(true); setRecipientHighlighted(0); }}
-                      onBlur={() => setTimeout(() => setRecipientOpen(false), 150)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') return setRecipientOpen(false);
-                        if (!recipientOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-                          setRecipientOpen(true);
-                          e.preventDefault();
-                          return;
-                        }
-                        if (recipientOpen) {
-                          if (e.key === 'ArrowDown') {
-                            e.preventDefault();
-                            setRecipientHighlighted(i => Math.min(i + 1, Math.max(filteredRecipients.length - 1, 0)));
-                          } else if (e.key === 'ArrowUp') {
-                            e.preventDefault();
-                            setRecipientHighlighted(i => Math.max(i - 1, 0));
-                          } else if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const u = filteredRecipients[recipientHighlighted];
-                            if (u) {
-                              setSelectedRecipient(u);
-                              setRecipientSearch(`${u.name || u.userName || u.userNickName || ''} - ${u.numeroMembre || u._id || ''}`);
-                              setRecipientOpen(false);
+                      onBlur={() => {
+                        setTimeout(() => {
+                          if (selectedRecipient) {
+                            const display = `${selectedRecipient.name || selectedRecipient.userName || selectedRecipient.userNickName || ''} - ${selectedRecipient.numeroMembre || selectedRecipient._id || ''}`;
+                            if (recipientSearch !== display) {
+                              setSelectedRecipient(null);
+                              setRecipientSearch('');
+                              toast.error('Bénéficiaire modifié, sélection annulée');
                             }
+                            return;
+                          }
+                          if (recipientSearch) {
+                            const match = findUserByName(recipientSearch, usersOptions);
+                            if (!match) {
+                              setRecipientSearch('');
+                            }
+                          }
+                        }, 200);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const u = filteredRecipients[0];
+                          if (u) {
+                            setSelectedRecipient(u);
+                            setRecipientSearch(`${u.name || u.userName || u.userNickName || ''} - ${u.numeroMembre || u._id || ''}`);
                           }
                         }
                       }}
                       className="w-full border-neutral-300"
                     />
 
-                    {recipientOpen && filteredRecipients.length > 0 && (
-                      <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-                        {filteredRecipients.map((u, idx) => (
-                          <button
-                            type="button"
-                            key={u._id}
-                            onMouseEnter={() => setRecipientHighlighted(idx)}
-                            onClick={() => { setSelectedRecipient(u); setRecipientSearch(`${u.name || u.userName || u.userNickName || ''} - ${u.numeroMembre || u._id || ''}`); setRecipientOpen(false); }}
-                            className={`w-full text-left px-3 py-2 text-sm ${idx === recipientHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
-                          >
-                            {u.name || u.userName || u.userNickName} - {u.numeroMembre || u._id || ''}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -390,49 +378,37 @@ const VirementDroit = () => {
                       value={detenteurSearch}
                       onChange={(e) => { setDetenteurSearch(e.target.value); setDetenteurHighlighted(0); }}
                       onFocus={() => { setDetenteurOpen(true); setDetenteurHighlighted(0); }}
-                      onBlur={() => setTimeout(() => setDetenteurOpen(false), 150)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') return setDetenteurOpen(false);
-                        if (!detenteurOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-                          setDetenteurOpen(true);
-                          e.preventDefault();
-                          return;
-                        }
-                        if (detenteurOpen) {
-                          if (e.key === 'ArrowDown') {
-                            e.preventDefault();
-                            setDetenteurHighlighted(i => Math.min(i + 1, Math.max(filteredDetenteurs.length - 1, 0)));
-                          } else if (e.key === 'ArrowUp') {
-                            e.preventDefault();
-                            setDetenteurHighlighted(i => Math.max(i - 1, 0));
-                          } else if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const u = filteredDetenteurs[detenteurHighlighted];
-                            if (u) {
-                              setSelectedDetenteur(u);
-                              setDetenteurSearch(`${u.name || u.userName || u.userNickName || ''} - ${u.numeroMembre || u._id || ''}`);
-                              setDetenteurOpen(false);
+                      onBlur={() => {
+                        setTimeout(() => {
+                          if (selectedDetenteur) {
+                            const display = `${selectedDetenteur.name || selectedDetenteur.userName || selectedDetenteur.userNickName || ''} - ${selectedDetenteur.numeroMembre || selectedDetenteur._id || ''}`;
+                            if (detenteurSearch !== display) {
+                              setSelectedDetenteur(null);
+                              setDetenteurSearch('');
+                              toast.error('Détenteur modifié, sélection annulée');
                             }
+                            return;
+                          }
+                          if (detenteurSearch) {
+                            const match = findUserByName(detenteurSearch, usersOptions);
+                            if (!match) {
+                              setDetenteurSearch('');
+                            }
+                          }
+                        }, 200);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const u = filteredDetenteurs[0];
+                          if (u) {
+                            setSelectedDetenteur(u);
+                            setDetenteurSearch(`${u.name || u.userName || u.userNickName || ''} - ${u.numeroMembre || u._id || ''}`);
                           }
                         }
                       }}
                       className="w-full border-neutral-300"
                     />
-                    {detenteurOpen && filteredDetenteurs.length > 0 && (
-                      <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-                        {filteredDetenteurs.map((u, idx) => (
-                          <button
-                            type="button"
-                            key={u._id}
-                            onMouseEnter={() => setDetenteurHighlighted(idx)}
-                            onClick={() => { setSelectedDetenteur(u); setDetenteurSearch(`${u.name || u.userName || u.userNickName || ''} - ${u.numeroMembre || u._id || ''}`); setDetenteurOpen(false); }}
-                            className={`w-full text-left px-3 py-2 text-sm ${idx === detenteurHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
-                          >
-                            {u.name || u.userName || u.userNickName} - {u.numeroMembre || u._id || ''}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
 

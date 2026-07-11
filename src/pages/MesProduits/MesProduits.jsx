@@ -1106,57 +1106,28 @@ const MesProduits = () => {
                     value={detentaireSearch}
                     onChange={e => { setDetentaireSearch(e.target.value); setDetentaireHighlighted(0); }}
                     onFocus={() => { setDetentaireOpen(true); setDetentaireHighlighted(0); }}
-                    onBlur={() => setTimeout(() => setDetentaireOpen(false), 150)}
+                    onBlur={() => setTimeout(() => {
+                      setDetentaireOpen(false);
+                      const match = filteredDetentaires.find(u => u.name === detentaireSearch);
+                      if (!match) {
+                        setDepositForm(f => ({ ...f, detentaire: '' }));
+                        setDetentaireSearch('');
+                      }
+                    }, 150)}
                     onKeyDown={(e) => {
                       if (e.key === 'Escape') return setDetentaireOpen(false);
-                      if (!detentaireOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-                        setDetentaireOpen(true);
+                      if (e.key === 'Enter') {
                         e.preventDefault();
-                        return;
-                      }
-                      if (detentaireOpen) {
-                        if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          setDetentaireHighlighted(i => Math.min(i + 1, Math.max(filteredDetentaires.length - 1, 0)));
-                        } else if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          setDetentaireHighlighted(i => Math.max(i - 1, 0));
-                        } else if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const user = filteredDetentaires[detentaireHighlighted];
-                          if (user) {
-                            setDepositForm(f => ({ ...f, detentaire: user._id }));
-                            setDetentaireSearch(user.name);
-                            setDetentaireOpen(false);
-                          }
+                        const user = filteredDetentaires[0];
+                        if (user) {
+                          setDepositForm(f => ({ ...f, detentaire: user._id }));
+                          setDetentaireSearch(user.name);
+                          setDetentaireOpen(false);
                         }
                       }
                     }}
                     className="w-full"
                   />
-                  {detentaireOpen && (
-                    <div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-                      {filteredDetentaires.length > 0 ? (
-                        filteredDetentaires.map((user, idx) => (
-                          <button
-                            type="button"
-                            key={user._id}
-                            onMouseEnter={() => setDetentaireHighlighted(idx)}
-                            onClick={() => {
-                              setDepositForm(f => ({ ...f, detentaire: user._id }));
-                              setDetentaireSearch(user.name);
-                              setDetentaireOpen(false);
-                            }}
-                            className={`w-full text-left px-3 py-2 text-sm ${idx === detentaireHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
-                          >
-                            {user.name}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3 py-2 text-sm text-neutral-500">Aucun utilisateur trouvé</div>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="space-y-2 md:col-span-2">
