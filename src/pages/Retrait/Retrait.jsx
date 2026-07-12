@@ -24,6 +24,7 @@ import { getProfile } from '../../services/auth.service.js';
 import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
 import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
+import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 
 const Retrait = () => {
 	const { user } = useAuth();
@@ -58,8 +59,6 @@ const Retrait = () => {
 
 	// États pour les recherches - Détentaire
 	const [detentaireSearch, setDetentaireSearch] = useState('');
-	const [detentaireOpen, setDetentaireOpen] = useState(false);
-	const [detentaireHighlighted, setDetentaireHighlighted] = useState(0);
 
 	// États pour les recherches - Site d'origine
 	const [siteOriginSearch, setSiteOriginSearch] = useState('');
@@ -75,7 +74,6 @@ const Retrait = () => {
 	const [saving, setSaving] = useState(false);
 
 	// Données filtrées (défensif pour éviter les valeurs undefined)
-	const filteredDetentaires = usersOptions.filter(user => (user?.name || '').toLowerCase().includes((detentaireSearch || '').toLowerCase()));
 	const filteredOriginSites = detentaireSites.filter(site => (site?.siteName || '').toLowerCase().includes((siteOriginSearch || '').toLowerCase()));
 	const filteredProducts = productsOnSite.filter(item => ((item?.productName || '').toLowerCase()).includes((productSearch || '').toLowerCase()));
 
@@ -344,36 +342,21 @@ const Retrait = () => {
 								</div>
 								<form className="space-y-4 p-4" onSubmit={handleWithdrawalSubmit}>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										{/* 1. Détentaire avec recherche */}
-										<div className="space-y-2 md:col-span-2">
-											<Label required>1. Détenteur</Label>
-											<div className="relative">
-												<Input
-													placeholder="Rechercher un détenteur..."
-													value={detentaireSearch || ''}
-													onChange={e => { setDetentaireSearch(e.target.value); }}
-													onFocus={() => {}}
-													onBlur={() => setTimeout(() => {
-														const match = usersOptions.find(u => (u?.name || '') === detentaireSearch);
-														if (!match) {
-															handleSelectDetentaire('');
-															setDetentaireSearch('');
-														}
-													}, 150)}
-													onKeyDown={(e) => {
-														if (e.key === 'Enter') {
-															e.preventDefault();
-															const user = filteredDetentaires[0];
-															if (user) {
-																handleSelectDetentaire(user._id);
-																setDetentaireSearch(user.name || '');
-															}
-														}
-													}}
-													className="w-full"
-												/>
-											</div>
-										</div>
+									{/* 1. Détentaire avec recherche */}
+									<div className="space-y-2 md:col-span-2">
+										<Label required>1. Détenteur</Label>
+										<UserAutocomplete
+											users={usersOptions}
+											value={detentaireSearch}
+											onChange={setDetentaireSearch}
+											onSelect={(user) => {
+												handleSelectDetentaire(user._id);
+												setDetentaireSearch(user.name || user.userNickName || '');
+											}}
+											placeholder="Rechercher un détenteur..."
+											className="w-full"
+										/>
+									</div>
 
 										{/* 2. Site d'origine avec recherche */}
 										{withdrawalForm.detentaire && (

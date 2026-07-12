@@ -27,6 +27,7 @@ import PaginationControls from '../../components/commons/PaginationControls.jsx'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 import { getAllUsersSelect } from '../../services/user.service';
+import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 import { getMySites, getActifsBySite, getSitesByUser } from '../../services/site.service';
 import { getAccessToken } from '../../services/token.service';
 import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
@@ -86,7 +87,6 @@ const Depot = () => {
 	// Données filtrées
 	const filteredOriginSites = allSites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
 	const filteredProducts = productsOnSite.filter(item => (item.productName || '').toLowerCase().includes(productSearch.toLowerCase()));
-	const filteredDetentaires = usersOptions.filter(user => user.name.toLowerCase().includes(detentaireSearch.toLowerCase()));
 	const filteredDestinationSites = detentaireSites.filter(site => site.siteName.toLowerCase().includes(siteDestinationSearch.toLowerCase()));
 
 	const fetchActifs = async () => {
@@ -525,31 +525,17 @@ const Depot = () => {
 								{transferForm.productId && (
 									<div className="space-y-2">
 										<Label required>4. Détenteur</Label>
-										<div className="relative">
-											<Input
-												placeholder="Rechercher un détenteur..."
-												value={detentaireSearch}
-												onChange={e => { setDetentaireSearch(e.target.value); }}
-												onBlur={() => {
-													const match = filteredDetentaires.find(u => u.name === detentaireSearch);
-													if (!match) {
-														setTransferForm(f => ({ ...f, detentaire: '' }));
-														setDetentaireSearch('');
-													}
-												}}
-												onKeyDown={(e) => {
-													if (e.key === 'Enter') {
-														e.preventDefault();
-														const user = filteredDetentaires[0];
-														if (user) {
-															setTransferForm(f => ({ ...f, detentaire: user._id }));
-															setDetentaireSearch(user.name);
-														}
-													}
-												}}
-												className="w-full"
-											/>
-										</div>
+										<UserAutocomplete
+											users={usersOptions}
+											value={detentaireSearch}
+											onChange={setDetentaireSearch}
+											onSelect={(user) => {
+												setTransferForm(f => ({ ...f, detentaire: user._id }));
+												setDetentaireSearch(user.name || user.userNickName || '');
+											}}
+											placeholder="Rechercher un détenteur..."
+											className="w-full"
+										/>
 									</div>
 								)}
 

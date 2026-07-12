@@ -32,6 +32,7 @@ import { getMySites } from '../../services/site.service';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { addProductFieldControl } from '../../utils/addProductFieldControl';
+import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 
 const MesProduits = () => {
   // Gestion des erreurs pour le formulaire dépôt
@@ -253,8 +254,6 @@ const MesProduits = () => {
   const [siteDestinationHighlighted, setSiteDestinationHighlighted] = useState(0);
   // States pour recherche détentaire
   const [detentaireSearch, setDetentaireSearch] = useState('');
-  const [detentaireOpen, setDetentaireOpen] = useState(false);
-  const [detentaireHighlighted, setDetentaireHighlighted] = useState(0);
   const [form, setForm] = useState({
     // productState: '',
     codeCPC: '',
@@ -283,7 +282,6 @@ const MesProduits = () => {
   const filteredEditCpcOptions = editCpcOptions.filter(opt => opt.nom.toLowerCase().includes(editCpcSearch.toLowerCase()));
   const filteredOriginSites = sites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
   const filteredDestinationSites = sites.filter(site => site.siteName.toLowerCase().includes(siteDestinationSearch.toLowerCase()));
-  const filteredDetentaires = usersOptions.filter(user => user.name.toLowerCase().includes(detentaireSearch.toLowerCase()));
 
   // Soumission du formulaire d'ajout
   const handleAddProduct = async (e) => {
@@ -1100,35 +1098,17 @@ const MesProduits = () => {
               <Input name="prixUnitaire" value={depositForm.prixUnitaire} onChange={e => setDepositForm(f => ({ ...f, prixUnitaire: e.target.value }))} type="hidden" />
               <div className="space-y-2">
                 <Label htmlFor="detentaire">Détenteur</Label>
-                <div className="relative">
-                  <Input
-                    placeholder="Rechercher le détenteur..."
-                    value={detentaireSearch}
-                    onChange={e => { setDetentaireSearch(e.target.value); setDetentaireHighlighted(0); }}
-                    onFocus={() => { setDetentaireOpen(true); setDetentaireHighlighted(0); }}
-                    onBlur={() => setTimeout(() => {
-                      setDetentaireOpen(false);
-                      const match = filteredDetentaires.find(u => u.name === detentaireSearch);
-                      if (!match) {
-                        setDepositForm(f => ({ ...f, detentaire: '' }));
-                        setDetentaireSearch('');
-                      }
-                    }, 150)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') return setDetentaireOpen(false);
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const user = filteredDetentaires[0];
-                        if (user) {
-                          setDepositForm(f => ({ ...f, detentaire: user._id }));
-                          setDetentaireSearch(user.name);
-                          setDetentaireOpen(false);
-                        }
-                      }
-                    }}
-                    className="w-full"
-                  />
-                </div>
+                <UserAutocomplete
+                  users={usersOptions}
+                  value={detentaireSearch}
+                  onChange={setDetentaireSearch}
+                  onSelect={(user) => {
+                    setDepositForm(f => ({ ...f, detentaire: user._id }));
+                    setDetentaireSearch(user.name || user.userNickName || '');
+                  }}
+                  placeholder="Rechercher le détenteur..."
+                  className="w-full"
+                />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="observations">Observations</Label>

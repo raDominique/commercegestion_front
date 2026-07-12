@@ -21,6 +21,7 @@ import { virementDroit, getMyDepositsAtOthers } from '../../services/transaction
 import { getAccessToken } from '../../services/token.service';
 import { getSitesByUser } from '../../services/site.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
+import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 
 const findUserByName = (name, users) => {
   if (!name || !users?.length) return null;
@@ -56,17 +57,11 @@ const VirementDroit = () => {
 
   const [usersOptions, setUsersOptions] = useState([]);
   const [recipientSearch, setRecipientSearch] = useState('');
-  const [recipientOpen, setRecipientOpen] = useState(false);
-  const [recipientHighlighted, setRecipientHighlighted] = useState(0);
-  const [filteredRecipients, setFilteredRecipients] = useState([]);
   const [selectedRecipient, setSelectedRecipient] = useState(null);
   const [, setLoadingRecipients] = useState(false);
   const [loadingVirement, setLoadingVirement] = useState(false);
 
 	const [detenteurSearch, setDetenteurSearch] = useState('');
-	const [detenteurOpen, setDetenteurOpen] = useState(false);
-	const [detenteurHighlighted, setDetenteurHighlighted] = useState(0);
-	const [filteredDetenteurs, setFilteredDetenteurs] = useState([]);
 	const [selectedDetenteur, setSelectedDetenteur] = useState(null);
 
 	const [recipientSites, setRecipientSites] = useState([]);
@@ -137,14 +132,6 @@ const VirementDroit = () => {
       setLoadingRecipients(false);
     }
   };
-
-  useEffect(() => {
-    setFilteredRecipients(usersOptions.filter(u => (u?.name || u?.userName || u?.userNickName || '').toLowerCase().includes((recipientSearch || '').toLowerCase())));
-  }, [recipientSearch, usersOptions]);
-
-  useEffect(() => {
-    setFilteredDetenteurs(usersOptions.filter(u => (u?.name || u?.userName || u?.userNickName || '').toLowerCase().includes((detenteurSearch || '').toLowerCase())));
-  }, [detenteurSearch, usersOptions]);
 
   const filteredSites = recipientSites.filter(site => (site?.siteName || '').toLowerCase().includes(siteSearch.toLowerCase()));
 
@@ -329,87 +316,34 @@ const VirementDroit = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">Bénéficiaire (Z) <span className="text-red-500 ml-0.5">*</span></label>
-                  <div className="relative">
-                    <Input
-                      placeholder={usersOptions.length === 0 ? 'Chargement...' : 'Rechercher le bénéficiaire...'}
-                      value={recipientSearch}
-                      onChange={(e) => { setRecipientSearch(e.target.value); setRecipientHighlighted(0); }}
-                      onFocus={() => { setRecipientOpen(true); setRecipientHighlighted(0); }}
-                      onBlur={() => {
-                        setTimeout(() => {
-                          if (selectedRecipient) {
-                            const display = `${selectedRecipient.name || selectedRecipient.userName || selectedRecipient.userNickName || ''} - ${selectedRecipient.numeroMembre || selectedRecipient._id || ''}`;
-                            if (recipientSearch !== display) {
-                              setSelectedRecipient(null);
-                              setRecipientSearch('');
-                              toast.error('Bénéficiaire modifié, sélection annulée');
-                            }
-                            return;
-                          }
-                          if (recipientSearch) {
-                            const match = findUserByName(recipientSearch, usersOptions);
-                            if (!match) {
-                              setRecipientSearch('');
-                            }
-                          }
-                        }, 200);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const u = filteredRecipients[0];
-                          if (u) {
-                            setSelectedRecipient(u);
-                            setRecipientSearch(`${u.name || u.userName || u.userNickName || ''} - ${u.numeroMembre || u._id || ''}`);
-                          }
-                        }
-                      }}
-                      className="w-full border-neutral-300"
-                    />
-
-                  </div>
+                  <UserAutocomplete
+                    users={usersOptions}
+                    value={recipientSearch}
+                    onChange={setRecipientSearch}
+                    onSelect={(user) => {
+                      setSelectedRecipient(user);
+                      setRecipientSearch(`${user.name || user.userName || user.userNickName || ''} - ${user.numeroMembre || user._id || ''}`);
+                    }}
+                    getSubLabel={(user) => `${user.numeroMembre || ''}`}
+                    placeholder={usersOptions.length === 0 ? 'Chargement...' : 'Rechercher le bénéficiaire...'}
+                    className="w-full border-neutral-300"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-neutral-700 mb-1">Détenteur (Y) <span className="text-red-500 ml-0.5">*</span></label>
-                  <div className="relative">
-                    <Input
-                      placeholder={usersOptions.length === 0 ? 'Chargement...' : 'Rechercher le détenteur...'}
-                      value={detenteurSearch}
-                      onChange={(e) => { setDetenteurSearch(e.target.value); setDetenteurHighlighted(0); }}
-                      onFocus={() => { setDetenteurOpen(true); setDetenteurHighlighted(0); }}
-                      onBlur={() => {
-                        setTimeout(() => {
-                          if (selectedDetenteur) {
-                            const display = `${selectedDetenteur.name || selectedDetenteur.userName || selectedDetenteur.userNickName || ''} - ${selectedDetenteur.numeroMembre || selectedDetenteur._id || ''}`;
-                            if (detenteurSearch !== display) {
-                              setSelectedDetenteur(null);
-                              setDetenteurSearch('');
-                              toast.error('Détenteur modifié, sélection annulée');
-                            }
-                            return;
-                          }
-                          if (detenteurSearch) {
-                            const match = findUserByName(detenteurSearch, usersOptions);
-                            if (!match) {
-                              setDetenteurSearch('');
-                            }
-                          }
-                        }, 200);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const u = filteredDetenteurs[0];
-                          if (u) {
-                            setSelectedDetenteur(u);
-                            setDetenteurSearch(`${u.name || u.userName || u.userNickName || ''} - ${u.numeroMembre || u._id || ''}`);
-                          }
-                        }
-                      }}
-                      className="w-full border-neutral-300"
-                    />
-                  </div>
+                  <UserAutocomplete
+                    users={usersOptions}
+                    value={detenteurSearch}
+                    onChange={setDetenteurSearch}
+                    onSelect={(user) => {
+                      setSelectedDetenteur(user);
+                      setDetenteurSearch(`${user.name || user.userName || user.userNickName || ''} - ${user.numeroMembre || user._id || ''}`);
+                    }}
+                    getSubLabel={(user) => `${user.numeroMembre || ''}`}
+                    placeholder={usersOptions.length === 0 ? 'Chargement...' : 'Rechercher le détenteur...'}
+                    className="w-full border-neutral-300"
+                  />
                 </div>
 
                 <div className="space-y-2">
