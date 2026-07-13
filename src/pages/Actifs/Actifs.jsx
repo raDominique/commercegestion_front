@@ -46,6 +46,11 @@ const renderPerson = (person) => {
 	return '-';
 };
 
+const getQuantityValue = (value) => {
+	const numericValue = Number(value);
+	return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
 const Actifs = () => {
 	usePageTitle('Actifs');
 
@@ -964,7 +969,9 @@ const Actifs = () => {
 											<div><b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}</div>
 											<div><b>Dépôt :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}</div>
 											<div><b>Adresse dépôt :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
-											<div><b>Quantité :</b> {formatThousands(detailActif.quantite ?? 0)}</div>
+											<div><b>QTE :</b> {formatThousands(getQuantityValue(detailActif.quantite))}</div>
+<div><b>En attente :</b> {formatThousands(getQuantityValue(detailActif.quantiteEnAttente))}</div>
+<div><b>Disponible :</b> {formatThousands(getQuantityValue(detailActif.quantiteDisponible ?? detailActif.quantite))}</div>
 											<div><b>Détenteur :</b> {renderPerson(detailActif.detentaire)}</div>
 										</>
 									)}
@@ -995,10 +1002,23 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Image</TableHead>
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
+							<TableHead colSpan={3} className="text-xs text-neutral-600 text-center">Quantité</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
+						</TableRow>
+						<TableRow>
+							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
+							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
+							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
+							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
+							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-center">Réelle</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-center">Disponible</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-center">En Attente</TableHead>
+							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
+							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-right p-4">&nbsp;</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -1015,7 +1035,9 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
-								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
+								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantite))}</TableCell>
+								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteDisponible ?? item.quantite))}</TableCell>
+								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteEnAttente))}</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								<TableCell className="text-sm text-right">
@@ -1066,7 +1088,20 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							</div>
 						</div>
 						<div className="flex flex-col items-end gap-2">
-							<div className="text-sm font-medium text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
+							<div className="grid grid-cols-3 gap-2 text-xs text-neutral-700 min-w-55">
+								<div className="text-right">
+									<div className="font-semibold">QTE</div>
+									<div>{formatThousands(getQuantityValue(item.quantite))}</div>
+								</div>
+								<div className="text-right">
+									<div className="font-semibold">Att.</div>
+									<div>{formatThousands(getQuantityValue(item.quantiteEnAttente))}</div>
+								</div>
+								<div className="text-right">
+									<div className="font-semibold">Disp.</div>
+									<div>{formatThousands(getQuantityValue(item.quantiteDisponible ?? item.quantite))}</div>
+								</div>
+							</div>
 							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
 							<div className="flex flex-col gap-1 mt-2">
 								{/* ✅ UN SEUL bouton Détails, design cohérent avec les autres */}
