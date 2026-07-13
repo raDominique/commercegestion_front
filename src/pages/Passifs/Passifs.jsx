@@ -22,6 +22,12 @@ import { Badge } from '../../components/ui/badge';
 import { getFullMediaUrl } from '../../services/media.service';
 import InfoIcon from '@mui/icons-material/Info';
 import { Loader } from '../../components/ui/loader';
+const statutConfig = {
+  PENDING: { label: 'En attente', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  APPROVED: { label: 'Approuvé', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  REJECTED: { label: 'Rejeté', className: 'bg-red-50 text-red-700 border-red-200' },
+};
+
 const renderPerson = (person) => {
 	if (!person) return '-';
 	if (typeof person === 'string') return person;
@@ -176,6 +182,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 							<TableHead className="text-xs text-neutral-600 text-right">Total (Ar)</TableHead> */}
 							{/* <TableHead className="text-xs text-neutral-600">Détenteur</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
+							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
 						</TableRow>
@@ -200,6 +207,11 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell> */}
 									{/* <TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell> */}
 									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
+									<TableCell className="text-sm">
+										<Badge className={`text-xs px-2 py-0.5 rounded ${statutConfig[item.statut]?.className || 'bg-neutral-100 text-neutral-700 border-neutral-200'}`}>
+											{statutConfig[item.statut]?.label || item.statut || '-'}
+										</Badge>
+									</TableCell>
 									<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 									<TableCell className="text-sm text-right">
 										<div className="flex gap-2 justify-end">
@@ -242,6 +254,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<div>Montant: {montant !== null ? formatThousands(montant) : '-'}</div>
 									{/* <div>Détenteur: {detenteur}</div> */}
 									<div>Ayant droit: {ayantDroit}</div>
+									<div>Statut: <Badge className={`text-xs px-2 py-0.5 rounded ${statutConfig[item.statut]?.className || 'bg-neutral-100 text-neutral-700 border-neutral-200'}`}>{statutConfig[item.statut]?.label || item.statut || '-'}</Badge></div>
 									<div>{date ? dateFormat(date) : '-'}</div>
 								</div>
 							</div>
