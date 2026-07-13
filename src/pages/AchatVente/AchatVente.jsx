@@ -54,16 +54,7 @@ const AchatVente = () => {
       setLoadingProducts(true);
       getActifsBySite(siteOrigineId).then(res => {
         const items = Array.isArray(res) ? res : (res?.data && Array.isArray(res.data) ? res.data : []);
-        const grouped = {};
-        items.forEach(item => {
-          const id = item.productId || item._id;
-          if (grouped[id]) {
-            grouped[id].quantite = (grouped[id].quantite || 0) + (item.quantite || 0);
-          } else {
-            grouped[id] = { ...item };
-          }
-        });
-        setProducts(Object.values(grouped));
+        setProducts(items);
         setProductId('');
         setQuantite('');
         setRapportEchange('');
@@ -109,13 +100,15 @@ const AchatVente = () => {
     if (!quantite) missing.push('Quantité');
     if (!rapportEchange) missing.push(mode === 'monetary' ? 'Prix unitaire' : 'Rapport d\'échange');
     if (missing.length > 0) { toast.error(`Champs obligatoires : ${missing.join(', ')}`); return; }
+    const actualProductId = selectedProduct?.productId || selectedProduct?._id;
+    if (!actualProductId && productId) { toast.error('Erreur de sélection du produit'); return; }
     setSaving(true);
     try {
       const token = getAccessToken();
       if (!token) { toast.error('Authentification requise'); return; }
       await createVenteTransaction({
         vendeurId,
-        productId,
+        productId: actualProductId,
         siteOrigineId,
         siteDestinationId: siteOrigineId,
         quantite: Number(quantite),
@@ -132,7 +125,7 @@ const AchatVente = () => {
     }
   };
 
-  const selectedProduct = products.find(p => (p.productId || p._id) === productId);
+  const selectedProduct = products[Number(productId)] || null;
   const displayProductName = selectedProduct ? truncate(selectedProduct.productName || selectedProduct.name) : null;
   const maxQty = selectedProduct?.quantite ?? null;
 
@@ -189,8 +182,8 @@ const AchatVente = () => {
                             <SelectValue placeholder={loadingProducts ? "Chargement..." : "Sélectionner un produit"}>{displayProductName}</SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            {products.map(p => (
-                              <SelectItem key={p.productId || p._id} value={p.productId || p._id}>{p.productName || p.name}</SelectItem>
+                            {products.map((p, i) => (
+                              <SelectItem key={i} value={String(i)}>{p.productName || p.name} (Stock: {formatThousands(p.quantite ?? 0)})</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -202,9 +195,9 @@ const AchatVente = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
-                            <Input type="number" min="1" max={maxQty || undefined} value={quantite} onChange={e => {
+                            <Input type="number" min="1" max={maxQty ?? undefined} value={quantite} onChange={e => {
                               const val = e.target.value;
-                              if (val === '' || Number(val) <= (maxQty || Infinity)) setQuantite(val);
+                              if (val === '' || Number(val) <= (maxQty ?? Infinity)) setQuantite(val);
                             }} className="bg-white" />
                           </div>
                           <div className="space-y-2">
@@ -286,8 +279,8 @@ const AchatVente = () => {
                             <SelectValue placeholder={loadingProducts ? "Chargement..." : "Sélectionner un produit"}>{displayProductName}</SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            {products.map(p => (
-                              <SelectItem key={p.productId || p._id} value={p.productId || p._id}>{p.productName || p.name}</SelectItem>
+                            {products.map((p, i) => (
+                              <SelectItem key={i} value={String(i)}>{p.productName || p.name} (Stock: {formatThousands(p.quantite ?? 0)})</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -299,9 +292,9 @@ const AchatVente = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
-                            <Input type="number" min="1" max={maxQty || undefined} value={quantite} onChange={e => {
+                            <Input type="number" min="1" max={maxQty ?? undefined} value={quantite} onChange={e => {
                               const val = e.target.value;
-                              if (val === '' || Number(val) <= (maxQty || Infinity)) setQuantite(val);
+                              if (val === '' || Number(val) <= (maxQty ?? Infinity)) setQuantite(val);
                             }} className="bg-white" />
                           </div>
                           <div className="space-y-2">
