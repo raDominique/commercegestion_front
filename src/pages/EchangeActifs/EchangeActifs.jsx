@@ -358,7 +358,7 @@ const EchangeActifs = () => {
           <form onSubmit={handleSubmitOffer} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="detenteurAId">Détenteur W *</Label>
+                <Label htmlFor="detenteurAId" required>Détenteur W</Label>
                 <Select
                   value={offerForm.detenteurAId}
                   onValueChange={(value) => {
@@ -381,7 +381,7 @@ const EchangeActifs = () => {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="depotAId">Dépôt *</Label>
+                <Label htmlFor="depotAId" required>Dépôt</Label>
                 <Select
                   value={offerForm.depotAId}
                   onValueChange={(value) => {
@@ -404,7 +404,7 @@ const EchangeActifs = () => {
               </div>
 
               <div className="grid min-w-0 gap-2">
-                <Label htmlFor="productAId">Produit A vendu * {selectedProductA?.quantite != null && (
+                <Label htmlFor="productAId" required>Produit A vendu {selectedProductA?.quantite != null && (
                   <div className="text-xs text-neutral-500">Disponible: {formatThousands(selectedProductA.quantite)}</div>
                 )}</Label>
                 <Select
@@ -427,7 +427,7 @@ const EchangeActifs = () => {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="quantiteA">Quantité de produit A *</Label>
+                <Label htmlFor="quantiteA" required>Quantité de produit A</Label>
                 <Input
                   id="quantiteA"
                   type="number"
@@ -440,7 +440,7 @@ const EchangeActifs = () => {
               </div>
 
               <div className="grid min-w-0 gap-2">
-                <Label htmlFor="productBId">Produit B de contrepartie *</Label>
+                <Label htmlFor="productBId" required>Produit B de contrepartie</Label>
                 <Select
                   value={offerForm.productBId}
                   onValueChange={(value) => setOfferForm((prev) => ({ ...prev, productBId: value }))}
@@ -460,7 +460,7 @@ const EchangeActifs = () => {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="tauxEchange">Taux d'échange *</Label>
+                <Label htmlFor="tauxEchange" required>Taux d'échange</Label>
                 <Input
                   id="tauxEchange"
                   type="number"
@@ -696,7 +696,7 @@ const EchangeActifs = () => {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="buyQuantity">Quantité à acheter *</Label>
+              <Label htmlFor="buyQuantity" required>Quantité à acheter</Label>
               <Input
                 id="buyQuantity"
                 type="number"

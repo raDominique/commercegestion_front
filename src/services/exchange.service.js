@@ -14,9 +14,9 @@ import axiosInstance from './axios.config';
  * @returns {Promise<Object>} - Données de l'API
  */
 export const createExchangeOffer = async (payload, token) => {
-  const response = await axiosInstance.post('/api/v1/exchange/offers', payload, {
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-  });
+  const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const response = await axiosInstance.post('/api/v1/exchange/offers', payload, { headers });
   return response.data;
 };
 
@@ -35,13 +35,15 @@ export const createExchangeOffer = async (payload, token) => {
  * @returns {Promise<Object>} - Données de l'API
  */
 export const getExchangeOffers = async (params = {}, token) => {
+  const headers = { Accept: 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
   const response = await axiosInstance.get('/api/v1/exchange/offers', {
     params: {
       limit: 20,
       page: 1,
       ...params,
     },
-    headers: { Authorization: `Bearer ${token}`, accept: '*/*' },
+    headers,
   });
   return response.data;
 };
@@ -54,9 +56,9 @@ export const getExchangeOffers = async (params = {}, token) => {
  * @returns {Promise<Object>} - Données de l'API
  */
 export const buyExchangeOffer = async (offerId, quantiteA, token) => {
-  const response = await axiosInstance.post(`/api/v1/exchange/offers/${offerId}/buy`, { quantiteA }, {
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-  });
+  const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const response = await axiosInstance.post(`/api/v1/exchange/offers/${offerId}/buy`, { quantiteA }, { headers });
   return response.data;
 };
 
