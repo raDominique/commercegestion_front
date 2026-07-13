@@ -245,7 +245,8 @@ export const initializeTransaction = async (params, token) => {
  * @param {string} params.siteOrigineId - ID du site d'origine
  * @param {string} params.siteDestinationId - ID du site de destination
  * @param {number} params.quantite - Quantité
- * @param {number} params.prixUnitaire - Prix unitaire
+ * @param {string} params.contrepartieId - ID de la contrepartie (acheteur)
+ * @param {number} params.rapportEchange - Rapport d'échange
  * @param {string} [params.observations] - Observations facultatives
  * @param {string} token - Token d'authentification
  * @returns {Promise}
@@ -259,7 +260,8 @@ export const createVenteTransaction = async (params, token) => {
             siteOrigineId: params.siteOrigineId,
             siteDestinationId: params.siteDestinationId,
             quantite: Number(params.quantite),
-            prixUnitaire: Number(params.prixUnitaire),
+            contrepartieId: params.contrepartieId,
+            rapportEchange: Number(params.rapportEchange),
             observations: params.observations || '',
         },
         {

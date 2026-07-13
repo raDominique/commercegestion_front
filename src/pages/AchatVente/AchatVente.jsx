@@ -6,6 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 import { createVenteTransaction } from '../../services/transaction.service';
 import { getAllUsersSelect } from '../../services/user.service';
@@ -13,7 +14,12 @@ import { getMySites, getActifsBySite } from '../../services/site.service';
 import { getAccessToken } from '../../services/token.service';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
+import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 import { Loader } from '../../components/ui/loader';
+import { formatThousands } from '../../utils/formatNumber';
+
+const getUserDisplayName = (u) => u?.name || u?.userNickName || u?.userName || u?.email || '';
+const truncate = (text, max = 35) => !text || text.length <= max ? text : text.slice(0, max) + '…';
 
 const AchatVente = () => {
   usePageTitle('Achat / Vente');
@@ -23,16 +29,17 @@ const AchatVente = () => {
   const [sites, setSites] = useState([]);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [mode, setMode] = useState('monetary');
 
-  const [form, setForm] = useState({
-    vendeurId: '',
-    productId: '',
-    siteOrigineId: '',
-    siteDestinationId: '',
-    quantite: '',
-    prixUnitaire: '',
-    observations: '',
-  });
+  const [vendeurInput, setVendeurInput] = useState('');
+  const [vendeurId, setVendeurId] = useState('');
+  const [contrepartieInput, setContrepartieInput] = useState('');
+  const [contrepartieId, setContrepartieId] = useState('');
+  const [siteOrigineId, setSiteOrigineId] = useState('');
+  const [productId, setProductId] = useState('');
+  const [quantite, setQuantite] = useState('');
+  const [rapportEchange, setRapportEchange] = useState('');
+  const [observations, setObservations] = useState('');
 
   useEffect(() => {
     getAllUsersSelect().then(res => setUsers(Array.isArray(res) ? res : []));
@@ -43,48 +50,91 @@ const AchatVente = () => {
   }, []);
 
   useEffect(() => {
-    if (form.siteOrigineId) {
+    if (siteOrigineId) {
       setLoadingProducts(true);
-      getActifsBySite(form.siteOrigineId).then(res => {
+      getActifsBySite(siteOrigineId).then(res => {
         const items = Array.isArray(res) ? res : (res?.data && Array.isArray(res.data) ? res.data : []);
-        setProducts(items);
-        setForm(prev => ({ ...prev, productId: '', quantite: '', prixUnitaire: '' }));
+        const grouped = {};
+        items.forEach(item => {
+          const id = item.productId || item._id;
+          if (grouped[id]) {
+            grouped[id].quantite = (grouped[id].quantite || 0) + (item.quantite || 0);
+          } else {
+            grouped[id] = { ...item };
+          }
+        });
+        setProducts(Object.values(grouped));
+        setProductId('');
+        setQuantite('');
+        setRapportEchange('');
       }).finally(() => setLoadingProducts(false));
     } else {
       setProducts([]);
     }
-  }, [form.siteOrigineId]);
+  }, [siteOrigineId]);
 
-  const handleSelectProduct = (productId) => {
-    const actif = products.find(p => (p.productId || p._id) === productId);
-    setForm(prev => ({
-      ...prev,
-      productId,
-      prixUnitaire: actif?.prixUnitaire || '',
-      quantite: '',
-    }));
+  const resetForm = () => {
+    setVendeurInput('');
+    setVendeurId('');
+    setContrepartieInput('');
+    setContrepartieId('');
+    setSiteOrigineId('');
+    setProductId('');
+    setQuantite('');
+    setRapportEchange('');
+    setObservations('');
+    setProducts([]);
+  };
+
+  const handleModeChange = (newMode) => {
+    setMode(newMode);
+    resetForm();
+  };
+
+  const ready = {
+    vendeur: !!vendeurId,
+    contrepartie: mode !== 'exchange' || !!contrepartieId,
+    siteOrigine: !!siteOrigineId,
+    product: !!productId,
+    submit: !!vendeurId && !!siteOrigineId && !!productId && !!quantite && !!rapportEchange && (mode !== 'exchange' || !!contrepartieId),
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.vendeurId || !form.productId || !form.siteOrigineId || !form.siteDestinationId || !form.quantite) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
-      return;
-    }
+    const missing = [];
+    if (!vendeurId) missing.push('Vendeur');
+    if (mode === 'exchange' && !contrepartieId) missing.push('Contrepartie');
+    if (!siteOrigineId) missing.push('Site d\'origine');
+    if (!productId) missing.push('Produit');
+    if (!quantite) missing.push('Quantité');
+    if (!rapportEchange) missing.push(mode === 'monetary' ? 'Prix unitaire' : 'Rapport d\'échange');
+    if (missing.length > 0) { toast.error(`Champs obligatoires : ${missing.join(', ')}`); return; }
     setSaving(true);
     try {
       const token = getAccessToken();
       if (!token) { toast.error('Authentification requise'); return; }
-      await createVenteTransaction(form, token);
+      await createVenteTransaction({
+        vendeurId,
+        productId,
+        siteOrigineId,
+        siteDestinationId: siteOrigineId,
+        quantite: Number(quantite),
+        contrepartieId: mode === 'exchange' ? contrepartieId : null,
+        rapportEchange: Number(rapportEchange),
+        observations,
+      }, token);
       toast.success('Transaction effectuée avec succès');
-      setForm({ vendeurId: '', productId: '', siteOrigineId: '', siteDestinationId: '', quantite: '', prixUnitaire: '', observations: '' });
-      setProducts([]);
+      resetForm();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Erreur lors de la transaction");
     } finally {
       setSaving(false);
     }
   };
+
+  const selectedProduct = products.find(p => (p.productId || p._id) === productId);
+  const displayProductName = selectedProduct ? truncate(selectedProduct.productName || selectedProduct.name) : null;
+  const maxQty = selectedProduct?.quantite ?? null;
 
   return (
     <div className="px-6 mx-auto">
@@ -93,80 +143,191 @@ const AchatVente = () => {
       ) : (
         <>
           <h1 className="text-2xl text-neutral-900 mb-6">Achat / Vente</h1>
-          <Card className="border-neutral-200 bg-white">
-            <div className="p-4">
-              <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="vendeurId">Vendeur *</Label>
-                <Select value={form.vendeurId} onValueChange={v => setForm(prev => ({ ...prev, vendeurId: v }))}>
-                  <SelectTrigger id="vendeurId" className="bg-white"><SelectValue placeholder="Sélectionner un vendeur" /></SelectTrigger>
-                  <SelectContent>
-                    {users.map(u => (
-                      <SelectItem key={u._id || u.id} value={u._id || u.id}>{u.name || u.userNickName || u.userName || u.email}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="siteOrigineId">Site d'origine *</Label>
-                <Select value={form.siteOrigineId} onValueChange={v => setForm(prev => ({ ...prev, siteOrigineId: v }))}>
-                  <SelectTrigger id="siteOrigineId" className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
-                  <SelectContent>
-                    {sites.map(s => (
-                      <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="productId">Produit *</Label>
-                <Select value={form.productId} onValueChange={handleSelectProduct} disabled={!form.siteOrigineId || loadingProducts}>
-                  <SelectTrigger id="productId" className="bg-white"><SelectValue placeholder={!form.siteOrigineId ? "Choisissez d'abord un site" : loadingProducts ? "Chargement..." : "Sélectionner un produit"} /></SelectTrigger>
-                  <SelectContent>
-                    {products.map(p => (
-                      <SelectItem key={p.productId || p._id} value={p.productId || p._id}>{p.productName || p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="siteDestinationId">Site de destination *</Label>
-                <Select value={form.siteDestinationId} onValueChange={v => setForm(prev => ({ ...prev, siteDestinationId: v }))}>
-                  <SelectTrigger id="siteDestinationId" className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
-                  <SelectContent>
-                    {sites.map(s => (
-                      <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="quantite">Quantité *</Label>
-                  <Input id="quantite" type="number" min="1" value={form.quantite} onChange={e => setForm(prev => ({ ...prev, quantite: e.target.value }))} className="bg-white" />
+          <Tabs value={mode} onValueChange={handleModeChange}>
+            <TabsList>
+              <TabsTrigger value="monetary">Vente monétaire</TabsTrigger>
+              <TabsTrigger value="exchange">Échange produit</TabsTrigger>
+            </TabsList>
+            <TabsContent value="monetary">
+              <Card className="border-neutral-200 bg-white">
+                <div className="px-4 pt-4">
+                  <h2 className="text-lg font-semibold text-neutral-900">Vente monétaire</h2>
+                  <p className="text-sm text-neutral-600">Vendez un produit contre de l'argent.</p>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="prixUnitaire">Prix unitaire (Ar)</Label>
-                  <Input id="prixUnitaire" type="number" min="0" value={form.prixUnitaire} onChange={e => setForm(prev => ({ ...prev, prixUnitaire: e.target.value }))} className="bg-white" />
-                </div>
-              </div>
+                <form onSubmit={handleSubmit} className="space-y-4 p-4">
+                    <div className="space-y-2">
+                      <Label required>1. Vendeur</Label>
+                      <UserAutocomplete
+                        users={users}
+                        value={vendeurInput}
+                        onChange={(val) => { setVendeurInput(val); if (!val) setVendeurId(''); }}
+                        onSelect={(u) => setVendeurId(u._id || u.id)}
+                        getDisplayName={getUserDisplayName}
+                        placeholder="Rechercher un vendeur..."
+                      />
+                    </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="observations">Observations</Label>
-                <Textarea id="observations" value={form.observations} onChange={e => setForm(prev => ({ ...prev, observations: e.target.value }))} placeholder="Observations facultatives" rows={3} />
-              </div>
+                    {ready.vendeur && (
+                      <div className="space-y-2">
+                        <Label required>2. Site d'origine</Label>
+                        <Select value={siteOrigineId} onValueChange={setSiteOrigineId}>
+                          <SelectTrigger className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
+                          <SelectContent>
+                            {sites.map(s => (
+                              <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
 
-              <Button type="submit" status={saving ? 'loading' : 'active'} color="default" disabled={saving} className="w-full">
-                {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                Effectuer la transaction
-              </Button>
-            </form>
-            </div>
-          </Card>
+                    {ready.siteOrigine && (
+                      <div className="space-y-2">
+                        <Label required>3. Produit</Label>
+                        <Select value={productId} onValueChange={setProductId} disabled={loadingProducts}>
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder={loadingProducts ? "Chargement..." : "Sélectionner un produit"}>{displayProductName}</SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {products.map(p => (
+                              <SelectItem key={p.productId || p._id} value={p.productId || p._id}>{p.productName || p.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {ready.product && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
+                            <Input type="number" min="1" max={maxQty || undefined} value={quantite} onChange={e => {
+                              const val = e.target.value;
+                              if (val === '' || Number(val) <= (maxQty || Infinity)) setQuantite(val);
+                            }} className="bg-white" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label required>Prix unitaire (Ar)</Label>
+                            <Input type="number" min="0" value={rapportEchange} onChange={e => setRapportEchange(e.target.value)} className="bg-white" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>5. Observations</Label>
+                          <Textarea value={observations} onChange={e => setObservations(e.target.value)} placeholder="Observations facultatives" rows={3} />
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-2">
+                          <Button variant="outline" type="button" onClick={resetForm}>Annuler</Button>
+                          <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving}>
+                            {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                            {saving ? 'Traitement...' : 'Effectuer la transaction'}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </form>
+                </Card>
+              </TabsContent>
+
+                <TabsContent value="exchange">
+                  <Card className="border-neutral-200 bg-white">
+                    <div className="px-4 pt-4">
+                      <h2 className="text-lg font-semibold text-neutral-900">Échange produit</h2>
+                      <p className="text-sm text-neutral-600">Échangez un produit avec un autre membre.</p>
+                    </div>
+                  <form onSubmit={handleSubmit} className="space-y-4 p-4">
+                    <div className="space-y-2">
+                      <Label required>1. Vendeur</Label>
+                      <UserAutocomplete
+                        users={users}
+                        value={vendeurInput}
+                        onChange={(val) => { setVendeurInput(val); if (!val) setVendeurId(''); }}
+                        onSelect={(u) => setVendeurId(u._id || u.id)}
+                        getDisplayName={getUserDisplayName}
+                        placeholder="Rechercher un vendeur..."
+                      />
+                    </div>
+
+                    {ready.vendeur && (
+                      <div className="space-y-2">
+                        <Label required>2. Contrepartie (acheteur)</Label>
+                        <UserAutocomplete
+                          users={users}
+                          value={contrepartieInput}
+                          onChange={(val) => { setContrepartieInput(val); if (!val) setContrepartieId(''); }}
+                          onSelect={(u) => setContrepartieId(u._id || u.id)}
+                          getDisplayName={getUserDisplayName}
+                          placeholder="Rechercher la contrepartie..."
+                        />
+                      </div>
+                    )}
+
+                    {ready.contrepartie && (
+                      <div className="space-y-2">
+                        <Label required>3. Site d'origine</Label>
+                        <Select value={siteOrigineId} onValueChange={setSiteOrigineId}>
+                          <SelectTrigger className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
+                          <SelectContent>
+                            {sites.map(s => (
+                              <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {ready.siteOrigine && (
+                      <div className="space-y-2">
+                        <Label required>4. Produit</Label>
+                        <Select value={productId} onValueChange={setProductId} disabled={loadingProducts}>
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder={loadingProducts ? "Chargement..." : "Sélectionner un produit"}>{displayProductName}</SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {products.map(p => (
+                              <SelectItem key={p.productId || p._id} value={p.productId || p._id}>{p.productName || p.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {ready.product && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
+                            <Input type="number" min="1" max={maxQty || undefined} value={quantite} onChange={e => {
+                              const val = e.target.value;
+                              if (val === '' || Number(val) <= (maxQty || Infinity)) setQuantite(val);
+                            }} className="bg-white" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label required>Rapport d'échange</Label>
+                            <Input type="number" min="0" value={rapportEchange} onChange={e => setRapportEchange(e.target.value)} className="bg-white" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>6. Observations</Label>
+                          <Textarea value={observations} onChange={e => setObservations(e.target.value)} placeholder="Observations facultatives" rows={3} />
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-2">
+                          <Button variant="outline" type="button" onClick={resetForm}>Annuler</Button>
+                          <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving}>
+                            {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                            {saving ? 'Traitement...' : 'Effectuer la transaction'}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </form>
+                  </Card>
+                </TabsContent>
+              </Tabs>
         </>
       )}
     </div>
