@@ -145,10 +145,30 @@ const Passifs = () => {
 							{loadingDetail ? (
 								<div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
 							) : detailPassif ? (
-								<div className="space-y-2 text-sm">
-									<div><b>Produit :</b> {detailPassif.productId?.productName || '-'}</div>
-									<div><b>Produit codeCPC :</b> {detailPassif.productId?.codeCPC || '-'}</div>
-									<div><b>Quantité :</b> {detailPassif.quantite || '-'}</div>
+								<div className="flex gap-6">
+									<div className="flex-1 space-y-2 text-sm">
+										<div><b>Produit :</b> {detailPassif.productId?.productName || '-'}</div>
+										<div><b>Code CPC :</b> {detailPassif.productId?.codeCPC || '-'}</div>
+										<div><b>Quantité :</b> {detailPassif.quantite ?? '-'}</div>
+										<div><b>Prix unitaire :</b> {detailPassif.prixUnitaire != null ? formatThousands(detailPassif.prixUnitaire) : '-'}</div>
+										<div><b>Type :</b> {detailPassif.typePassif || '-'}</div>
+										<div><b>Dépôt :</b> {detailPassif.depotId?.siteName || '-'}</div>
+										<div><b>Adresse dépôt :</b> {detailPassif.depotId?.siteAddress || '-'}</div>
+										<div><b>Créancier :</b> {renderPerson(detailPassif.creancierId)}</div>
+										<div><b>Détenteur :</b> {renderPerson(detailPassif.detentaire)}</div>
+										<div><b>Ayant droit :</b> {renderPerson(detailPassif.ayant_droit)}</div>
+										<div><b>Utilisateur :</b> {detailPassif.userId?.userNickName || detailPassif.userId?.userName || '-'}</div>
+										<div><b>Email :</b> {detailPassif.userId?.userEmail || '-'}</div>
+										<div><b>Téléphone :</b> {detailPassif.userId?.userPhone || '-'}</div>
+										<div><b>Statut :</b> {detailPassif.isActive ? 'Actif' : 'Inactif'}</div>
+										<div><b>Créé le :</b> {detailPassif.createdAt ? dateFormat(detailPassif.createdAt) : '-'}</div>
+										<div><b>Mis à jour le :</b> {detailPassif.updatedAt ? dateFormat(detailPassif.updatedAt) : '-'}</div>
+									</div>
+									{detailPassif.productId?.productImage && (
+										<div className="shrink-0">
+											<img src={getFullMediaUrl(detailPassif.productId.productImage)} alt={detailPassif.productId.productName || 'product'} className="w-28 h-28 rounded object-cover border" />
+										</div>
+									)}
 								</div>
 							) : (
 								<div className="p-8 text-center text-neutral-400">Aucune donnée</div>
