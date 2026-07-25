@@ -27,7 +27,6 @@ import PaginationControls from '../../components/commons/PaginationControls.jsx'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 import { getAllUsersSelect } from '../../services/user.service';
-import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 import { getMySites, getActifsBySite, getSitesByUser } from '../../services/site.service';
 import { getAccessToken } from '../../services/token.service';
 import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
@@ -45,7 +44,6 @@ const Depot = () => {
 	const [total, setTotal] = useState(0);
 
 	// Formulaire dépôt
-	const [usersOptions, setUsersOptions] = useState([]);
 	const [allSites, setAllSites] = useState([]);
 	const [detentaireSites, setDetentaireSites] = useState([]);
 	const [productsOnSite, setProductsOnSite] = useState([]);
@@ -61,6 +59,7 @@ const Depot = () => {
 		quantite: '',
 		prixUnitaire: '',
 		detentaire: '',
+		detentaireName: '',
 		ayant_droit: '',
 		observations: ''
 	});
@@ -75,8 +74,8 @@ const Depot = () => {
 	const [productOpen, setProductOpen] = useState(false);
 	const [productHighlighted, setProductHighlighted] = useState(0);
 
-	// États pour les recherches - Détentaire
-	const [detentaireSearch, setDetentaireSearch] = useState('');
+	// Mapping userId -> name pour la résolution du détenteur par ID
+	const [usersMap, setUsersMap] = useState({});
 
 	// États pour les recherches - Site de destination
 	const [siteDestinationSearch, setSiteDestinationSearch] = useState('');
@@ -141,21 +140,28 @@ const Depot = () => {
 		fetchActifs();
 	}, [page, limit]);
 
-	// Charger les données du formulaire
+	// Charger les sites au montage
 	useEffect(() => {
-		getAllUsersSelect().then(res => {
-			if (Array.isArray(res)) {
-				setUsersOptions(res);
-			} else if (res && Array.isArray(res.data)) {
-				setUsersOptions(res.data);
-			} else {
-				setUsersOptions([]);
-			}
-		});
 		getMySites().then(res => {
 			const sites = res?.data || [];
 			setAllSites(Array.isArray(sites) ? sites : []);
 		});
+	}, []);
+
+	// Charger la map des utilisateurs pour résolution ID -> nom (sans afficher la liste)
+	useEffect(() => {
+		let mounted = true;
+		getAllUsersSelect().then(res => {
+			if (!mounted) return;
+			const arr = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+			const map = arr.reduce((acc, u) => {
+				if (u && u._id) acc[u._id] = u.name || u.userNickName || '';
+				if (u && u.userId) acc[u.userId] = u.name || u.userNickName || '';
+				return acc;
+			}, {});
+			setUsersMap(map);
+		}).catch(() => { });
+		return () => { mounted = false; };
 	}, []);
 
 	// Charger les sites du détentaire sélectionné
@@ -292,6 +298,7 @@ const Depot = () => {
 				quantite: '',
 				prixUnitaire: '',
 				detentaire: '',
+				detentaireName: '',
 				ayant_droit: '',
 				observations: ''
 			});
@@ -521,20 +528,29 @@ const Depot = () => {
 									</>
 								)}
 
-								{/* 4. Détenteur avec recherche */}
+								{/* 4. Détenteur par ID (style parrain) */}
 								{transferForm.productId && (
 									<div className="space-y-2">
 										<Label required>4. Détenteur</Label>
-										<UserAutocomplete
-											users={usersOptions}
-											value={detentaireSearch}
-											onChange={setDetentaireSearch}
-											onSelect={(user) => {
-												setTransferForm(f => ({ ...f, detentaire: user._id }));
-												setDetentaireSearch(user.name || user.userNickName || '');
+										<Input
+											placeholder="ID du membre (8 caractères)"
+											value={transferForm.detentaire}
+											onChange={e => {
+												const val = e.target.value;
+												setTransferForm(prev => ({ ...prev, detentaire: val, detentaireName: '' }));
+												const code = (val || '').trim();
+												if (code.length === 8) {
+													const found = usersMap[code] || '';
+													setTransferForm(prev => ({ ...prev, detentaire: val, detentaireName: found }));
+												}
 											}}
-											placeholder="Rechercher un détenteur..."
-											className="w-full"
+											className="border-neutral-300"
+										/>
+										<Input
+											placeholder="Nom du détenteur"
+											value={transferForm.detentaireName}
+											readOnly
+											className="border-neutral-300 bg-neutral-100 text-neutral-700"
 										/>
 									</div>
 								)}
@@ -686,7 +702,7 @@ const Depot = () => {
 							</div>
 
 							<div className="flex justify-end gap-2">
-								<Button variant="outline" type="button" onClick={() => {
+							<Button variant="outline" type="button" onClick={() => {
 									setTransferForm({
 										actifId: '',
 										productId: '',
@@ -695,12 +711,12 @@ const Depot = () => {
 										quantite: '',
 										prixUnitaire: '',
 										detentaire: '',
+										detentaireName: '',
 										ayant_droit: '',
 										observations: ''
 									});
 									setSiteOriginSearch('');
 									setProductSearch('');
-									setDetentaireSearch('');
 									setSiteDestinationSearch('');
 									setProductsOnSite([]);
 									setMaxTransferQty(null);
