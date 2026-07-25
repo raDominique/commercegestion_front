@@ -133,13 +133,13 @@ export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, on
   }
 
   return (
-    <div className="space-y-3 p-4">
+    <div className="space-y-4 p-4">
       {actifs.map(item => {
         const itemId = item.id || item._id;
         return (
           <div key={itemId || item.productId || JSON.stringify(item)} className="p-4 border rounded bg-white">
             <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
                   {item.productImage ? (
                     <img src={getFullMediaUrl(item.productImage)} alt={item.productName} className="w-full h-full object-cover" />

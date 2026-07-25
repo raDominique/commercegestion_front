@@ -130,12 +130,17 @@ const AchatVente = () => {
   const maxQty = selectedProduct?.quantite ?? null;
 
   return (
-    <div className="px-6 mx-auto">
+    <div className="px-4 md:px-6 mx-auto">
       {user && user.userValidated === false ? (
         <UserNotValidatedBanner />
       ) : (
         <>
-          <h1 className="text-2xl text-neutral-900 mb-6">Achat / Vente</h1>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl text-neutral-900 mb-2">Achat / Vente</h1>
+              <p className="text-sm text-neutral-600">Achetez et vendez des produits entre membres</p>
+            </div>
+          </div>
           <Tabs value={mode} onValueChange={handleModeChange}>
             <TabsList>
               <TabsTrigger value="monetary">Vente monétaire</TabsTrigger>

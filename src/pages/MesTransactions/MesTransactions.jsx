@@ -183,17 +183,22 @@ const MesTransactions = () => {
 
   if (user && user.userValidated === false) {
     return (
-      <div className="px-6 mx-auto">
+      <div className="px-4 md:px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
   }
 
   return (
-    <div className="px-6 mx-auto">
-      <h1 className="text-2xl text-neutral-900 mb-2">Mes Transactions</h1>
+    <div className="px-4 md:px-6 mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl text-neutral-900 mb-2">Mes Transactions</h1>
+          <p className="text-sm text-neutral-600">Suivez l'historique de toutes vos transactions</p>
+        </div>
+      </div>
 
-      <Tabs defaultValue="transactions" className="mt-4">
+      <Tabs defaultValue="transactions">
         <TabsList>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="actifs">Mouvements des Actifs</TabsTrigger>
@@ -205,7 +210,7 @@ const MesTransactions = () => {
             Liste de vos transactions passées et en cours
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 mb-4">
+          <div className="flex flex-wrap items-center gap-4 mb-4">
             <div className="w-48">
               <Select value={typeFilter} onValueChange={value => { setPage(1); setTypeFilter(value); }}>
                 <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
@@ -269,7 +274,7 @@ const MesTransactions = () => {
                     <DialogDescription>Informations complètes de la transaction sélectionnée</DialogDescription>
                   </DialogHeader>
                   {selectedTransactionDetails ? (
-                    <div className="space-y-3 text-sm">
+                    <div className="space-y-4 text-sm">
                       <div><b>N° transaction :</b> {selectedTransactionDetails.transactionNumber || selectedTransactionDetails._id}</div>
                       <div><b>Type :</b> {selectedTransactionDetails.type || '-'}</div>
                       <div><b>Statut :</b> {selectedTransactionDetails.status || '-'}</div>
@@ -429,7 +434,7 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat,
 
   // Version d'affichage pour Mobile (Cards)
   return (
-    <div className="space-y-3 p-4 bg-neutral-50/50">
+    <div className="space-y-4 p-4 bg-neutral-50/50">
       {transactions.map((item, idx) => {
         const transId = item._id || item.transactionId;
         const transNumber = item.transactionNumber || item._id || '-';
@@ -446,7 +451,7 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat,
 
         return (
           <Card key={transId || idx} className="p-4 border-neutral-200 bg-white shadow-sm">
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="font-semibold text-neutral-900 text-base truncate">{produit}</div>

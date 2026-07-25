@@ -73,7 +73,7 @@ export default function Login() {
             Connectez-vous à votre compte <span className="font-bold text-violet-600">Etokisana</span>
           </p>
         </div>
-        <form onSubmit={handleSubmit} className={`${isMobile ? 'space-y-4' : 'space-y-5'}`}>
+        <form onSubmit={handleSubmit} className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

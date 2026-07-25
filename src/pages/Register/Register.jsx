@@ -299,7 +299,7 @@ const Register = () => {
             {/* Mobile header with toggle to show branding/info */}
             {isMobile && (
               <div className="w-full flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <img src={LogoImage} alt="Logo" className="h-10 w-auto" />
                   <div>
                     <div className="text-lg font-semibold text-violet-700">Créer un compte</div>
@@ -593,7 +593,7 @@ const Register = () => {
                   </div>
 
                   {/* Documents (fixe: 2 inputs) */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <Label>
                       {form.documentType === 'cin' && "CIN (PNG recto-verso)"}
                       {form.documentType === 'passeport' && "Passeport (PNG recto-verso)"}
@@ -661,7 +661,7 @@ const Register = () => {
                       </div>
 
                       {/* Carte Stat (recto + verso) */}
-                      <div className="p-4 bg-neutral-50 rounded-lg space-y-3">
+                      <div className="p-4 bg-neutral-50 rounded-lg space-y-4">
                         <Label>Carte Stat (PNG recto-verso)</Label>
                         <div className="grid grid-cols-2 gap-4">
                           {[0, 1].map((idx) => (
@@ -691,7 +691,7 @@ const Register = () => {
                       </div>
 
                       {/* Carte Fiscale (fixe: 2 inputs) */}
-                      <div className="p-4 bg-neutral-50 rounded-lg space-y-3">
+                      <div className="p-4 bg-neutral-50 rounded-lg space-y-4">
                         <Label>Carte fiscale (PNG recto-verso)</Label>
                         <div className="grid grid-cols-2 gap-4">
                           {[0, 1].map((idx) => (

@@ -297,7 +297,7 @@ const Retrait = () => {
 	};
 
 	return (
-		<div className="px-6 mx-auto">
+		<div className="px-4 md:px-6 mx-auto">
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
@@ -309,7 +309,7 @@ const Retrait = () => {
 						</TabsList>
 
 						<TabsContent value="list" className="space-y-6">
-							<div className="space-y-6">
+							<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 								<div>
 									<h1 className="text-2xl text-neutral-900 mb-2">Mes Retraits</h1>
 									<p className="text-sm text-neutral-600">Historique de vos retraits</p>
@@ -630,7 +630,7 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 
 	// Mobile cards
 	return (
-		<div className="space-y-3 p-4">
+		<div className="space-y-4 p-4">
 			{passifs.map((item) => {
 				const statusBadge = getTransactionStatusBadgeProps(item?.status, { isValide: item?.isValide });
 				const validationText = statusBadge.label;
@@ -644,12 +644,12 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 					<Card key={item._id} className="p-4">
 						<div className="flex items-start justify-between gap-4">
 							<div className="flex-1 min-w-0">
-								<div className="flex items-center gap-3">
-									<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
-										{item.productId?.productImage ? (
-											<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-full h-full object-cover" />
-										) : (
-											<span className="text-neutral-400">-</span>
+							<div className="flex items-center gap-4">
+								<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
+									{item.productId?.productImage ? (
+										<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-full h-full object-cover" />
+									) : (
+										<span className="text-neutral-400">-</span>
 										)}
 									</div>
 									<div className="min-w-0">
@@ -657,7 +657,7 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 										<div className="text-xs text-neutral-500 truncate">{item.siteOrigineId?.siteName || '-'}</div>
 									</div>
 								</div>
-								<div className="grid grid-cols-2 gap-2 mt-3 text-xs">
+								<div className="grid grid-cols-2 gap-2 mt-4 text-xs">
 									<div>
 										<span className="text-neutral-600">Opérateur:</span>
 										<div className="font-medium text-neutral-900">{operatorName}</div>

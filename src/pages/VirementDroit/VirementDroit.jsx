@@ -256,12 +256,12 @@ const VirementDroit = () => {
   const actif = selectedActifForVirement;
 
   return (
-    <div className="px-6 mx-auto">
+    <div className="px-4 md:px-6 mx-auto">
       {user && user.userValidated === false ? (
         <UserNotValidatedBanner />
       ) : (
         <>
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl text-neutral-900 mb-2">Virement de droit</h1>
               <p className="text-sm text-neutral-600">Transférez le droit d'un actif à un bénéficiaire tiers</p>

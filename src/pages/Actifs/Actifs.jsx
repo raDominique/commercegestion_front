@@ -476,7 +476,7 @@ const Actifs = () => {
 		: '';
 
 	return (
-		<div className="px-6 mx-auto">
+		<div className="px-4 md:px-6 mx-auto">
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
@@ -488,13 +488,14 @@ const Actifs = () => {
 						</TabsList>
 
 						<TabsContent value="list" className="space-y-6">
-							<div className="flex justify-between items-center mb-6">
+							<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 								<div>
 									<h1 className="text-2xl text-neutral-900 mb-2">Mes Actifs</h1>
+									<p className="text-sm text-neutral-600">Gérez vos actifs et leur disponibilité</p>
 								</div>
-								<div className="flex gap-3 items-center">
-									<Button onClick={handleOpenAddProductModal} status="active" color="default">
-										Opération hors plateforme
+							<div className="flex gap-4 items-center">
+								<Button onClick={handleOpenAddProductModal} status="active" color="default">
+									Opération hors plateforme
 									</Button>
 									<ExportButton
 										exportFunction={exportAndDownloadActifs}
@@ -534,11 +535,11 @@ const Actifs = () => {
 									<h1 className="text-2xl text-neutral-900 mb-2">Mes Produits en vente</h1>
 									<p className="text-sm text-neutral-600">Liste des produits mises en vente</p>
 								</div>
-								<div className="flex gap-3 items-center">
-									<Input
-										placeholder="Rechercher..."
-										value={shopSearch}
-										onChange={e => { setShopPage(1); setShopSearch(e.target.value); }}
+							<div className="flex gap-4 items-center">
+								<Input
+									placeholder="Rechercher..."
+									value={shopSearch}
+									onChange={e => { setShopPage(1); setShopSearch(e.target.value); }}
 										className="max-w-xs border-black bg-white"
 									/>
 								</div>
@@ -827,8 +828,8 @@ const Actifs = () => {
 							{loadingDetail ? (
 								<div className="flex justify-center py-8"><Loader message="Chargement..." /></div>
 							) : detailActif ? (
-								<div className="space-y-3 text-sm">
-									{(detailActif._shopRaw || detailActif.shopItemId) ? (
+							<div className="space-y-4 text-sm">
+								{(detailActif._shopRaw || detailActif.shopItemId) ? (
 										<>
 											<div className="flex items-start gap-4">
 												<div className="w-20 h-20 bg-neutral-100 rounded overflow-hidden">
@@ -986,11 +987,11 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 
 	// Vue mobile — cards
 	return (
-		<div className="space-y-3 p-4">
+		<div className="space-y-4 p-4">
 			{actifs.map(item => (
 				<Card key={item.id} className="p-4">
 					<div className="flex items-start justify-between gap-4">
-						<div className="flex items-center gap-3">
+						<div className="flex items-center gap-4">
 							<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
 								{item.productImage ? (
 									<img src={getFullMediaUrl(item.productImage)} alt={item.productName} className="w-full h-full object-cover" />
@@ -1020,7 +1021,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								</div>
 							</div>
 							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
-							<div className="flex items-center gap-1 mt-2">
+							<div className="flex items-center gap-2 mt-2">
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
@@ -1136,11 +1137,11 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 
 	// Vue mobile — cards
 	return (
-		<div className="space-y-3 p-4">
+		<div className="space-y-4 p-4">
 			{actifs.map(item => (
 				<Card key={item.id} className="p-4">
 					<div className="flex items-start justify-between gap-4">
-						<div className="flex items-center gap-3">
+						<div className="flex items-center gap-4">
 							<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
 								{item.productImage ? (
 									<img src={getFullMediaUrl(item.productImage)} alt={item.productName} className="w-full h-full object-cover" />
@@ -1159,7 +1160,7 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 							<div className="text-xs text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
 							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
 							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
-							<div className="flex items-center gap-1 mt-2">
+							<div className="flex items-center gap-2 mt-2">
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}>

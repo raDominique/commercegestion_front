@@ -44,12 +44,19 @@ const AppelOffre = () => {
   const { user } = useAuth();
 
   return (
-    <div className="px-6 mx-auto">
+    <div className="px-4 md:px-6 mx-auto">
       {user && user.userValidated === false ? (
         <UserNotValidatedBanner />
       ) : (
-        <Tabs defaultValue="list">
-          <TabsList>
+        <>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <div>
+                    <h1 className="text-2xl text-neutral-900 mb-2">Appels d'offre</h1>
+                    <p className="text-sm text-neutral-600">Consultez et gérez les appels d'offre</p>
+                </div>
+            </div>
+            <Tabs defaultValue="list">
+                <TabsList>
             <TabsTrigger value="list">Tous les appels d'offres</TabsTrigger>
             <TabsTrigger value="form">Mes appels d'offre</TabsTrigger>
           </TabsList>
@@ -70,6 +77,7 @@ const AppelOffre = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        </>
       )}
     </div>
   );
@@ -235,7 +243,7 @@ function TendersList() {
                   <div className="text-sm text-neutral-700"><span className="font-bold">Date limite:</span> {item.dateLimite ? new Date(item.dateLimite).toLocaleDateString('fr-FR') : '-'}</div>
                   {item.lanceurId?.userNickName && <div className="text-sm text-neutral-700"><span className="font-bold">Lanceur:</span> {item.lanceurId.userNickName}</div>}
                 </div>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-4 flex gap-2">
                   <Button className="flex-1" status="active" color="default" onClick={() => handleView(item._id)}>Voir</Button>
                   <Button className="flex-1" status={item.statut !== 'OUVERT' || item.hasBid ? 'inactive' : 'active'} color="default" disabled={item.statut !== 'OUVERT' || item.hasBid} onClick={() => { setBidTenderId(item._id); setBidOpen(true); }}>{item.statut !== 'OUVERT' ? 'Fermé' : item.hasBid ? 'Déjà soumis' : 'Soumissionner'}</Button>
                 </div>
@@ -265,7 +273,7 @@ function TendersList() {
           {detailLoading ? (
             <div className="py-8 flex justify-center"><Loader message="Chargement..." /></div>
           ) : detailTender ? (
-            <div className="space-y-3 text-sm">
+            <div className="space-y-4 text-sm">
               {detailTender.productId?.productImage && (
                 <div className="flex justify-center mb-4">
                   <img
@@ -514,7 +522,7 @@ function MyTendersList() {
           {detailLoading ? (
             <div className="py-8 flex justify-center"><Loader message="Chargement..." /></div>
           ) : detailTender ? (
-            <div className="space-y-3 text-sm">
+            <div className="space-y-4 text-sm">
               {detailTender.productId?.productImage && (
                 <div className="flex justify-center mb-4">
                   <img

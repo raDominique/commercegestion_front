@@ -70,7 +70,7 @@ const ResetPassword = () => {
           <h1 className="text-3xl font-bold text-violet-700 mb-1">Réinitialiser le mot de passe</h1>
           <p className="text-base text-neutral-700 text-center">Choisissez un nouveau mot de passe pour votre compte.</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="newPassword">Nouveau mot de passe</Label>
             <div className="relative">

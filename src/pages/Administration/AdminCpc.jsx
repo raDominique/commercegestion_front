@@ -228,7 +228,7 @@ const AdminCpc = () => {
     };
 
     return (
-        <div className="px-6 mx-auto">
+        <div className="px-4 md:px-6 mx-auto">
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
@@ -517,18 +517,18 @@ function CpcTableOrList({ loading, items, handleShowInfo, handleEditCpc, handleD
 
     // Mobile cards
     return (
-        <div className="space-y-3 p-4">
+        <div className="space-y-4 p-4">
             {items.map((item, idx) => (
                 <Card key={idx} className="p-4">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                                 <div className="flex flex-col">
                                     <span className="font-bold text-neutral-900">{item.code}</span>
                                     <span className="text-xs text-neutral-500 max-w-full wrap-break-words whitespace-normal">{item.nom}</span>
                                 </div>
                             </div>
-                            <div className="mt-3 flex items-center gap-2 flex-wrap">
+                            <div className="mt-4 flex items-center gap-2 flex-wrap">
                                 <Badge variant="secondary" className="text-xs">{item.niveau}</Badge>
                             </div>
                         </div>

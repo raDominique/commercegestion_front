@@ -244,17 +244,19 @@ const OperationsAValider = () => {
 
   if (user && user.userValidated === false) {
     return (
-      <div className="px-6 mx-auto">
+      <div className="px-4 md:px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
   }
 
   return (
-    <div className="px-6 mx-auto space-y-4">
-      <div>
-        <h1 className="text-2xl text-neutral-900">Opérations à valider</h1>
-        <p className="text-sm text-neutral-600">Consultez les opérations en attente de validation ({total}).</p>
+    <div className="px-4 md:px-6 mx-auto space-y-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl text-neutral-900 mb-2">Opérations à valider</h1>
+          <p className="text-sm text-neutral-600">Consultez les opérations en attente de validation ({total}).</p>
+        </div>
       </div>
 
       {loading ? (
@@ -293,7 +295,7 @@ const OperationsAValider = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-3 pb-2">
+            <div className="space-y-4 pb-2">
               <div className="text-sm text-neutral-700">
                 <div className="font-medium">Produit:</div>
                 <div className="text-neutral-600">{selectedTransactionForApprove?.productId?.productName}</div>
@@ -351,7 +353,7 @@ const OperationsAValider = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-3 pb-2">
+            <div className="space-y-4 pb-2">
               <div className="text-sm text-neutral-700">
                 <div className="font-medium">Produit:</div>
                 <div className="text-neutral-600">{selectedTransactionForReject?.productId?.productName}</div>
@@ -482,7 +484,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
   }
 
   return (
-    <div className="space-y-3 p-4">
+    <div className="space-y-4 p-4">
       {transactions.map((item, idx) => {
         const typeBadge = getTransactionTypeBadgeProps(item.type);
         const badgeClass = typeBadge.className;
@@ -510,7 +512,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                   <div>{item.createdAt ? dateFormat(item.createdAt) : '-'}</div>
                 </div>
                 {item.status === 'PENDING' && (
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-4 flex gap-2">
                     <Button 
                       size="sm" 
                       variant="default"

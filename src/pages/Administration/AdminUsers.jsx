@@ -161,7 +161,7 @@ export default function AdminUsers() {
     const adminUsers = totalAdmin;
 
     return (
-        <div className="px-6 mx-auto">
+        <div className="px-4 md:px-6 mx-auto">
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
@@ -173,7 +173,7 @@ export default function AdminUsers() {
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="p-4 border-neutral-200 bg-white">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center">
                                 <PersonIcon className="w-5 h-5 text-violet-600" />
                             </div>
@@ -185,7 +185,7 @@ export default function AdminUsers() {
                     </Card>
 
                     <Card className="p-4 border-neutral-200 bg-white">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center">
                                 <PersonIcon className="w-5 h-5 text-violet-600" />
                             </div>
@@ -197,7 +197,7 @@ export default function AdminUsers() {
                     </Card>
 
                     <Card className="p-4 border-neutral-200 bg-white">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
                                 <ShieldOutlinedIcon className="w-5 h-5 text-amber-600" />
                             </div>
@@ -510,19 +510,19 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
 
     // Mobile: cards list
     return (
-        <div className="space-y-3 p-4">
+        <div className="space-y-4 p-4">
             {users.map((user) => (
                 <Card key={user.id} className="p-4">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user.status === 'Actif' ? 'bg-violet-600 text-white' : 'bg-neutral-300 text-neutral-700'}`}>{user.name && user.name.charAt(0).toUpperCase()}</div>
                                 <div>
                                     <div className="font-medium text-neutral-900">{user.name}</div>
                                     <div className="text-xs text-neutral-500">{user.email}</div>
                                 </div>
                             </div>
-                            <div className="mt-3 flex flex-wrap gap-2 items-center">
+                            <div className="mt-4 flex flex-wrap gap-2 items-center">
                                 <Badge variant="outline" className="text-xs">{user.referralCode || 'N/A'}</Badge>
                                 <Badge variant={user.emailVerified ? 'default' : 'secondary'} className="text-xs">{user.emailVerified ? 'Vérifié' : 'Non vérifié'}</Badge>
                                 <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">{user.role === 'admin' ? 'Admin' : 'Utilisateur'}</Badge>

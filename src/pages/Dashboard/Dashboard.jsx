@@ -49,7 +49,7 @@ const DashboardPage = () => {
 
     if (error) {
         return (
-            <div className="px-6 mx-auto">
+            <div className="px-4 md:px-6 mx-auto">
                 <Alert variant="destructive">
                     <ErrorOutline className="h-4 w-4" />
                     <AlertDescription>Erreur: {error}</AlertDescription>
@@ -63,12 +63,12 @@ const DashboardPage = () => {
     const isAdmin = user?.userAccess === 'Admin';
 
     return (
-        <div className="px-6 mx-auto space-y-8">
+        <div className="px-4 md:px-6 mx-auto space-y-8">
             {/* En-tête avec titre et actions */}
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-neutral-900">Tableau de Bord</h1>
-                    <p className="text-muted-foreground mt-1">Gérez et suivez votre activité avec facilité</p>
+                    <h1 className="text-2xl text-neutral-900 mb-2">Tableau de Bord</h1>
+                    <p className="text-sm text-neutral-600">Gérez et suivez votre activité avec facilité</p>
                 </div>
             </div>
 
@@ -234,7 +234,7 @@ const DashboardPage = () => {
                         <CardTitle className="text-lg text-black font-semibold">Inventaire Global</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
                                 <div>
                                     <p className="text-sm text-gray-600">Quantité Actifs</p>
@@ -266,7 +266,7 @@ const DashboardPage = () => {
                         <CardTitle className="text-black font-semibold">Sites et Actifs</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-3 max-h-72 overflow-y-auto">
+                        <div className="space-y-4 max-h-72 overflow-y-auto">
                             {inventory?.charts?.actifsBySite?.filter(site => site._id !== null).length > 0 ? (
                                 inventory?.charts?.actifsBySite
                                     ?.filter(site => site._id !== null)
@@ -313,9 +313,9 @@ function StatisticCard({ title, value, icon, trend, description }) {
                 <div className="flex items-start justify-between">
                     <div className="flex-1">
                         <p className="text-sm text-black font-semibold">{title}</p>
-                        <p className="text-4xl font-bold mt-3 text-violet-900">{value}</p>
+                        <p className="text-4xl font-bold mt-4 text-violet-900">{value}</p>
                         {trend && (
-                            <div className="flex items-center gap-1 mt-3">
+                            <div className="flex items-center gap-1 mt-4">
                                 <ArrowUpward className="text-violet-600 text-sm" />
                                 <span className="text-xs font-medium text-violet-600">{trend}</span>
                             </div>

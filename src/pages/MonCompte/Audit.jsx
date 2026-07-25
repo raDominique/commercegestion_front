@@ -264,7 +264,7 @@ const Audit = () => {
   const renderDetails = (obj) => {
     if (!obj || Object.keys(obj).length === 0) return <div className="text-sm text-neutral-500">Aucun détail disponible</div>;
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         {Object.entries(obj).map(([k, v]) => (
           <div key={k} className="grid grid-cols-3 gap-4 items-start">
             <div className="text-sm text-neutral-600 col-span-1">{humanKey(k)}</div>
@@ -277,19 +277,19 @@ const Audit = () => {
 
   if (user && user.userValidated === false) {
     return (
-      <div className="px-6 mx-auto">
+      <div className="px-4 md:px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
   }
 
   return (
-    <div className="px-6 mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl text-neutral-900 mb-2">Audit</h1>
-        <p className="text-sm text-neutral-600">
-          Historique et activités liées à votre compte
-        </p>
+    <div className="px-4 md:px-6 mx-auto space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl text-neutral-900 mb-2">Audit</h1>
+          <p className="text-sm text-neutral-600">Historique et activités liées à votre compte</p>
+        </div>
       </div>
 
       <Card className="border border-gray-200 bg-white">
@@ -297,8 +297,8 @@ const Audit = () => {
           <CardTitle>Activité du compte</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+            <div className="flex items-center gap-4">
               <Input placeholder="Rechercher..." value={query} onChange={e => { setPage(1); setQuery(e.target.value); }} className="w-64" />
               <Select value={actionFilter} onValueChange={value => { setPage(1); setActionFilter(value); }}>
                 <SelectTrigger className="w-44 border-neutral-300 bg-white min-w-0">
@@ -336,7 +336,7 @@ const Audit = () => {
 
                   return (
                     <li key={item._id || item.id || idx} className="p-3 rounded-lg hover:bg-neutral-50">
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-start gap-4">
                         <div className="shrink-0">
                           <div className={`${meta.bg} w-10 h-10 rounded-full flex items-center justify-center`}>
                             <span className="material-icons size-4 text-white">{meta.iconName || 'info'}</span>
@@ -348,7 +348,7 @@ const Audit = () => {
                             <span className="text-neutral-600"> {verb} </span>
                             <span className="font-semibold">{entityName}</span>
                           </div>
-                          <div className="mt-1 text-xs text-neutral-500 flex flex-wrap gap-3">
+                          <div className="mt-1 text-xs text-neutral-500 flex flex-wrap gap-4">
                             <Badge variant="outline" className="text-xs">{item.entityType || '-'}</Badge>
                             {item.ipAddress || item.ip || item.remoteIp ? <span>Adresse IP: {item.ipAddress || item.ip || item.remoteIp}</span> : null}
                             <span>{formatTimestamp(item.timestamp || item.createdAt)}</span>

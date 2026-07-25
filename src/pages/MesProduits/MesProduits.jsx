@@ -527,7 +527,7 @@ const MesProduits = () => {
 
     // Mobile list view
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         {loading ? (
           <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
         ) : products.length > 0 ? (
@@ -564,7 +564,7 @@ const MesProduits = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2 mt-3 justify-end">
+              <div className="flex gap-2 mt-4 justify-end">
                 <Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)} aria-label={`Voir détails ${product.name}`}>
                   <InfoIcon className="w-5 h-5 mr-2" />Détails
                 </Button>
@@ -586,14 +586,14 @@ const MesProduits = () => {
 
   if (user && user.userValidated === false) {
     return (
-      <div className="px-6 mx-auto">
+      <div className="px-4 md:px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
   }
 
   return (
-    <div className="px-6 mx-auto">
+    <div className="px-4 md:px-6 mx-auto">
       {user && user.userValidated === false && (
         <UserNotValidatedBanner />
       )}
@@ -1202,7 +1202,7 @@ const MesProduits = () => {
 
               {/* INFOS TECHNIQUES */}
               <div>
-                <div className="text-sm font-semibold text-neutral-700 mb-3">
+                <div className="text-sm font-semibold text-neutral-700 mb-4">
                   Informations techniques
                 </div>
 

@@ -41,11 +41,13 @@ const ExportHub = () => {
     ];
 
     return (
-        <div className="px-6 mx-auto space-y-8">
+        <div className="px-4 md:px-6 mx-auto space-y-8">
             {/* En-tête */}
-            <div>
-                <h1 className="text-3xl font-bold text-neutral-900">Centre d'Export</h1>
-                <p className="text-muted-foreground mt-1">Exportez vos données dans le format souhaité</p>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl text-neutral-900 mb-2">Centre d'Export</h1>
+                    <p className="text-sm text-neutral-600">Exportez vos données dans le format souhaité</p>
+                </div>
             </div>
 
             {/* Info alert */}

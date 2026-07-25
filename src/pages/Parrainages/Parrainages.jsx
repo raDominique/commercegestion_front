@@ -74,7 +74,7 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-sm">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-4">
                                         {/* {referral.userImage ? (
                                             <img src={getFullMediaUrl(referral.userImage)} alt={referral.userNickName || referral.userName} className="w-8 h-8 rounded object-cover" />
                                         ) : (
@@ -131,12 +131,12 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
 
     // Mobile view: cards
     return (
-        <div className="space-y-3 p-4">
+        <div className="space-y-4 p-4">
             {referrals.map((referral) => (
                 <Card key={referral._id} className="p-4">
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-neutral-100 text-sm">
                                     {(referral.userNickName || referral.userName || '').charAt(0).toUpperCase()}
                                 </div>
@@ -145,7 +145,7 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
                                     <div className="text-xs text-neutral-500">{referral.userEmail}</div>
                                 </div>
                             </div>
-                            <div className="mt-3 flex flex-wrap gap-2 items-center">
+                            <div className="mt-4 flex flex-wrap gap-2 items-center">
                                 <Badge variant="outline" className="text-xs">{referral.userId ?? 'N/A'}</Badge>
                                 <div className="text-sm text-neutral-900">{referral.userType}</div>
                                 <Badge variant={(referral.isParrain1Validated && referral.isParrain2Validated) ? 'default' : 'secondary'} className="text-xs">{(referral.isParrain1Validated && referral.isParrain2Validated) ? 'Validé' : 'En attente'}</Badge>
@@ -156,7 +156,7 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                            <div className="flex gap-1">
+                            <div className="flex gap-2">
                                 <Button
                                     size="sm"
                                     variant="ghost"
@@ -305,7 +305,7 @@ const Parrainage = () => {
     };
 
     return (
-        <div className="px-6 mx-auto">
+        <div className="px-4 md:px-6 mx-auto">
             <div className="space-y-6">
                 {user && user.userValidated === false ? (
                     <UserNotValidatedBanner />
@@ -322,7 +322,7 @@ const Parrainage = () => {
                         <Card className="border-neutral-200 bg-white p-4">
                             <div className="space-y-4">
                                 <h3 className="font-semibold text-neutral-900">Filtres</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                                     <div>
                                         <label className="text-xs font-medium text-neutral-600 block mb-2">Recherche (nom/email)</label>
                                         <Input

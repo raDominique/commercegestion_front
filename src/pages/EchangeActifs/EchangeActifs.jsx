@@ -343,9 +343,11 @@ const EchangeActifs = () => {
 
   return (
     <div className="px-4 sm:px-6 mx-auto">
-      <div className="mb-6">
-        <h1 className="text-xl sm:text-2xl text-neutral-900 mb-2">Échange d'actifs entre deux membres</h1>
-        <p className="text-sm text-neutral-600">Créez une offre d'échange puis recherchez les produits disponibles à l'achat.</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl text-neutral-900 mb-2">Échange d'actifs</h1>
+          <p className="text-sm text-neutral-600">Créez une offre d'échange puis recherchez les produits disponibles à l'achat.</p>
+        </div>
       </div>
 
       <Tabs defaultValue="create">
@@ -355,7 +357,7 @@ const EchangeActifs = () => {
         </TabsList>
 
         <TabsContent value="create" className="space-y-6">
-          <form onSubmit={handleSubmitOffer} className="space-y-5">
+          <form onSubmit={handleSubmitOffer} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="detenteurAId" required>Détenteur W</Label>
@@ -477,7 +479,7 @@ const EchangeActifs = () => {
             <Card className="border-neutral-200 bg-white">
               <div className="p-4">
                 <Label>Détenteurs Y acceptés pour le produit B</Label>
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-56 overflow-auto">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-56 overflow-auto">
                   {userOptions.map((member) => {
                     const id = member.id;
                     return (
@@ -503,7 +505,7 @@ const EchangeActifs = () => {
         </TabsContent>
 
         <TabsContent value="offers" className="space-y-6">
-          <form onSubmit={handleFilterSubmit} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3 mb-5">
+          <form onSubmit={handleFilterSubmit} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4 mb-6">
             <Select value={filters.productAId} onValueChange={(value) => setFilters((prev) => ({ ...prev, productAId: value }))}>
               <SelectTrigger className="bg-white min-w-0 max-w-full"><SelectValue placeholder="Produit A" /></SelectTrigger>
               <SelectContent className={productSelectContentClassName}>
@@ -617,15 +619,15 @@ const EchangeActifs = () => {
                 </Table>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:hidden">
                 {offers.map((offer) => (
                   <Card key={getId(offer)} className="border-neutral-200 bg-white">
-                    <div className="p-4 space-y-3">
+                    <div className="p-4 space-y-4">
                       <div>
                         <div className="text-xs text-neutral-500">Produit A</div>
                         <div className="font-medium text-neutral-900 wrap-break-word">{productLabel(offer.productAId || offer.productA)}</div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <div className="text-xs text-neutral-500">Quantité A</div>
                           <div className="text-neutral-900">{offer.quantiteA != null ? formatThousands(offer.quantiteA) : '-'}</div>
@@ -688,7 +690,7 @@ const EchangeActifs = () => {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div className="min-w-0 wrap-break-word"><span className="font-bold">Produit A:</span> {productLabel(selectedOffer?.productAId || selectedOffer?.productA)}</div>
               <div className="min-w-0 wrap-break-word"><span className="font-bold">Produit B:</span> {productLabel(selectedOffer?.productBId || selectedOffer?.productB)}</div>
               <div><span className="font-bold">Taux:</span> {selectedOffer?.tauxEchange != null ? formatThousands(selectedOffer.tauxEchange) : '-'}</div>

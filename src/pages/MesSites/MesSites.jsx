@@ -152,24 +152,26 @@ const MesSites = () => {
 
   if (user && user.userValidated === false) {
     return (
-      <div className="px-6 mx-auto">
+      <div className="px-4 md:px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
   }
 
   return (
-    <div className="px-6 mx-auto">
+    <div className="px-4 md:px-6 mx-auto">
       {user && user.userValidated === false && (
         <UserNotValidatedBanner />
       )}
       <div className="space-y-6">
-        <div className="space-y-2 mb-4">
-          <h1 className="text-2xl text-neutral-900 mb-2">Mes Sites</h1>
-          <p className="text-sm text-neutral-600">
-            Gérez vos sites web et boutiques en ligne
-          </p>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <div>
+            <h1 className="text-2xl text-neutral-900 mb-2">Mes Sites</h1>
+            <p className="text-sm text-neutral-600">Gérez vos sites web et boutiques en ligne</p>
+          </div>
+        </div>
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button status="active" color="default" className="mt-2">
                 <AddIcon className="w-4 h-4 mr-2" />
@@ -253,7 +255,7 @@ const MesSites = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-4 border-neutral-200 bg-white">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center">
                 <PublicIcon className="w-5 h-5 text-violet-600" />
               </div>

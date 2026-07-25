@@ -143,11 +143,11 @@ export default function MonCompte() {
   return (
     <div className="px-4 sm:px-6 lg:px-8 mx-auto">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl text-neutral-900 mb-2">Mon Compte</h1>
-          <p className="text-sm text-neutral-600">
-            Gérez vos informations personnelles et préférences
-          </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl text-neutral-900 mb-2">Mon Compte</h1>
+            <p className="text-sm text-neutral-600">Gérez vos informations personnelles et préférences</p>
+          </div>
         </div>
 
         {/* Profile Card */}

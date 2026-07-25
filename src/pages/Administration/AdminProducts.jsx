@@ -101,7 +101,7 @@ const AdminProducts = () => {
   };
 
   return (
-    <div className="px-6 mx-auto">
+    <div className="px-4 md:px-6 mx-auto">
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -246,7 +246,7 @@ const AdminProducts = () => {
 
               {/* INFOS TECHNIQUES */}
               <div>
-                <div className="text-sm font-semibold text-neutral-700 mb-3">
+                <div className="text-sm font-semibold text-neutral-700 mb-4">
                   Informations techniques
                 </div>
 
@@ -377,12 +377,12 @@ function ProductTableOrList({ loading, products, handleAskValidate, handleShowDe
 
   // Mobile cards
   return (
-    <div className="space-y-3 p-4">
+    <div className="space-y-4 p-4">
       {products.map((product) => (
         <Card key={product._id} className="p-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
                   {product.image ? (
                     <img src={getFullMediaUrl(product.image)} alt={product.name} className="w-full h-full object-cover" />
@@ -396,7 +396,7 @@ function ProductTableOrList({ loading, products, handleAskValidate, handleShowDe
                   <div className="text-xs text-neutral-500 truncate">{product.ownerName || product.ownerNickName || '-'}</div>
                 </div>
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <Badge variant={product.isStocker ? 'default' : 'secondary'} className="text-xs">{product.isStocker ? 'Stocké' : 'Non stocké'}</Badge>
                 <div className="flex items-center gap-2">
                   <Switch aria-label="Basculer validation produit" checked={product.validation} onCheckedChange={() => handleAskValidate(product._id)} />

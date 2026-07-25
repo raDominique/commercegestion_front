@@ -71,7 +71,7 @@ export const ExportDialog = ({
                     </Alert>
                 )}
 
-                <div className="grid grid-cols-2 gap-3 py-4">
+                <div className="grid grid-cols-2 gap-4 py-4">
                     {formats.map((format) => (
                         <button
                             key={format.value}

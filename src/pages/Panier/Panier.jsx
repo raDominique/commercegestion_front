@@ -49,7 +49,7 @@ export default function Panier() {
 
   if (user && user.userValidated === false) {
     return (
-      <div className="px-6 mx-auto">
+      <div className="px-4 md:px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
@@ -73,22 +73,24 @@ export default function Panier() {
   };
 
   return (
-    <div className="px-6 mx-auto">
+    <div className="px-4 md:px-6 mx-auto">
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigate('/boutique')}
-            className="border-neutral-300"
-          >
-            <ArrowBackIcon className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl text-neutral-900">Mon Panier</h1>
-            <p className="text-sm text-neutral-600">
-              {items.length} {items.length > 1 ? 'articles' : 'article'} dans votre panier
-            </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate('/boutique')}
+              className="border-neutral-300"
+            >
+              <ArrowBackIcon className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl text-neutral-900 mb-2">Mon Panier</h1>
+              <p className="text-sm text-neutral-600">
+                {items.length} {items.length > 1 ? 'articles' : 'article'} dans votre panier
+              </p>
+            </div>
           </div>
         </div>
 
@@ -129,7 +131,7 @@ export default function Panier() {
                     Vider le panier
                   </Button>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {items.map((item) => (
                     <div key={item.id} className="p-3 bg-white border border-neutral-100 rounded-lg shadow-sm">
                       <div className="flex items-center gap-4">
@@ -149,8 +151,8 @@ export default function Panier() {
                             </div>
                           </div>
 
-                          <div className="mt-3 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
                               <button
                                 onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                 aria-label="Réduire quantité"
@@ -170,7 +172,7 @@ export default function Panier() {
                               </button>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-4">
                               <button
                                 onClick={() => removeFromCart(item.id)}
                                 className="text-red-600 hover:text-red-700 transition-colors text-sm"
@@ -200,7 +202,7 @@ export default function Panier() {
 
             <div className="space-y-4">
               <Card className="border-neutral-200 p-4 sticky top-6 bg-white">
-                <div className="space-y-3 mb-4">
+                <div className="space-y-4 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-neutral-600">Sous-total</span>
                     <span className="text-neutral-900 font-medium">{getTotalPrice().toLocaleString()} Ar</span>

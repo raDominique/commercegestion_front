@@ -42,7 +42,7 @@ const ForgotPassword = () => {
                     <h1 className="text-3xl font-bold text-violet-700 mb-1">Mot de passe oublié</h1>
                     <p className="text-base text-neutral-700 text-center">Entrez votre email ou code utilisateur pour recevoir les instructions de réinitialisation.</p>
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="userEmail">Email ou code utilisateur</Label>
                         <Input id="userEmail" type="text" placeholder="votre@email.com ou code" value={userEmail} onChange={e => setUserEmail   (e.target.value)} required className="border-neutral-300" />

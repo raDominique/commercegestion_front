@@ -103,17 +103,17 @@ const Passifs = () => {
 	};
 
 	return (
-		<div className="px-6 mx-auto">
+		<div className="px-4 md:px-6 mx-auto">
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
 				<>
-					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 						<div>
 							<h1 className="text-2xl text-neutral-900 mb-2">Mes Passifs</h1>
 							<p className="text-sm text-neutral-600">Historique de vos passifs</p>
 						</div>
-						<div className="flex gap-3 items-center">
+						<div className="flex gap-4 items-center">
 							<ExportButton
 								exportFunction={exportAndDownloadPassifs}
 								formats={[
@@ -250,7 +250,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 	}
 
 	return (
-		<div className="space-y-3 p-4">
+		<div className="space-y-4 p-4">
 			{passifs.map((item, idx) => {
 				const produit = item.productName || (item.productId && (item.productId.productName || item.productId)) || '-';
 				const quantite = item.quantite ?? '-';

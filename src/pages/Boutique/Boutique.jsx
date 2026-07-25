@@ -216,13 +216,13 @@ const Boutique = () => {
 
   if (user && user.userValidated === false) {
     return (
-      <div className="px-6 mx-auto">
+      <div className="px-4 md:px-6 mx-auto">
         <UserNotValidatedBanner />
       </div>
     );
   }
   return (
-    <div className="px-6 mx-auto">
+    <div className="px-4 md:px-6 mx-auto">
       <Tabs defaultValue="products">
         <TabsList>
           <TabsTrigger value="products">Produits à vendre</TabsTrigger>
@@ -230,8 +230,11 @@ const Boutique = () => {
         </TabsList>
 
         <TabsContent value="products" className="space-y-6">
-          <div>
-            <h1 className="text-2xl text-neutral-900 mb-2">Boutiques</h1>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl text-neutral-900 mb-2">Boutiques</h1>
+              <p className="text-sm text-neutral-600">Parcourez les produits disponibles à l'achat</p>
+            </div>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -336,7 +339,7 @@ const Boutique = () => {
                         <div className="text-sm text-neutral-700"><span className="font-bold">Fournisseur:</span> {vendeur?.userNickName || product.productOwnerId || '-'}</div>
                         <div className="text-sm text-neutral-700"><span className="font-bold">Adresse:</span> {site?.siteAddress || '-'}</div>
                       </div>
-                      <div className="mt-3">
+                      <div className="mt-4">
                         <Button
                           onClick={() => handleAddToCart(item)}
                           disabled={addingId === (item._id || item.id)}
@@ -376,7 +379,7 @@ const Boutique = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
             <Card className="border-neutral-200 bg-white overflow-hidden">
               <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
                 <h2 className="text-base font-semibold text-neutral-900">Liste des produits</h2>
@@ -453,7 +456,7 @@ const Boutique = () => {
                   <h2 className="text-base font-semibold text-neutral-900">Panier</h2>
                   <p className="text-sm text-neutral-500">{items.length} article(s)</p>
                 </div>
-                <div className="flex items-center gap-3 text-sm">
+                <div className="flex items-center gap-4 text-sm">
                   <span className="text-neutral-600">Date : {new Date().toLocaleDateString('fr-FR')}</span>
                   <Button
                     variant="outline"
