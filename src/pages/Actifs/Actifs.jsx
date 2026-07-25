@@ -11,6 +11,7 @@ import { addShopItem, getMyShopItems, deleteShopItem, getShopItem } from '../../
 import { selectAllProduits } from '../../services/product.service';
 import { getMySites } from '../../services/site.service';
 import { Label } from '../../components/ui/label';
+import { Tooltip, TooltipTrigger, TooltipContent } from '../../components/ui/tooltip';
 import { toast } from 'sonner';
 import ExportButton from '../../components/commons/ExportButton.jsx';
 import { exportAndDownloadActifs } from '../../services/export.service.js';
@@ -51,6 +52,10 @@ const getQuantityValue = (value) => {
 	return Number.isFinite(numericValue) ? numericValue : 0;
 };
 
+// Style partagé pour la colonne Actions — garanti par inline style
+const ACTION_COL_STYLE_LG = { minWidth: '200px', width: '200px' };
+const ACTION_COL_STYLE_SM = { minWidth: '100px', width: '100px' };
+
 const Actifs = () => {
 	usePageTitle('Actifs');
 
@@ -78,9 +83,7 @@ const Actifs = () => {
 	const [shopSearch, setShopSearch] = useState('');
 
 	const [detailOpen, setDetailOpen] = useState(false);
-
 	const [detailActif, setDetailActif] = useState(null);
-
 
 	const [stockModalOpen, setStockModalOpen] = useState(false);
 	const [selectedActifForStock, setSelectedActifForStock] = useState(null);
@@ -115,10 +118,15 @@ const Actifs = () => {
 	const [siteHighlighted, setSiteHighlighted] = useState(0);
 
 	// Produits filtrés
-	const filteredProducts = products.filter(product => (product.productName || '').toLowerCase().includes(productSearch.toLowerCase()) || (product.codeCPC || '').toLowerCase().includes(productSearch.toLowerCase()));
+	const filteredProducts = products.filter(product =>
+		(product.productName || '').toLowerCase().includes(productSearch.toLowerCase()) ||
+		(product.codeCPC || '').toLowerCase().includes(productSearch.toLowerCase())
+	);
 
 	// Sites filtrés
-	const filteredSites = sites.filter(site => (site.siteName || '').toLowerCase().includes(siteSearch.toLowerCase()));
+	const filteredSites = sites.filter(site =>
+		(site.siteName || '').toLowerCase().includes(siteSearch.toLowerCase())
+	);
 
 	const fetchActifs = async () => {
 		try {
@@ -169,8 +177,7 @@ const Actifs = () => {
 		fetchMyShopItems();
 	}, [shopPage, shopLimit, shopSearch, user]);
 
-	useEffect(() => {
-	}, [deleteModalOpen, selectedSellItemToDelete]);
+	useEffect(() => { }, [deleteModalOpen, selectedSellItemToDelete]);
 
 	// Map shop item shape to the actif shape used by ActifsTableOrList
 	const mapShopItemToActif = (item) => ({
@@ -464,7 +471,9 @@ const Actifs = () => {
 
 	/* ================= RENDER ================= */
 
-	const productToDeleteName = selectedSellItemToDelete ? (selectedSellItemToDelete.productName || selectedSellItemToDelete.productId?.productName || selectedSellItemToDelete._shopRaw?.productId?.productName || selectedSellItemToDelete.product?.productName || selectedSellItemToDelete?.productCode || '-') : '';
+	const productToDeleteName = selectedSellItemToDelete
+		? (selectedSellItemToDelete.productName || selectedSellItemToDelete.productId?.productName || selectedSellItemToDelete._shopRaw?.productId?.productName || selectedSellItemToDelete.product?.productName || selectedSellItemToDelete?.productCode || '-')
+		: '';
 
 	return (
 		<div className="px-6 mx-auto">
@@ -477,46 +486,46 @@ const Actifs = () => {
 							<TabsTrigger value="list">Mes Actifs</TabsTrigger>
 							<TabsTrigger value="annonces">Mes Produits en vente</TabsTrigger>
 						</TabsList>
+
 						<TabsContent value="list" className="space-y-6">
 							<div className="flex justify-between items-center mb-6">
 								<div>
 									<h1 className="text-2xl text-neutral-900 mb-2">Mes Actifs</h1>
 								</div>
-
 								<div className="flex gap-3 items-center">
-									<Button
-										onClick={handleOpenAddProductModal}
-										status="active"
-										color="default"
-									>
+									<Button onClick={handleOpenAddProductModal} status="active" color="default">
 										Opération hors plateforme
 									</Button>
 									<ExportButton
 										exportFunction={exportAndDownloadActifs}
 										formats={[
 											{ label: 'PDF', value: 'pdf', description: 'Document PDF' },
-											{ label: 'Excel', value: 'excel', description: 'Fichier Excel' }
+											{ label: 'Excel', value: 'excel', description: 'Fichier Excel' },
 										]}
 										title="Exporter les actifs"
 										buttonLabel="Exporter"
 									/>
 									<Input
 										placeholder="Rechercher..."
-										onChange={e => {
-											setPage(1);
-											setSearch(e.target.value);
-										}}
+										onChange={e => { setPage(1); setSearch(e.target.value); }}
 										className="max-w-xs border-black bg-white"
 									/>
 								</div>
 							</div>
 
 							<Card className="border-neutral-200 bg-white">
-								<ActifsTableOrList loading={loading} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} onOpenStockModal={handleOpenStockModal} onOpenSellModal={handleOpenSellModal} />
+								<ActifsTableOrList
+									loading={loading}
+									actifs={actifs}
+									dateFormat={dateFormat}
+									isDesktop={isDesktop}
+									onShowDetail={handleShowDetail}
+									onOpenStockModal={handleOpenStockModal}
+									onOpenSellModal={handleOpenSellModal}
+								/>
 							</Card>
 
 							<PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
-
 						</TabsContent>
 
 						<TabsContent value="annonces" className="space-y-6">
@@ -557,21 +566,13 @@ const Actifs = () => {
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Mettre en vente</DialogTitle>
-								<DialogDescription>
-									{selectedActifForSale?.productName}
-								</DialogDescription>
+								<DialogDescription>{selectedActifForSale?.productName}</DialogDescription>
 							</DialogHeader>
-
 							<div className="space-y-4">
 								<div>
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Produit</label>
-									<Input
-										disabled
-										value={selectedActifForSale?.productName || ''}
-										className="border-neutral-300 bg-neutral-50"
-									/>
+									<Input disabled value={selectedActifForSale?.productName || ''} className="border-neutral-300 bg-neutral-50" />
 								</div>
-
 								<div>
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité à vendre</label>
 									<Input
@@ -582,16 +583,10 @@ const Actifs = () => {
 										value={sellForm.quantite}
 										onChange={(e) => {
 											const val = e.target.value;
-											if (val === '') {
-												setSellForm({ ...sellForm, quantite: '' });
-												return;
-											}
+											if (val === '') { setSellForm({ ...sellForm, quantite: '' }); return; }
 											let num = Number(val);
 											const max = Number(selectedActifForSale?.quantite ?? Infinity);
-											if (isNaN(num)) {
-												setSellForm({ ...sellForm, quantite: '' });
-												return;
-											}
+											if (isNaN(num)) { setSellForm({ ...sellForm, quantite: '' }); return; }
 											if (num > max) num = max;
 											if (num < 1) num = 1;
 											setSellForm({ ...sellForm, quantite: String(num) });
@@ -600,7 +595,6 @@ const Actifs = () => {
 									/>
 									<div className="text-xs text-neutral-500 mt-1">Disponible: {selectedActifForSale?.quantite ?? 0}</div>
 								</div>
-
 								<div>
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Prix unitaire (Ar)</label>
 									<Input
@@ -612,7 +606,6 @@ const Actifs = () => {
 										className="border-neutral-300"
 									/>
 								</div>
-
 								<div>
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Description</label>
 									<Input
@@ -622,21 +615,9 @@ const Actifs = () => {
 										className="border-neutral-300"
 									/>
 								</div>
-
 								<div className="flex justify-end gap-2 pt-4">
-									<Button
-										variant="outline"
-										status="inactive"
-										onClick={() => setSellModalOpen(false)}
-									>
-										Annuler
-									</Button>
-									<Button
-										status={loadingSell ? "loading" : "active"}
-										onClick={handleSell}
-										disabled={loadingSell}
-										color="default"
-									>
+									<Button variant="outline" status="inactive" onClick={() => setSellModalOpen(false)}>Annuler</Button>
+									<Button status={loadingSell ? 'loading' : 'active'} onClick={handleSell} disabled={loadingSell} color="default">
 										{loadingSell && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Mettre en vente
 									</Button>
 								</div>
@@ -649,19 +630,15 @@ const Actifs = () => {
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Supprimer l'annonce</DialogTitle>
-								<DialogDescription>Êtes-vous sûr de vouloir supprimer l'annonce « {productToDeleteName} » ? Cette action est irréversible.</DialogDescription>
+								<DialogDescription>
+									Êtes-vous sûr de vouloir supprimer l'annonce « {productToDeleteName} » ? Cette action est irréversible.
+								</DialogDescription>
 							</DialogHeader>
 							<div className="flex justify-end gap-2 mt-4">
 								<DialogClose asChild>
 									<Button variant="outline" status="inactive">Annuler</Button>
 								</DialogClose>
-								<Button
-									variant="default"
-									status={deleting ? 'loading' : 'active'}
-									color="default"
-									disabled={deleting}
-									onClick={handleConfirmDeleteShopItem}
-								>
+								<Button variant="default" status={deleting ? 'loading' : 'active'} color="default" disabled={deleting} onClick={handleConfirmDeleteShopItem}>
 									{deleting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Supprimer
 								</Button>
 							</div>
@@ -673,30 +650,17 @@ const Actifs = () => {
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Ajouter du stock</DialogTitle>
-								<DialogDescription>
-									{selectedActifForStock?.productName}
-								</DialogDescription>
+								<DialogDescription>{selectedActifForStock?.productName}</DialogDescription>
 							</DialogHeader>
-
 							<div className="space-y-4">
 								<div>
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Produit</label>
-									<Input
-										disabled
-										value={selectedActifForStock?.productName || ''}
-										className="border-neutral-300 bg-neutral-50"
-									/>
+									<Input disabled value={selectedActifForStock?.productName || ''} className="border-neutral-300 bg-neutral-50" />
 								</div>
-
 								<div>
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Site d'origine</label>
-									<Input
-										disabled
-										value={selectedActifForStock?.siteOrigineId || selectedActifForStock?.depot || ''}
-										className="border-neutral-300 bg-neutral-50"
-									/>
+									<Input disabled value={selectedActifForStock?.siteOrigineId || selectedActifForStock?.depot || ''} className="border-neutral-300 bg-neutral-50" />
 								</div>
-
 								<div>
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</label>
 									<Input
@@ -708,7 +672,6 @@ const Actifs = () => {
 										className="border-neutral-300"
 									/>
 								</div>
-
 								<div>
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Observations</label>
 									<Input
@@ -718,21 +681,9 @@ const Actifs = () => {
 										className="border-neutral-300"
 									/>
 								</div>
-
 								<div className="flex justify-end gap-2 pt-4">
-									<Button
-										variant="outline"
-										status="inactive"
-										onClick={() => setStockModalOpen(false)}
-									>
-										Annuler
-									</Button>
-									<Button
-										status={loadingAddStock ? "loading" : "active"}
-										onClick={handleAddStock}
-										disabled={loadingAddStock}
-										color="default"
-									>
+									<Button variant="outline" status="inactive" onClick={() => setStockModalOpen(false)}>Annuler</Button>
+									<Button status={loadingAddStock ? 'loading' : 'active'} onClick={handleAddStock} disabled={loadingAddStock} color="default">
 										{loadingAddStock && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Ajouter
 									</Button>
 								</div>
@@ -745,46 +696,28 @@ const Actifs = () => {
 						<DialogContent>
 							<DialogHeader>
 								<DialogTitle>Initialiser un produit à un site</DialogTitle>
-								<DialogDescription>
-									Sélectionnez un produit et un site pour l'initialiser
-								</DialogDescription>
+								<DialogDescription>Sélectionnez un produit et un site pour l'initialiser</DialogDescription>
 							</DialogHeader>
-
 							<div className="space-y-4">
 								<div className="space-y-2">
 									<Label>Produit</Label>
 									<div className="relative">
 										<Input
-											placeholder={products.length === 0 ? "Aucun produit disponible" : "Rechercher un produit..."}
+											placeholder={products.length === 0 ? 'Aucun produit disponible' : 'Rechercher un produit...'}
 											value={productSearch}
 											onChange={e => { setProductSearch(e.target.value); setProductHighlighted(0); }}
 											onFocus={() => { setProductOpen(true); setProductHighlighted(0); }}
 											onBlur={() => setTimeout(() => setProductOpen(false), 150)}
 											onKeyDown={(e) => {
 												if (e.key === 'Escape') return setProductOpen(false);
-												if (!productOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-													setProductOpen(true);
-													e.preventDefault();
-													return;
-												}
+												if (!productOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { setProductOpen(true); e.preventDefault(); return; }
 												if (productOpen) {
-													if (e.key === 'ArrowDown') {
-														e.preventDefault();
-														setProductHighlighted(i => Math.min(i + 1, Math.max(filteredProducts.length - 1, 0)));
-													} else if (e.key === 'ArrowUp') {
-														e.preventDefault();
-														setProductHighlighted(i => Math.max(i - 1, 0));
-													} else if (e.key === 'Enter') {
+													if (e.key === 'ArrowDown') { e.preventDefault(); setProductHighlighted(i => Math.min(i + 1, Math.max(filteredProducts.length - 1, 0))); }
+													else if (e.key === 'ArrowUp') { e.preventDefault(); setProductHighlighted(i => Math.max(i - 1, 0)); }
+													else if (e.key === 'Enter') {
 														e.preventDefault();
 														const product = filteredProducts[productHighlighted];
-														if (product) {
-															setAddProductForm(prev => ({
-																...prev,
-																productId: product._id,
-															}));
-															setProductSearch(product.productName);
-															setProductOpen(false);
-														}
+														if (product) { setAddProductForm(prev => ({ ...prev, productId: product._id })); setProductSearch(product.productName); setProductOpen(false); }
 													}
 												}
 											}}
@@ -798,14 +731,7 @@ const Actifs = () => {
 														type="button"
 														key={product._id}
 														onMouseEnter={() => setProductHighlighted(idx)}
-														onClick={() => {
-															setAddProductForm(prev => ({
-																...prev,
-																productId: product._id,
-															}));
-															setProductSearch(product.productName);
-															setProductOpen(false);
-														}}
+														onClick={() => { setAddProductForm(prev => ({ ...prev, productId: product._id })); setProductSearch(product.productName); setProductOpen(false); }}
 														className={`w-full text-left px-3 py-2 text-sm ${idx === productHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
 													>
 														{product.productName} - {product.codeCPC}
@@ -825,36 +751,21 @@ const Actifs = () => {
 									<Label>Site</Label>
 									<div className="relative">
 										<Input
-											placeholder={sites.length === 0 ? "Aucun site disponible" : "Rechercher un site..."}
+											placeholder={sites.length === 0 ? 'Aucun site disponible' : 'Rechercher un site...'}
 											value={siteSearch}
 											onChange={e => { setSiteSearch(e.target.value); setSiteHighlighted(0); }}
 											onFocus={() => { setSiteOpen(true); setSiteHighlighted(0); }}
 											onBlur={() => setTimeout(() => setSiteOpen(false), 150)}
 											onKeyDown={(e) => {
 												if (e.key === 'Escape') return setSiteOpen(false);
-												if (!siteOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-													setSiteOpen(true);
-													e.preventDefault();
-													return;
-												}
+												if (!siteOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { setSiteOpen(true); e.preventDefault(); return; }
 												if (siteOpen) {
-													if (e.key === 'ArrowDown') {
-														e.preventDefault();
-														setSiteHighlighted(i => Math.min(i + 1, Math.max(filteredSites.length - 1, 0)));
-													} else if (e.key === 'ArrowUp') {
-														e.preventDefault();
-														setSiteHighlighted(i => Math.max(i - 1, 0));
-													} else if (e.key === 'Enter') {
+													if (e.key === 'ArrowDown') { e.preventDefault(); setSiteHighlighted(i => Math.min(i + 1, Math.max(filteredSites.length - 1, 0))); }
+													else if (e.key === 'ArrowUp') { e.preventDefault(); setSiteHighlighted(i => Math.max(i - 1, 0)); }
+													else if (e.key === 'Enter') {
 														e.preventDefault();
 														const site = filteredSites[siteHighlighted];
-														if (site) {
-															setAddProductForm(prev => ({
-																...prev,
-																siteId: site._id
-															}));
-															setSiteSearch(site.siteName);
-															setSiteOpen(false);
-														}
+														if (site) { setAddProductForm(prev => ({ ...prev, siteId: site._id })); setSiteSearch(site.siteName); setSiteOpen(false); }
 													}
 												}
 											}}
@@ -868,14 +779,7 @@ const Actifs = () => {
 														type="button"
 														key={site._id}
 														onMouseEnter={() => setSiteHighlighted(idx)}
-														onClick={() => {
-															setAddProductForm(prev => ({
-																...prev,
-																siteId: site._id
-															}));
-															setSiteSearch(site.siteName);
-															setSiteOpen(false);
-														}}
+														onClick={() => { setAddProductForm(prev => ({ ...prev, siteId: site._id })); setSiteSearch(site.siteName); setSiteOpen(false); }}
 														className={`w-full text-left px-3 py-2 text-sm ${idx === siteHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
 													>
 														{site.siteName}
@@ -904,19 +808,8 @@ const Actifs = () => {
 								</div>
 
 								<div className="flex justify-end gap-2 pt-4">
-									<Button
-										variant="outline"
-										status="inactive"
-										onClick={() => setAddProductModalOpen(false)}
-									>
-										Annuler
-									</Button>
-									<Button
-										status={loadingAddProduct ? "loading" : "active"}
-										onClick={handleAddProductToSite}
-										disabled={loadingAddProduct}
-										color="default"
-									>
+									<Button variant="outline" status="inactive" onClick={() => setAddProductModalOpen(false)}>Annuler</Button>
+									<Button status={loadingAddProduct ? 'loading' : 'active'} onClick={handleAddProductToSite} disabled={loadingAddProduct} color="default">
 										{loadingAddProduct && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Ajouter
 									</Button>
 								</div>
@@ -931,7 +824,6 @@ const Actifs = () => {
 								<DialogTitle>Détail actif</DialogTitle>
 								<DialogDescription>Informations détaillées</DialogDescription>
 							</DialogHeader>
-
 							{loadingDetail ? (
 								<div className="flex justify-center py-8"><Loader message="Chargement..." /></div>
 							) : detailActif ? (
@@ -953,7 +845,6 @@ const Actifs = () => {
 													<div><b>Adresse site :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
 												</div>
 											</div>
-
 											<div><b>Vendeur :</b> {renderPerson(detailActif.vendeurId || detailActif.detentaire)}</div>
 											<div><b>Quantité à vendre :</b> {formatThousands(detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0)}</div>
 											<div><b>Quantité originale :</b> {formatThousands(detailActif.quantiteOriginale ?? detailActif._shopRaw?.quantiteOriginale ?? 0)}</div>
@@ -970,8 +861,8 @@ const Actifs = () => {
 											<div><b>Dépôt :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}</div>
 											<div><b>Adresse dépôt :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
 											<div><b>QTE :</b> {formatThousands(getQuantityValue(detailActif.quantite))}</div>
-<div><b>En attente :</b> {formatThousands(getQuantityValue(detailActif.quantiteEnAttente))}</div>
-<div><b>Disponible :</b> {formatThousands(getQuantityValue(detailActif.quantiteDisponible ?? detailActif.quantite))}</div>
+											<div><b>En attente :</b> {formatThousands(getQuantityValue(detailActif.quantiteEnAttente))}</div>
+											<div><b>Disponible :</b> {formatThousands(getQuantityValue(detailActif.quantiteDisponible ?? detailActif.quantite))}</div>
 											<div><b>Détenteur :</b> {renderPerson(detailActif.detentaire)}</div>
 										</>
 									)}
@@ -987,6 +878,9 @@ const Actifs = () => {
 
 export default Actifs;
 
+/* ============================================================
+   ActifsTableOrList
+   ============================================================ */
 function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal }) {
 	if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
 	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
@@ -994,8 +888,9 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 	if (isDesktop) {
 		return (
 			<div className="overflow-x-auto">
-				<Table>
+				<Table>	
 					<TableHeader>
+						{/* Ligne 1 */}
 						<TableRow>
 							<TableHead className="text-xs text-neutral-600">Produit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Code</TableHead>
@@ -1005,8 +900,15 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead colSpan={3} className="text-xs text-neutral-600 text-center">Quantité</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
+							{/* ✅ FIX : largeur forcée via style inline */}
+							<TableHead
+								className="text-xs text-neutral-600 text-right p-2 whitespace-nowrap"
+								style={ACTION_COL_STYLE_LG}
+							>
+								Actions
+							</TableHead>
 						</TableRow>
+						{/* Ligne 2 — sous-headers Quantité */}
 						<TableRow>
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
@@ -1018,7 +920,12 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600 text-center">En Attente</TableHead>
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right p-4">&nbsp;</TableHead>
+							<TableHead
+								className="text-xs text-neutral-600 text-right p-4 whitespace-nowrap"
+								style={ACTION_COL_STYLE_LG}
+							>
+								&nbsp;
+							</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -1028,7 +935,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm text-neutral-500 truncate max-w-xs">{item.productCode || '-'}</TableCell>
 								<TableCell>
 									{item.productImage ? (
-										<img src={getFullMediaUrl(item.productImage)} className="w-12 h-12 rounded object-cover" />
+										<img src={getFullMediaUrl(item.productImage)} className="w-12 h-12 rounded object-cover" alt={item.productName} />
 									) : (
 										<span className="text-neutral-400">-</span>
 									)}
@@ -1040,24 +947,33 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteEnAttente))}</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
-								<TableCell className="text-sm text-right">
-									{/* ✅ UN SEUL bouton Détails, design cohérent avec les autres */}
-									<div className="flex flex-col items-end gap-2">
-										<div>
-											<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
-												<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
-											</Button>
-										</div>
-										<div>
-											<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
-												<AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock
-											</Button>
-										</div>
-										<div>
-											<Button variant="ghost" size="sm" onClick={() => onOpenSellModal(item)}>
-												<LocalOfferIcon className="w-4 h-4 text-green-600" /> Mettre en vente
-											</Button>
-										</div>
+								{/* ✅ FIX : largeur forcée via style inline */}
+								<TableCell className="text-sm text-right whitespace-nowrap" style={ACTION_COL_STYLE_LG}>
+									<div className="flex items-center justify-end gap-1">
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
+													<InfoIcon className="w-4 h-4 text-violet-600" />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>Détails</TooltipContent>
+										</Tooltip>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
+													<AddHomeIcon className="w-4 h-4 text-orange-500" />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>Rajouter stock</TooltipContent>
+										</Tooltip>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button variant="ghost" size="sm" onClick={() => onOpenSellModal(item)}>
+													<LocalOfferIcon className="w-4 h-4 text-green-600" />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>Mettre en vente</TooltipContent>
+										</Tooltip>
 									</div>
 								</TableCell>
 							</TableRow>
@@ -1068,6 +984,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 		);
 	}
 
+	// Vue mobile — cards
 	return (
 		<div className="space-y-3 p-4">
 			{actifs.map(item => (
@@ -1103,17 +1020,31 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								</div>
 							</div>
 							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
-							<div className="flex flex-col gap-1 mt-2">
-								{/* ✅ UN SEUL bouton Détails, design cohérent avec les autres */}
-								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
-									<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
-								</Button>
-								<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
-									<AddHomeIcon className="w-4 h-4 text-orange-500" /> Rajouter stock
-								</Button>
-								<Button variant="ghost" size="sm" onClick={() => onOpenSellModal(item)}>
-									<LocalOfferIcon className="w-4 h-4 text-green-600" /> Mettre en vente
-								</Button>
+							<div className="flex items-center gap-1 mt-2">
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
+											<InfoIcon className="w-4 h-4 text-violet-600" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>Détails</TooltipContent>
+								</Tooltip>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button variant="ghost" size="sm" onClick={() => onOpenStockModal(item)}>
+											<AddHomeIcon className="w-4 h-4 text-orange-500" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>Rajouter stock</TooltipContent>
+								</Tooltip>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button variant="ghost" size="sm" onClick={() => onOpenSellModal(item)}>
+											<LocalOfferIcon className="w-4 h-4 text-green-600" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>Mettre en vente</TooltipContent>
+								</Tooltip>
 							</div>
 						</div>
 					</div>
@@ -1123,6 +1054,9 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 	);
 }
 
+/* ============================================================
+   SellItemsTableOrList
+   ============================================================ */
 function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenDeleteModal }) {
 	if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
 	if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
@@ -1143,7 +1077,13 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
+							{/* ✅ FIX : largeur forcée via style inline */}
+							<TableHead
+								className="text-xs text-neutral-600 text-right p-4 whitespace-nowrap"
+								style={ACTION_COL_STYLE_SM}
+							>
+								Actions
+							</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -1153,7 +1093,7 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 								<TableCell className="text-sm text-neutral-500 truncate max-w-xs">{item.productCode || '-'}</TableCell>
 								<TableCell>
 									{item.productImage ? (
-										<img src={getFullMediaUrl(item.productImage)} className="w-12 h-12 rounded object-cover" />
+										<img src={getFullMediaUrl(item.productImage)} className="w-12 h-12 rounded object-cover" alt={item.productName} />
 									) : (
 										<span className="text-neutral-400">-</span>
 									)}
@@ -1165,18 +1105,25 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 								<TableCell className="text-sm truncate max-w-xs">{item.statut || '-'}</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
-								<TableCell className="text-sm text-right">
-									<div className="flex flex-col items-end gap-2">
-										<div>
-											<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}>
-												<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
-											</Button>
-										</div>
-										<div>
-											<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
-												<DeleteIcon className="w-4 h-4 text-red-600" /> Retirer
-											</Button>
-										</div>
+								{/* ✅ FIX : largeur forcée via style inline */}
+								<TableCell className="text-sm text-right whitespace-nowrap" style={ACTION_COL_STYLE_SM}>
+									<div className="flex items-center justify-end gap-1">
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}>
+													<InfoIcon className="w-4 h-4 text-violet-600" />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>Détails</TooltipContent>
+										</Tooltip>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
+													<DeleteIcon className="w-4 h-4 text-red-600" />
+												</Button>
+											</TooltipTrigger>
+											<TooltipContent>Retirer</TooltipContent>
+										</Tooltip>
 									</div>
 								</TableCell>
 							</TableRow>
@@ -1187,6 +1134,7 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 		);
 	}
 
+	// Vue mobile — cards
 	return (
 		<div className="space-y-3 p-4">
 			{actifs.map(item => (
@@ -1211,13 +1159,23 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 							<div className="text-xs text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
 							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
 							<div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
-							<div className="flex flex-col gap-1 mt-2">
-								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}>
-									<InfoIcon className="w-4 h-4 text-violet-600" /> Détails
-								</Button>
-								<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
-									<DeleteIcon className="w-4 h-4 text-red-600" /> Retirer
-								</Button>
+							<div className="flex items-center gap-1 mt-2">
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item)}>
+											<InfoIcon className="w-4 h-4 text-violet-600" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>Détails</TooltipContent>
+								</Tooltip>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button variant="ghost" size="sm" onClick={() => onOpenDeleteModal(item)}>
+											<DeleteIcon className="w-4 h-4 text-red-600" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>Retirer</TooltipContent>
+								</Tooltip>
 							</div>
 						</div>
 					</div>
