@@ -306,32 +306,31 @@ const Retrait = () => {
 					<TabsList>
 						<TabsTrigger value="list">Historique de mes retraits</TabsTrigger>
 						<TabsTrigger value="form">Formulaire de retrait</TabsTrigger>
-						</TabsList>
+					</TabsList>
 
-						<TabsContent value="list" className="space-y-6">
-							<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-								<div>
-									<h1 className="text-2xl text-neutral-900 mb-2">Mes Retraits</h1>
-									<p className="text-sm text-neutral-600">Historique de vos retraits</p>
-								</div>
-
-								{/* TABLEAU */}
-								<Card className="border-neutral-200 bg-white">
-									<RetraitTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} isDesktop={isDesktop} />
-								</Card>
-
-								<PaginationControls
-									page={page}
-									total={total}
-									limit={limit}
-									loading={loading}
-									onPageChange={setPage}
-									onLimitChange={setLimit}
-									showLimitSelector
-									limitLabel="Par page"
-									className="mt-4"
-								/>
+					<TabsContent value="list" className="space-y-6">
+						<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+							<div>
+								<h1 className="text-2xl text-neutral-900 mb-2">Mes Retraits</h1>
+								<p className="text-sm text-neutral-600">Historique de vos retraits</p>
 							</div>
+						</div>
+
+						<Card className="border-neutral-200 bg-white">
+							<RetraitTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} isDesktop={isDesktop} />
+						</Card>
+
+						<PaginationControls
+							page={page}
+							total={total}
+							limit={limit}
+							loading={loading}
+							onPageChange={setPage}
+							onLimitChange={setLimit}
+							showLimitSelector
+							limitLabel="Par page"
+							className="mt-4"
+						/>
 						</TabsContent>
 
 						<TabsContent value="form">

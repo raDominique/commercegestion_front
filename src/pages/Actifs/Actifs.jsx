@@ -4,7 +4,7 @@ import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Loader } from '../../components/ui/loader';
 import { getActifs } from '../../services/ledger.service';
-import { getActifById } from '../../services/actifs.service';
+import { getActifsByIds } from '../../services/actifs.service';
 import { getProfile } from '../../services/auth.service';
 import { initializeTransaction } from '../../services/transaction.service';
 import { addShopItem, getMyShopItems, deleteShopItem, getShopItem } from '../../services/shop-available.service';
@@ -200,11 +200,11 @@ const Actifs = () => {
 		actifId: item.actifId || item._id,
 	});
 
-	const handleShowDetail = async id => {
+	const handleShowDetail = async ids => {
 		try {
 			setLoadingDetail(true);
 			const token = user?.token || localStorage.getItem('authToken');
-			const data = await getActifById(id, token);
+			const data = await getActifsByIds(ids, token);
 			setDetailActif(data || null);
 			setDetailOpen(true);
 		} catch (err) {
@@ -263,8 +263,8 @@ const Actifs = () => {
 			try {
 				const assetId = typeof itemOrId === 'object' ? (itemOrId.actifId || itemOrId.id) : null;
 				if (assetId) {
-					const data = await getActifById(assetId, user?.token || localStorage.getItem('authToken'));
-					setDetailActif(data || null);
+					const data = await getActifsByIds(assetId, user?.token || localStorage.getItem('authToken'));
+					setDetailActif((Array.isArray(data) ? data[0] : data) || null);
 					setDetailOpen(true);
 					return;
 				}
@@ -828,46 +828,69 @@ const Actifs = () => {
 							{loadingDetail ? (
 								<div className="flex justify-center py-8"><Loader message="Chargement..." /></div>
 							) : detailActif ? (
-							<div className="space-y-4 text-sm">
-								{(detailActif._shopRaw || detailActif.shopItemId) ? (
-										<>
-											<div className="flex items-start gap-4">
-												<div className="w-20 h-20 bg-neutral-100 rounded overflow-hidden">
-													{(detailActif.productId?.productImage || detailActif.productImage) ? (
-														<img src={getFullMediaUrl(detailActif.productId?.productImage || detailActif.productImage)} alt={detailActif.productId?.productName || detailActif.productName} className="w-full h-full object-cover" />
-													) : (
-														<span className="text-neutral-400">-</span>
-													)}
+								Array.isArray(detailActif) ? (
+									<div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+										{detailActif.map((actif, idx) => (
+											<div key={actif._id || idx} className="border border-neutral-200 rounded-lg p-3 space-y-1.5 text-sm">
+												<div className="flex items-start gap-3">
+													{actif.productId?.productImage ? (
+														<img src={getFullMediaUrl(actif.productId.productImage)} alt={actif.productId.productName} className="w-12 h-12 rounded object-cover shrink-0" />
+													) : null}
+													<div className="min-w-0 flex-1">
+														<div className="font-medium text-neutral-900">{actif.productId?.productName || '-'}</div>
+														<div className="text-xs text-neutral-500">{actif.productId?.codeCPC || '-'}</div>
+													</div>
 												</div>
-												<div>
-													<div><b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}</div>
-													<div><b>Code produit :</b> {detailActif.productId?.codeCPC || detailActif.productCode || '-'}</div>
-													<div><b>Site :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}</div>
-													<div><b>Adresse site :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
+												<div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-neutral-700">
+													<span><b>Dépôt :</b> {actif.depotId?.siteName || '-'}</span>
+													<span><b>Adresse :</b> {actif.depotId?.siteAddress || '-'}</span>
+													<span><b>Qté :</b> {formatThousands(getQuantityValue(actif.quantite))}</span>
+													<span><b>Disponible :</b> {formatThousands(getQuantityValue(actif.quantiteDisponible ?? actif.quantite))}</span>
+													<span><b>Détenteur :</b> {renderPerson(actif.detentaire.userName)} {renderPerson(actif.detentaire.userFirstName)}</span>
+													{/* <span><b>Ayant droit :</b> {renderPerson(actif.ayant_droit)}</span> */}
+													<span className="col-span-2"><b>Date :</b> {actif.createdAt ? dateFormat(actif.createdAt) : '-'}</span>
 												</div>
 											</div>
-											<div><b>Vendeur :</b> {renderPerson(detailActif.vendeurId || detailActif.detentaire)}</div>
-											<div><b>Quantité à vendre :</b> {formatThousands(detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0)}</div>
-											<div><b>Quantité originale :</b> {formatThousands(detailActif.quantiteOriginale ?? detailActif._shopRaw?.quantiteOriginale ?? 0)}</div>
-											<div><b>Prix unitaire (Ar) :</b> {formatThousands(detailActif.prixUnitaire ?? detailActif._shopRaw?.prixUnitaire ?? 0)}</div>
-											<div><b>Valeur totale :</b> {formatThousands((detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0) * (detailActif.prixUnitaire ?? detailActif._shopRaw?.prixUnitaire ?? 0))}</div>
-											<div><b>Description :</b> {detailActif.description || detailActif._shopRaw?.description || '-'}</div>
-											<div><b>Date création :</b> {detailActif.createdAt ? dateFormat(detailActif.createdAt) : (detailActif._shopRaw?.createdAt ? dateFormat(detailActif._shopRaw.createdAt) : '-')}</div>
-											<div><b>Date mise à jour :</b> {detailActif.updatedAt ? dateFormat(detailActif.updatedAt) : (detailActif._shopRaw?.updatedAt ? dateFormat(detailActif._shopRaw.updatedAt) : '-')}</div>
-										</>
-									) : (
-										<>
-											<div><b>Code produit :</b> {detailActif.productId?.codeCPC || detailActif.productCode || '-'}</div>
-											<div><b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}</div>
-											<div><b>Dépôt :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}</div>
-											<div><b>Adresse dépôt :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
-											<div><b>QTE :</b> {formatThousands(getQuantityValue(detailActif.quantite))}</div>
-											<div><b>En attente :</b> {formatThousands(getQuantityValue(detailActif.quantiteEnAttente))}</div>
-											<div><b>Disponible :</b> {formatThousands(getQuantityValue(detailActif.quantiteDisponible ?? detailActif.quantite))}</div>
-											<div><b>Détenteur :</b> {renderPerson(detailActif.detentaire)}</div>
-										</>
-									)}
-								</div>
+										))}
+									</div>
+								) : (detailActif._shopRaw || detailActif.shopItemId) ? (
+									<div className="space-y-4 text-sm">
+										<div className="flex items-start gap-4">
+											<div className="w-20 h-20 bg-neutral-100 rounded overflow-hidden">
+												{(detailActif.productId?.productImage || detailActif.productImage) ? (
+													<img src={getFullMediaUrl(detailActif.productId?.productImage || detailActif.productImage)} alt={detailActif.productId?.productName || detailActif.productName} className="w-full h-full object-cover" />
+												) : (
+													<span className="text-neutral-400">-</span>
+												)}
+											</div>
+											<div>
+												<div><b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}</div>
+												<div><b>Code produit :</b> {detailActif.productId?.codeCPC || detailActif.productCode || '-'}</div>
+												<div><b>Site :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}</div>
+												<div><b>Adresse site :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
+											</div>
+										</div>
+										<div><b>Vendeur :</b> {renderPerson(detailActif.vendeurId || detailActif.detentaire)}</div>
+										<div><b>Quantité à vendre :</b> {formatThousands(detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0)}</div>
+										<div><b>Quantité originale :</b> {formatThousands(detailActif.quantiteOriginale ?? detailActif._shopRaw?.quantiteOriginale ?? 0)}</div>
+										<div><b>Prix unitaire (Ar) :</b> {formatThousands(detailActif.prixUnitaire ?? detailActif._shopRaw?.prixUnitaire ?? 0)}</div>
+										<div><b>Valeur totale :</b> {formatThousands((detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0) * (detailActif.prixUnitaire ?? detailActif._shopRaw?.prixUnitaire ?? 0))}</div>
+										<div><b>Description :</b> {detailActif.description || detailActif._shopRaw?.description || '-'}</div>
+										<div><b>Date création :</b> {detailActif.createdAt ? dateFormat(detailActif.createdAt) : (detailActif._shopRaw?.createdAt ? dateFormat(detailActif._shopRaw.createdAt) : '-')}</div>
+										<div><b>Date mise à jour :</b> {detailActif.updatedAt ? dateFormat(detailActif.updatedAt) : (detailActif._shopRaw?.updatedAt ? dateFormat(detailActif._shopRaw.updatedAt) : '-')}</div>
+									</div>
+								) : (
+									<div className="space-y-4 text-sm">
+										<div><b>Code produit :</b> {detailActif.productId?.codeCPC || detailActif.productCode || '-'}</div>
+										<div><b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}</div>
+										<div><b>Dépôt :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}</div>
+										<div><b>Adresse dépôt :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
+										<div><b>QTE :</b> {formatThousands(getQuantityValue(detailActif.quantite))}</div>
+										<div><b>En attente :</b> {formatThousands(getQuantityValue(detailActif.quantiteEnAttente))}</div>
+										<div><b>Disponible :</b> {formatThousands(getQuantityValue(detailActif.quantiteDisponible ?? detailActif.quantite))}</div>
+										<div><b>Détenteur :</b> {renderPerson(detailActif.detentaire)}</div>
+									</div>
+								)
 							) : null}
 						</DialogContent>
 					</Dialog>
@@ -898,7 +921,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Image</TableHead>
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
-							<TableHead colSpan={3} className="text-xs text-neutral-600 text-center">Quantité</TableHead>
+							<TableHead colSpan={2} className="text-xs text-neutral-600 text-center">Quantité</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 							{/* ✅ FIX : largeur forcée via style inline */}
@@ -918,7 +941,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-center">Réelle</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-center">Disponible</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-center">En Attente</TableHead>
+							{/* <TableHead className="text-xs text-neutral-600 text-center">En Attente</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
 							<TableHead
@@ -945,7 +968,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
 								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantite))}</TableCell>
 								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteDisponible ?? item.quantite))}</TableCell>
-								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteEnAttente))}</TableCell>
+								{/* <TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteEnAttente))}</TableCell> */}
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								{/* ✅ FIX : largeur forcée via style inline */}
@@ -953,7 +976,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 									<div className="flex items-center justify-end gap-1">
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
+												<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.ids)}>
 													<InfoIcon className="w-4 h-4 text-violet-600" />
 												</Button>
 											</TooltipTrigger>
@@ -1013,7 +1036,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								</div>
 								<div className="text-right">
 									<div className="font-semibold">Att.</div>
-									<div>{formatThousands(getQuantityValue(item.quantiteEnAttente))}</div>
+									{/* <div>{formatThousands(getQuantityValue(item.quantiteEnAttente))}</div> */}
 								</div>
 								<div className="text-right">
 									<div className="font-semibold">Disp.</div>
@@ -1024,7 +1047,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<div className="flex items-center gap-2 mt-2">
 								<Tooltip>
 									<TooltipTrigger asChild>
-										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id)}>
+										<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.ids)}>
 											<InfoIcon className="w-4 h-4 text-violet-600" />
 										</Button>
 									</TooltipTrigger>
