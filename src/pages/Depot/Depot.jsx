@@ -26,8 +26,9 @@ import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBan
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
-import { getAllUsersSelect } from '../../services/user.service';
+import { getUsers } from '../../services/user.service';
 import { getMySites, getActifsBySite, getSitesByUser } from '../../services/site.service';
+import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 import { getAccessToken } from '../../services/token.service';
 import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
 
@@ -64,6 +65,10 @@ const Depot = () => {
 		observations: ''
 	});
 
+	// États pour les recherches - Détentaire
+	const [usersOptions, setUsersOptions] = useState([]);
+	const [detentaireSearch, setDetentaireSearch] = useState('');
+
 	// États pour les recherches - Site d'origine
 	const [siteOriginSearch, setSiteOriginSearch] = useState('');
 	const [siteOriginOpen, setSiteOriginOpen] = useState(false);
@@ -74,9 +79,6 @@ const Depot = () => {
 	const [productOpen, setProductOpen] = useState(false);
 	const [productHighlighted, setProductHighlighted] = useState(0);
 
-	// Mapping userId -> name pour la résolution du détenteur par ID
-	const [usersMap, setUsersMap] = useState({});
-
 	// États pour les recherches - Site de destination
 	const [siteDestinationSearch, setSiteDestinationSearch] = useState('');
 	const [siteDestinationOpen, setSiteDestinationOpen] = useState(false);
@@ -84,9 +86,9 @@ const Depot = () => {
 	// Estado para o formulário de transferência
 	const [saving, setSaving] = useState(false);
 	// Données filtrées
-	const filteredOriginSites = allSites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
+	const filteredOriginSites = detentaireSites.filter(site => (site?.siteName || '').toLowerCase().includes((siteOriginSearch || '').toLowerCase()));
 	const filteredProducts = productsOnSite.filter(item => (item.productName || '').toLowerCase().includes(productSearch.toLowerCase()));
-	const filteredDestinationSites = detentaireSites.filter(site => site.siteName.toLowerCase().includes(siteDestinationSearch.toLowerCase()));
+	const filteredDestinationSites = detentaireSites.filter(site => (site?.siteName || '').toLowerCase().includes((siteDestinationSearch || '').toLowerCase()));
 
 	const fetchActifs = async () => {
 		setLoading(true);
@@ -148,19 +150,18 @@ const Depot = () => {
 		});
 	}, []);
 
-	// Charger la map des utilisateurs pour résolution ID -> nom (sans afficher la liste)
+	// Charger les utilisateurs via l'API getUsers pour l'autocomplétion
 	useEffect(() => {
 		let mounted = true;
-		getAllUsersSelect().then(res => {
-			if (!mounted) return;
-			const arr = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
-			const map = arr.reduce((acc, u) => {
-				if (u && u._id) acc[u._id] = u.name || u.userNickName || '';
-				if (u && u.userId) acc[u.userId] = u.name || u.userNickName || '';
-				return acc;
-			}, {});
-			setUsersMap(map);
-		}).catch(() => { });
+		getUsers({ limit: 50, page: 1 })
+			.then(res => {
+				if (!mounted) return;
+				const arr = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+				setUsersOptions(arr);
+			})
+			.catch(() => {
+				if (mounted) setUsersOptions([]);
+			});
 		return () => { mounted = false; };
 	}, []);
 
@@ -191,6 +192,33 @@ const Depot = () => {
 
 	/* ================= ACTIONS ================= */
 
+	const getUserDisplayName = user => {
+		if (!user) return '';
+		const fullName = [user.userFirstname, user.userName].filter(Boolean).join(' ').trim();
+		return fullName || user.userNickName || user.name || user.userEmail || '';
+	};
+
+	const handleSelectDetentaire = user => {
+		const userId = user?._id || user?.id || '';
+		const displayName = getUserDisplayName(user);
+		setTransferForm(prev => ({
+			...prev,
+			detentaire: userId,
+			detentaireName: displayName,
+			siteOrigineId: '',
+			productId: '',
+			actifId: '',
+			quantite: '',
+			prixUnitaire: '',
+			siteDestinationId: '',
+			observations: ''
+		}));
+		setDetentaireSearch(displayName);
+		setDetentaireSites([]);
+		setProductsOnSite([]);
+		setMaxTransferQty(null);
+	};
+
 	const handleSelectSiteOrigine = async siteId => {
 		setTransferForm(prev => ({
 			...prev,
@@ -199,8 +227,6 @@ const Depot = () => {
 			actifId: '',
 			quantite: '',
 			prixUnitaire: '',
-			detentaire: '',
-			ayant_droit: '',
 			siteDestinationId: '',
 			observations: ''
 		}));
@@ -238,8 +264,6 @@ const Depot = () => {
 			productId: actif?.productId || '',
 			quantite: '',
 			prixUnitaire: actif?.prixUnitaire || '',
-			detentaire: '',
-			ayant_droit: '',
 		}));
 		setMaxTransferQty(actif?.quantite || null);
 	};
@@ -302,6 +326,7 @@ const Depot = () => {
 				ayant_droit: '',
 				observations: ''
 			});
+			setDetentaireSearch('');
 			setProductsOnSite([]);
 			setMaxTransferQty(null);
 			fetchActifs();
@@ -365,68 +390,90 @@ const Depot = () => {
 						</div>
 						<form className="space-y-4 p-4" onSubmit={handleTransferSubmit}>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								{/* 1. Site d'origine avec recherche */}
-								<div className="space-y-2 md:col-span-2">
-									<Label required>1. Site d'origine</Label>
-									<div className="relative">
-										<Input
-											placeholder="Rechercher le site d'origine..."
-											value={siteOriginSearch}
-											onChange={e => { setSiteOriginSearch(e.target.value); setSiteOriginHighlighted(0); }}
-											onFocus={() => { setSiteOriginOpen(true); setSiteOriginHighlighted(0); }}
-											onBlur={() => setTimeout(() => setSiteOriginOpen(false), 150)}
-											onKeyDown={(e) => {
-												if (e.key === 'Escape') return setSiteOriginOpen(false);
-												if (!siteOriginOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-													setSiteOriginOpen(true);
-													e.preventDefault();
-													return;
-												}
-												if (siteOriginOpen) {
-													if (e.key === 'ArrowDown') {
-														e.preventDefault();
-														setSiteOriginHighlighted(i => Math.min(i + 1, Math.max(filteredOriginSites.length - 1, 0)));
-													} else if (e.key === 'ArrowUp') {
-														e.preventDefault();
-														setSiteOriginHighlighted(i => Math.max(i - 1, 0));
-													} else if (e.key === 'Enter') {
-														e.preventDefault();
-														const site = filteredOriginSites[siteOriginHighlighted];
-														if (site) {
-															handleSelectSiteOrigine(site._id);
-															setSiteOriginSearch(site.siteName);
-															setSiteOriginOpen(false);
-														}
-													}
-												}
-											}}
-											className="w-full"
-										/>
-										{siteOriginOpen && (
-											<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-												{filteredOriginSites.length > 0 ? (
-													filteredOriginSites.map((site, idx) => (
-														<button
-															type="button"
-															key={site._id}
-															onMouseEnter={() => setSiteOriginHighlighted(idx)}
-															onClick={() => {
-																handleSelectSiteOrigine(site._id);
-																setSiteOriginSearch(site.siteName);
-																setSiteOriginOpen(false);
-															}}
-															className={`w-full text-left px-3 py-2 text-sm ${idx === siteOriginHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
-														>
-															{site.siteName} - {site.siteAddress || ''}
-														</button>
-													))
-												) : (
-													<div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
-												)}
-											</div>
-										)}
-									</div>
-								</div>
+{/* 1. Détenteur via l'API getUsers */}
+																	<div className="space-y-2 md:col-span-2">
+																		<Label required>1. Détenteur</Label>
+																		<UserAutocomplete
+																			users={usersOptions}
+																			value={detentaireSearch}
+																			onChange={setDetentaireSearch}
+																			onSelect={handleSelectDetentaire}
+																			placeholder="Rechercher un utilisateur..."
+																			className="border-neutral-300"
+																			getDisplayName={getUserDisplayName}
+																		/>
+																		<Input
+																			placeholder="Nom du détenteur"
+																			value={transferForm.detentaireName}
+																			readOnly
+																			className="border-neutral-300 bg-neutral-100 text-neutral-700"
+																		/>
+																	</div>
+
+																	{transferForm.detentaire && (
+																		<div className="space-y-2 md:col-span-2">
+																			<Label required>2. Site d'origine</Label>
+																			<div className="relative">
+																				<Input
+																					placeholder={loadingDetentaireSites ? "Chargement..." : "Rechercher le site d'origine..."}
+																					value={siteOriginSearch}
+																					onChange={e => { setSiteOriginSearch(e.target.value); setSiteOriginHighlighted(0); }}
+																					onFocus={() => { setSiteOriginOpen(true); setSiteOriginHighlighted(0); }}
+																					onBlur={() => setTimeout(() => setSiteOriginOpen(false), 150)}
+																					onKeyDown={(e) => {
+																						if (e.key === 'Escape') return setSiteOriginOpen(false);
+																						if (!siteOriginOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+																							setSiteOriginOpen(true);
+																							e.preventDefault();
+																							return;
+																						}
+																						if (siteOriginOpen) {
+																							if (e.key === 'ArrowDown') {
+																								e.preventDefault();
+																								setSiteOriginHighlighted(i => Math.min(i + 1, Math.max(filteredOriginSites.length - 1, 0)));
+																							} else if (e.key === 'ArrowUp') {
+																								e.preventDefault();
+																								setSiteOriginHighlighted(i => Math.max(i - 1, 0));
+																							} else if (e.key === 'Enter') {
+																								e.preventDefault();
+																								const site = filteredOriginSites[siteOriginHighlighted];
+																								if (site) {
+																									handleSelectSiteOrigine(site._id);
+																									setSiteOriginSearch(site.siteName);
+																									setSiteOriginOpen(false);
+																								}
+																							}
+																						}
+																					}}
+																					className="w-full"
+																					disabled={loadingDetentaireSites || detentaireSites.length === 0}
+																				/>
+																				{siteOriginOpen && (
+																					<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
+																						{filteredOriginSites.length > 0 ? (
+																							filteredOriginSites.map((site, idx) => (
+																								<button
+																									type="button"
+																									key={site._id}
+																									onMouseEnter={() => setSiteOriginHighlighted(idx)}
+																									onClick={() => {
+																										handleSelectSiteOrigine(site._id);
+																										setSiteOriginSearch(site.siteName);
+																										setSiteOriginOpen(false);
+																									}}
+																									className={`w-full text-left px-3 py-2 text-sm ${idx === siteOriginHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
+																								>
+																									{site.siteName} - {site.siteAddress || ''}
+																								</button>
+																							))
+																						) : (
+																							<div className="px-3 py-2 text-sm text-neutral-500">Aucun site trouvé</div>
+																						)}
+																					</div>
+																				)}
+																			</div>
+																		</div>
+																	)}
 
 								{/* 2. Produit du site avec recherche */}
 								{transferForm.siteOrigineId && (
@@ -528,32 +575,7 @@ const Depot = () => {
 									</>
 								)}
 
-								{/* 4. Détenteur par ID (style parrain) */}
-								{transferForm.productId && (
-									<div className="space-y-2">
-										<Label required>4. Détenteur</Label>
-										<Input
-											placeholder="ID du membre (8 caractères)"
-											value={transferForm.detentaire}
-											onChange={e => {
-												const val = e.target.value;
-												setTransferForm(prev => ({ ...prev, detentaire: val, detentaireName: '' }));
-												const code = (val || '').trim();
-												if (code.length === 8) {
-													const found = usersMap[code] || '';
-													setTransferForm(prev => ({ ...prev, detentaire: val, detentaireName: found }));
-												}
-											}}
-											className="border-neutral-300"
-										/>
-										<Input
-											placeholder="Nom du détenteur"
-											value={transferForm.detentaireName}
-											readOnly
-											className="border-neutral-300 bg-neutral-100 text-neutral-700"
-										/>
-									</div>
-								)}
+
 
 								{/* 4. Ayant droit avec recherche */}
 								{/* {transferForm.productId && (
