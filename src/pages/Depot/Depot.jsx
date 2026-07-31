@@ -26,7 +26,7 @@ import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBan
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
-import { getAllUsersSelect } from '../../services/user.service';
+import { getUsers } from '../../services/user.service';
 import { getMySites, getActifsBySite, getSitesByUser } from '../../services/site.service';
 import { getAccessToken } from '../../services/token.service';
 import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
@@ -59,6 +59,7 @@ const Depot = () => {
 		quantite: '',
 		prixUnitaire: '',
 		detentaire: '',
+		detentaireCode: '',
 		detentaireName: '',
 		ayant_droit: '',
 		observations: ''
@@ -74,7 +75,7 @@ const Depot = () => {
 	const [productOpen, setProductOpen] = useState(false);
 	const [productHighlighted, setProductHighlighted] = useState(0);
 
-	// Mapping userId -> name pour la résolution du détenteur par ID
+	// Mapping code membre (userId) -> utilisateur pour résoudre le _id du détenteur
 	const [usersMap, setUsersMap] = useState({});
 
 	// États pour les recherches - Site de destination
@@ -151,12 +152,11 @@ const Depot = () => {
 	// Charger la map des utilisateurs pour résolution ID -> nom (sans afficher la liste)
 	useEffect(() => {
 		let mounted = true;
-		getAllUsersSelect().then(res => {
+		getUsers().then(res => {
 			if (!mounted) return;
 			const arr = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
 			const map = arr.reduce((acc, u) => {
-				if (u && u._id) acc[u._id] = u.name || u.userNickName || '';
-				if (u && u.userId) acc[u.userId] = u.name || u.userNickName || '';
+				if (u && u.userId) acc[u.userId] = u;
 				return acc;
 			}, {});
 			setUsersMap(map);
@@ -200,6 +200,7 @@ const Depot = () => {
 			quantite: '',
 			prixUnitaire: '',
 			detentaire: '',
+			detentaireCode: '',
 			ayant_droit: '',
 			siteDestinationId: '',
 			observations: ''
@@ -239,6 +240,7 @@ const Depot = () => {
 			quantite: '',
 			prixUnitaire: actif?.prixUnitaire || '',
 			detentaire: '',
+			detentaireCode: '',
 			ayant_droit: '',
 		}));
 		setMaxTransferQty(actif?.quantite || null);
@@ -298,6 +300,7 @@ const Depot = () => {
 				quantite: '',
 				prixUnitaire: '',
 				detentaire: '',
+				detentaireCode: '',
 				detentaireName: '',
 				ayant_droit: '',
 				observations: ''
@@ -534,15 +537,18 @@ const Depot = () => {
 										<Label required>4. Détenteur</Label>
 										<Input
 											placeholder="ID du membre (8 caractères)"
-											value={transferForm.detentaire}
+											value={transferForm.detentaireCode}
 											onChange={e => {
 												const val = e.target.value;
-												setTransferForm(prev => ({ ...prev, detentaire: val, detentaireName: '' }));
 												const code = (val || '').trim();
-												if (code.length === 8) {
-													const found = usersMap[code] || '';
-													setTransferForm(prev => ({ ...prev, detentaire: val, detentaireName: found }));
-												}
+												const member = code.length === 8 ? (usersMap[code] || null) : null;
+												const fullName = member ? ([member.userName, member.userFirstname].filter(Boolean).join(' ') || member.userNickName || '') : '';
+												setTransferForm(prev => ({
+													...prev,
+													detentaireCode: val,
+													detentaire: member ? member._id : '',
+													detentaireName: fullName,
+												}));
 											}}
 											className="border-neutral-300"
 										/>
@@ -711,6 +717,7 @@ const Depot = () => {
 										quantite: '',
 										prixUnitaire: '',
 										detentaire: '',
+										detentaireCode: '',
 										detentaireName: '',
 										ayant_droit: '',
 										observations: ''
