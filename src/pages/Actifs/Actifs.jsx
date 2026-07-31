@@ -24,6 +24,8 @@ import {
 	DialogClose,
 } from '../../components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
+import { Badge } from '../../components/ui/badge';
+import { getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
 import { formatThousands } from '../../utils/formatNumber';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
@@ -922,6 +924,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
 							<TableHead colSpan={2} className="text-xs text-neutral-600 text-center">Quantité</TableHead>
+							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 							{/* ✅ FIX : largeur forcée via style inline */}
@@ -944,6 +947,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							{/* <TableHead className="text-xs text-neutral-600 text-center">En Attente</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
+							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
 							<TableHead
 								className="text-xs text-neutral-600 text-right p-4 whitespace-nowrap"
 								style={ACTION_COL_STYLE_LG}
@@ -953,7 +957,9 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{actifs.map(item => (
+						{actifs.map(item => {
+						const statusBadge = getTransactionStatusBadgeProps(item.statut);
+						return (
 							<TableRow key={item.id}>
 								<TableCell className="text-sm truncate max-w-xs">{item.productName || '-'}</TableCell>
 								<TableCell className="text-sm text-neutral-500 truncate max-w-xs">{item.productCode || '-'}</TableCell>
@@ -969,6 +975,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantite))}</TableCell>
 								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteDisponible ?? item.quantite))}</TableCell>
 								{/* <TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteEnAttente))}</TableCell> */}
+								<TableCell className="text-sm"><Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge></TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								{/* ✅ FIX : largeur forcée via style inline */}
@@ -1001,7 +1008,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 									</div>
 								</TableCell>
 							</TableRow>
-						))}
+						);
+					})}
 					</TableBody>
 				</Table>
 			</div>
@@ -1011,8 +1019,10 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 	// Vue mobile — cards
 	return (
 		<div className="space-y-4 p-4">
-			{actifs.map(item => (
-				<Card key={item.id} className="p-4">
+			{actifs.map(item => {
+				const statusBadge = getTransactionStatusBadgeProps(item.statut);
+				return (
+					<Card key={item.id} className="p-4">
 					<div className="flex items-start justify-between gap-4">
 						<div className="flex items-center gap-4">
 							<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
@@ -1043,7 +1053,10 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 									<div>{formatThousands(getQuantityValue(item.quantiteDisponible ?? item.quantite))}</div>
 								</div>
 							</div>
-							<div className="text-xs text-neutral-600">Statut: {item.statut || '-'}</div>
+							<div>
+								<Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>
+							</div>
+							<div className="text-xs text-neutral-600">Détenteur: {renderPerson(item.detentaire || item.detentaireId)}</div>
 							<div className="flex items-center gap-2 mt-2">
 								<Tooltip>
 									<TooltipTrigger asChild>
@@ -1073,7 +1086,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 						</div>
 					</div>
 				</Card>
-			))}
+			);
+			})}
 		</div>
 	);
 }
