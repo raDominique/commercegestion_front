@@ -944,7 +944,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-center">Réelle</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-center">Disponible</TableHead>
-							{/* <TableHead className="text-xs text-neutral-600 text-center">En Attente</TableHead> */}
+							<TableHead className="text-xs text-neutral-600 text-center">En Attente</TableHead>
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
 							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
@@ -974,7 +974,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
 								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantite))}</TableCell>
 								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteDisponible ?? item.quantite))}</TableCell>
-								{/* <TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteEnAttente))}</TableCell> */}
+								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteEnAttente))}</TableCell>
 								<TableCell className="text-sm"><Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge></TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
@@ -1046,7 +1046,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								</div>
 								<div className="text-right">
 									<div className="font-semibold">Att.</div>
-									{/* <div>{formatThousands(getQuantityValue(item.quantiteEnAttente))}</div> */}
+									<div>{formatThousands(getQuantityValue(item.quantiteEnAttente))}</div>
 								</div>
 								<div className="text-right">
 									<div className="font-semibold">Disp.</div>
