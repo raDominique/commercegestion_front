@@ -923,7 +923,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Image</TableHead>
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
-							<TableHead colSpan={2} className="text-xs text-neutral-600 text-center">Quantité</TableHead>
+							<TableHead colSpan={3} className="text-xs text-neutral-600 text-center">Quantité</TableHead>
 							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
