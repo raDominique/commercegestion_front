@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -84,6 +84,10 @@ const Depot = () => {
 	const [siteDestinationHighlighted, setSiteDestinationHighlighted] = useState(0);
 	// Estado para o formulário de transferência
 	const [saving, setSaving] = useState(false);
+	// Recherche du membre en cours via l'API
+	const [memberLookupLoading, setMemberLookupLoading] = useState(false);
+	const [memberNotFound, setMemberNotFound] = useState(false);
+	const memberSearchCodeRef = useRef('');
 	// Données filtrées
 	const filteredOriginSites = allSites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
 	const filteredProducts = productsOnSite.filter(item => (item.productName || '').toLowerCase().includes(productSearch.toLowerCase()));
@@ -152,7 +156,7 @@ const Depot = () => {
 	// Charger la map des utilisateurs pour résolution ID -> nom (sans afficher la liste)
 	useEffect(() => {
 		let mounted = true;
-		getUsers().then(res => {
+		getUsers({ limit: 1000 }).then(res => {
 			if (!mounted) return;
 			const arr = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
 			const map = arr.reduce((acc, u) => {
@@ -163,6 +167,26 @@ const Depot = () => {
 		}).catch(() => { });
 		return () => { mounted = false; };
 	}, []);
+
+	// Recherche à la demande d'un membre non présent dans la map locale
+	// via getUsers avec params (search) pour récupérer ses informations
+	const resolveMemberByCode = async code => {
+		setMemberLookupLoading(true);
+		try {
+			const res = await getUsers({ search: code, limit: 10 });
+			const arr = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+			const member = arr.find(u => u && u.userId === code) || arr[0] || null;
+			if (member && member.userId) {
+				setUsersMap(prev => ({ ...prev, [member.userId]: member }));
+			}
+			return member;
+		} catch (error) {
+			console.error('Erreur lors de la recherche du membre:', error);
+			return null;
+		} finally {
+			setMemberLookupLoading(false);
+		}
+	};
 
 	// Charger les sites du détentaire sélectionné
 	useEffect(() => {
@@ -536,30 +560,83 @@ const Depot = () => {
 								{transferForm.productId && (
 									<div className="space-y-2">
 										<Label required>4. Détenteur</Label>
-										<Input
-											placeholder="ID du membre (8 caractères)"
-											value={transferForm.detentaireCode}
-											style={{ textTransform: 'uppercase' }}
-											onChange={e => {
-												const val = e.target.value.toUpperCase();
-												const code = (val || '').trim();
-												const member = code.length === 8 ? (usersMap[code] || null) : null;
-												const fullName = member ? ([member.userName, member.userFirstname].filter(Boolean).join(' ') || member.userNickName || '') : '';
-												setTransferForm(prev => ({
-													...prev,
-													detentaireCode: val,
-													detentaire: member ? member._id : '',
-													detentaireName: fullName,
-												}));
-											}}
-											className="border-neutral-300"
-										/>
-										<Input
-											placeholder="Nom du détenteur"
-											value={transferForm.detentaireName}
-											readOnly
-											className="border-neutral-300 bg-neutral-100 text-neutral-700"
-										/>
+										<div className={`rounded-md p-2 ${memberNotFound ? 'border border-red-400 bg-red-50' : ''}`}>
+											<div className="space-y-2">
+												<Input
+													placeholder="ID du membre (8 caractères)"
+													value={transferForm.detentaireCode}
+													maxLength={8}
+													style={{ textTransform: 'uppercase' }}
+													onChange={e => {
+														const val = e.target.value.toUpperCase();
+														const code = (val || '').trim();
+														memberSearchCodeRef.current = code;
+														setMemberNotFound(false);
+														const member = code.length === 8 ? (usersMap[code] || null) : null;
+														const fullName = member ? ([member.userName, member.userFirstname].filter(Boolean).join(' ') || member.userNickName || '') : '';
+														setTransferForm(prev => ({
+															...prev,
+															detentaireCode: val,
+															detentaire: member ? member._id : '',
+															detentaireName: fullName,
+														}));
+														if (code.length === 8 && !member) {
+															resolveMemberByCode(code).then(found => {
+																if (memberSearchCodeRef.current !== code) return;
+																if (!found) {
+																	setMemberNotFound(true);
+																	setTransferForm(prev => ({
+																		...prev,
+																		detentaire: '',
+																		detentaireName: '',
+																	}));
+																	return;
+																}
+																const foundName = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || '');
+																setTransferForm(prev => ({
+																	...prev,
+																	detentaire: found._id,
+																	detentaireName: foundName,
+																}));
+															});
+														}
+													}}
+													className={`border-neutral-300 ${memberNotFound ? 'border-red-400 bg-white' : ''}`}
+												/>
+												<div className="flex items-center justify-between text-xs">
+													{memberLookupLoading ? (
+														<span className="text-neutral-400" />
+													) : transferForm.detentaireName ? (
+														<span className="text-emerald-600">Code valide</span>
+													) : memberNotFound ? (
+														<span className="text-red-600">Code invalide</span>
+													) : (transferForm.detentaireCode && (transferForm.detentaireCode || '').length !== 8) ? (
+														<span className="text-amber-600">Le code doit contenir exactement 8 caractères</span>
+													) : (
+														<span className="text-neutral-500" />
+													)}
+													<span className="text-neutral-400">{(transferForm.detentaireCode || '').length}/8</span>
+												</div>
+												<div className="relative">
+													<Input
+														placeholder={memberNotFound ? 'Membre non trouvé' : 'Nom du détenteur'}
+														value={transferForm.detentaireName}
+														readOnly
+														disabled={memberLookupLoading}
+														className={`border-neutral-300 bg-neutral-100 text-neutral-700 pr-9 ${memberNotFound ? 'border-red-400 text-red-600' : ''}`}
+													/>
+													{memberLookupLoading && (
+														<Loader size="sm" className="absolute right-2.5 top-1/2 -translate-y-1/2 border-neutral-400 border-t-transparent shrink-0" />
+													)}
+												</div>
+												{memberNotFound && (
+													<p className="text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre et le nom du membre.</p>
+												)}
+												{!memberLookupLoading && !memberNotFound && transferForm.detentaireName && (
+													<p className="text-xs text-emerald-600">Membre trouvé</p>
+												)}
+											</div>
+										</div>
 									</div>
 								)}
 
