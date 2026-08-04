@@ -280,6 +280,7 @@ const Depot = () => {
 
 			const payload = {
 				detentaire: transferForm.detentaire,
+				detentaireCode: (transferForm.detentaireCode || '').toUpperCase(),
 				ayant_droit: ayantDroitId,
 				productId: transferForm.productId,
 				siteOrigineId: transferForm.siteOrigineId,
@@ -538,8 +539,9 @@ const Depot = () => {
 										<Input
 											placeholder="ID du membre (8 caractères)"
 											value={transferForm.detentaireCode}
+											style={{ textTransform: 'uppercase' }}
 											onChange={e => {
-												const val = e.target.value;
+												const val = e.target.value.toUpperCase();
 												const code = (val || '').trim();
 												const member = code.length === 8 ? (usersMap[code] || null) : null;
 												const fullName = member ? ([member.userName, member.userFirstname].filter(Boolean).join(' ') || member.userNickName || '') : '';
