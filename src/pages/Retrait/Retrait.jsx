@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
@@ -13,7 +13,7 @@ import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
 import { returnStockToAMember, getUserTransactions } from '../../services/transaction.service';
 import { getFullMediaUrl } from '../../services/media.service';
-import { getAllUsersSelect } from '../../services/user.service';
+import { getUsers } from '../../services/user.service';
 import { getSitesByUser, getActifsBySite } from '../../services/site.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useDateFormat from '../../utils/useDateFormat.jsx';
@@ -24,7 +24,6 @@ import { getProfile } from '../../services/auth.service.js';
 import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
 import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
-import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 
 const Retrait = () => {
 	const { user } = useAuth();
@@ -40,7 +39,6 @@ const Retrait = () => {
 	const [total, setTotal] = useState(0);
 
 	// États pour le formulaire de retrait
-	const [usersOptions, setUsersOptions] = useState([]);
 	const [detentaireSites, setDetentaireSites] = useState([]);
 	const [productsOnSite, setProductsOnSite] = useState([]);
 	const [maxWithdrawalQty, setMaxWithdrawalQty] = useState(null);
@@ -53,12 +51,17 @@ const Retrait = () => {
 		quantite: '',
 		prixUnitaire: '',
 		detentaire: '',
+		detentaireCode: '',
+		detentaireName: '',
 		ayant_droit: '',
 		observations: ''
 	});
 
-	// États pour les recherches - Détentaire
-	const [detentaireSearch, setDetentaireSearch] = useState('');
+	// Résolution du détenteur à partir de son code membre
+	const [usersMap, setUsersMap] = useState({});
+	const [memberLookupLoading, setMemberLookupLoading] = useState(false);
+	const [memberNotFound, setMemberNotFound] = useState(false);
+	const memberSearchCodeRef = useRef('');
 
 	// États pour les recherches - Site d'origine
 	const [siteOriginSearch, setSiteOriginSearch] = useState('');
@@ -126,18 +129,37 @@ const Retrait = () => {
 		fetchPassifs();
 	}, [page, limit]);
 
-	// Charger les utilisateurs au chargement initial
+	// Charger la map des utilisateurs pour résoudre un code membre en détenteur
 	useEffect(() => {
-		getAllUsersSelect().then(res => {
-			if (Array.isArray(res)) {
-				setUsersOptions(res);
-			} else if (res && Array.isArray(res.data)) {
-				setUsersOptions(res.data);
-			} else {
-				setUsersOptions([]);
-			}
-		});
+		let mounted = true;
+		getUsers({ limit: 1000 }).then(res => {
+			if (!mounted) return;
+			const users = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+			setUsersMap(users.reduce((map, member) => {
+				if (member?.userId) map[member.userId] = member;
+				return map;
+			}, {}));
+		}).catch(() => {});
+		return () => { mounted = false; };
 	}, []);
+
+	const resolveMemberByCode = async code => {
+		setMemberLookupLoading(true);
+		try {
+			const res = await getUsers({ search: code, limit: 10 });
+			const users = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+			const member = users.find(item => item?.userId === code) || users[0] || null;
+			if (member?.userId) {
+				setUsersMap(prev => ({ ...prev, [member.userId]: member }));
+			}
+			return member;
+		} catch (error) {
+			console.error('Erreur lors de la recherche du membre:', error);
+			return null;
+		} finally {
+			setMemberLookupLoading(false);
+		}
+	};
 
 	// Charger les sites du détentaire sélectionné
 	useEffect(() => {
@@ -163,22 +185,6 @@ const Retrait = () => {
 	}, [withdrawalForm.detentaire]);
 
 	/* ================= ACTIONS ================= */
-
-	const handleSelectDetentaire = detentaireId => {
-		setWithdrawalForm(prev => ({
-			...prev,
-			detentaire: detentaireId,
-			siteOrigineId: '',
-			productId: '',
-			actifId: '',
-			quantite: '',
-			siteDestinationId: '',
-			observations: ''
-		}));
-		setDetentaireSites([]);
-		setProductsOnSite([]);
-		setMaxWithdrawalQty(null);
-	};
 
 	const handleSelectSiteOrigine = async siteId => {
 		setWithdrawalForm(prev => ({
@@ -277,6 +283,8 @@ const Retrait = () => {
 				quantite: '',
 				prixUnitaire: '',
 				detentaire: '',
+				detentaireCode: '',
+				detentaireName: '',
 				ayant_droit: '',
 				observations: ''
 			});
@@ -285,7 +293,6 @@ const Retrait = () => {
 			setMaxWithdrawalQty(null);
 			setSiteOriginSearch('');
 			setProductSearch('');
-			setDetentaireSearch('');
 			toast.success('Retrait effectué avec succès');
 			fetchPassifs();
 		} catch (error) {
@@ -344,17 +351,47 @@ const Retrait = () => {
 									{/* 1. Détentaire avec recherche */}
 									<div className="space-y-2 md:col-span-2">
 										<Label required>1. Détenteur</Label>
-										<UserAutocomplete
-											users={usersOptions}
-											value={detentaireSearch}
-											onChange={setDetentaireSearch}
-											onSelect={(user) => {
-												handleSelectDetentaire(user._id);
-												setDetentaireSearch(user.name || user.userNickName || '');
-											}}
-											placeholder="Rechercher un détenteur..."
-											className="w-full"
-										/>
+										<div className={`rounded-md p-2 ${memberNotFound ? 'border border-red-400 bg-red-50' : ''}`}>
+											<div className="space-y-2">
+												<Input
+													placeholder="ID du membre (8 caractères)"
+													value={withdrawalForm.detentaireCode}
+													maxLength={8}
+													style={{ textTransform: 'uppercase' }}
+													onChange={e => {
+														const value = e.target.value.toUpperCase();
+														const code = value.trim();
+														memberSearchCodeRef.current = code;
+														setMemberNotFound(false);
+														const member = code.length === 8 ? (usersMap[code] || null) : null;
+														const name = member ? ([member.userName, member.userFirstname].filter(Boolean).join(' ') || member.userNickName || '') : '';
+														setWithdrawalForm(prev => ({ ...prev, detentaireCode: value, detentaire: member?._id || '', detentaireName: name, siteOrigineId: '', productId: '', actifId: '', quantite: '', siteDestinationId: '', observations: '' }));
+														setDetentaireSites([]);
+														setProductsOnSite([]);
+														setMaxWithdrawalQty(null);
+														if (code.length === 8 && !member) {
+															resolveMemberByCode(code).then(found => {
+																if (memberSearchCodeRef.current !== code) return;
+																if (!found) return setMemberNotFound(true);
+																const foundName = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || '');
+																setWithdrawalForm(prev => ({ ...prev, detentaire: found._id, detentaireName: foundName }));
+															});
+														}
+													}}
+													className={`border-neutral-300 ${memberNotFound ? 'border-red-400 bg-white' : ''}`}
+												/>
+												<div className="flex items-center justify-between text-xs">
+													{memberLookupLoading ? <span className="text-neutral-400" /> : withdrawalForm.detentaireName ? <span className="text-emerald-600">Code valide</span> : memberNotFound ? <span className="text-red-600">Code invalide</span> : withdrawalForm.detentaireCode && withdrawalForm.detentaireCode.length !== 8 ? <span className="text-amber-600">Le code doit contenir exactement 8 caractères</span> : <span className="text-neutral-500" />}
+													<span className="text-neutral-400">{withdrawalForm.detentaireCode.length}/8</span>
+												</div>
+												<div className="relative">
+													<Input placeholder={memberNotFound ? 'Membre non trouvé' : 'Nom du détenteur'} value={withdrawalForm.detentaireName} readOnly disabled={memberLookupLoading} className={`border-neutral-300 bg-neutral-100 text-neutral-700 pr-9 ${memberNotFound ? 'border-red-400 text-red-600' : ''}`} />
+													{memberLookupLoading && <Loader size="sm" className="absolute right-2.5 top-1/2 -translate-y-1/2 border-neutral-400 border-t-transparent shrink-0" />}
+												</div>
+												{memberNotFound && <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre et le nom du membre.</p>}
+												{!memberLookupLoading && !memberNotFound && withdrawalForm.detentaireName && <p className="text-xs text-emerald-600">Membre trouvé</p>}
+											</div>
+										</div>
 									</div>
 
 										{/* 2. Site d'origine avec recherche */}
@@ -533,10 +570,11 @@ const Retrait = () => {
 												quantite: '',
 												prixUnitaire: '',
 												detentaire: '',
+												detentaireCode: '',
+												detentaireName: '',
 												ayant_droit: '',
 												observations: ''
 											});
-											setDetentaireSearch('');
 											setSiteOriginSearch('');
 											setProductSearch('');
 											setDetentaireSites([]);
