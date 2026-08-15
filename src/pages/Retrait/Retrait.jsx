@@ -14,7 +14,7 @@ import { formatThousands } from '../../utils/formatNumber';
 import { returnStockToAMember, getUserTransactions } from '../../services/transaction.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getUsers } from '../../services/user.service';
-import { getSitesByUser, getActifsBySite } from '../../services/site.service';
+import { getMySites, getSitesByUser, getActifsBySite } from '../../services/site.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
@@ -87,13 +87,7 @@ const Retrait = () => {
 	const filteredOriginSites = detentaireSites.filter(site => (site?.siteName || '').toLowerCase().includes((siteOriginSearch || '').toLowerCase()));
 	const filteredProducts = productsOnSite.filter(item => ((item?.productName || '').toLowerCase()).includes((productSearch || '').toLowerCase()));
 
-	const originSiteName = detentaireSites.find(site => site?._id === withdrawalForm.siteOrigineId)?.siteName || siteOriginSearch || "le site d'origine";
-	const selectedDestinationName = destinationSites.find(site => site?._id === withdrawalForm.siteDestinationId)?.siteName || '';
-	const destinationOptions = [
-		{ _id: '', siteName: `Même site que l'origine (${originSiteName})`, isOrigin: true },
-		...destinationSites.filter(site => site?._id !== withdrawalForm.siteOrigineId),
-	];
-	const filteredDestinationOptions = destinationOptions.filter(site => (site?.siteName || '').toLowerCase().includes((siteDestinationSearch || '').toLowerCase()));
+	const filteredDestinationSites = destinationSites.filter(site => (site?.siteName || '').toLowerCase().includes((siteDestinationSearch || '').toLowerCase()));
 
 	// Récupérer l'historique des retraits
 	const fetchPassifs = async () => {
@@ -202,41 +196,20 @@ const Retrait = () => {
 	// Charger les sites de l'ayant-droit (utilisateur connecté) pour le site d'arrivée du retrait
 	useEffect(() => {
 		let mounted = true;
-		const loadDestinationSites = async () => {
-			setDestinationSitesLoading(true);
-			let userId = (user && (user._id || user.id));
-			if (!userId) {
-				try {
-					const profile = await getProfile();
-					userId = profile?._id || profile?.id;
-				} catch (err) {
-					console.debug("Impossible de récupérer le profil pour le site d'arrivée:", err);
-				}
-			}
-			if (!userId) {
-				if (mounted) setDestinationSites([]);
-				if (mounted) setDestinationSitesLoading(false);
-				return;
-			}
-			try {
-				const res = await getSitesByUser(userId);
-				let sites = [];
-				if (Array.isArray(res)) {
-					sites = res;
-				} else if (res?.data && Array.isArray(res.data)) {
-					sites = res.data;
-				}
-				if (mounted) setDestinationSites(sites);
-			} catch (error) {
+		setDestinationSitesLoading(true);
+		getMySites({ limit: 100, page: 1 })
+			.then(res => {
+				if (mounted) setDestinationSites(Array.isArray(res?.data) ? res.data : []);
+			})
+			.catch(error => {
 				console.error("Erreur lors de la récupération des sites d'arrivée:", error);
 				if (mounted) setDestinationSites([]);
-			} finally {
+			})
+			.finally(() => {
 				if (mounted) setDestinationSitesLoading(false);
-			}
-		};
-		loadDestinationSites();
+			});
 		return () => { mounted = false; };
-	}, [user]);
+	}, []);
 
 	/* ================= ACTIONS ================= */
 
@@ -252,6 +225,7 @@ const Retrait = () => {
 		}));
 		setMaxWithdrawalQty(null);
 		setSiteDestinationSearch('');
+		setSiteDestinationHighlighted(0);
 
 		try {
 			const res = await getActifsBySite(siteId);
@@ -274,12 +248,6 @@ const Retrait = () => {
 		}
 	};
 
-	const handleSelectDestination = site => {
-		setWithdrawalForm(prev => ({ ...prev, siteDestinationId: site?._id || '' }));
-		setSiteDestinationSearch(site?.siteName || '');
-		setSiteDestinationHighlighted(0);
-	};
-
 	const handleSelectProduct = productId => {
 		const actif = productsOnSite.find(item => item.productId === productId);
 		setWithdrawalForm(prev => ({
@@ -295,7 +263,7 @@ const Retrait = () => {
 	const handleWithdrawalSubmit = async e => {
 		e.preventDefault();
 
-		if (!withdrawalForm.detentaire || !withdrawalForm.siteOrigineId || !withdrawalForm.productId || !withdrawalForm.quantite) {
+		if (!withdrawalForm.detentaire || !withdrawalForm.siteOrigineId || !withdrawalForm.productId || !withdrawalForm.quantite || !withdrawalForm.siteDestinationId) {
 			toast.error('Veuillez remplir tous les champs obligatoires');
 			return;
 		}
@@ -329,7 +297,7 @@ const Retrait = () => {
 				ayant_droit: ayantDroitId,
 				productId: withdrawalForm.productId,
 				siteOrigineId: withdrawalForm.siteOrigineId,
-				siteDestinationId: withdrawalForm.siteDestinationId || withdrawalForm.siteOrigineId,
+				siteDestinationId: withdrawalForm.siteDestinationId,
 				quantite: Number(withdrawalForm.quantite),
 				prixUnitaire: withdrawalForm.prixUnitaire !== '' ? Number(withdrawalForm.prixUnitaire) : null,
 				observations: withdrawalForm.observations || '',
@@ -355,6 +323,7 @@ const Retrait = () => {
 			setSiteOriginSearch('');
 			setProductSearch('');
 			setSiteDestinationSearch('');
+			setSiteDestinationHighlighted(0);
 			toast.success('Retrait effectué avec succès');
 			fetchPassifs();
 		} catch (error) {
@@ -433,6 +402,7 @@ const Retrait = () => {
 														setMaxWithdrawalQty(null);
 														setSiteOriginSearch('');
 														setSiteDestinationSearch('');
+														setSiteDestinationHighlighted(0);
 														if (code.length === 8 && !member) {
 															resolveMemberByCode(code).then(found => {
 																if (memberSearchCodeRef.current !== code) return;
@@ -586,13 +556,13 @@ const Retrait = () => {
 											</div>
 										)}
 
-										{/* 4. Site d'arrivée (destination du retrait) */}
+										{/* 4. Site de destination */}
 										{withdrawalForm.siteOrigineId && (
 											<div className="space-y-2 md:col-span-2">
-												<Label>4. Site d'arrivée (destination du retrait)</Label>
+												<Label required>4. Site de destination</Label>
 												<div className="relative">
 													<Input
-														placeholder={destinationSitesLoading ? 'Chargement...' : "Rechercher le site d'arrivée..."}
+														placeholder={destinationSitesLoading ? 'Chargement...' : destinationSites.length === 0 ? 'Aucun site disponible' : "Rechercher le site de destination..."}
 														value={siteDestinationSearch || ''}
 														onChange={e => { setSiteDestinationSearch(e.target.value); setSiteDestinationHighlighted(0); }}
 														onFocus={() => { setSiteDestinationOpen(true); setSiteDestinationHighlighted(0); }}
@@ -607,37 +577,40 @@ const Retrait = () => {
 															if (siteDestinationOpen) {
 																if (e.key === 'ArrowDown') {
 																	e.preventDefault();
-																	setSiteDestinationHighlighted(i => Math.min(i + 1, Math.max(filteredDestinationOptions.length - 1, 0)));
+																	setSiteDestinationHighlighted(i => Math.min(i + 1, Math.max(filteredDestinationSites.length - 1, 0)));
 																} else if (e.key === 'ArrowUp') {
 																	e.preventDefault();
 																	setSiteDestinationHighlighted(i => Math.max(i - 1, 0));
 																} else if (e.key === 'Enter') {
 																	e.preventDefault();
-																	const site = filteredDestinationOptions[siteDestinationHighlighted];
+																	const site = filteredDestinationSites[siteDestinationHighlighted];
 																	if (site) {
-																		handleSelectDestination(site);
+																		setWithdrawalForm(f => ({ ...f, siteDestinationId: site._id }));
+																		setSiteDestinationSearch(site.siteName || '');
 																		setSiteDestinationOpen(false);
 																	}
 																}
 															}
 														}}
 														className="w-full"
+														disabled={destinationSitesLoading || destinationSites.length === 0}
 													/>
 													{siteDestinationOpen && (
 														<div className="absolute left-0 right-0 mt-1 bg-white border rounded shadow max-h-60 overflow-auto z-50">
-															{filteredDestinationOptions.length > 0 ? (
-																filteredDestinationOptions.map((site, idx) => (
+															{filteredDestinationSites.length > 0 ? (
+																filteredDestinationSites.map((site, idx) => (
 																	<button
 																		type="button"
 																		key={site?._id ?? site?.id ?? idx}
 																		onMouseEnter={() => setSiteDestinationHighlighted(idx)}
 																		onClick={() => {
-																			handleSelectDestination(site);
+																			setWithdrawalForm(f => ({ ...f, siteDestinationId: site._id }));
+																			setSiteDestinationSearch(site.siteName || '');
 																			setSiteDestinationOpen(false);
 																		}}
 																		className={`w-full text-left px-3 py-2 text-sm ${idx === siteDestinationHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
 																	>
-																		{site.isOrigin ? site.siteName : `${site.siteName || '-'}${site.siteAddress ? ` - ${site.siteAddress}` : ''}`}
+																		{`${site.siteName || '-'}${site.siteAddress ? ` - ${site.siteAddress}` : ''}`}
 																	</button>
 																))
 															) : (
@@ -646,11 +619,6 @@ const Retrait = () => {
 														</div>
 													)}
 												</div>
-												<p className="text-xs text-neutral-500">
-													{withdrawalForm.siteDestinationId
-														? <>Destination : <span className="font-medium text-neutral-700">{selectedDestinationName || 'site sélectionné'}</span></>
-														: <>Par défaut, le retrait reste au site d'origine (<span className="font-medium text-neutral-700">{originSiteName}</span>)</>}
-												</p>
 											</div>
 										)}
 
@@ -711,6 +679,7 @@ const Retrait = () => {
 											setSiteOriginSearch('');
 											setProductSearch('');
 											setSiteDestinationSearch('');
+											setSiteDestinationHighlighted(0);
 											setDetentaireSites([]);
 											setProductsOnSite([]);
 											setMaxWithdrawalQty(null);
@@ -722,7 +691,7 @@ const Retrait = () => {
 											status={saving ? 'loading' : 'active'}
 											color="default"
 											type="submit"
-											disabled={!withdrawalForm.detentaire || !withdrawalForm.siteOrigineId || !withdrawalForm.productId || !withdrawalForm.quantite}
+											disabled={!withdrawalForm.detentaire || !withdrawalForm.siteOrigineId || !withdrawalForm.productId || !withdrawalForm.quantite || !withdrawalForm.siteDestinationId}
 										>
 											{saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Valider le retrait
 										</Button>
