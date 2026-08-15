@@ -146,7 +146,7 @@ export default function MonCompte() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl text-neutral-900 mb-2">Mon Compte</h1>
-            <p className="text-sm text-neutral-600">Gérez vos informations personnelles et préférences</p>
+            <p className="text-sm text-neutral-600">Vos informations personnelles et préférences</p>
           </div>
         </div>
 

@@ -23,8 +23,10 @@ import { exportAndDownloadUsers } from '../../services/export.service.js';
 import { getFullMediaUrl } from '../../services/media.service';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Loader } from '../../components/ui/loader';
+import usePageTitle from '../../utils/usePageTitle.jsx';
 
 export default function AdminUsers() {
+    usePageTitle('Gestion des utilisateurs');
     const [searchTerm, setSearchTerm] = useState('');
     const dateFormat = useDateFormat();
     const [users, setUsers] = useState([]);
@@ -166,7 +168,7 @@ export default function AdminUsers() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                         <h1 className="text-2xl text-neutral-900 mb-2">Gestion des utilisateurs</h1>
-                        <p className="text-sm text-neutral-600">Gérez les comptes et permissions utilisateurs</p>
+                        <p className="text-sm text-neutral-600">Les comptes et permissions des utilisateurs</p>
                     </div>
                 </div>
 

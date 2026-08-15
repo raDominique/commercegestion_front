@@ -194,7 +194,7 @@ const MesTransactions = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl text-neutral-900 mb-2">Mes Transactions</h1>
-          <p className="text-sm text-neutral-600">Suivez l'historique de toutes vos transactions</p>
+          <p className="text-sm text-neutral-600">Historique de toutes vos transactions</p>
         </div>
       </div>
 

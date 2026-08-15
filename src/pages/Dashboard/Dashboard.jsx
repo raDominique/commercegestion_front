@@ -67,8 +67,8 @@ const DashboardPage = () => {
             {/* En-tête avec titre et actions */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl text-neutral-900 mb-2">Tableau de Bord</h1>
-                    <p className="text-sm text-neutral-600">Gérez et suivez votre activité avec facilité</p>
+                    <h1 className="text-2xl text-neutral-900 mb-2">Tableau de bord</h1>
+                    <p className="text-sm text-neutral-600">Vue d'ensemble de votre activité</p>
                 </div>
             </div>
 

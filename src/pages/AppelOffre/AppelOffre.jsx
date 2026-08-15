@@ -53,7 +53,7 @@ const AppelOffre = () => {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl text-neutral-900 mb-2">Appels d'offre</h1>
-                    <p className="text-sm text-neutral-600">Consultez et gérez les appels d'offre</p>
+                    <p className="text-sm text-neutral-600">Les appels d'offre et leurs soumissions</p>
                 </div>
             </div>
             <Tabs defaultValue="list">

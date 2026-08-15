@@ -193,7 +193,7 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
 
 const Parrainage = () => {
     const { user } = useAuth();
-    usePageTitle('Mes Parrainage');
+    usePageTitle('Mes parrainages');
 
     const [referrals, setReferrals] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -314,7 +314,7 @@ const Parrainage = () => {
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div>
                                 <h1 className="text-2xl text-neutral-900 mb-2">Mes Parrainages</h1>
-                                <p className="text-sm text-neutral-600">Liste de mes filleuls et statut de validation</p>
+                                <p className="text-sm text-neutral-600">Vos filleuls et leur statut de validation</p>
                             </div>
                         </div>
 

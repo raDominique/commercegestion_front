@@ -107,7 +107,7 @@ const AdminProducts = () => {
           <div>
             <h1 className="text-2xl text-neutral-900 mb-2">Gestion des produits</h1>
             <p className="text-sm text-neutral-600">
-              Gérez les produits de la plateforme
+              Les produits de la plateforme
             </p>
           </div>
           <div className="flex gap-2">

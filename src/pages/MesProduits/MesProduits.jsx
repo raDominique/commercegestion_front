@@ -112,7 +112,7 @@ const MesProduits = () => {
       toast.error(errorMessage);
     }
   };
-  usePageTitle('Mes Produits');
+  usePageTitle('Mes produits');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState([]);

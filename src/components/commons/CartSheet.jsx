@@ -36,7 +36,7 @@ export function CartSheet({ open, onOpenChange }) {
             Mon Panier ({items.length})
           </SheetTitle>
           <SheetDescription className="text-neutral-500">
-            Gérez vos articles et procédez au paiement
+            Vos articles et le paiement
           </SheetDescription>
         </SheetHeader>
 

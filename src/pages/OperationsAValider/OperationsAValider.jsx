@@ -255,7 +255,7 @@ const OperationsAValider = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl text-neutral-900 mb-2">Opérations à valider</h1>
-          <p className="text-sm text-neutral-600">Consultez les opérations en attente de validation ({total}).</p>
+          <p className="text-sm text-neutral-600">Les opérations en attente de validation ({total})</p>
         </div>
       </div>
 

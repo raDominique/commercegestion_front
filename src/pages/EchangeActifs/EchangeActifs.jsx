@@ -92,7 +92,7 @@ const siteLabel = (value) => {
 };
 
 const EchangeActifs = () => {
-  usePageTitle("Echange d'actifs entre deux membres");
+  usePageTitle("Échange d'actifs");
   const { user } = useAuth();
 
   const [users, setUsers] = useState([]);
@@ -346,7 +346,7 @@ const EchangeActifs = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl text-neutral-900 mb-2">Échange d'actifs</h1>
-          <p className="text-sm text-neutral-600">Créez une offre d'échange puis recherchez les produits disponibles à l'achat.</p>
+          <p className="text-sm text-neutral-600">Vente de vos actifs et produits proposés par les autres membres</p>
         </div>
       </div>
 

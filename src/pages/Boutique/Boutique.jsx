@@ -233,7 +233,7 @@ const Boutique = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl text-neutral-900 mb-2">Boutiques</h1>
-              <p className="text-sm text-neutral-600">Parcourez les produits disponibles à l'achat</p>
+              <p className="text-sm text-neutral-600">Les produits disponibles à l'achat</p>
             </div>
           </div>
 
@@ -366,7 +366,6 @@ const Boutique = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl text-neutral-900 mb-2">Achat rapide</h1>
-              <p className="text-sm text-neutral-600">Sélectionnez les produits à gauche, ajustez le panier à droite.</p>
             </div>
             <div className="w-full md:w-72">
               <Input

@@ -152,7 +152,7 @@ const Register = () => {
     setStep((prev) => Math.min(prev + 1, steps.length - 1));
   };
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 0));
-  usePageTitle('Inscription');
+  usePageTitle('Créer un compte');
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -274,7 +274,7 @@ const Register = () => {
               <img src={LogoImage} alt="Logo Etokisana" className="h-14 md:h-20 w-auto mb-4 md:mb-6" />
               <h1 className="text-2xl md:text-3xl font-bold text-violet-700 mb-2">Créer un compte</h1>
               <p className="text-sm md:text-base text-neutral-700 mb-6 text-center">
-                Rejoignez <span className="font-bold text-violet-600">Etokisana</span> dès aujourd'hui
+                Rejoignez <span className="font-bold text-violet-600">Etokisana</span>
               </p>
               <div className="flex justify-center gap-2 mb-4 md:mb-6">
                 {steps.map((label, idx) => (

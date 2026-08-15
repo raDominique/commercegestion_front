@@ -493,7 +493,7 @@ const Actifs = () => {
 							<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 								<div>
 									<h1 className="text-2xl text-neutral-900 mb-2">Mes Actifs</h1>
-									<p className="text-sm text-neutral-600">Gérez vos actifs et leur disponibilité</p>
+									<p className="text-sm text-neutral-600">Vos actifs et leur disponibilité</p>
 								</div>
 							<div className="flex flex-wrap gap-3 items-center">
 								<Button onClick={handleOpenAddProductModal} status="active" color="default">
@@ -535,7 +535,7 @@ const Actifs = () => {
 							<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 								<div>
 									<h1 className="text-2xl text-neutral-900 mb-2">Mes Produits en vente</h1>
-									<p className="text-sm text-neutral-600">Liste des produits mises en vente</p>
+									<p className="text-sm text-neutral-600">Vos produits mis en vente</p>
 								</div>
 							<div className="flex flex-wrap gap-3 items-center">
 								<Input

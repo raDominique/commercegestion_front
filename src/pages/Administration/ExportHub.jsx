@@ -19,7 +19,7 @@ import { Alert, AlertDescription } from '../../components/ui/alert.jsx';
 import { FileDownload, Info } from '@mui/icons-material';
 
 const ExportHub = () => {
-    usePageTitle('Centre d\'Export');
+    usePageTitle('Centre d\'export');
     const { user } = useAuth();
 
     const isAdmin = user?.userAccess === 'Admin';
@@ -45,8 +45,8 @@ const ExportHub = () => {
             {/* En-tête */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl text-neutral-900 mb-2">Centre d'Export</h1>
-                    <p className="text-sm text-neutral-600">Exportez vos données dans le format souhaité</p>
+                    <h1 className="text-2xl text-neutral-900 mb-2">Centre d'export</h1>
+                    <p className="text-sm text-neutral-600">Export des données de la plateforme</p>
                 </div>
             </div>
 

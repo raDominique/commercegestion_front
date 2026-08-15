@@ -234,7 +234,7 @@ const AdminCpc = () => {
                     <div>
                         <h1 className="text-2xl text-neutral-900 mb-2">Gestion des CPC</h1>
                         <p className="text-sm text-neutral-600">
-                            Gérez les codes CPC
+                            Les codes CPC de la plateforme
                         </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
