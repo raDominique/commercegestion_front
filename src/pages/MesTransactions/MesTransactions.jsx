@@ -521,10 +521,63 @@ const formatDateMultiline = (dateStr) => {
   return [`${day}/${month}/${year}`, `à ${hours}:${minutes}`];
 };
 
-function MouvementsActifsTable({ loading, actifs, dateFormat, renderPerson }) {
+function MouvementsActifsTable({ loading, actifs, renderPerson }) {
+  const { isDesktop } = useScreenType();
   if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
   if (!actifs || actifs.length === 0) {
     return <div className="p-8 text-center text-neutral-400">Aucun mouvement d'actif trouvé</div>;
+  }
+
+  if (!isDesktop) {
+    return (
+      <div className="space-y-3 p-4 bg-neutral-50/50">
+        {actifs.map((item, idx) => {
+          const date = item.dateTime;
+          return (
+            <Card key={item.numeroTransaction || item._id || idx} className="p-4 border-neutral-200 bg-white shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="font-semibold text-neutral-900 text-base truncate">{item.product || '-'}</div>
+                  <div className="text-xs font-mono text-neutral-400 mt-0.5">N° {item.numeroTransaction || '-'}</div>
+                </div>
+                <div className={`text-sm font-bold shrink-0 ${item.quantite >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                  {item.quantite ?? '-'}
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-y-2 gap-x-4 border-t border-neutral-100 pt-3 text-sm">
+                <div>
+                  <span className="text-xs text-neutral-400 block">Membre</span>
+                  <span className="text-neutral-900 truncate block">{renderPerson(item.membre)}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">Détenteur</span>
+                  <span className="text-neutral-900 truncate block">{renderPerson(item.detenteur)}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">Site</span>
+                  <span className="text-neutral-700 truncate block">{item.site || '-'}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">Date</span>
+                  <span className="text-neutral-700 block whitespace-nowrap">{date ? formatDateMultiline(date).join(' ') : '-'}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">Stock initial</span>
+                  <span className="text-neutral-900">{item.stockInitial ?? '-'}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">Stock final</span>
+                  <span className="text-neutral-900">{item.stockFinal ?? '-'}</span>
+                </div>
+              </div>
+              <div className="mt-3 text-sm text-neutral-700 border-t border-neutral-100 pt-2">
+                <span className="text-xs text-neutral-400">Intitulé :</span> <span className="text-neutral-800">{item.title || 'Virement de droit'}</span>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    );
   }
 
   return (
@@ -578,10 +631,63 @@ function MouvementsActifsTable({ loading, actifs, dateFormat, renderPerson }) {
   );
 }
 
-function MouvementsPassifsTable({ loading, passifs, dateFormat, renderPerson }) {
+function MouvementsPassifsTable({ loading, passifs, renderPerson }) {
+  const { isDesktop } = useScreenType();
   if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
   if (!passifs || passifs.length === 0) {
     return <div className="p-8 text-center text-neutral-400">Aucun mouvement de passif trouvé</div>;
+  }
+
+  if (!isDesktop) {
+    return (
+      <div className="space-y-3 p-4 bg-neutral-50/50">
+        {passifs.map((item, idx) => {
+          const date = item.dateTime;
+          return (
+            <Card key={item.numeroTransaction || item._id || idx} className="p-4 border-neutral-200 bg-white shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="font-semibold text-neutral-900 text-base truncate">{item.product || '-'}</div>
+                  <div className="text-xs font-mono text-neutral-400 mt-0.5">N° {item.numeroTransaction || '-'}</div>
+                </div>
+                <div className={`text-sm font-bold shrink-0 ${item.quantite >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                  {item.quantite ?? '-'}
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-y-2 gap-x-4 border-t border-neutral-100 pt-3 text-sm">
+                <div>
+                  <span className="text-xs text-neutral-400 block">Membre</span>
+                  <span className="text-neutral-900 truncate block">{renderPerson(item.membre)}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">Ayant droit</span>
+                  <span className="text-neutral-900 truncate block">{renderPerson(item.ayantDroit)}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">Site</span>
+                  <span className="text-neutral-700 truncate block">{item.site || '-'}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">Date</span>
+                  <span className="text-neutral-700 block whitespace-nowrap">{date ? formatDateMultiline(date).join(' ') : '-'}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">Stock initial</span>
+                  <span className="text-neutral-900">{item.stockInitial ?? '-'}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-400 block">Stock final</span>
+                  <span className="text-neutral-900">{item.stockFinal ?? '-'}</span>
+                </div>
+              </div>
+              <div className="mt-3 text-sm text-neutral-700 border-t border-neutral-100 pt-2">
+                <span className="text-xs text-neutral-400">Intitulé :</span> <span className="text-neutral-800">{item.title || 'Virement de droit'}</span>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    );
   }
 
   return (

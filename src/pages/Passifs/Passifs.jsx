@@ -113,7 +113,7 @@ const Passifs = () => {
 							<h1 className="text-2xl text-neutral-900 mb-2">Mes Passifs</h1>
 							<p className="text-sm text-neutral-600">Historique de vos passifs</p>
 						</div>
-						<div className="flex gap-4 items-center">
+						<div className="flex flex-wrap gap-3 items-center">
 							<ExportButton
 								exportFunction={exportAndDownloadPassifs}
 								formats={[
@@ -127,7 +127,7 @@ const Passifs = () => {
 								placeholder="Rechercher..."
 								value={search}
 								onChange={e => { setPage(1); setSearch(e.target.value); }}
-								className="max-w-xs border-black bg-white"
+								className="w-full md:max-w-xs border-black bg-white"
 							/>
 						</div>
 					</div>
@@ -145,8 +145,8 @@ const Passifs = () => {
 							{loadingDetail ? (
 								<div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
 							) : detailPassif ? (
-								<div className="flex gap-6">
-									<div className="flex-1 space-y-2 text-sm">
+								<div className="flex flex-col sm:flex-row gap-6">
+									<div className="flex-1 space-y-2 text-sm min-w-0">
 										<div><b>Produit :</b> {detailPassif.productId?.productName || '-'}</div>
 										<div><b>Code CPC :</b> {detailPassif.productId?.codeCPC || '-'}</div>
 										<div><b>Quantité :</b> {detailPassif.quantite ?? '-'}</div>
@@ -165,7 +165,7 @@ const Passifs = () => {
 										<div><b>Mis à jour le :</b> {detailPassif.updatedAt ? dateFormat(detailPassif.updatedAt) : '-'}</div>
 									</div>
 									{detailPassif.productId?.productImage && (
-										<div className="shrink-0">
+										<div className="shrink-0 mx-auto sm:mx-0">
 											<img src={getFullMediaUrl(detailPassif.productId.productImage)} alt={detailPassif.productId.productName || 'product'} className="w-28 h-28 rounded object-cover border" />
 										</div>
 									)}

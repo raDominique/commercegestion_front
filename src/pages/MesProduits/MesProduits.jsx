@@ -624,7 +624,7 @@ const MesProduits = () => {
                 <form className="space-y-4" onSubmit={handleAddProduct}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Catégorie CPC et Code CPC côte à côte */}
-                    <div className="col-span-1 md:col-span-2 flex gap-4">
+                    <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row gap-4">
                       <div className="space-y-2 flex-2">
                         <Label htmlFor="productCategory">Catégorie CPC</Label>
                         <div className="relative">
@@ -811,7 +811,7 @@ const MesProduits = () => {
           <form className="space-y-4" onSubmit={handleEditProduct}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Catégorie CPC et Code CPC côte à côte */}
-              <div className="col-span-1 md:col-span-2 flex gap-4">
+              <div className="col-span-1 md:col-span-2 flex flex-col sm:flex-row gap-4">
                 <div className="space-y-2 flex-1">
                   <Label htmlFor="productCategory">Catégorie CPC</Label>
                   <div className="relative">

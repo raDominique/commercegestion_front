@@ -64,11 +64,11 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen w-full bg-linear-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 rounded-xl border border-neutral-200 bg-neutral-100">
+      <Card className="w-full max-w-md p-6 sm:p-8 rounded-xl border border-neutral-200 bg-neutral-100">
         <div className="flex flex-col items-center mb-6">
-          <img src={LogoImage} alt="Logo Etokisana" className="h-20 w-auto mb-4" />
-          <h1 className="text-3xl font-bold text-violet-700 mb-1">Réinitialiser le mot de passe</h1>
-          <p className="text-base text-neutral-700 text-center">Choisissez un nouveau mot de passe pour votre compte.</p>
+          <img src={LogoImage} alt="Logo Etokisana" className="h-16 sm:h-20 w-auto mb-4" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-violet-700 mb-1 text-center">Réinitialiser le mot de passe</h1>
+          <p className="text-sm sm:text-base text-neutral-700 text-center">Choisissez un nouveau mot de passe pour votre compte.</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">

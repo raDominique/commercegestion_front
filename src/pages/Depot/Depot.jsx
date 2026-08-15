@@ -343,14 +343,14 @@ const Depot = () => {
 
 	if (user && user.userValidated === false) {
 		return (
-			<div className="px-6 mx-auto">
+			<div className="px-4 md:px-6 mx-auto">
 				<UserNotValidatedBanner />
 			</div>
 		);
 	}
 
 	return (
-		<div className="px-6 mx-auto">
+		<div className="px-4 md:px-6 mx-auto">
 			{user && user.userValidated === false && (
 				<UserNotValidatedBanner />
 			)}

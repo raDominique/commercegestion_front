@@ -266,9 +266,9 @@ const Audit = () => {
     return (
       <div className="space-y-4">
         {Object.entries(obj).map(([k, v]) => (
-          <div key={k} className="grid grid-cols-3 gap-4 items-start">
-            <div className="text-sm text-neutral-600 col-span-1">{humanKey(k)}</div>
-            <div className="text-sm font-medium col-span-2 text-right wrap-break-words whitespace-normal overflow-x-auto">{formatDetailValue(k, v)}</div>
+          <div key={k} className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 items-start">
+            <div className="text-sm text-neutral-600 sm:col-span-1">{humanKey(k)}</div>
+            <div className="text-sm font-medium sm:col-span-2 text-left sm:text-right wrap-break-words whitespace-normal overflow-x-auto">{formatDetailValue(k, v)}</div>
           </div>
         ))}
       </div>
@@ -297,11 +297,11 @@ const Audit = () => {
           <CardTitle>Activité du compte</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-            <div className="flex items-center gap-4">
-              <Input placeholder="Rechercher..." value={query} onChange={e => { setPage(1); setQuery(e.target.value); }} className="w-64" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <Input placeholder="Rechercher..." value={query} onChange={e => { setPage(1); setQuery(e.target.value); }} className="w-full sm:w-64" />
               <Select value={actionFilter} onValueChange={value => { setPage(1); setActionFilter(value); }}>
-                <SelectTrigger className="w-44 border-neutral-300 bg-white min-w-0">
+                <SelectTrigger className="w-full sm:w-44 border-neutral-300 bg-white min-w-0">
                   <SelectValue placeholder="Filtrer action" />
                 </SelectTrigger>
                 <SelectContent className="z-50">
@@ -312,7 +312,7 @@ const Audit = () => {
               </Select>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button onClick={() => { setPage(1); setQuery(''); setActionFilter('all'); }} variant="outline">Réinitialiser</Button>
               <Button onClick={() => handleExport('excel')} status={exporting ? 'loading' : 'active'}>{exporting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Exporter Excel</Button>
               <Button onClick={() => handleExport('pdf')} status={exporting ? 'loading' : 'active'}>{exporting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Exporter PDF</Button>

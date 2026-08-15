@@ -26,6 +26,7 @@ import {
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { toast } from 'sonner';
 import InfoIcon from '@mui/icons-material/Info';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -254,10 +255,10 @@ function TendersList() {
       </div>
 
       <div className="mt-6">
-        <div className="flex items-center justify-end gap-2">
-          <button className="px-3 py-1 border rounded disabled:opacity-40 disabled:cursor-not-allowed" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Précédent</button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Précédent</Button>
           <div className="text-sm text-neutral-600">Page {page} / {Math.max(1, Math.ceil(total / limit))}</div>
-          <button className="px-3 py-1 border rounded disabled:opacity-40 disabled:cursor-not-allowed" disabled={page >= Math.ceil(total / limit)} onClick={() => setPage(p => p + 1)}>Suivant</button>
+          <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / limit)} onClick={() => setPage(p => p + 1)}>Suivant</Button>
         </div>
       </div>
         </>
@@ -463,53 +464,51 @@ function MyTendersList() {
       {!tenders || tenders.length === 0 ? (
         <div className="p-6 text-neutral-500">Aucun appel d'offre trouvé</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="text-xs text-neutral-600">
-                <th className="py-2">Titre</th>
-                <th className="py-2">Statut</th>
-                <th className="py-2">Créé le</th>
-                <th className="py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tenders.map((t) => (
-                <tr key={t._id} className="border-t">
-                  <td className="py-3">{t.titre || t._id}</td>
-                  <td className="py-3">
-                    <Badge className={statusColor(t.statut || '')}>{(t.statut || '').replace('_', ' ')}</Badge>
-                  </td>
-                  <td className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</td>
-                  <td className="py-3">
-                    <div className="flex gap-1 items-center">
-                      <Button variant="ghost" size="sm" onClick={() => handleView(t._id)} className="text-xs gap-1">
-                        <InfoIcon className="w-4 h-4 text-violet-600" /> Détails
+        <Table>
+          <TableHeader>
+            <TableRow className="text-xs text-neutral-600">
+              <TableHead className="py-2">Titre</TableHead>
+              <TableHead className="py-2">Statut</TableHead>
+              <TableHead className="py-2">Créé le</TableHead>
+              <TableHead className="py-2">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tenders.map((t) => (
+              <TableRow key={t._id} className="border-t">
+                <TableCell className="py-3">{t.titre || t._id}</TableCell>
+                <TableCell className="py-3">
+                  <Badge className={statusColor(t.statut || '')}>{(t.statut || '').replace('_', ' ')}</Badge>
+                </TableCell>
+                <TableCell className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</TableCell>
+                <TableCell className="py-3">
+                  <div className="flex gap-1 items-center">
+                    <Button variant="ghost" size="sm" onClick={() => handleView(t._id)} className="text-xs gap-1">
+                      <InfoIcon className="w-4 h-4 text-violet-600" /> Détails
+                    </Button>
+                    {t.statut === 'OUVERT' && (
+                      <Button variant="ghost" size="sm" onClick={() => handleOpenSealed(t._id)} className="text-xs gap-1">
+                        <HowToVoteIcon className="w-4 h-4 text-orange-500" /> Dépouiller
                       </Button>
-                      {t.statut === 'OUVERT' && (
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenSealed(t._id)} className="text-xs gap-1">
-                          <HowToVoteIcon className="w-4 h-4 text-orange-500" /> Dépouiller
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="sm" disabled={t.statut !== 'OUVERT'} className={`text-xs gap-1 ${t.statut !== 'OUVERT' ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => handleViewBids(t._id)}>
-                        <CheckCircleIcon className={`w-4 h-4 ${t.statut !== 'OUVERT' ? 'text-neutral-400' : 'text-green-600'}`} /> Soumissions
-                      </Button>
-                      <Button variant="ghost" size="sm" disabled={t.statut !== 'OUVERT'} className={`text-xs gap-1 ${t.statut !== 'OUVERT' ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => { setDeleteTargetId(t._id); setDeleteConfirmOpen(true); }}>
-                        <DeleteIcon className={`w-4 h-4 ${t.statut !== 'OUVERT' ? 'text-neutral-400' : 'text-red-600'}`} /> Supprimer
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    )}
+                    <Button variant="ghost" size="sm" disabled={t.statut !== 'OUVERT'} className={`text-xs gap-1 ${t.statut !== 'OUVERT' ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => handleViewBids(t._id)}>
+                      <CheckCircleIcon className={`w-4 h-4 ${t.statut !== 'OUVERT' ? 'text-neutral-400' : 'text-green-600'}`} /> Soumissions
+                    </Button>
+                    <Button variant="ghost" size="sm" disabled={t.statut !== 'OUVERT'} className={`text-xs gap-1 ${t.statut !== 'OUVERT' ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => { setDeleteTargetId(t._id); setDeleteConfirmOpen(true); }}>
+                      <DeleteIcon className={`w-4 h-4 ${t.statut !== 'OUVERT' ? 'text-neutral-400' : 'text-red-600'}`} /> Supprimer
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
-      <div className="mt-4 flex items-center justify-end gap-2">
-        <button className="px-3 py-1 border rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Précédent</button>
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+        <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Précédent</Button>
         <span className="text-sm text-neutral-600">Page {page} / {Math.max(1, Math.ceil(total / limit))}</span>
-        <button className="px-3 py-1 border rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed" disabled={page >= Math.ceil(total / limit)} onClick={() => setPage(p => p + 1)}>Suivant</button>
+        <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / limit)} onClick={() => setPage(p => p + 1)}>Suivant</Button>
       </div>
 
       <Dialog open={detailOpen} onOpenChange={(open) => { setDetailOpen(open); if (!open) setDetailTender(null); }}>
@@ -599,54 +598,52 @@ function MyTendersList() {
           ) : bids.length === 0 ? (
             <div className="py-8 text-center text-neutral-500">Aucune soumission pour le moment</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-xs text-neutral-500 uppercase border-b">
-                    <th className="py-2 pr-2 text-left">Soumissionnaire</th>
-                    <th className="py-2 px-2 text-left">Prix unitaire</th>
-                    <th className="py-2 px-2 text-left">Qté</th>
-                    <th className="py-2 px-2 text-left">Total</th>
-                    <th className="py-2 px-2 text-left">Délai</th>
-                    <th className="py-2 px-2 text-left">Statut</th>
-                    <th className="py-2 pl-2 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bids.map((bid) => {
-                    const soumissionnaire = bid.soumissionnaireId || bid.userId || {};
-                    const total = bid.prixTotal ?? (bid.prixUnitaire * bid.quantite);
-                    return (
-                      <tr key={bid._id} className="border-b last:border-b-0 hover:bg-neutral-50">
-                        <td className="py-3 pr-2 font-medium text-neutral-900">{soumissionnaire.userNickName || soumissionnaire.userName || 'Anonyme'}</td>
-                        <td className="py-3 px-2">{bid.prixUnitaire != null ? `${bid.prixUnitaire.toLocaleString()} Ar` : '-'}</td>
-                        <td className="py-3 px-2">{bid.quantite || '-'}</td>
-                        <td className="py-3 px-2 font-medium">{total ? `${total.toLocaleString()} Ar` : '-'}</td>
-                        <td className="py-3 px-2">{bid.delaiLivraison || '-'}</td>
-                        <td className="py-3 px-2">
-                          <Badge className={bid.statut === 'RETENUE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200'}>
-                            {bid.statut || 'SOUMIS'}
-                          </Badge>
-                        </td>
-                        <td className="py-3 pl-2 text-right">
-                          {bid.statut !== 'RETENUE' ? (
-                            <Button
-                              size="sm"
-                              color="default"
-                              onClick={() => setAwardTarget({ tenderId: bidsTenderId, bidId: bid._id, commentaire: '' })}
-                            >
-                              <CheckCircleIcon className="w-4 h-4 mr-1" /> Attribuer
-                            </Button>
-                          ) : (
-                            <span className="text-green-700 text-xs font-semibold">RETENUE</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="text-xs text-neutral-500 uppercase">
+                  <TableHead className="py-2 pr-2 text-left">Soumissionnaire</TableHead>
+                  <TableHead className="py-2 px-2 text-left">Prix unitaire</TableHead>
+                  <TableHead className="py-2 px-2 text-left">Qté</TableHead>
+                  <TableHead className="py-2 px-2 text-left">Total</TableHead>
+                  <TableHead className="py-2 px-2 text-left">Délai</TableHead>
+                  <TableHead className="py-2 px-2 text-left">Statut</TableHead>
+                  <TableHead className="py-2 pl-2 text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bids.map((bid) => {
+                  const soumissionnaire = bid.soumissionnaireId || bid.userId || {};
+                  const total = bid.prixTotal ?? (bid.prixUnitaire * bid.quantite);
+                  return (
+                    <TableRow key={bid._id} className="border-b last:border-b-0 hover:bg-neutral-50">
+                      <TableCell className="py-3 pr-2 font-medium text-neutral-900">{soumissionnaire.userNickName || soumissionnaire.userName || 'Anonyme'}</TableCell>
+                      <TableCell className="py-3 px-2">{bid.prixUnitaire != null ? `${bid.prixUnitaire.toLocaleString()} Ar` : '-'}</TableCell>
+                      <TableCell className="py-3 px-2">{bid.quantite || '-'}</TableCell>
+                      <TableCell className="py-3 px-2 font-medium">{total ? `${total.toLocaleString()} Ar` : '-'}</TableCell>
+                      <TableCell className="py-3 px-2">{bid.delaiLivraison || '-'}</TableCell>
+                      <TableCell className="py-3 px-2">
+                        <Badge className={bid.statut === 'RETENUE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200'}>
+                          {bid.statut || 'SOUMIS'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-3 pl-2 text-right">
+                        {bid.statut !== 'RETENUE' ? (
+                          <Button
+                            size="sm"
+                            color="default"
+                            onClick={() => setAwardTarget({ tenderId: bidsTenderId, bidId: bid._id, commentaire: '' })}
+                          >
+                            <CheckCircleIcon className="w-4 h-4 mr-1" /> Attribuer
+                          </Button>
+                        ) : (
+                          <span className="text-green-700 text-xs font-semibold">RETENUE</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
 
           <DialogFooter>

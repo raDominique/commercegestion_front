@@ -495,7 +495,7 @@ const Actifs = () => {
 									<h1 className="text-2xl text-neutral-900 mb-2">Mes Actifs</h1>
 									<p className="text-sm text-neutral-600">Gérez vos actifs et leur disponibilité</p>
 								</div>
-							<div className="flex gap-4 items-center">
+							<div className="flex flex-wrap gap-3 items-center">
 								<Button onClick={handleOpenAddProductModal} status="active" color="default">
 									Opération hors plateforme
 									</Button>
@@ -511,7 +511,7 @@ const Actifs = () => {
 									<Input
 										placeholder="Rechercher..."
 										onChange={e => { setPage(1); setSearch(e.target.value); }}
-										className="max-w-xs border-black bg-white"
+										className="w-full md:max-w-xs border-black bg-white"
 									/>
 								</div>
 							</div>
@@ -537,12 +537,12 @@ const Actifs = () => {
 									<h1 className="text-2xl text-neutral-900 mb-2">Mes Produits en vente</h1>
 									<p className="text-sm text-neutral-600">Liste des produits mises en vente</p>
 								</div>
-							<div className="flex gap-4 items-center">
+							<div className="flex flex-wrap gap-3 items-center">
 								<Input
 									placeholder="Rechercher..."
 									value={shopSearch}
 									onChange={e => { setShopPage(1); setShopSearch(e.target.value); }}
-										className="max-w-xs border-black bg-white"
+										className="w-full md:max-w-xs border-black bg-white"
 									/>
 								</div>
 							</div>
@@ -1023,9 +1023,9 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 				const statusBadge = getTransactionStatusBadgeProps(item.statut);
 				return (
 					<Card key={item.id} className="p-4">
-					<div className="flex items-start justify-between gap-4">
-						<div className="flex items-center gap-4">
-							<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
+					<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+						<div className="flex items-center gap-4 min-w-0">
+							<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden shrink-0">
 								{item.productImage ? (
 									<img src={getFullMediaUrl(item.productImage)} alt={item.productName} className="w-full h-full object-cover" />
 								) : (
@@ -1038,8 +1038,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<div className="text-xs text-neutral-500 mt-1">{item.depot || '-'}</div>
 							</div>
 						</div>
-						<div className="flex flex-col items-end gap-2">
-							<div className="grid grid-cols-3 gap-2 text-xs text-neutral-700 min-w-55">
+						<div className="flex flex-col sm:items-end gap-2">
+							<div className="grid grid-cols-3 gap-2 text-xs text-neutral-700 min-w-0">
 								<div className="text-right">
 									<div className="font-semibold">QTE</div>
 									<div>{formatThousands(getQuantityValue(item.quantite))}</div>

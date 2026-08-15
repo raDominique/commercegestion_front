@@ -511,7 +511,7 @@ const Register = () => {
                       <span className='text-red-400'>*</span>
                     </Label>
                     <GoogleMapPicker lat={form.userMainLat} lng={form.userMainLng} onChange={({ lat, lng }) => setForm((prev) => ({ ...prev, userMainLat: lat, userMainLng: lng }))} />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="userMainLat">
                           Latitude
@@ -600,7 +600,7 @@ const Register = () => {
                       {form.documentType === 'permis-de-conduire' && "Permis de conduire (PNG recto-verso)"}
                       {!form.documentType && "Documents (PNG recto-verso)"}
                     </Label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {[0, 1].map((idx) => {
                         // Erreur dynamique pour chaque document
                         let docErrors = [];
@@ -663,7 +663,7 @@ const Register = () => {
                       {/* Carte Stat (recto + verso) */}
                       <div className="p-4 bg-neutral-50 rounded-lg space-y-4">
                         <Label>Carte Stat (PNG recto-verso)</Label>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {[0, 1].map((idx) => (
                             <div key={idx} className="relative border rounded-lg p-2 flex flex-col items-center justify-center bg-white shadow-sm">
                               <Input
@@ -693,7 +693,7 @@ const Register = () => {
                       {/* Carte Fiscale (fixe: 2 inputs) */}
                       <div className="p-4 bg-neutral-50 rounded-lg space-y-4">
                         <Label>Carte fiscale (PNG recto-verso)</Label>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {[0, 1].map((idx) => (
                             <div key={idx} className="relative border rounded-lg p-2 flex flex-col items-center justify-center bg-white shadow-sm">
                               <Input

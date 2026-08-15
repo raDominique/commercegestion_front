@@ -134,8 +134,8 @@ export default function Panier() {
                 <div className="space-y-4">
                   {items.map((item) => (
                     <div key={item.id} className="p-3 bg-white border border-neutral-100 rounded-lg shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="w-24 h-24 bg-neutral-50 rounded-lg overflow-hidden shrink-0 border border-neutral-100">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-neutral-50 rounded-lg overflow-hidden shrink-0 border border-neutral-100">
                           <ImageWithFallback
                             src={item.image ? getFullMediaUrl(item.image) : undefined}
                             alt={item.name}
@@ -151,7 +151,7 @@ export default function Panier() {
                             </div>
                           </div>
 
-                          <div className="mt-4 flex items-center justify-between">
+                          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                             <div className="flex items-center gap-4">
                               <button
                                 onClick={() => updateQuantity(item.id, item.quantity - 1)}

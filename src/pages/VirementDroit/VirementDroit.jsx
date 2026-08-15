@@ -21,6 +21,7 @@ import { virementDroit, getMyDepositsAtOthers } from '../../services/transaction
 import { getAccessToken } from '../../services/token.service';
 import { getSitesByUser } from '../../services/site.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
+import useScreenType from '../../utils/useScreenType';
 import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 
 const findUserByName = (name, users) => {
@@ -49,6 +50,7 @@ const renderPerson = (person) => {
 const VirementDroit = () => {
   usePageTitle('Virement de droit');
   const { user } = useAuth();
+  const { isDesktop } = useScreenType();
 
   const [form, setForm] = useState({ quantite: '', observations: '' });
 
@@ -280,7 +282,7 @@ const VirementDroit = () => {
                   />
                 </div>
               </div>
-              <ActifsTable loading={loadingActifs} actifs={actifs} dateFormat={dateFormat} isDesktop={true} onVirerDroit={handleOpenVirementFromActif} />
+              <ActifsTable loading={loadingActifs} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onVirerDroit={handleOpenVirementFromActif} />
             </div>
           </Card>
 
