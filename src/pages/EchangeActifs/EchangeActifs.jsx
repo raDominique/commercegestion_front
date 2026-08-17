@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -24,12 +24,11 @@ import {
   TableCell,
 } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
-import { Checkbox } from '../../components/ui/checkbox';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
-import { getAllUsersSelect } from '../../services/user.service';
+import { getAllUsersSelect, getUsers } from '../../services/user.service';
 import { getSitesByUser, getActifsBySite } from '../../services/site.service';
 import { selectAllProduits } from '../../services/product.service';
 import { createExchangeOffer, getExchangeOffers, buyExchangeOffer } from '../../services/exchange.service';
@@ -106,6 +105,15 @@ const EchangeActifs = () => {
   const [loadingSites, setLoadingSites] = useState(false);
   const [loadingActifs, setLoadingActifs] = useState(false);
 
+  // Saisie des détenteurs Y acceptés par ID (style parrain)
+  const [acceptedDetenteurCode, setAcceptedDetenteurCode] = useState('');
+  const [acceptedDetenteurName, setAcceptedDetenteurName] = useState('');
+  const [resolvedAcceptedDetenteur, setResolvedAcceptedDetenteur] = useState(null);
+  const [acceptedDetenteurLookupLoading, setAcceptedDetenteurLookupLoading] = useState(false);
+  const [acceptedDetenteurNotFound, setAcceptedDetenteurNotFound] = useState(false);
+  const [acceptedDetenteurMembers, setAcceptedDetenteurMembers] = useState([]);
+  const acceptedDetenteurSearchRef = useRef('');
+
   const [filters, setFilters] = useState(initialFilters);
   const [offers, setOffers] = useState([]);
   const [offersTotal, setOffersTotal] = useState(0);
@@ -127,6 +135,15 @@ const EchangeActifs = () => {
     id: getId(member),
     label: userLabel(member),
   })).filter((member) => member.id), [users]);
+
+  // Mapping ID membre (userId) -> utilisateur pour résoudre le _id du détenteur Y
+  const usersMap = useMemo(() => {
+    const map = {};
+    (users || []).forEach((u) => {
+      if (u && u.userId) map[u.userId] = u;
+    });
+    return map;
+  }, [users]);
 
   const detenteurSiteOptions = useMemo(() => detenteurSites.map((site) => ({
     id: getId(site),
@@ -265,6 +282,12 @@ const EchangeActifs = () => {
       setOfferForm(initialOfferForm);
       setDetenteurSites([]);
       setSiteActifs([]);
+      setAcceptedDetenteurMembers([]);
+      setAcceptedDetenteurCode('');
+      setAcceptedDetenteurName('');
+      setResolvedAcceptedDetenteur(null);
+      setAcceptedDetenteurNotFound(false);
+      acceptedDetenteurSearchRef.current = '';
       setOffersPage(1);
       await loadOffers();
     } catch (err) {
@@ -309,13 +332,85 @@ const EchangeActifs = () => {
     }
   };
 
-  const toggleAcceptedDetenteur = (id, checked) => {
+  // Recherche à la demande d'un détenteur Y non présent dans la map locale
+  const resolveAcceptedDetenteurByCode = async (code) => {
+    setAcceptedDetenteurLookupLoading(true);
+    try {
+      const res = await getUsers({ search: code, limit: 10 });
+      const arr = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      const member = arr.find((u) => u && u.userId === code) || arr[0] || null;
+      if (acceptedDetenteurSearchRef.current !== code) return;
+      if (!member || !member.userId) {
+        setAcceptedDetenteurNotFound(true);
+        setResolvedAcceptedDetenteur(null);
+        setAcceptedDetenteurName('');
+        return;
+      }
+      setResolvedAcceptedDetenteur(member);
+      setAcceptedDetenteurName(userLabel(member));
+    } catch (err) {
+      console.error('Erreur lors de la recherche du détenteur Y:', err);
+      if (acceptedDetenteurSearchRef.current === code) {
+        setAcceptedDetenteurNotFound(true);
+        setResolvedAcceptedDetenteur(null);
+        setAcceptedDetenteurName('');
+      }
+    } finally {
+      setAcceptedDetenteurLookupLoading(false);
+    }
+  };
+
+  const handleAcceptedDetenteurCodeChange = (event) => {
+    const val = event.target.value.toUpperCase();
+    const code = (val || '').trim();
+    acceptedDetenteurSearchRef.current = code;
+    setAcceptedDetenteurNotFound(false);
+    setResolvedAcceptedDetenteur(null);
+    setAcceptedDetenteurName('');
+    setAcceptedDetenteurCode(val);
+
+    if (code.length === 8) {
+      const member = usersMap[code] || null;
+      if (member) {
+        setResolvedAcceptedDetenteur(member);
+        setAcceptedDetenteurName(userLabel(member));
+        return;
+      }
+      resolveAcceptedDetenteurByCode(code);
+    }
+  };
+
+  const addAcceptedDetenteur = () => {
+    if (!resolvedAcceptedDetenteur) {
+      toast.error("Veuillez saisir un ID de détenteur Y valide");
+      return;
+    }
+    const id = getId(resolvedAcceptedDetenteur);
+    if (!id) {
+      toast.error("Impossible de résoudre l'ID du détenteur Y");
+      return;
+    }
+    if (offerForm.acceptedDetenteurBIds.includes(id)) {
+      toast.error('Ce détenteur Y est déjà ajouté');
+      return;
+    }
     setOfferForm((prev) => ({
       ...prev,
-      acceptedDetenteurBIds: checked
-        ? [...prev.acceptedDetenteurBIds, id]
-        : prev.acceptedDetenteurBIds.filter((detenteurId) => detenteurId !== id),
+      acceptedDetenteurBIds: [...prev.acceptedDetenteurBIds, id],
     }));
+    setAcceptedDetenteurMembers((prev) => [...prev, resolvedAcceptedDetenteur]);
+    setAcceptedDetenteurCode('');
+    setAcceptedDetenteurName('');
+    setResolvedAcceptedDetenteur(null);
+    setAcceptedDetenteurNotFound(false);
+  };
+
+  const removeAcceptedDetenteur = (id) => {
+    setOfferForm((prev) => ({
+      ...prev,
+      acceptedDetenteurBIds: prev.acceptedDetenteurBIds.filter((detenteurId) => detenteurId !== id),
+    }));
+    setAcceptedDetenteurMembers((prev) => prev.filter((member) => getId(member) !== id));
   };
 
   const renderAcceptedDetenteurs = (offer) => {
@@ -479,20 +574,84 @@ const EchangeActifs = () => {
             <Card className="border-neutral-200 bg-white">
               <div className="p-4">
                 <Label>Détenteurs Y acceptés pour le produit B</Label>
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-56 overflow-auto">
-                  {userOptions.map((member) => {
-                    const id = member.id;
-                    return (
-                      <label key={id} className="flex items-center gap-2 text-sm text-neutral-700">
-                        <Checkbox
-                          checked={offerForm.acceptedDetenteurBIds.includes(id)}
-                          onCheckedChange={(checked) => toggleAcceptedDetenteur(id, checked === true)}
+                <p className="text-xs text-neutral-500 mt-1">
+                  Saisissez l'ID du détenteur Y (8 caractères) puis validez pour l'ajouter.
+                </p>
+                <div className="mt-4">
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Input
+                        placeholder="ID du détenteur Y (8 caractères)"
+                        value={acceptedDetenteurCode}
+                        maxLength={8}
+                        style={{ textTransform: 'uppercase' }}
+                        onChange={handleAcceptedDetenteurCodeChange}
+                        className={`bg-white ${acceptedDetenteurNotFound ? 'border-red-400' : ''}`}
+                      />
+                      <div className="relative">
+                        <Input
+                          placeholder={acceptedDetenteurNotFound ? 'Membre non trouvé' : 'Nom du détenteur Y'}
+                          value={acceptedDetenteurName}
+                          readOnly
+                          disabled={acceptedDetenteurLookupLoading}
+                          className={`bg-neutral-100 text-neutral-700 pr-9 ${acceptedDetenteurNotFound ? 'border-red-400 text-red-600' : 'border-neutral-300'}`}
                         />
-                        <span className="min-w-0 wrap-wrap-break-word">{member.label}</span>
-                      </label>
-                    );
-                  })}
+                        {acceptedDetenteurLookupLoading && (
+                          <Loader size="sm" className="absolute right-2.5 top-1/2 -translate-y-1/2 border-neutral-400 border-t-transparent shrink-0" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      {acceptedDetenteurLookupLoading ? (
+                        <span className="text-neutral-400" />
+                      ) : resolvedAcceptedDetenteur ? (
+                        <span className="text-emerald-600">ID valide</span>
+                      ) : acceptedDetenteurNotFound ? (
+                        <span className="text-red-600">ID invalide</span>
+                      ) : (acceptedDetenteurCode && acceptedDetenteurCode.length !== 8) ? (
+                        <span className="text-amber-600">L'ID doit contenir exactement 8 caractères</span>
+                      ) : (
+                        <span className="text-neutral-500" />
+                      )}
+                      <span className="text-neutral-400">{acceptedDetenteurCode.length}/8</span>
+                    </div>
+                    {acceptedDetenteurNotFound && (
+                      <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre.</p>
+                    )}
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        size="sm"
+                        color="default"
+                        disabled={!resolvedAcceptedDetenteur}
+                        onClick={addAcceptedDetenteur}
+                        className="w-full sm:w-auto"
+                      >
+                        Ajouter
+                      </Button>
+                    </div>
+                  </div>
                 </div>
+                {acceptedDetenteurMembers.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {acceptedDetenteurMembers.map((member) => {
+                      const id = getId(member);
+                      return (
+                        <span key={id} className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 border border-neutral-200 px-3 py-1 text-sm text-neutral-700">
+                          {userLabel(member)}
+                          <button
+                            type="button"
+                            onClick={() => removeAcceptedDetenteur(id)}
+                            aria-label={`Retirer ${userLabel(member)}`}
+                            className="text-neutral-400 hover:text-red-600 focus:outline-none"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </Card>
 
