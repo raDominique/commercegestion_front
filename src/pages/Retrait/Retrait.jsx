@@ -14,7 +14,8 @@ import { formatThousands } from '../../utils/formatNumber';
 import { returnStockToAMember, getUserTransactions } from '../../services/transaction.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getUsers } from '../../services/user.service';
-import { getMySites, getSitesByUser, getActifsBySite } from '../../services/site.service';
+import { getMySites, getSitesByUser } from '../../services/site.service';
+import { getMyDeposits } from '../../services/actifs.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
@@ -228,18 +229,20 @@ const Retrait = () => {
 		setSiteDestinationHighlighted(0);
 
 		try {
-			const res = await getActifsBySite(siteId);
+			const res = await getMyDeposits({ detenteurId: withdrawalForm.detentaire, siteId, limit: 100 });
 			let siteProducts = [];
 			if (Array.isArray(res)) {
 				siteProducts = res;
-			} else if (res?.data && Array.isArray(res.data)) {
+			} else if (Array.isArray(res?.data)) {
 				siteProducts = res.data;
+			} else if (Array.isArray(res?.data?.data)) {
+				siteProducts = res.data.data;
 			}
 			setProductsOnSite(siteProducts);
 			if (siteProducts.length > 0) {
 				toast.success(`${siteProducts.length} actif(s) chargé(s)`);
 			} else {
-				toast.info('Aucun actif sur ce site');
+				toast.info('Aucun actif déposé sur ce site');
 			}
 		} catch (error) {
 			console.error('Erreur lors de la récupération des actifs:', error);
