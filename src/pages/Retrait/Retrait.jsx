@@ -86,7 +86,7 @@ const Retrait = () => {
 
 	// Données filtrées (défensif pour éviter les valeurs undefined)
 	const filteredOriginSites = detentaireSites.filter(site => (site?.siteName || '').toLowerCase().includes((siteOriginSearch || '').toLowerCase()));
-	const filteredProducts = productsOnSite.filter(item => ((item?.productName || '').toLowerCase()).includes((productSearch || '').toLowerCase()));
+	const filteredProducts = productsOnSite.filter(item => ((item?.productId?.productName || '').toLowerCase()).includes((productSearch || '').toLowerCase()));
 
 	const filteredDestinationSites = destinationSites.filter(site => (site?.siteName || '').toLowerCase().includes((siteDestinationSearch || '').toLowerCase()));
 
@@ -252,11 +252,12 @@ const Retrait = () => {
 	};
 
 	const handleSelectProduct = productId => {
-		const actif = productsOnSite.find(item => item.productId === productId);
+		const actif = productsOnSite.find(item => (item.productId?._id ?? item.productId) === (productId?._id ?? productId));
+		const productIdValue = (productId?._id ?? productId) || '';
 		setWithdrawalForm(prev => ({
 			...prev,
-			actifId: actif?.productId || '',
-			productId: actif?.productId || '',
+			actifId: productIdValue,
+			productId: productIdValue,
 			quantite: '',
 			prixUnitaire: actif?.prixUnitaire || '',
 		}));
@@ -527,7 +528,7 @@ const Retrait = () => {
 																	const product = filteredProducts[productHighlighted];
 																	if (product) {
 																		handleSelectProduct(product.productId);
-																		setProductSearch(product.productName || '');
+																		setProductSearch(product.productId?.productName || '');
 																		setProductOpen(false);
 																	}
 																}
@@ -545,12 +546,12 @@ const Retrait = () => {
 																	onMouseEnter={() => setProductHighlighted(idx)}
 																	onClick={() => {
 																		handleSelectProduct(item.productId);
-																		setProductSearch(item.productName || '');
+																		setProductSearch(item.productId?.productName || '');
 																		setProductOpen(false);
 																	}}
 																	className={`w-full text-left px-3 py-2 text-sm ${idx === productHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
 																>
-																	{item.productName || '-'} - Qté: {formatThousands(item.quantite)}
+																	{item.productId?.productName || '-'} - Qté: {formatThousands(item.quantite)}
 																</button>
 															))}
 														</div>
