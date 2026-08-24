@@ -395,7 +395,7 @@ const Boutique = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-28 whitespace-nowrap">Code article</TableHead>
-                        <TableHead className="max-w-[200px] whitespace-nowrap">Désignation</TableHead>
+                        <TableHead className="max-w-50 whitespace-nowrap">Désignation</TableHead>
                         <TableHead className="w-32 text-right whitespace-nowrap">Prix unitaire</TableHead>
                         <TableHead className="w-24 text-right whitespace-nowrap">Stock réel</TableHead>
                         <TableHead className="w-24 text-right whitespace-nowrap">Actions</TableHead>
@@ -409,7 +409,7 @@ const Boutique = () => {
                         return (
                           <TableRow key={key} className="odd:bg-neutral-50">
                             <TableCell className="font-medium text-neutral-800 whitespace-nowrap">{product.codeCPC || '-'}</TableCell>
-                            <TableCell className="text-neutral-900 max-w-[200px] truncate" title={product.productName || '-'}>{product.productName || '-'}</TableCell>
+                            <TableCell className="text-neutral-900 max-w-50 truncate" title={product.productName || '-'}>{product.productName || '-'}</TableCell>
                             <TableCell className="text-right whitespace-nowrap">{item.prixUnitaire != null ? formatThousands(item.prixUnitaire) : '-'}</TableCell>
                             <TableCell className="text-right whitespace-nowrap">{item.quantite != null ? formatThousands(item.quantite) : '-'}</TableCell>
                             <TableCell className="text-right">
