@@ -964,8 +964,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 										<span className="text-neutral-400">-</span>
 									)}
 								</TableCell>
-								<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
-								<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
+								<TableCell className="text-sm truncate max-w-[140px]" title={item.depot || '-'}>{item.depot || '-'}</TableCell>
+								<TableCell className="text-sm truncate max-w-[140px]" title={item.depotAdresse || '-'}>{item.depotAdresse || '-'}</TableCell>
 								<TableCell className="text-sm text-center">
 									<div className="flex flex-col items-center leading-tight">
 										<span className="font-medium">{formatThousands(adaptiveQty.value)}</span>
@@ -1124,8 +1124,8 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 										<span className="text-neutral-400">-</span>
 									)}
 								</TableCell>
-								<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
-								<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
+								<TableCell className="text-sm truncate max-w-[140px]" title={item.depot || '-'}>{item.depot || '-'}</TableCell>
+								<TableCell className="text-sm truncate max-w-[140px]" title={item.depotAdresse || '-'}>{item.depotAdresse || '-'}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{item.statut || '-'}</TableCell>
