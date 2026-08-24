@@ -54,6 +54,19 @@ const getQuantityValue = (value) => {
 	return Number.isFinite(numericValue) ? numericValue : 0;
 };
 
+// Quantité à afficher selon le statut :
+// - approuvé (APPROVED) -> quantité réelle
+// - en attente (PENDING) -> quantité en attente
+const getAdaptiveQuantity = (item) => {
+	const key = String(item?.statut || '').toUpperCase();
+	const isPending = key.includes('PENDING') || key.includes('ATTENTE');
+	return {
+		isPending,
+		value: getQuantityValue(isPending ? item.quantiteEnAttente : item.quantite),
+		label: isPending ? 'En attente' : 'Réelle',
+	};
+};
+
 // Style partagé pour la colonne Actions — garanti par inline style
 const ACTION_COL_STYLE_LG = { minWidth: '200px', width: '200px' };
 const ACTION_COL_STYLE_SM = { minWidth: '100px', width: '100px' };
@@ -923,7 +936,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Image</TableHead>
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
-							<TableHead colSpan={3} className="text-xs text-neutral-600 text-center">Quantité</TableHead>
+							<TableHead className="text-xs text-neutral-600 text-center">Quantité</TableHead>
 							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
@@ -935,30 +948,11 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								Actions
 							</TableHead>
 						</TableRow>
-						{/* Ligne 2 — sous-headers Quantité */}
-						<TableRow>
-							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
-							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
-							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
-							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
-							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-center">Réelle</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-center">En Attente</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-center">Disponible</TableHead>
-							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
-							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
-							<TableHead className="text-xs text-neutral-600">&nbsp;</TableHead>
-							<TableHead
-								className="text-xs text-neutral-600 text-right p-4 whitespace-nowrap"
-								style={ACTION_COL_STYLE_LG}
-							>
-								&nbsp;
-							</TableHead>
-						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{actifs.map(item => {
 						const statusBadge = getTransactionStatusBadgeProps(item.statut);
+						const adaptiveQty = getAdaptiveQuantity(item);
 						return (
 							<TableRow key={item.id}>
 								<TableCell className="text-sm truncate max-w-xs">{item.productName || '-'}</TableCell>
@@ -972,9 +966,12 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
-								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantite))}</TableCell>
-								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteEnAttente))}</TableCell>
-								<TableCell className="text-sm text-center">{formatThousands(getQuantityValue(item.quantiteDisponible ?? item.quantite))}</TableCell>
+								<TableCell className="text-sm text-center">
+									<div className="flex flex-col items-center leading-tight">
+										<span className="font-medium">{formatThousands(adaptiveQty.value)}</span>
+										{/* <span className="text-[10px] text-neutral-500">{adaptiveQty.label}</span> */}
+									</div>
+								</TableCell>
 								<TableCell className="text-sm"><Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge></TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
@@ -1019,8 +1016,9 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 	// Vue mobile — cards
 	return (
 		<div className="space-y-4 p-4">
-			{actifs.map(item => {
+				{actifs.map(item => {
 				const statusBadge = getTransactionStatusBadgeProps(item.statut);
+				const adaptiveQty = getAdaptiveQuantity(item);
 				return (
 					<Card key={item.id} className="p-4">
 					<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -1039,19 +1037,9 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							</div>
 						</div>
 						<div className="flex flex-col sm:items-end gap-2">
-							<div className="grid grid-cols-3 gap-2 text-xs text-neutral-700 min-w-0">
-								<div className="text-right">
-									<div className="font-semibold">QTE</div>
-									<div>{formatThousands(getQuantityValue(item.quantite))}</div>
-								</div>
-								<div className="text-right">
-									<div className="font-semibold">Att.</div>
-									<div>{formatThousands(getQuantityValue(item.quantiteEnAttente))}</div>
-								</div>
-								<div className="text-right">
-									<div className="font-semibold">Disp.</div>
-									<div>{formatThousands(getQuantityValue(item.quantiteDisponible ?? item.quantite))}</div>
-								</div>
+							<div className="text-xs text-neutral-700 text-right">
+								<div className="font-semibold">Quantité ({adaptiveQty.label})</div>
+								<div>{formatThousands(adaptiveQty.value)}</div>
 							</div>
 							<div>
 								<Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>
