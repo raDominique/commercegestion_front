@@ -54,17 +54,50 @@ const getQuantityValue = (value) => {
 	return Number.isFinite(numericValue) ? numericValue : 0;
 };
 
-// Quantité à afficher selon le statut :
-// - approuvé (APPROVED) -> quantité réelle
+// Normalise le statut (string ou tableau) en tableau de valeurs
+const getStatutArray = (statut) => {
+	if (Array.isArray(statut)) return statut;
+	if (statut == null) return [];
+	return [statut];
+};
+
+const statutIsPending = (s) => /PENDING|ATTENTE/.test(String(s).toUpperCase());
+const statutIsApproved = (s) => String(s).toUpperCase().includes('APPROVED');
+
+// Retourne les badges de statut (gère le cas où un actif mélange APPROVED + PENDING)
+const getStatusBadges = (statut) => {
+	const arr = getStatutArray(statut);
+	if (arr.length === 0) {
+		return [{ className: 'bg-neutral-100 text-neutral-700 border-neutral-200', label: '-' }];
+	}
+	const hasApproved = arr.some(statutIsApproved);
+	const hasPending = arr.some(statutIsPending);
+	if (hasApproved && hasPending) {
+		return [{ className: 'bg-amber-50 text-amber-700 border-amber-200', label: 'Approuvé partiellement' }];
+	}
+	return arr.map((s) => getTransactionStatusBadgeProps(s));
+};
+
+// Lignes de quantité à afficher selon les statuts présents :
+// - approuvé (APPROVED) -> quantité disponible (réelle)
 // - en attente (PENDING) -> quantité en attente
-const getAdaptiveQuantity = (item) => {
-	const key = String(item?.statut || '').toUpperCase();
-	const isPending = key.includes('PENDING') || key.includes('ATTENTE');
-	return {
-		isPending,
-		value: getQuantityValue(isPending ? item.quantiteEnAttente : item.quantite),
-		label: isPending ? 'En attente' : 'Réelle',
-	};
+// `isPartial` indique un mélange APPROVED + PENDING (=> "Approuvé partiellement")
+const getQuantityLines = (item) => {
+	const statuts = getStatutArray(item?.statut);
+	const hasApproved = statuts.some(statutIsApproved);
+	const hasPending = statuts.some(statutIsPending);
+	const isPartial = hasApproved && hasPending;
+	const lines = [];
+	if (hasApproved) {
+		lines.push({ label: 'Réelle', value: getQuantityValue(item?.quantiteDisponible ?? item?.quantite) });
+	}
+	if (hasPending) {
+		lines.push({ label: 'En attente', value: getQuantityValue(item?.quantiteEnAttente) });
+	}
+	if (lines.length === 0) {
+		lines.push({ label: 'Réelle', value: getQuantityValue(item?.quantite) });
+	}
+	return { lines, isPartial, showLabels: isPartial || lines.length > 1 };
 };
 
 // Style partagé pour la colonne Actions — garanti par inline style
@@ -845,7 +878,11 @@ const Actifs = () => {
 							) : detailActif ? (
 								Array.isArray(detailActif) ? (
 									<div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-										{detailActif.map((actif, idx) => (
+										{detailActif.map((actif, idx) => {
+											const detailStatusBadge = actif.status
+												? getTransactionStatusBadgeProps(actif.status)
+												: { className: 'bg-violet-50 text-violet-700 border-violet-200', label: 'Approuvé' };
+											return (
 											<div key={actif._id || idx} className="border border-neutral-200 rounded-lg p-3 space-y-1.5 text-sm">
 												<div className="flex items-start gap-3">
 													{actif.productId?.productImage ? (
@@ -855,6 +892,7 @@ const Actifs = () => {
 														<div className="font-medium text-neutral-900">{actif.productId?.productName || '-'}</div>
 														<div className="text-xs text-neutral-500">{actif.productId?.codeCPC || '-'}</div>
 													</div>
+													<Badge className={`text-xs ${detailStatusBadge.className} px-2 py-0.5 rounded shrink-0`}>{detailStatusBadge.label}</Badge>
 												</div>
 												<div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-neutral-700">
 													<span><b>Dépôt :</b> {actif.depotId?.siteName || '-'}</span>
@@ -866,7 +904,8 @@ const Actifs = () => {
 													<span className="col-span-2"><b>Date :</b> {actif.createdAt ? dateFormat(actif.createdAt) : '-'}</span>
 												</div>
 											</div>
-										))}
+										);
+										})}
 									</div>
 								) : (detailActif._shopRaw || detailActif.shopItemId) ? (
 									<div className="space-y-4 text-sm">
@@ -951,8 +990,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 					</TableHeader>
 					<TableBody>
 						{actifs.map(item => {
-						const statusBadge = getTransactionStatusBadgeProps(item.statut);
-						const adaptiveQty = getAdaptiveQuantity(item);
+						const statusBadges = getStatusBadges(item.statut);
+						const { lines: quantityLines, showLabels } = getQuantityLines(item);
 						return (
 							<TableRow key={item.id}>
 								<TableCell className="text-sm truncate max-w-xs">{item.productName || '-'}</TableCell>
@@ -968,11 +1007,21 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								<TableCell className="text-sm truncate max-w-35" title={item.depotAdresse || '-'}>{item.depotAdresse || '-'}</TableCell>
 								<TableCell className="text-sm text-center">
 									<div className="flex flex-col items-center leading-tight">
-										<span className="font-medium">{formatThousands(adaptiveQty.value)}</span>
-										{/* <span className="text-[10px] text-neutral-500">{adaptiveQty.label}</span> */}
+										{quantityLines.map((line, idx) => (
+											<div key={idx} className="flex flex-col items-center">
+												<span className="font-medium">{formatThousands(line.value)}</span>
+												{showLabels && <span className="text-[10px] text-neutral-500">{line.label}</span>}
+											</div>
+										))}
 									</div>
 								</TableCell>
-								<TableCell className="text-sm"><Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge></TableCell>
+								<TableCell className="text-sm">
+									<div className="flex flex-wrap gap-1">
+										{statusBadges.map((statusBadge, idx) => (
+											<Badge key={idx} className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>
+										))}
+									</div>
+								</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								{/* ✅ FIX : largeur forcée via style inline */}
@@ -1017,8 +1066,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 	return (
 		<div className="space-y-4 p-4">
 				{actifs.map(item => {
-				const statusBadge = getTransactionStatusBadgeProps(item.statut);
-				const adaptiveQty = getAdaptiveQuantity(item);
+				const statusBadges = getStatusBadges(item.statut);
+				const { lines: quantityLines, showLabels } = getQuantityLines(item);
 				return (
 					<Card key={item.id} className="p-4">
 					<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -1038,11 +1087,17 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 						</div>
 						<div className="flex flex-col sm:items-end gap-2">
 							<div className="text-xs text-neutral-700 text-right">
-								<div className="font-semibold">Quantité ({adaptiveQty.label})</div>
-								<div>{formatThousands(adaptiveQty.value)}</div>
+								{quantityLines.map((line, idx) => (
+									<div key={idx}>
+										<div className="font-semibold">{showLabels ? `Quantité (${line.label})` : 'Quantité'}</div>
+										<div>{formatThousands(line.value)}</div>
+									</div>
+								))}
 							</div>
-							<div>
-								<Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>
+							<div className="flex flex-wrap gap-1 sm:justify-end">
+								{statusBadges.map((statusBadge, idx) => (
+									<Badge key={idx} className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>
+								))}
 							</div>
 							<div className="text-xs text-neutral-600">Détenteur: {renderPerson(item.detentaire || item.detentaireId)}</div>
 							<div className="flex items-center gap-2 mt-2">
