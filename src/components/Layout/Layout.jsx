@@ -18,6 +18,14 @@ export function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const { isDesktop } = useScreenType();
+
+  // Auto-close mobile menu when transitioning to desktop (resize bug fix)
+  React.useEffect(() => {
+    if (isDesktop) {
+      setMobileMenuOpen(false);
+    }
+  }, [isDesktop]);
 
   const handleLogout = () => {
     logout();
@@ -38,7 +46,6 @@ export function Layout({ children }) {
   ].includes(r.path)).map(r => ({ path: r.path, label: r.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()), element: r.element }));
 
   const isActive = (path) => location.pathname === path;
-  const { isDesktop } = useScreenType();
 
   return (
     <div className="min-h-screen bg-neutral-300">

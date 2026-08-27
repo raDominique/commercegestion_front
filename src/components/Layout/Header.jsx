@@ -11,7 +11,7 @@ import {
     DialogFooter,
     DialogClose,
 } from '../ui/dialog';
-import { Logout, Menu, Close, AccountBalanceWallet, ShoppingCart, Notifications as BellIcon } from '@mui/icons-material';
+import { Logout, Menu, Close, ShoppingCart, Notifications as BellIcon } from '@mui/icons-material';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { privateRoutes } from '../../routes/routes';
 import { useCart } from '../../context/CartContext';
@@ -30,7 +30,6 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
     const { getTotalItems } = useCart();
     const socketInitialized = useRef(false);
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-    const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
     const [logoutLoading, setLogoutLoading] = useState(false);
 
     useEffect(() => {
@@ -75,14 +74,28 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
     const user = profile;
     const navigate = useNavigate();
 
-    // build nav lists (same logic as Sidebar)
+    // Build nav lists
+    const dashboardItem = privateRoutes.filter(r => r.path === '/dashboard');
+
     const userNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
-        '/actifs', '/passifs', '/boutique', '/depot', '/retrait'
+        '/actifs', '/passifs', '/boutique', '/depot', '/retrait', '/virement-droit', '/appel-offre', '/echange-actifs', '/achat-vente'
     ].includes(r.path));
 
-    const accountNavItems = privateRoutes.filter(r => ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role)) && [
-        '/mon-compte', '/mes-produits', '/mes-transactions', '/mes-sites'
-    ].includes(r.path));
+    const accountNavItems = privateRoutes.filter(r => {
+        const allowedRole = ['Utilisateur', 'Admin'].some(role => r.role && r.role.includes(role));
+        const includedPath = [
+            '/mon-compte',
+            '/mes-produits',
+            '/mes-transactions',
+            '/operations-a-valider',
+            '/mes-sites',
+            '/parrainages',
+            '/mon-compte/audit'
+        ].includes(r.path);
+        const requiresValidation = r.userValidated === true;
+        const validatedOk = !(requiresValidation && user && user.userValidated === false);
+        return allowedRole && includedPath && validatedOk;
+    });
 
     const adminNavItems = privateRoutes.filter(
         r => r.role && r.role.includes('Admin') && [
@@ -92,36 +105,50 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
         ].includes(r.path)
     );
 
+    // User avatar component (reused in header and sheet)
+    const UserAvatar = ({ size = 'sm' }) => {
+        const sizeClass = size === 'sm' ? 'w-8 h-8' : 'w-12 h-12';
+        const textSize = size === 'sm' ? 'text-xs' : 'text-sm';
+        if (user?.userType === 'Entreprise' && user.logo) {
+            return <img src={getFullMediaUrl(user.logo)} alt="Logo entreprise" className={`${sizeClass} rounded-full object-cover bg-neutral-200`} />;
+        }
+        if (user?.userType === 'Particulier' && user.userImage) {
+            return <img src={getFullMediaUrl(user.userImage)} alt="Avatar utilisateur" className={`${sizeClass} rounded-full object-cover bg-neutral-200`} />;
+        }
+        return (
+            <div className={`${sizeClass} bg-violet-600 rounded-full flex items-center justify-center`}>
+                <span className={`${textSize} text-white`}>
+                    {typeof user?.userName === 'string' && user.userName.length > 0 ? user.userName.charAt(0).toUpperCase() : '?'}
+                </span>
+            </div>
+        );
+    };
+
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-16">
-                    <div className="flex items-center gap-8">
-                        <Link to="/" className="flex items-center gap-2">
-                            <img src={LogoImage} alt="Logo" className="h-8 w-auto" />
-                        </Link>
-                    </div>
+                <div className="flex justify-between items-center h-14 sm:h-16">
+                    {/* Logo */}
+                    <Link to="/" className="flex items-center gap-2 shrink-0">
+                        <img src={LogoImage} alt="Logo" className="h-7 sm:h-8 w-auto" />
+                    </Link>
 
                     {user && (
                         <>
+                            {/* ===== MOBILE TOP BAR ===== */}
                             {!isDesktop && (
                                 <button
-                                    className="p-2"
+                                    className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
                                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                    aria-label="Open mobile menu"
+                                    aria-label="Menu"
                                 >
-                                    {mobileMenuOpen ? <Close className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                                    {mobileMenuOpen ? <Close className="w-6 h-6 text-neutral-700" /> : <Menu className="w-6 h-6 text-neutral-700" />}
                                 </button>
                             )}
 
-                            <div className="hidden md:flex items-center gap-4">
-                                {/* <div className="flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg">
-                                    <AccountBalanceWallet className="w-4 h-4 text-neutral-600" />
-                                    <span className="text-sm text-neutral-900">
-                                        {typeof user.userTotalSolde === 'number' ? user.userTotalSolde.toLocaleString('fr-MG') : '0'} Ariary
-                                    </span>
-                                </div> */}
-
+                            {/* ===== DESKTOP TOP BAR ===== */}
+                            {isDesktop && (
+                            <div className="flex items-center gap-2">
                                 <Popover>
                                     <PopoverTrigger asChild>
                                         <Button
@@ -133,7 +160,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                             <BellIcon className="w-5 h-5" />
                                             {notifications.length > 0 && (
                                                 <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
-                                                    {notifications.length}
+                                                    {notifications.length > 99 ? '99+' : notifications.length}
                                                 </span>
                                             )}
                                         </Button>
@@ -168,26 +195,8 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                     </Button>
                                 </Link>
 
-                                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/mon-compte')}>
-                                    {user.userType === 'Entreprise' && user.logo ? (
-                                        <img
-                                            src={getFullMediaUrl(user.logo)}
-                                            alt="Logo entreprise"
-                                            className="w-8 h-8 rounded-full object-cover bg-neutral-200"
-                                        />
-                                    ) : user.userType === 'Particulier' && user.userImage ? (
-                                        <img
-                                            src={getFullMediaUrl(user.userImage)}
-                                            alt="Avatar utilisateur"
-                                            className="w-8 h-8 rounded-full object-cover bg-neutral-200"
-                                        />
-                                    ) : (
-                                        <div className="w-8 h-8 bg-violet-600 rounded-full flex items-center justify-center">
-                                            <span className="text-xs text-white">
-                                                {typeof user.userName === 'string' && user.userName.length > 0 ? user.userName.charAt(0).toUpperCase() : '?'}
-                                            </span>
-                                        </div>
-                                    )}
+                                <div className="flex items-center gap-2 cursor-pointer hover:bg-neutral-50 rounded-lg px-2 py-1 transition-colors" onClick={() => navigate('/mon-compte')}>
+                                    <UserAvatar size="sm" />
                                     <span className="text-sm text-neutral-700">{typeof user.userName === 'string' ? user.userName : 'Utilisateur'}</span>
                                 </div>
 
@@ -239,118 +248,125 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                     </DialogContent>
                                 </Dialog>
                             </div>
+                            )}
                         </>
                     )}
                 </div>
             </div>
 
-            {/* Mobile menu as right sheet */}
+            {/* ===== MOBILE SHEET (sidebar) ===== */}
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-                <SheetContent side="right" className="bg-white text-neutral-900">
-                    <SheetHeader>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                {user && (user.userType === 'Entreprise' && user.logo ? (
-                                    <img src={getFullMediaUrl(user.logo)} alt="Logo" className="w-10 h-10 rounded-full object-cover" />
-                                ) : user.userType === 'Particulier' && user.userImage ? (
-                                    <img src={getFullMediaUrl(user.userImage)} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
-                                ) : (
-                                    <div className="w-10 h-10 bg-violet-600 rounded-full flex items-center justify-center">
-                                        <span className="text-sm text-white">{user && typeof user.userName === 'string' && user.userName.length > 0 ? user.userName.charAt(0).toUpperCase() : '?'}</span>
-                                    </div>
-                                ))}
-                                <div className="ml-2">
-                                    <div className="font-semibold text-neutral-900">{user ? (typeof user.userName === 'string' ? user.userName : 'Utilisateur') : ''}</div>
-                                    <div className="text-xs text-neutral-500">{user?.userType || ''}</div>
+                <SheetContent side="right" className="bg-white text-neutral-900 p-0 w-[min(85vw,320px)]">
+                    {/* User profile card */}
+                    <div className="px-5 pt-6 pb-4 bg-gradient-to-b from-violet-50 to-white border-b border-neutral-100">
+                        <div className="flex items-center gap-3">
+                            <UserAvatar size="lg" />
+                            <div className="min-w-0">
+                                <div className="font-semibold text-neutral-900 truncate">
+                                    {user ? (typeof user.userName === 'string' ? user.userName : 'Utilisateur') : ''}
                                 </div>
+                                <div className="text-xs text-neutral-500 mt-0.5">{user?.userType || ''}</div>
                             </div>
-                            {/* mobile: balance moved into scrollable content - top-right duplicate removed */}
                         </div>
-                    </SheetHeader>
+                    </div>
 
-                    <div className="px-4 py-3 flex-1 overflow-y-auto">
-                        <div className="space-y-3">
-                            {/* Balance at top, left aligned */}
-                            {/* <div className="px-3 py-2 rounded-lg text-sm text-neutral-700 flex items-center gap-2">
-                                <AccountBalanceWallet className="w-5 h-5 text-neutral-600" />
-                                <span>{user && typeof user.userTotalSolde === 'number' ? user.userTotalSolde.toLocaleString('fr-MG') : '0'} Ariary</span>
-                            </div> */}
-
-                            {/* Notifications */}
-                            <div>
-                                <Button 
-                                  variant="ghost"
-                                  className="w-full justify-between text-left px-3 py-2" 
-                                  aria-label="Notifications" 
-                                  onClick={() => setMobileNotifOpen(v => !v)}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <BellIcon className="w-5 h-5 text-neutral-700" />
-                                        <span className="text-sm text-neutral-700">Notifications</span>
-                                    </div>
-                                    {notifications.length > 0 && <span className="text-xs bg-red-600 text-white rounded-full px-2 py-0.5">{notifications.length}</span>}
-                                </Button>
-                                {mobileNotifOpen && (
-                                    <div className="mt-2 bg-white border border-neutral-100 rounded-lg divide-y divide-neutral-100 max-h-48 overflow-y-auto">
-                                        {notifications.length === 0 ? (
-                                            <div className="p-3 text-sm text-neutral-500">Aucune notification</div>
-                                        ) : (
-                                            notifications.map(n => (
-                                                <div key={n.id} className="p-3 text-sm">
-                                                    <div className="text-neutral-800">{n.message}</div>
-                                                    <div className="text-xs text-neutral-400">{n.date}</div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            <Separator />
-
-                            <nav className="space-y-1">
-                                <p className="text-xs text-neutral-500 px-3 mb-2">NAVIGATION</p>
+                    {/* Scrollable navigation */}
+                    <div className="flex-1 overflow-y-auto px-3 py-4">
+                        <div className="space-y-5">
+                            {/* NAVIGATION */}
+                            <nav className="space-y-0.5">
+                                <p className="text-[10px] font-semibold text-neutral-400 px-3 mb-1.5 uppercase tracking-wider">Navigation</p>
+                                {dashboardItem.map((item) => (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                                            isActive(item.path)
+                                                ? 'bg-violet-50 text-violet-600 font-medium'
+                                                : 'text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100'
+                                        }`}
+                                    >
+                                        {item.icon ? <item.icon className="w-5 h-5 shrink-0" /> : <span className="material-icons text-lg">menu</span>}
+                                        <span>{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                    </Link>
+                                ))}
                                 {userNavItems.map((item) => (
-                                    <Link key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path) ? 'bg-violet-50 text-violet-600' : 'text-neutral-700 hover:bg-neutral-100'}`}>
-                                        {item.icon ? <item.icon className="w-5 h-5" /> : <span className="material-icons">menu</span>}
-                                        <span className="text-sm">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                                            isActive(item.path)
+                                                ? 'bg-violet-50 text-violet-600 font-medium'
+                                                : 'text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100'
+                                        }`}
+                                    >
+                                        {item.icon ? <item.icon className="w-5 h-5 shrink-0" /> : <span className="material-icons text-lg">menu</span>}
+                                        <span>{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                     </Link>
                                 ))}
                             </nav>
 
-                            <Separator />
+                            <Separator className="bg-neutral-100" />
 
-                            <nav className="space-y-1">
-                                <p className="text-xs text-neutral-500 px-3 mb-2">COMPTE</p>
+                            {/* COMPTE */}
+                            <nav className="space-y-0.5">
+                                <p className="text-[10px] font-semibold text-neutral-400 px-3 mb-1.5 uppercase tracking-wider">Compte</p>
                                 {accountNavItems.map((item) => (
-                                    <Link key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path) ? 'bg-violet-50 text-violet-600' : 'text-neutral-700 hover:bg-neutral-100'}`}>
-                                        {item.icon ? <item.icon className="w-5 h-5" /> : <span className="material-icons">menu</span>}
-                                        <span className="text-sm">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                                            isActive(item.path)
+                                                ? 'bg-violet-50 text-violet-600 font-medium'
+                                                : 'text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100'
+                                        }`}
+                                    >
+                                        {item.icon ? <item.icon className="w-5 h-5 shrink-0" /> : <span className="material-icons text-lg">menu</span>}
+                                        <span>{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                     </Link>
                                 ))}
                             </nav>
 
+                            {/* ADMIN */}
                             {user?.userAccess === 'Admin' && (
                                 <>
-                                    <Separator />
-                                    <nav className="space-y-1">
-                                        <p className="text-xs text-neutral-500 px-3 mb-2">ADMINISTRATION</p>
+                                    <Separator className="bg-neutral-100" />
+                                    <nav className="space-y-0.5">
+                                        <p className="text-[10px] font-semibold text-neutral-400 px-3 mb-1.5 uppercase tracking-wider">Administration</p>
                                         {adminNavItems.map((item) => (
-                                            <Link key={item.path} to={item.path} onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive(item.path) ? 'bg-violet-50 text-violet-600' : 'text-neutral-700 hover:bg-neutral-100'}`}>
-                                                {item.icon ? <item.icon className="w-5 h-5" /> : <span className="material-icons">menu</span>}
-                                                <span className="text-sm">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                            <Link
+                                                key={item.path}
+                                                to={item.path}
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                                                    isActive(item.path)
+                                                        ? 'bg-violet-50 text-violet-600 font-medium'
+                                                        : 'text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100'
+                                                }`}
+                                            >
+                                                {item.icon ? <item.icon className="w-5 h-5 shrink-0" /> : <span className="material-icons text-lg">menu</span>}
+                                                <span>{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                                             </Link>
                                         ))}
                                     </nav>
                                 </>
                             )}
-
-                            <div className="mt-4">
-                                <Button variant="ghost" onClick={() => setLogoutDialogOpen(true)} className="w-full justify-start text-neutral-600">
-                                    <Logout className="w-4 h-4 mr-2" /> Déconnexion
-                                </Button>
-                            </div>
                         </div>
+                    </div>
+
+                    {/* Logout button at bottom */}
+                    <div className="px-3 pb-4 pt-2 border-t border-neutral-100">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setLogoutDialogOpen(true)}
+                            className="w-full justify-start text-neutral-500 hover:text-red-600 hover:bg-red-50"
+                        >
+                            <Logout className="w-4 h-4 mr-3" />
+                            <span className="text-sm">Déconnexion</span>
+                        </Button>
                     </div>
                 </SheetContent>
             </Sheet>
