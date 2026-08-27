@@ -27,6 +27,15 @@ import {
   DialogFooter,
 } from '../../components/ui/dialog';
 
+const extractApiErrorMessage = (err) => {
+  return (
+    err?.response?.data?.message ||
+    err?.response?.data?.data?.message ||
+    err?.message ||
+    'Une erreur est survenue'
+  );
+};
+
 const OperationsAValider = () => {
   usePageTitle('Opérations à valider');
   const { user } = useAuth();
@@ -185,7 +194,7 @@ const OperationsAValider = () => {
       setObservations('');
     } catch (err) {
       console.error('Error approving transaction:', err);
-      toast.error('Erreur lors de l\'approbation');
+      toast.error(extractApiErrorMessage(err));
     } finally {
       setActionLoading(false);
       setActionTransactionId(null);
@@ -235,7 +244,7 @@ const OperationsAValider = () => {
       setMotifRejet('');
     } catch (err) {
       console.error('Error rejecting transaction:', err);
-      toast.error('Erreur lors du rejet');
+      toast.error(extractApiErrorMessage(err));
     } finally {
       setActionLoading(false);
       setActionTransactionId(null);
