@@ -87,15 +87,16 @@ const getQuantityLines = (item) => {
 	const hasApproved = statuts.some(statutIsApproved);
 	const hasPending = statuts.some(statutIsPending);
 	const isPartial = hasApproved && hasPending;
+	const realQuantity = getQuantityValue(item?.quantite);
 	const lines = [];
-	if (hasApproved) {
-		lines.push({ label: 'Réelle', value: getQuantityValue(item?.quantiteDisponible ?? item?.quantite) });
+	if (hasApproved && realQuantity !== 0) {
+		lines.push({ label: 'Réelle', value: realQuantity });
 	}
 	if (hasPending) {
 		lines.push({ label: 'En attente', value: getQuantityValue(item?.quantiteEnAttente) });
 	}
-	if (lines.length === 0) {
-		lines.push({ label: 'Réelle', value: getQuantityValue(item?.quantite) });
+	if (lines.length === 0 && realQuantity !== 0) {
+		lines.push({ label: 'Réelle', value: realQuantity });
 	}
 	return { lines, isPartial, showLabels: isPartial || lines.length > 1 };
 };
@@ -1024,7 +1025,6 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
-								{/* ✅ FIX : largeur forcée via style inline */}
 								<TableCell className="text-sm text-right whitespace-nowrap" style={ACTION_COL_STYLE_LG}>
 									<div className="flex items-center justify-end gap-1">
 										<Tooltip>
