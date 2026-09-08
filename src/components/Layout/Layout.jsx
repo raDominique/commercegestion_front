@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import { privateRoutes } from '../../routes/routes';
 
 import Sidebar from './Sidebar';
+import { disconnectSocket } from '../../services/socket.service';
+import { NotificationsProvider } from '../../context/NotificationsContext';
 import useScreenType from '../../utils/useScreenType';
 
 import Header from './Header';
@@ -28,6 +30,7 @@ export function Layout({ children }) {
   }, [isDesktop]);
 
   const handleLogout = () => {
+    disconnectSocket();
     logout();
     navigate('/login');
   };
@@ -49,6 +52,7 @@ export function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-neutral-300">
+      <NotificationsProvider>
       <Header
         user={user}
         mobileMenuOpen={mobileMenuOpen}
@@ -76,6 +80,7 @@ export function Layout({ children }) {
         <Content>{children}</Content>
       )}
 
+      </NotificationsProvider>
     </div>
   );
 }

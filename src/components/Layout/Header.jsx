@@ -16,63 +16,101 @@ import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { privateRoutes } from '../../routes/routes';
 import { useCart } from '../../context/CartContext';
 import LogoImage from '../../assets/logo/logo.png';
-import { useEffect, useState, useRef } from 'react';
-import { initSocket, onSocketEvent, offSocketEvent, disconnectSocket } from '../../services/socket.service';
-import { getProfile } from '../../services/auth.service';
+import { useState } from 'react';
+import { useNotificationsContext } from '../../context/NotificationsContext';
+import { formatNotifCount } from '../../utils/notificationTarget';
 import { getFullMediaUrl } from '../../services/media.service';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader } from '../ui/sheet';
 import { Loader } from '../ui/loader';
 
+function UnreadDot() {
+    return <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-violet-600" aria-label="Non lue" />;
+}
+
+function NotificationItem({ notif, formatRelative, onOpen }) {
+    return (
+        <button
+            type="button"
+            onClick={() => onOpen(notif)}
+            className={`w-full py-3 px-4 flex gap-2.5 text-left hover:bg-violet-50 cursor-pointer transition rounded-lg ${notif.isRead ? '' : 'bg-violet-50/50'}`}
+        >
+            {!notif.isRead && <UnreadDot />}
+            <span className="min-w-0 flex-1">
+                {notif.title && (
+                    <span className="block truncate text-sm font-semibold text-neutral-900">{notif.title}</span>
+                )}
+                <span className="mt-0.5 block text-sm leading-snug text-neutral-600 line-clamp-2">{notif.message}</span>
+                <span className="mt-1 block text-xs text-neutral-400">{formatRelative(notif.createdAt)}</span>
+            </span>
+        </button>
+    );
+}
+
+function NotificationBell({ notifications, unreadCount, loadingHistory, markAllRead, formatRelative, onOpen, align = 'end' }) {
+    const [open, setOpen] = useState(false);
+    const handleOpen = (notif) => {
+        onOpen(notif);
+        setOpen(false);
+    };
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="relative text-neutral-600"
+                    aria-label="Notifications"
+                >
+                    <BellIcon className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
+                            {formatNotifCount(unreadCount)}
+                        </span>
+                    )}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent align={align} className="w-80 p-0 bg-white rounded-xl shadow-xl border border-neutral-100">
+                <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between rounded-t-xl">
+                    <span className="font-semibold text-neutral-800 text-base">Notifications</span>
+                    {unreadCount > 0 && (
+                        <button
+                            type="button"
+                            onClick={markAllRead}
+                            className="text-xs font-semibold text-violet-600 hover:text-violet-700 hover:underline"
+                        >
+                            Tout marquer lu
+                        </button>
+                    )}
+                </div>
+                <div className="divide-y divide-neutral-200 max-h-80 overflow-y-auto">
+                    {loadingHistory ? (
+                        <div className="py-4 text-center text-neutral-500">Chargement…</div>
+                    ) : notifications.length === 0 ? (
+                        <div className="py-4 text-center text-neutral-500">Aucune notification</div>
+                    ) : notifications.map((notif) => (
+                        <NotificationItem key={notif._id} notif={notif} formatRelative={formatRelative} onOpen={handleOpen} />
+                    ))}
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+}
+
 function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isDesktop }) {
-    const [notifications, setNotifications] = useState([]);
-    const [profile, setProfile] = useState(null);
+    const { profile, notifications, unreadCount, unreadByRoute, loadingHistory, markAllRead, openNotification, formatRelative } = useNotificationsContext();
     const { getTotalItems } = useCart();
-    const socketInitialized = useRef(false);
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
     const [logoutLoading, setLogoutLoading] = useState(false);
 
-    useEffect(() => {
-        let mounted = true;
-        getProfile()
-            .then((data) => { if (mounted) setProfile(data); })
-            .catch(() => { if (mounted) setProfile(null); });
-        return () => { mounted = false; };
-    }, []);
-
-    useEffect(() => {
-        if (!profile || socketInitialized.current) return;
-        const socketUrl = import.meta.env.VITE_API_BASE_URL?.replace(/^http/, 'ws');
-        if (!socketUrl || !profile._id || !profile.userAccess) return;
-        initSocket(socketUrl, { userId: profile._id, userAccess: profile.userAccess });
-        socketInitialized.current = true;
-
-        const notifHandler = (data) => {
-            setNotifications((prev) => [
-                { id: Date.now(), message: data.message, date: new Date().toLocaleDateString() },
-                ...prev,
-            ]);
-        };
-        const adminHandler = (data) => {
-            setNotifications((prev) => [
-                { id: Date.now(), message: data.message, date: new Date().toLocaleDateString() },
-                ...prev,
-            ]);
-        };
-
-        onSocketEvent('notification', notifHandler);
-        if (profile.userAccess === 'Admin') onSocketEvent('admin_event', adminHandler);
-
-        return () => {
-            offSocketEvent('notification', notifHandler);
-            if (profile.userAccess === 'Admin') offSocketEvent('admin_event', adminHandler);
-            disconnectSocket();
-            socketInitialized.current = false;
-        };
-    }, [profile]);
-
     const user = profile;
     const navigate = useNavigate();
+    const badgeFor = (path) => unreadByRoute[path] || 0;
+
+    const handleOpenNotification = (notif) => {
+        const target = openNotification(notif);
+        if (target) navigate(target.path);
+    };
 
     // Build nav lists
     const dashboardItem = privateRoutes.filter(r => r.path === '/dashboard');
@@ -105,6 +143,30 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
         ].includes(r.path)
     );
 
+    const MobileNavLink = ({ item }) => {
+        const count = badgeFor(item.path);
+        return (
+            <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                    isActive(item.path)
+                        ? 'bg-violet-50 text-violet-600 font-medium'
+                        : 'text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100'
+                }`}
+            >
+                {item.icon ? <item.icon className="w-5 h-5 shrink-0" /> : <span className="material-icons text-lg">menu</span>}
+                <span className="flex-1">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                {count > 0 && (
+                    <span className="min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full bg-violet-600 text-white text-[11px] font-bold">
+                        {formatNotifCount(count)}
+                    </span>
+                )}
+            </Link>
+        );
+    };
+
     // User avatar component (reused in header and sheet)
     const UserAvatar = ({ size = 'sm' }) => {
         const sizeClass = size === 'sm' ? 'w-8 h-8' : 'w-12 h-12';
@@ -124,6 +186,8 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
         );
     };
 
+    const recentMobile = notifications.slice(0, 8);
+
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -135,50 +199,40 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
 
                     {user && (
                         <>
-                            {/* ===== MOBILE TOP BAR ===== */}
+                            {/* ===== MOBILE TOP BAR : cloche + menu ===== */}
                             {!isDesktop && (
-                                <button
-                                    className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
-                                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                    aria-label="Menu"
-                                >
-                                    {mobileMenuOpen ? <Close className="w-6 h-6 text-neutral-700" /> : <Menu className="w-6 h-6 text-neutral-700" />}
-                                </button>
+                                <div className="flex items-center gap-1">
+                                    <NotificationBell
+                                        notifications={notifications}
+                                        unreadCount={unreadCount}
+                                        loadingHistory={loadingHistory}
+                                        markAllRead={markAllRead}
+                                        formatRelative={formatRelative}
+                                        onOpen={handleOpenNotification}
+                                        align="end"
+                                    />
+                                    <button
+                                        className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+                                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                        aria-label="Menu"
+                                    >
+                                        {mobileMenuOpen ? <Close className="w-6 h-6 text-neutral-700" /> : <Menu className="w-6 h-6 text-neutral-700" />}
+                                    </button>
+                                </div>
                             )}
 
                             {/* ===== DESKTOP TOP BAR ===== */}
                             {isDesktop && (
                             <div className="flex items-center gap-2">
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="relative text-neutral-600"
-                                            aria-label="Notifications"
-                                        >
-                                            <BellIcon className="w-5 h-5" />
-                                            {notifications.length > 0 && (
-                                                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
-                                                    {notifications.length > 99 ? '99+' : notifications.length}
-                                                </span>
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent align="end" className="w-72 p-0 bg-white rounded-xl shadow-xl border border-neutral-100">
-                                        <div className="px-4 py-3 border-b border-neutral-100 font-semibold text-neutral-800 text-base rounded-t-xl">Notifications</div>
-                                        <div className="divide-y divide-neutral-200 max-h-60 overflow-y-auto">
-                                            {notifications.length === 0 ? (
-                                                <div className="py-4 text-center text-neutral-500">Aucune notification</div>
-                                            ) : notifications.map((notif) => (
-                                                <div key={notif.id} className="py-3 px-4 flex flex-col gap-1 hover:bg-violet-50 cursor-pointer transition rounded-lg">
-                                                    <span className="text-sm text-neutral-800">{notif.message}</span>
-                                                    <span className="text-xs text-neutral-400">{notif.date}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </PopoverContent>
-                                </Popover>
+                                <NotificationBell
+                                    notifications={notifications}
+                                    unreadCount={unreadCount}
+                                    loadingHistory={loadingHistory}
+                                    markAllRead={markAllRead}
+                                    formatRelative={formatRelative}
+                                    onOpen={handleOpenNotification}
+                                    align="end"
+                                />
 
                                 <Link to="/panier" aria-label="Panier">
                                     <Button
@@ -273,38 +327,51 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                     {/* Scrollable navigation */}
                     <div className="flex-1 overflow-y-auto px-3 py-4">
                         <div className="space-y-5">
+                            {/* NOTIFICATIONS récentes */}
+                            <nav className="space-y-0.5">
+                                <div className="flex items-center justify-between px-3 mb-1.5">
+                                    <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Notifications</p>
+                                    {unreadCount > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={markAllRead}
+                                            className="text-[11px] font-semibold text-violet-600 hover:text-violet-700 hover:underline"
+                                        >
+                                            Tout marquer lu
+                                        </button>
+                                    )}
+                                </div>
+                                {recentMobile.length === 0 ? (
+                                    <p className="px-3 py-2 text-xs text-neutral-400">Aucune notification</p>
+                                ) : recentMobile.map((notif) => (
+                                    <button
+                                        key={notif._id}
+                                        type="button"
+                                        onClick={() => { setMobileMenuOpen(false); handleOpenNotification(notif); }}
+                                        className={`w-full flex gap-2.5 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                                            notif.isRead ? 'text-neutral-600 hover:bg-neutral-50' : 'bg-violet-50 text-neutral-800 hover:bg-violet-100'
+                                        }`}
+                                    >
+                                        {!notif.isRead && <UnreadDot />}
+                                        <span className="min-w-0 flex-1">
+                                            {notif.title && <span className="block truncate text-[13px] font-semibold">{notif.title}</span>}
+                                            <span className="block text-xs leading-snug line-clamp-2">{notif.message}</span>
+                                            <span className="mt-0.5 block text-[11px] text-neutral-400">{formatRelative(notif.createdAt)}</span>
+                                        </span>
+                                    </button>
+                                ))}
+                            </nav>
+
+                            <Separator className="bg-neutral-100" />
+
                             {/* NAVIGATION */}
                             <nav className="space-y-0.5">
                                 <p className="text-[10px] font-semibold text-neutral-400 px-3 mb-1.5 uppercase tracking-wider">Navigation</p>
                                 {dashboardItem.map((item) => (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                                            isActive(item.path)
-                                                ? 'bg-violet-50 text-violet-600 font-medium'
-                                                : 'text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100'
-                                        }`}
-                                    >
-                                        {item.icon ? <item.icon className="w-5 h-5 shrink-0" /> : <span className="material-icons text-lg">menu</span>}
-                                        <span>{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                                    </Link>
+                                    <MobileNavLink key={item.path} item={item} />
                                 ))}
                                 {userNavItems.map((item) => (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                                            isActive(item.path)
-                                                ? 'bg-violet-50 text-violet-600 font-medium'
-                                                : 'text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100'
-                                        }`}
-                                    >
-                                        {item.icon ? <item.icon className="w-5 h-5 shrink-0" /> : <span className="material-icons text-lg">menu</span>}
-                                        <span>{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                                    </Link>
+                                    <MobileNavLink key={item.path} item={item} />
                                 ))}
                             </nav>
 
@@ -314,19 +381,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                             <nav className="space-y-0.5">
                                 <p className="text-[10px] font-semibold text-neutral-400 px-3 mb-1.5 uppercase tracking-wider">Compte</p>
                                 {accountNavItems.map((item) => (
-                                    <Link
-                                        key={item.path}
-                                        to={item.path}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                                            isActive(item.path)
-                                                ? 'bg-violet-50 text-violet-600 font-medium'
-                                                : 'text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100'
-                                        }`}
-                                    >
-                                        {item.icon ? <item.icon className="w-5 h-5 shrink-0" /> : <span className="material-icons text-lg">menu</span>}
-                                        <span>{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                                    </Link>
+                                    <MobileNavLink key={item.path} item={item} />
                                 ))}
                             </nav>
 
@@ -337,19 +392,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                     <nav className="space-y-0.5">
                                         <p className="text-[10px] font-semibold text-neutral-400 px-3 mb-1.5 uppercase tracking-wider">Administration</p>
                                         {adminNavItems.map((item) => (
-                                            <Link
-                                                key={item.path}
-                                                to={item.path}
-                                                onClick={() => setMobileMenuOpen(false)}
-                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                                                    isActive(item.path)
-                                                        ? 'bg-violet-50 text-violet-600 font-medium'
-                                                        : 'text-neutral-600 hover:bg-neutral-50 active:bg-neutral-100'
-                                                }`}
-                                            >
-                                                {item.icon ? <item.icon className="w-5 h-5 shrink-0" /> : <span className="material-icons text-lg">menu</span>}
-                                                <span>{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                                            </Link>
+                                            <MobileNavLink key={item.path} item={item} />
                                         ))}
                                     </nav>
                                 </>
