@@ -114,6 +114,13 @@ const EchangeActifs = () => {
   const [acceptedDetenteurMembers, setAcceptedDetenteurMembers] = useState([]);
   const acceptedDetenteurSearchRef = useRef('');
 
+  const [detenteurWCode, setDetenteurWCode] = useState('');
+  const [detenteurWName, setDetenteurWName] = useState('');
+  const [resolvedDetenteurW, setResolvedDetenteurW] = useState(null);
+  const [detenteurWLookupLoading, setDetenteurWLookupLoading] = useState(false);
+  const [detenteurWNotFound, setDetenteurWNotFound] = useState(false);
+  const detenteurWSearchRef = useRef('');
+
   const [filters, setFilters] = useState(initialFilters);
   const [offers, setOffers] = useState([]);
   const [offersTotal, setOffersTotal] = useState(0);
@@ -288,6 +295,11 @@ const EchangeActifs = () => {
       setResolvedAcceptedDetenteur(null);
       setAcceptedDetenteurNotFound(false);
       acceptedDetenteurSearchRef.current = '';
+      setDetenteurWCode('');
+      setDetenteurWName('');
+      setResolvedDetenteurW(null);
+      setDetenteurWNotFound(false);
+      detenteurWSearchRef.current = '';
       setOffersPage(1);
       await loadOffers();
     } catch (err) {
@@ -357,6 +369,60 @@ const EchangeActifs = () => {
       }
     } finally {
       setAcceptedDetenteurLookupLoading(false);
+    }
+  };
+
+  const resolveDetenteurWByCode = async (code) => {
+    setDetenteurWLookupLoading(true);
+    try {
+      const res = await getUsers({ search: code, limit: 10 });
+      const arr = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      const member = arr.find((item) => item && item.userId === code) || arr[0] || null;
+      if (detenteurWSearchRef.current !== code) return;
+      if (!member || !member.userId) {
+        setDetenteurWNotFound(true);
+        setResolvedDetenteurW(null);
+        setDetenteurWName('');
+        return;
+      }
+      setResolvedDetenteurW(member);
+      setDetenteurWName(userLabel(member));
+      setOfferForm((prev) => ({ ...prev, detenteurAId: getId(member) }));
+      loadDetenteurSites(getId(member));
+    } catch (err) {
+      console.error('Erreur lors de la recherche du détenteur W:', err);
+      if (detenteurWSearchRef.current === code) {
+        setDetenteurWNotFound(true);
+        setResolvedDetenteurW(null);
+        setDetenteurWName('');
+      }
+    } finally {
+      setDetenteurWLookupLoading(false);
+    }
+  };
+
+  const handleDetenteurWCodeChange = (event) => {
+    const val = event.target.value.toUpperCase();
+    const code = (val || '').trim();
+    detenteurWSearchRef.current = code;
+    setDetenteurWNotFound(false);
+    setResolvedDetenteurW(null);
+    setDetenteurWName('');
+    setDetenteurWCode(val);
+    setOfferForm((prev) => ({ ...prev, detenteurAId: '', depotAId: '', productAId: '' }));
+    setDetenteurSites([]);
+    setSiteActifs([]);
+
+    if (code.length === 8) {
+      const member = usersMap[code] || null;
+      if (member) {
+        setResolvedDetenteurW(member);
+        setDetenteurWName(userLabel(member));
+        setOfferForm((prev) => ({ ...prev, detenteurAId: getId(member) }));
+        loadDetenteurSites(getId(member));
+        return;
+      }
+      resolveDetenteurWByCode(code);
     }
   };
 
@@ -456,25 +522,48 @@ const EchangeActifs = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="detenteurAId" required>Détenteur W</Label>
-                <Select
-                  value={offerForm.detenteurAId}
-                  onValueChange={(value) => {
-                    setOfferForm((prev) => ({ ...prev, detenteurAId: value, depotAId: '', productAId: '' }));
-                    loadDetenteurSites(value);
-                  }}
-                  disabled={loadingLookups}
-                >
-                  <SelectTrigger id="detenteurAId" className="bg-white">
-                    <SelectValue placeholder="Sélectionner le détenteur du produit A" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {userOptions.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Input
+                        id="detenteurAId"
+                        placeholder="ID du détenteur W (8 caractères)"
+                        value={detenteurWCode}
+                        maxLength={8}
+                        style={{ textTransform: 'uppercase' }}
+                        onChange={handleDetenteurWCodeChange}
+                        className={`bg-white ${detenteurWNotFound ? 'border-red-400' : ''}`}
+                      />
+                      <div className="relative">
+                        <Input
+                          placeholder={detenteurWNotFound ? 'Membre non trouvé' : 'Nom du détenteur W'}
+                          value={detenteurWName}
+                          readOnly
+                          disabled={detenteurWLookupLoading}
+                          className={`bg-neutral-100 text-neutral-700 pr-9 ${detenteurWNotFound ? 'border-red-400 text-red-600' : 'border-neutral-300'}`}
+                        />
+                        {detenteurWLookupLoading && (
+                          <Loader size="sm" className="absolute right-2.5 top-1/2 -translate-y-1/2 border-neutral-400 border-t-transparent shrink-0" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      {detenteurWLookupLoading ? (
+                        <span className="text-neutral-400" />
+                      ) : resolvedDetenteurW ? (
+                        <span className="text-emerald-600">ID valide</span>
+                      ) : detenteurWNotFound ? (
+                        <span className="text-red-600">ID invalide</span>
+                      ) : (detenteurWCode && detenteurWCode.length !== 8) ? (
+                        <span className="text-amber-600">L'ID doit contenir exactement 8 caractères</span>
+                      ) : (
+                        <span className="text-neutral-500" />
+                      )}
+                      <span className="text-neutral-400">{detenteurWCode.length}/8</span>
+                    </div>
+                    {detenteurWNotFound && (
+                      <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre.</p>
+                    )}
+                  </div>
               </div>
 
               <div className="grid gap-2">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -9,12 +9,11 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 import { createVenteTransaction } from '../../services/transaction.service';
-import { getAllUsersSelect } from '../../services/user.service';
+import { getAllUsersSelect, getUsers } from '../../services/user.service';
 import { getMySites, getActifsBySite } from '../../services/site.service';
 import { getAccessToken } from '../../services/token.service';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
-import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 import { Loader } from '../../components/ui/loader';
 import { formatThousands } from '../../utils/formatNumber';
 
@@ -33,6 +32,11 @@ const AchatVente = () => {
 
   const [vendeurInput, setVendeurInput] = useState('');
   const [vendeurId, setVendeurId] = useState('');
+  const [vendeurName, setVendeurName] = useState('');
+  const [vendeurLookupLoading, setVendeurLookupLoading] = useState(false);
+  const [vendeurNotFound, setVendeurNotFound] = useState(false);
+  const [resolvedVendeur, setResolvedVendeur] = useState(null);
+  const vendeurSearchRef = useRef('');
   const [contrepartieInput, setContrepartieInput] = useState('');
   const [contrepartieId, setContrepartieId] = useState('');
   const [siteOrigineId, setSiteOrigineId] = useState('');
@@ -67,6 +71,10 @@ const AchatVente = () => {
   const resetForm = () => {
     setVendeurInput('');
     setVendeurId('');
+    setVendeurName('');
+    setVendeurNotFound(false);
+    setResolvedVendeur(null);
+    vendeurSearchRef.current = '';
     setContrepartieInput('');
     setContrepartieId('');
     setSiteOrigineId('');
@@ -76,6 +84,102 @@ const AchatVente = () => {
     setObservations('');
     setProducts([]);
   };
+
+  const resolveVendeurByCode = async (code) => {
+    setVendeurLookupLoading(true);
+    try {
+      const res = await getUsers({ search: code, limit: 10 });
+      const members = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      const member = members.find((item) => item && item.userId === code) || members[0] || null;
+      if (vendeurSearchRef.current !== code) return;
+      if (!member || !member.userId) {
+        setVendeurId('');
+        setResolvedVendeur(null);
+        setVendeurName('');
+        setVendeurNotFound(true);
+        return;
+      }
+      setVendeurId(member._id || member.id || '');
+      setResolvedVendeur(member);
+      setVendeurName(getUserDisplayName(member));
+    } catch (err) {
+      console.error('Erreur lors de la recherche du vendeur:', err);
+      if (vendeurSearchRef.current === code) {
+        setVendeurId('');
+        setResolvedVendeur(null);
+        setVendeurName('');
+        setVendeurNotFound(true);
+      }
+    } finally {
+      setVendeurLookupLoading(false);
+    }
+  };
+
+  const handleVendeurCodeChange = (event) => {
+    const value = event.target.value.toUpperCase();
+    const code = value.trim();
+    vendeurSearchRef.current = code;
+    setVendeurInput(value);
+    setVendeurId('');
+    setVendeurName('');
+    setResolvedVendeur(null);
+    setVendeurNotFound(false);
+
+    if (code.length === 8) {
+      const member = users.find((item) => item?.userId === code);
+      if (member) {
+        setVendeurId(member._id || member.id || '');
+        setResolvedVendeur(member);
+        setVendeurName(getUserDisplayName(member));
+        return;
+      }
+      resolveVendeurByCode(code);
+    }
+  };
+
+  const vendeurField = (
+    <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <Input
+          placeholder="ID du vendeur (8 caractères)"
+          value={vendeurInput}
+          maxLength={8}
+          style={{ textTransform: 'uppercase' }}
+          onChange={handleVendeurCodeChange}
+          className={`bg-white ${vendeurNotFound ? 'border-red-400' : ''}`}
+        />
+        <div className="relative">
+          <Input
+            placeholder={vendeurNotFound ? 'Membre non trouvé' : 'Nom du vendeur'}
+            value={vendeurName}
+            readOnly
+            disabled={vendeurLookupLoading}
+            className={`bg-neutral-100 text-neutral-700 pr-9 ${vendeurNotFound ? 'border-red-400 text-red-600' : 'border-neutral-300'}`}
+          />
+          {vendeurLookupLoading && (
+            <Loader size="sm" className="absolute right-2.5 top-1/2 -translate-y-1/2 border-neutral-400 border-t-transparent shrink-0" />
+          )}
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-xs">
+        {vendeurLookupLoading ? (
+          <span className="text-neutral-400" />
+        ) : resolvedVendeur ? (
+          <span className="text-emerald-600">ID valide</span>
+        ) : vendeurNotFound ? (
+          <span className="text-red-600">ID invalide</span>
+        ) : (vendeurInput && vendeurInput.length !== 8) ? (
+          <span className="text-amber-600">L'ID doit contenir exactement 8 caractères</span>
+        ) : (
+          <span className="text-neutral-500" />
+        )}
+        <span className="text-neutral-400">{vendeurInput.length}/8</span>
+      </div>
+      {vendeurNotFound && (
+        <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre.</p>
+      )}
+    </div>
+  );
 
   const handleModeChange = (newMode) => {
     setMode(newMode);
@@ -155,14 +259,7 @@ const AchatVente = () => {
                 <form onSubmit={handleSubmit} className="space-y-4 p-4">
                     <div className="space-y-2">
                       <Label required>1. Vendeur</Label>
-                      <UserAutocomplete
-                        users={users}
-                        value={vendeurInput}
-                        onChange={(val) => { setVendeurInput(val); if (!val) setVendeurId(''); }}
-                        onSelect={(u) => setVendeurId(u._id || u.id)}
-                        getDisplayName={getUserDisplayName}
-                        placeholder="Rechercher un vendeur..."
-                      />
+                      {vendeurField}
                     </div>
 
                     {ready.vendeur && (
@@ -238,14 +335,7 @@ const AchatVente = () => {
                   <form onSubmit={handleSubmit} className="space-y-4 p-4">
                     <div className="space-y-2">
                       <Label required>1. Vendeur</Label>
-                      <UserAutocomplete
-                        users={users}
-                        value={vendeurInput}
-                        onChange={(val) => { setVendeurInput(val); if (!val) setVendeurId(''); }}
-                        onSelect={(u) => setVendeurId(u._id || u.id)}
-                        getDisplayName={getUserDisplayName}
-                        placeholder="Rechercher un vendeur..."
-                      />
+                      {vendeurField}
                     </div>
 
                     {ready.vendeur && (
