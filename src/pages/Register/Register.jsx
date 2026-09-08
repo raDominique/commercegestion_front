@@ -577,7 +577,7 @@ const Register = () => {
                         id="avatar"
                         name="avatar"
                         type="file"
-                        accept="image/png"
+                        accept="image/*"
                         onChange={handleChange}
                         className="border-neutral-300"
                       />
