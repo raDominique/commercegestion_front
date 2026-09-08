@@ -3,17 +3,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getProfile } from '../../services/auth.service';
 import { Button } from '../../components/ui/button';
-import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
 import usePageTitle from '../../utils/usePageTitle';
-import useScreenType from '../../utils/useScreenType';
-import LogoImage from '../../assets/logo/logo.png';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import { Loader } from '../../components/ui/loader';
+import { AuthShell, BrandPanel, BrandPoints, FormPanel, AuthHeader } from '../../components/commons/authLayout';
 
+const inputClass =
+  'h-11 rounded-md border-neutral-200 bg-neutral-50 pl-10 text-[15px] shadow-none focus-visible:border-violet-600 focus-visible:ring-0';
 
 export default function Login() {
   usePageTitle('Connexion');
@@ -23,7 +25,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-  const { isMobile } = useScreenType();
 
   const allowedRoles = ['Utilisateur', 'Moderateur', 'Admin'];
   const handleSubmit = async (e) => {
@@ -39,7 +40,6 @@ export default function Login() {
         toast.error("Votre rôle ne permet pas d'accéder à cette application.");
       }
     } catch (error) {
-      // Gestion précise des erreurs API
       console.error('Erreur de connexion:', error);
       const apiMessage = error?.response?.data?.message;
       const url = error?.config?.url;
@@ -62,46 +62,79 @@ export default function Login() {
   };
 
   return (
-    <div className={`min-h-screen w-full bg-linear-to-br from-gray-200 to-gray-300 flex flex-col items-center ${isMobile ? 'justify-start py-6' : 'justify-center p-4'}`}>
-      {/* Card with login form */}
-      <Card className={`${isMobile ? 'w-full h-full max-w-none p-6 rounded-none border-none bg-white overflow-auto' : 'w-full max-w-md p-8 rounded-xl border border-neutral-200 bg-neutral-100'}`}>
-        {/* Branding above the card */}
-        <div className={`flex flex-col items-center ${isMobile ? 'mb-4' : 'mb-8'}`}>
-          <img src={LogoImage} alt="Logo Etokisana" className={`${isMobile ? 'h-12' : 'h-20'} w-auto mb-4`} />
-          <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-violet-700 mb-1`}>Connexion</h1>
-          <p className={`${isMobile ? 'text-sm' : 'text-base'} text-neutral-700 text-center`}>
-            Connectez-vous à votre compte <span className="font-bold text-violet-600">Etokisana</span>
-          </p>
-        </div>
-        <form onSubmit={handleSubmit} className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
+    <AuthShell>
+      <BrandPanel
+        eyebrow="Espace membre"
+        title="Gérez votre commerce en toute simplicité."
+        subtitle="Retrouvez vos produits, transactions, sites et parrainages dans un espace unique et sécurisé."
+      >
+        <BrandPoints
+          points={[
+            { title: 'Tableau de bord clair', text: 'Actifs, passifs et opérations en un coup d’œil.' },
+            { title: 'Transactions suivies', text: 'Dépôts, retraits et échanges tracés étape par étape.' },
+            { title: 'Accès sécurisé', text: 'Votre compte protégé, vos données restent à vous.' },
+          ]}
+        />
+        <p className="mt-6 border-t border-white/20 pt-4 text-xs tracking-wide text-violet-200">
+          © Etokisana — Plateforme de commerce et gestion
+        </p>
+      </BrandPanel>
+
+      <FormPanel>
+        <AuthHeader
+          title="Bon retour parmi nous"
+          subtitle={
+            <>
+              Connectez-vous à votre compte <span className="font-semibold text-violet-700">Etokisana</span> pour reprendre votre activité.
+            </>
+          }
+        />
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="votre@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="border-neutral-300"
-            />
+            <Label htmlFor="email">Adresse e-mail</Label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                <MailOutlinedIcon fontSize="small" />
+              </span>
+              <Input
+                id="email"
+                type="email"
+                placeholder="votre@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                className={inputClass}
+              />
+            </div>
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="password">Mot de passe</Label>
-            <div className="relative flex-items-center">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Mot de passe</Label>
+              <Link to="/forgot-password" className="text-xs font-semibold text-violet-700 hover:text-violet-800 hover:underline">
+                Mot de passe oublié ?
+              </Link>
+            </div>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                <LockOutlinedIcon fontSize="small" />
+              </span>
               <Input
                 id="password"
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="border-neutral-300 pr-10"
+                autoComplete="current-password"
+                className={`${inputClass} pr-10`}
                 placeholder="••••••••"
                 value={password}
               />
               <button
                 type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
                 tabIndex={-1}
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
@@ -109,27 +142,39 @@ export default function Login() {
                 {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
               </button>
             </div>
-            <div className="flex justify-end mt-2 text-sm">
-              <Link to="/forgot-password" className="text-violet-600 hover:text-violet-700">Mot de passe oublié ?</Link>
-            </div>
           </div>
+
           <Button
             type="submit"
-            status={loading ? "loading" : "active"}
-            className={`w-full bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center`}
+            status={loading ? 'loading' : 'active'}
+            className="h-11 w-full rounded-md text-[15px] font-semibold shadow-none"
             disabled={loading}
           >
             {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
             Se connecter
           </Button>
         </form>
-        <div className={`text-center text-sm ${isMobile ? 'mt-4 mb-6' : 'mt-6'}`}>
-          <span className="text-neutral-600">Pas encore de compte ? </span>
-          <Link to="/register" className="text-violet-600 hover:text-violet-700">
-            S'inscrire
-          </Link>
+
+        <div className="mt-6 flex items-center gap-3" aria-hidden="true">
+          <span className="h-px flex-1 bg-neutral-200" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">Nouveau ici</span>
+          <span className="h-px flex-1 bg-neutral-200" />
         </div>
-      </Card>
-    </div>
+
+        <div className="mt-6 border border-neutral-200 bg-neutral-50 px-4 py-4 text-center">
+          <p className="text-sm text-neutral-600">
+            Pas encore de compte ?{' '}
+            <Link to="/register" className="font-semibold text-violet-700 hover:text-violet-800 hover:underline">
+              Créer un compte
+            </Link>
+          </p>
+          <p className="mt-1 text-xs text-neutral-400">Inscription en 3 étapes, sans engagement.</p>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-neutral-400">
+          En vous connectant, vous acceptez nos conditions d’utilisation.
+        </p>
+      </FormPanel>
+    </AuthShell>
   );
 }

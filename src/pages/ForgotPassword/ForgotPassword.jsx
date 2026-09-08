@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Button } from '../../components/ui/button';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { toast } from 'sonner';
-import LogoImage from '../../assets/logo/logo.png';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import { forgotPassword } from '../../services/auth.service';
 import { Loader } from '../../components/ui/loader';
+import { AuthShell, BrandPanel, BrandPoints, FormPanel, AuthHeader } from '../../components/commons/authLayout';
 
 const ForgotPassword = () => {
     usePageTitle('Mot de passe oublié');
@@ -23,7 +23,6 @@ const ForgotPassword = () => {
         }
         setLoading(true);
         try {
-            // Try calling backend; payload key may vary depending on backend
             await forgotPassword({ userEmail: userEmail.trim() });
             toast.success("Si l'email/code est enregistré, un lien de réinitialisation a été envoyé.");
             setUserEmail('');
@@ -35,35 +34,58 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="min-h-screen w-full bg-linear-to-br from-gray-200 to-gray-300 flex flex-col items-center justify-center p-4">
-            <Card className="w-full max-w-md p-6 sm:p-8 rounded-xl border border-neutral-200 bg-neutral-100">
-                <div className="flex flex-col items-center mb-6">
-                    <img src={LogoImage} alt="Logo Etokisana" className="h-16 sm:h-20 w-auto mb-4" />
-                    <h1 className="text-2xl sm:text-3xl font-bold text-violet-700 mb-1 text-center">Mot de passe oublié</h1>
-                    <p className="text-sm sm:text-base text-neutral-700 text-center">Entrez votre email ou code utilisateur pour recevoir les instructions de réinitialisation.</p>
-                </div>
-                <form onSubmit={handleSubmit} className="space-y-6">
+        <AuthShell>
+            <BrandPanel
+                eyebrow="Assistance"
+                title="Retrouvez l’accès à votre compte."
+                subtitle="Saisissez votre e-mail ou votre code utilisateur : nous vous envoyons un lien de réinitialisation sécurisé."
+            >
+                <BrandPoints
+                    points={[
+                        { title: 'Lien sécurisé', text: 'Valable une courte durée, à usage unique.' },
+                        { title: 'Simple et rapide', text: 'Deux minutes suffisent pour repartir.' },
+                    ]}
+                />
+            </BrandPanel>
+            <FormPanel>
+                <AuthHeader
+                    title="Mot de passe oublié"
+                    subtitle="Entrez votre e-mail ou code utilisateur pour recevoir les instructions de réinitialisation."
+                />
+                <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="space-y-2">
                         <Label htmlFor="userEmail">Email ou code utilisateur</Label>
-                        <Input id="userEmail" type="text" placeholder="votre@email.com ou code" value={userEmail} onChange={e => setUserEmail   (e.target.value)} required className="border-neutral-300" />
+                        <div className="relative">
+                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                                <MailOutlinedIcon fontSize="small" />
+                            </span>
+                            <Input
+                                id="userEmail"
+                                type="text"
+                                placeholder="votre@email.com ou code"
+                                value={userEmail}
+                                onChange={e => setUserEmail(e.target.value)}
+                                required
+                                className="h-11 rounded-md border-neutral-200 bg-neutral-50 pl-10 shadow-none focus-visible:border-violet-600 focus-visible:ring-0"
+                            />
+                        </div>
                     </div>
                     <Button
                         type="submit"
                         status={loading ? "loading" : "active"}
-                        color="default"
-                        className="w-full flex items-center justify-center"
+                        className="h-11 w-full rounded-md font-semibold shadow-none"
                         disabled={loading}
                     >
                         {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                        Envoyer
+                        Envoyer le lien
                     </Button>
                 </form>
-                <div className="text-center text-sm mt-6">
-                    <span className="text-neutral-600">Retour à la page&nbsp;</span>
-                    <Link to="/login" className="text-violet-600 hover:text-violet-700">Connexion</Link>
+                <div className="mt-6 border border-neutral-200 bg-neutral-50 px-4 py-3.5 text-center text-sm text-neutral-600">
+                    Retour à la page&nbsp;
+                    <Link to="/login" className="font-semibold text-violet-700 hover:text-violet-800 hover:underline">Connexion</Link>
                 </div>
-            </Card>
-        </div>
+            </FormPanel>
+        </AuthShell>
     );
 };
 

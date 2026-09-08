@@ -3,7 +3,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import { maskUppercase, maskFirstname, maskPhone } from '../../utils/inputMasks.js';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import UploadOutlinedIcon from '@mui/icons-material/UploadOutlined';
+import { maskUppercase, maskFirstname } from '../../utils/inputMasks.js';
 import {
   validateUserType,
   validateUserNickName,
@@ -27,19 +30,17 @@ import {
 import GoogleMapPicker from '../../components/ui/GoogleMapPicker.jsx';
 import { Link, useNavigate } from 'react-router-dom';
 import usePageTitle from '../../utils/usePageTitle.jsx';
-import useScreenType from '../../utils/useScreenType.jsx';
 import { Button } from '../../components/ui/button.jsx';
 import { toast } from 'sonner';
-import { Card } from '../../components/ui/card.jsx';
 import { Input } from '../../components/ui/input.jsx';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { Label } from '../../components/ui/label.jsx';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
-import LogoImage from '../../assets/logo/logo.png';
 import { createUser } from '../../services/auth.service.js';
 import { getAllUsersSelect } from '../../services/user.service';
 import { Loader } from '../../components/ui/loader';
+import { AuthShell, BrandPanel, FormPanel, AuthHeader, AuthSteps } from '../../components/commons/authLayout';
 
 const steps = [
   "Type d'utilisateur",
@@ -47,11 +48,23 @@ const steps = [
   'Documents & Images',
 ];
 
+const fieldClass =
+  'rounded-md border-neutral-200 bg-neutral-50 shadow-none focus-visible:border-violet-600 focus-visible:ring-0';
+const errorClass = 'text-xs text-red-500 mt-1 flex items-center gap-1';
+const sectionTitleClass = 'border-l-2 border-violet-600 pl-3 text-sm font-bold text-neutral-900';
+
+function FieldError({ message }) {
+  if (!message) return null;
+  return (
+    <span className={errorClass}>
+      <InfoOutlinedIcon fontSize="small" className="inline" /> {message}
+    </span>
+  );
+}
+
 const Register = () => {
-  // Handle form submission (final step)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validation étape 3 avant soumission
     const errors = {};
     errors.avatar = validateAvatar(form.avatar);
     errors.documents = validateDocuments(form.documents);
@@ -69,9 +82,7 @@ const Register = () => {
     }
     setLoading(true);
     try {
-      // Préparer les données pour createUser
       const dataToSend = { ...form };
-      // Nettoyer les tableaux de fichiers nulls éventuels
       if (Array.isArray(dataToSend.carteFiscal)) {
         dataToSend.carteFiscal = dataToSend.carteFiscal.filter(f => f);
       }
@@ -91,10 +102,8 @@ const Register = () => {
       setLoading(false);
     }
   };
-  // Step navigation handlers
-  const [fieldErrors, setFieldErrors] = useState({});
 
-  // mapping userId -> name for parrain lookup
+  const [fieldErrors, setFieldErrors] = useState({});
   const [usersMap, setUsersMap] = useState({});
 
   const nextStep = () => {
@@ -124,7 +133,6 @@ const Register = () => {
       errors.userMainLng = validateUserMainLng(form.userMainLng);
       errors.documentType = validateDocumentType(form.documentType);
       errors.identityCardNumber = validateIdentityCardNumber(form.identityCardNumber);
-      // Filtrer les erreurs non vides
       const filtered = Object.fromEntries(Object.entries(errors).filter(([_, v]) => v));
       if (Object.keys(filtered).length > 0) {
         setFieldErrors(filtered);
@@ -141,7 +149,6 @@ const Register = () => {
         errors.carteStat = validateCarteStat(form.carteStat);
         errors.carteFiscal = validateCarteFiscal(form.carteFiscal);
       }
-      // Filtrer les erreurs non vides
       const filtered = Object.fromEntries(Object.entries(errors).filter(([_, v]) => v));
       if (Object.keys(filtered).length > 0) {
         setFieldErrors(filtered);
@@ -157,10 +164,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const { isMobile } = useScreenType();
-  const [showInfo, setShowInfo] = useState(false);
 
-  // Load users map once for parrain lookup
   useEffect(() => {
     let mounted = true;
     getAllUsersSelect().then(res => {
@@ -175,7 +179,6 @@ const Register = () => {
     return () => { mounted = false; };
   }, []);
 
-  // État global du formulaire
   const [form, setForm] = useState({
     userName: '',
     userNickName: '',
@@ -203,7 +206,7 @@ const Register = () => {
     parrain2ID: '',
     parrain2Name: '',
   });
-  // Handle input changes for both text and file inputs
+
   const handleChange = (e) => {
     const { name, type, value, files, dataset } = e.target;
     let maskedValue = value;
@@ -211,12 +214,8 @@ const Register = () => {
       maskedValue = maskUppercase(value);
     } else if (name === 'userFirstname') {
       maskedValue = maskFirstname(value);
-    } else if (name === 'userPhone') {
-      maskedValue = maskPhone(value);
     }
-    // Masquer l'erreur du champ concerné dès la saisie
     setFieldErrors(prev => ({ ...prev, [name]: undefined }));
-    // For dynamic file arrays (carteFiscal, documents, carteStat)
     if ((name === 'carteFiscal' || name === 'documents' || name === 'carteStat') && dataset.idx !== undefined) {
       const idx = parseInt(dataset.idx, 10);
       setForm((prev) => {
@@ -226,13 +225,11 @@ const Register = () => {
       });
       return;
     }
-    // Update value
     setForm((prev) => ({
       ...prev,
       [name]: type === 'file' ? files[0] : maskedValue,
     }));
 
-    // If user types a parrain ID of exactly 8 chars, lookup name from usersMap
     if ((name === 'parrain1ID' || name === 'parrain2ID')) {
       const code = (maskedValue || '').trim();
       if (code.length === 8) {
@@ -252,7 +249,6 @@ const Register = () => {
     }
   };
 
-  // Populate parrain names when parrain ID is provided (on load or programmatic set)
   useEffect(() => {
     if (!usersMap) return;
     setForm(prev => {
@@ -265,175 +261,179 @@ const Register = () => {
     });
   }, [usersMap, form.parrain1ID, form.parrain2ID]);
 
+  const docErrors = typeof validateDocuments === 'function' ? validateDocuments(form.documents) : [];
+
   return (
-    <div className={`min-h-screen w-full bg-linear-to-br from-neutral-50 to-neutral-100 flex items-center ${isMobile ? 'justify-start pt-6 pb-8' : 'justify-center p-0'}`}>
-      <Card className="w-full h-full max-w-none rounded-none p-0 border-none shadow-none overflow-auto">
-        <div className="flex flex-col md:flex-row w-full">
-          {!isMobile && (
-            <div className="md:w-1/2 bg-violet-50 flex flex-col items-center justify-center p-6 md:p-8 border-b md:border-b-0 md:border-r border-neutral-200 h-56 md:h-auto">
-              <img src={LogoImage} alt="Logo Etokisana" className="h-14 md:h-20 w-auto mb-4 md:mb-6" />
-              <h1 className="text-2xl md:text-3xl font-bold text-violet-700 mb-2">Créer un compte</h1>
-              <p className="text-sm md:text-base text-neutral-700 mb-6 text-center">
-                Rejoignez <span className="font-bold text-violet-600">Etokisana</span>
-              </p>
-              <div className="flex justify-center gap-2 mb-4 md:mb-6">
-                {steps.map((label, idx) => (
-                  <div
-                    key={label}
-                    className={`h-2 w-6 md:w-8 rounded-full transition-all ${step >= idx ? 'bg-violet-600' : 'bg-neutral-200'}`}
-                  />
-                ))}
+    <AuthShell>
+      <BrandPanel
+        eyebrow="Inscription gratuite"
+        title="Rejoignez Etokisana en 3 étapes."
+        subtitle="Un seul compte pour vendre, acheter, suivre vos opérations et développer votre réseau."
+      >
+        <ol className="space-y-px border border-white/20 bg-violet-700">
+          {steps.map((label, idx) => {
+            const active = idx === step;
+            const done = idx < step;
+            return (
+              <li
+                key={label}
+                className={`flex items-center gap-3 px-4 py-3 ${idx > 0 ? 'border-t border-white/20' : ''} ${active ? 'bg-white text-violet-800' : 'text-white'}`}
+              >
+                <span className={`flex h-7 w-7 shrink-0 items-center justify-center text-xs font-bold ${active ? 'bg-violet-600 text-white' : done ? 'bg-white text-violet-700' : 'border border-white/40 text-white'}`}>
+                  {done ? '✓' : `0${idx + 1}`}
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold leading-tight">{label}</span>
+                  <span className={`block text-xs ${active ? 'text-violet-600' : 'text-violet-200'}`}>
+                    {done ? 'Complété' : active ? 'Étape en cours' : idx === 0 ? 'Profil & parrains' : idx === 1 ? 'Identité & contact' : 'Justificatifs'}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+        <p className="mt-6 border-t border-white/20 pt-4 text-xs tracking-wide text-violet-200">
+          Vos informations restent confidentielles et sécurisées.
+        </p>
+      </BrandPanel>
+
+      <FormPanel wide>
+        <AuthHeader
+          title="Créer votre compte"
+          subtitle={
+            <>
+              Étape <span className="font-semibold text-violet-700">0{step + 1} sur 03</span> — {steps[step]}.
+            </>
+          }
+        />
+
+        <AuthSteps steps={steps} current={step} />
+
+        <form onSubmit={step === steps.length - 1 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }} className="space-y-6">
+          {/* ÉTAPE 1 */}
+          {step === 0 && (
+            <div className="space-y-6">
+              <div>
+                <h3 className={sectionTitleClass}>Quel est votre profil ?</h3>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {[
+                    { value: 'Particulier', icon: <PersonOutlinedIcon fontSize="small" />, text: 'Compte personnel' },
+                    { value: 'Entreprise', icon: <BusinessOutlinedIcon fontSize="small" />, text: 'Compte professionnel' },
+                  ].map((opt) => {
+                    const selected = form.userType === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => { setForm(f => ({ ...f, userType: opt.value })); setFieldErrors(prev => ({ ...prev, userType: undefined })); }}
+                        aria-pressed={selected}
+                        className={`flex items-center gap-3 border px-4 py-3.5 text-left transition-colors ${selected ? 'border-violet-600 bg-violet-50' : 'border-neutral-200 bg-neutral-50 hover:border-violet-300'}`}
+                      >
+                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center ${selected ? 'bg-violet-600 text-white' : 'bg-white text-neutral-500 border border-neutral-200'}`}>
+                          {opt.icon}
+                        </span>
+                        <span>
+                          <span className={`block text-sm font-bold ${selected ? 'text-violet-800' : 'text-neutral-800'}`}>{opt.value}</span>
+                          <span className="block text-xs text-neutral-500">{opt.text}</span>
+                        </span>
+                        <span className={`ml-auto flex h-5 w-5 items-center justify-center border text-[11px] font-bold ${selected ? 'border-violet-600 bg-violet-600 text-white' : 'border-neutral-300 bg-white text-transparent'}`}>✓</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <FieldError message={fieldErrors.userType} />
               </div>
-              <div className="flex flex-col gap-1 w-full max-w-xs md:max-w-xs mx-auto px-2 md:px-0">
-                {steps.map((label, idx) => (
-                  <div key={label} className="flex items-center gap-2">
-                    <div className={`h-3 w-3 rounded-full ${step === idx ? 'bg-violet-600' : 'bg-neutral-300'}`}></div>
-                    <span className={`text-sm ${step === idx ? 'text-violet-700 font-semibold' : 'text-neutral-500'}`}>{label}</span>
-                  </div>
-                ))}
+
+              <div>
+                <h3 className={sectionTitleClass}>Vos parrains</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-neutral-500">
+                  Saisissez les codes à 8 caractères reçus de vos parrains. Le nom s’affiche automatiquement.
+                </p>
+                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {[1, 2].map((n) => (
+                    <div key={n} className="border border-neutral-200 bg-neutral-50 p-4">
+                      <Label htmlFor={`parrain${n}ID`}>Code Parrain {n} <span className="text-red-500">*</span></Label>
+                      <Input
+                        id={`parrain${n}ID`}
+                        name={`parrain${n}ID`}
+                        type="text"
+                        placeholder="Ex. A1B2C3D4"
+                        value={form[`parrain${n}ID`]}
+                        onChange={handleChange}
+                        required
+                        maxLength={8}
+                        className="mt-2 border-neutral-200 bg-white font-mono uppercase shadow-none focus-visible:border-violet-600 focus-visible:ring-0"
+                      />
+                      <Input
+                        id={`parrain${n}Name`}
+                        name={`parrain${n}Name`}
+                        type="text"
+                        placeholder={form[`parrain${n}ID`]?.trim().length === 8 ? (form[`parrain${n}Name`] || 'Code non reconnu') : 'Nom du parrain'}
+                        value={form[`parrain${n}Name`]}
+                        readOnly
+                        tabIndex={-1}
+                        className={`mt-2 shadow-none ${form[`parrain${n}Name`] ? 'border-violet-200 bg-violet-50 text-violet-800' : 'border-neutral-200 bg-neutral-100 text-neutral-400'}`}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
-          {/* Right column: Form */}
-          <div className={`${isMobile ? 'w-full px-4' : 'md:w-1/2'} p-4 md:p-8 flex flex-col ${isMobile ? 'justify-start' : 'justify-center'} flex-1 overflow-auto pb-20`}>
-            {/* Mobile header with toggle to show branding/info */}
-            {isMobile && (
-              <div className="w-full flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <img src={LogoImage} alt="Logo" className="h-10 w-auto" />
-                  <div>
-                    <div className="text-lg font-semibold text-violet-700">Créer un compte</div>
-                    <div className="text-xs text-neutral-600">Rejoignez Etokisana</div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowInfo(s => !s)}
-                  className="text-sm text-violet-600 hover:text-violet-700 bg-violet-50 px-3 py-1 rounded-md"
-                >
-                  {showInfo ? 'Fermer' : 'Infos'}
-                </button>
-              </div>
-            )}
 
-            {/* Collapsible mobile info (branding + steps) */}
-            {isMobile && showInfo && (
-              <div className="mb-4 p-3 bg-violet-50 rounded-md border border-violet-100">
-                <div className="flex flex-col items-start gap-2">
-                  <div className="text-sm font-semibold text-violet-700">Pourquoi s'inscrire ?</div>
-                  <div className="text-xs text-neutral-700">Rejoignez Etokisana pour gérer vos produits, transactions et sites.</div>
-                  <div className="w-full mt-2 grid grid-cols-3 gap-2">
-                    {steps.map((label, idx) => (
-                      <div key={label} className="flex flex-col items-center">
-                        <div className={`h-2 w-8 rounded-full ${step >= idx ? 'bg-violet-600' : 'bg-neutral-200'}`} />
-                        <div className="text-[10px] text-neutral-600 mt-1 text-center">{label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={step === steps.length - 1 ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }} className="space-y-4">
-              {/* ÉTAPE 1 : Choix du type d'utilisateur */}
-              {step === 0 && (
-                <div className={`${isMobile ? 'w-full px-2' : 'flex flex-col gap-2 max-w-xs mx-auto'}`}>
-                  <Label htmlFor="userType" className="text-sm">
-                    Type d'utilisateur
-                    <span className='text-red-400'>*</span>
-                  </Label>
-                  <Select value={form.userType} onValueChange={val => { setForm(f => ({ ...f, userType: val })); setFieldErrors({ ...fieldErrors, userType: undefined }); }}>
-                    <SelectTrigger aria-invalid={!!fieldErrors.userType}>
-                      <SelectValue placeholder="Sélectionner le type d'utilisateur" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Particulier">Particulier</SelectItem>
-                      <SelectItem value="Entreprise">Entreprise</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {fieldErrors.userType && (
-                    <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userType}</span>
-                  )}
-                  <div className='space-y-2'>
-                    <Label htmlFor="parrain1ID" className="text-sm text-muted-foreground">
-                      Code Parrain 1
-                    </Label>
-                    <Input id="parrain1ID" name="parrain1ID" type="text" placeholder="Code Parrain 1" value={form.parrain1ID} onChange={handleChange} required className="border-neutral-300" />
-                    {/* Read-only display for parrain1 name when code is resolved */}
-                    <Input id="parrain1Name" name="parrain1Name" type="text" placeholder="Nom du parrain 1" value={form.parrain1Name} readOnly className="border-neutral-300 bg-neutral-100 text-neutral-700" />
-                    <Label htmlFor="parrain2ID" className="text-sm text-muted-foreground">
-                      Code Parrain 2
-                    </Label>
-                    <Input id="parrain2ID" name="parrain2ID" type="text" placeholder="Code Parrain 2" value={form.parrain2ID} onChange={handleChange} required className="border-neutral-300" />
-                    {/* Read-only display for parrain2 name when code is resolved */}
-                    <Input id="parrain2Name" name="parrain2Name" type="text" placeholder="Nom du parrain 2" value={form.parrain2Name} readOnly className="border-neutral-300 bg-neutral-100 text-neutral-700" />
-                  </div>
-                </div>
-              )}
-              {/* ÉTAPE 2 */}
-              {step === 1 && form.userType && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* ÉTAPE 2 */}
+          {step === 1 && form.userType && (
+            <div className="space-y-6">
+              <div>
+                <h3 className={sectionTitleClass}>Identité</h3>
+                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="userNickName">
-                      Pseudo
-                      <span className='text-red-400'>*</span>
-                    </Label>
-                    <Input id="userNickName" name="userNickName" type="text" placeholder="Pseudo" value={form.userNickName} onChange={handleChange} required className="border-neutral-300" aria-invalid={!!fieldErrors.userNickName} />
-                    {fieldErrors.userNickName && (
-                      <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userNickName}</span>
-                    )}
+                    <Label htmlFor="userNickName" required>Pseudo</Label>
+                    <Input id="userNickName" name="userNickName" type="text" placeholder="Pseudo" value={form.userNickName} onChange={handleChange} required className={fieldClass} aria-invalid={!!fieldErrors.userNickName} />
+                    <FieldError message={fieldErrors.userNickName} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="userName">
-                      {form.userType === 'Entreprise' ? 'Raison sociale' : 'Nom'}
-                      <span className='text-red-400'>*</span>
-                    </Label>
-                    <Input id="userName" name="userName" type="text" placeholder={form.userType === 'Entreprise' ? 'Raison sociale' : 'Nom'} value={form.userName} onChange={handleChange} required className="border-neutral-300" aria-invalid={!!fieldErrors.userName} />
-                    {fieldErrors.userName && (
-                      <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userName}</span>
-                    )}
+                    <Label htmlFor="userName" required>{form.userType === 'Entreprise' ? 'Raison sociale' : 'Nom'}</Label>
+                    <Input id="userName" name="userName" type="text" placeholder={form.userType === 'Entreprise' ? 'Raison sociale' : 'Nom'} value={form.userName} onChange={handleChange} required className={fieldClass} aria-invalid={!!fieldErrors.userName} />
+                    <FieldError message={fieldErrors.userName} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="userFirstname">{form.userType === 'Entreprise' ? 'Nom commercial' : 'Prénom'}</Label>
-                    <Input id="userFirstname" name="userFirstname" type="text" placeholder={form.userType === 'Entreprise' ? 'Nom commercial' : 'Prénom'} value={form.userFirstname} onChange={handleChange} required className="border-neutral-300" />
+                    <Input id="userFirstname" name="userFirstname" type="text" placeholder={form.userType === 'Entreprise' ? 'Nom commercial' : 'Prénom'} value={form.userFirstname} onChange={handleChange} required className={fieldClass} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="userDateOfBirth">{form.userType === 'Entreprise' ? "Date de création de l'entreprise" : 'Date de naissance'}</Label>
-                    <Input id="userDateOfBirth" name="userDateOfBirth" type="date" placeholder="Date de naissance" value={form.userDateOfBirth} onChange={handleChange} className="border-neutral-300" />
-                    {fieldErrors.userDateOfBirth && (
-                      <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userDateOfBirth}</span>
-                    )}
+                    <Label htmlFor="userDateOfBirth">{form.userType === 'Entreprise' ? "Date de création" : 'Date de naissance'}</Label>
+                    <Input id="userDateOfBirth" name="userDateOfBirth" type="date" value={form.userDateOfBirth} onChange={handleChange} className={fieldClass} />
+                    <FieldError message={fieldErrors.userDateOfBirth} />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className={sectionTitleClass}>Contact & accès</h3>
+                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="userEmail" required>Email</Label>
+                    <Input id="userEmail" name="userEmail" type="email" placeholder="vous@exemple.com" value={form.userEmail} onChange={handleChange} required className={fieldClass} aria-invalid={!!fieldErrors.userEmail} />
+                    <FieldError message={fieldErrors.userEmail} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="userEmail">
-                      Email
-                      <span className='text-red-400'>*</span>
-                    </Label>
-                    <Input id="userEmail" name="userEmail" type="email" placeholder="Email" value={form.userEmail} onChange={handleChange} required className="border-neutral-300" aria-invalid={!!fieldErrors.userEmail} />
-                    {fieldErrors.userEmail && (
-                      <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userEmail}</span>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="userPassword">
-                      Mot de passe
-                      <span className='text-red-400'>*</span>
-                    </Label>
+                    <Label htmlFor="userPassword" required>Mot de passe</Label>
                     <div className="relative">
                       <Input
                         id="userPassword"
                         name="userPassword"
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="Mot de passe"
+                        placeholder="8 caractères minimum"
                         value={form.userPassword}
                         onChange={handleChange}
                         required
-                        className="border-neutral-300 pr-10"
+                        className={`${fieldClass} pr-10`}
                         aria-invalid={!!fieldErrors.userPassword}
                       />
                       <button
                         type="button"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                        className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-200/60 hover:text-neutral-700"
                         tabIndex={-1}
                         onClick={() => setShowPassword((v) => !v)}
                         aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
@@ -442,322 +442,225 @@ const Register = () => {
                       </button>
                     </div>
                     {form.userPassword.length >= 8 ? (
-                      <span className="text-xs text-violet-500 flex items-center"><CheckCircleIcon fontSize="small" className="mr-1 inline" /> Mot de passe valide.</span>
+                      <span className="text-xs text-violet-600 flex items-center gap-1"><CheckCircleIcon fontSize="small" className="inline" /> Mot de passe valide.</span>
                     ) : (
-                      <span className="text-xs text-orange-300 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> Le mot de passe doit contenir au moins 8 caractères.</span>
+                      <span className="text-xs text-neutral-400 flex items-center gap-1"><InfoOutlinedIcon fontSize="small" className="inline" /> 8 caractères minimum.</span>
                     )}
-                    {fieldErrors.userPassword && (
-                      <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userPassword}</span>
-                    )}
+                    <FieldError message={fieldErrors.userPassword} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="userPhone">
-                      Téléphone
-                      <span className='text-red-400'>*</span>
-                    </Label>
-                    <div className="relative">
-                      <div className={isMobile ? 'flex flex-col' : 'flex items-center gap-2'}>
-                        <PhoneInput
-                          country={'mg'}
-                          value={form.userPhone}
-                          onChange={phone => setForm(prev => ({ ...prev, userPhone: phone }))}
-                          inputProps={{
-                            name: 'userPhone',
-                            required: true,
-                            id: 'userPhone',
-                            placeholder: 'Numéro sans indicatif',
-                            autoComplete: 'tel',
-                            'aria-invalid': !!fieldErrors.userPhone
-                          }}
-                          enableSearch
-                          containerClass="w-full"
-                          inputClass="border-neutral-300 w-full h-9 rounded-md px-3 py-1 text-base"
-                          buttonClass="border-none bg-transparent px-2 flex items-center"
-                          dropdownClass="rounded-md bg-input-background text-base shadow-lg z-50"
-                          searchClass="rounded-md px-2 py-1 mb-2 w-full"
-                          disableCountryCode={false}
-                          disableDropdown={false}
-                          masks={{ mg: '.. .. ... ..' }}
-                        />
-                        {fieldErrors.userPhone && (
-                          <span className="text-xs text-red-500 mt-2 flex items-center w-full text-left"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userPhone}</span>
-                        )}
-                      </div>
-                    </div>
+                    <Label htmlFor="userPhone" required>Téléphone</Label>
+                    <PhoneInput
+                      country={'mg'}
+                      value={form.userPhone}
+                      onChange={phone => { setForm(prev => ({ ...prev, userPhone: phone })); setFieldErrors(prev => ({ ...prev, userPhone: undefined })); }}
+                      inputProps={{ name: 'userPhone', required: true, id: 'userPhone', placeholder: 'Numéro sans indicatif', autoComplete: 'tel', 'aria-invalid': !!fieldErrors.userPhone }}
+                      enableSearch
+                      containerClass="w-full"
+                      inputClass="border-neutral-200 bg-neutral-50 w-full h-10 text-sm shadow-none"
+                      buttonClass="border border-neutral-200 bg-white px-2"
+                      dropdownClass="bg-white text-sm border border-neutral-200 z-50"
+                      searchClass="px-2 py-1 mb-2 w-full border border-neutral-200 text-sm"
+                      masks={{ mg: '.. .. ... ..' }}
+                    />
+                    <FieldError message={fieldErrors.userPhone} />
                   </div>
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2">
                     <Label htmlFor="userAddress">Adresse</Label>
-                    <Input id="userAddress" name="userAddress" type="text" placeholder="Adresse" value={form.userAddress} onChange={handleChange} required className="border-neutral-300" aria-invalid={!!fieldErrors.userAddress} />
-                    {fieldErrors.userAddress && (
-                      <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userAddress}</span>
-                    )}
+                    <Input id="userAddress" name="userAddress" type="text" placeholder="Lot, rue, ville" value={form.userAddress} onChange={handleChange} required className={fieldClass} aria-invalid={!!fieldErrors.userAddress} />
+                    <FieldError message={fieldErrors.userAddress} />
                   </div>
-                  {/* Champs manager pour Entreprise */}
-                  {form.userType === 'Entreprise' && (
-                    <>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="managerName">Nom du gérant</Label>
-                        <Input id="managerName" name="managerName" type="text" placeholder="Nom du gérant" value={form.managerName} onChange={handleChange} required className="border-neutral-300" />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="managerEmail">Email du gérant</Label>
-                        <Input id="managerEmail" name="managerEmail" type="email" placeholder="Email du gérant" value={form.managerEmail} onChange={handleChange} required className="border-neutral-300" />
-                      </div>
-                    </>
-                  )}
-                  <div className="md:col-span-2 mb-s">
-                    <Label>
-                      Localisation sur la carte
-                      <span className='text-red-400'>*</span>
-                    </Label>
-                    <GoogleMapPicker lat={form.userMainLat} lng={form.userMainLng} onChange={({ lat, lng }) => setForm((prev) => ({ ...prev, userMainLat: lat, userMainLng: lng }))} />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="userMainLat">
-                          Latitude
-                          <span className='text-red-400'>*</span>
-                        </Label>
-                        <Input id="userMainLat" name="userMainLat" type="text" placeholder="-21.45267" value={form.userMainLat} readOnly required className="border-neutral-300 bg-neutral-100 cursor-not-allowed" aria-invalid={!!fieldErrors.userMainLat} />
-                        {fieldErrors.userMainLat && (
-                          <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userMainLat}</span>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="userMainLng">
-                          Longitude
-                          <span className='text-red-400'>*</span>
-                        </Label>
-                        <Input id="userMainLng" name="userMainLng" type="text" placeholder="47.08569" value={form.userMainLng} readOnly required className="border-neutral-300 bg-neutral-100 cursor-not-allowed" aria-invalid={!!fieldErrors.userMainLng} />
-                        {fieldErrors.userMainLng && (
-                          <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.userMainLng}</span>
-                        )}
-                      </div>
+                </div>
+              </div>
+
+              {form.userType === 'Entreprise' && (
+                <div>
+                  <h3 className={sectionTitleClass}>Gérant</h3>
+                  <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="managerName">Nom du gérant</Label>
+                      <Input id="managerName" name="managerName" type="text" placeholder="Nom du gérant" value={form.managerName} onChange={handleChange} required className={fieldClass} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="managerEmail">Email du gérant</Label>
+                      <Input id="managerEmail" name="managerEmail" type="email" placeholder="gerant@entreprise.com" value={form.managerEmail} onChange={handleChange} required className={fieldClass} />
                     </div>
                   </div>
+                </div>
+              )}
+
+              <div>
+                <h3 className={sectionTitleClass}>Localisation <span className="text-red-500">*</span></h3>
+                <div className="mt-3 border border-neutral-200 bg-neutral-50 p-3">
+                  <GoogleMapPicker lat={form.userMainLat} lng={form.userMainLng} onChange={({ lat, lng }) => setForm((prev) => ({ ...prev, userMainLat: lat, userMainLng: lng }))} />
+                  <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="userMainLat" required>Latitude</Label>
+                      <Input id="userMainLat" name="userMainLat" type="text" placeholder="-21.45267" value={form.userMainLat} readOnly required className="border-neutral-200 bg-neutral-100 shadow-none cursor-not-allowed" aria-invalid={!!fieldErrors.userMainLat} />
+                      <FieldError message={fieldErrors.userMainLat} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="userMainLng" required>Longitude</Label>
+                      <Input id="userMainLng" name="userMainLng" type="text" placeholder="47.08569" value={form.userMainLng} readOnly required className="border-neutral-200 bg-neutral-100 shadow-none cursor-not-allowed" aria-invalid={!!fieldErrors.userMainLng} />
+                      <FieldError message={fieldErrors.userMainLng} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className={sectionTitleClass}>Pièce d’identité <span className="text-red-500">*</span></h3>
+                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="documentType">
-                      {form.userType === 'Entreprise' ? "Pièce d'identité du gérant" : "Pièce d'identité"}
-                      <span className='text-red-400'>*</span>
-                    </Label>
-                    <Select value={form.documentType} onValueChange={val => { setForm(f => ({ ...f, documentType: val })); setFieldErrors({ ...fieldErrors, documentType: undefined }); }}>
-                      <SelectTrigger aria-invalid={!!fieldErrors.documentType}>
+                    <Label htmlFor="documentType" required>{form.userType === 'Entreprise' ? "Pièce du gérant" : 'Type de pièce'}</Label>
+                    <Select value={form.documentType} onValueChange={val => { setForm(f => ({ ...f, documentType: val })); setFieldErrors(prev => ({ ...prev, documentType: undefined })); }}>
+                      <SelectTrigger aria-invalid={!!fieldErrors.documentType} className="rounded-md border-neutral-200 bg-neutral-50 shadow-none">
                         <SelectValue placeholder="Sélectionner" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-md shadow-none border-neutral-200">
                         <SelectItem value="cin">CIN</SelectItem>
                         <SelectItem value="passeport">Passeport</SelectItem>
                         <SelectItem value="permis-de-conduire">Permis de conduire</SelectItem>
                       </SelectContent>
                     </Select>
-                    {fieldErrors.documentType && (
-                      <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.documentType}</span>
-                    )}
+                    <FieldError message={fieldErrors.documentType} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="identityCardNumber">
-                      Numéro de pièce d'identité
-                      <span className='text-red-400'>*</span>
-                    </Label>
-                    <Input id="identityCardNumber" name="identityCardNumber" type="text" placeholder="Numéro de pièce d'identité" value={form.identityCardNumber} onChange={handleChange} required className="border-neutral-300" aria-invalid={!!fieldErrors.identityCardNumber} />
-                    {fieldErrors.identityCardNumber && (
-                      <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.identityCardNumber}</span>
-                    )}
+                    <Label htmlFor="identityCardNumber" required>Numéro de pièce</Label>
+                    <Input id="identityCardNumber" name="identityCardNumber" type="text" placeholder="N° de pièce" value={form.identityCardNumber} onChange={handleChange} required className={fieldClass} aria-invalid={!!fieldErrors.identityCardNumber} />
+                    <FieldError message={fieldErrors.identityCardNumber} />
                   </div>
                 </div>
-              )}
-              {/* ÉTAPE 3 */}
-              {step === 2 && form.userType && (
-                <div className="space-y-6">
+              </div>
+            </div>
+          )}
 
-                  {/* Avatar */}
-                  <div className="flex flex-col md:flex-row items-center gap-6">
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor="avatar">Avatar (PNG)</Label>
-                      <Input
-                        id="avatar"
-                        name="avatar"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleChange}
-                        className="border-neutral-300"
-                      />
-                      {fieldErrors.avatar && (
-                        <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.avatar}</span>
-                      )}
-                    </div>
-                    {form.avatar && (
-                      <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-violet-400 shadow-lg">
-                        <img src={URL.createObjectURL(form.avatar)} alt="Avatar" className="w-full h-full object-cover" />
-                      </div>
-                    )}
+          {/* ÉTAPE 3 */}
+          {step === 2 && form.userType && (
+            <div className="space-y-6">
+              <div>
+                <h3 className={sectionTitleClass}>Photo de profil</h3>
+                <div className="mt-3 flex flex-col gap-4 border border-neutral-200 bg-neutral-50 p-4 sm:flex-row sm:items-center">
+                  <div className="flex-1 space-y-2">
+                    <Label htmlFor="avatar">Avatar (PNG)</Label>
+                    <label htmlFor="avatar" className="flex cursor-pointer items-center gap-3 border border-dashed border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-500 hover:border-violet-400 hover:text-violet-700">
+                      <UploadOutlinedIcon fontSize="small" />
+                      <span>{form.avatar ? form.avatar.name : 'Choisir une image…'}</span>
+                    </label>
+                    <Input id="avatar" name="avatar" type="file" accept="image/*" onChange={handleChange} className="hidden" />
+                    <FieldError message={fieldErrors.avatar} />
                   </div>
-
-                  {/* Documents (fixe: 2 inputs) */}
-                  <div className="space-y-4">
-                    <Label>
-                      {form.documentType === 'cin' && "CIN (PNG recto-verso)"}
-                      {form.documentType === 'passeport' && "Passeport (PNG recto-verso)"}
-                      {form.documentType === 'permis-de-conduire' && "Permis de conduire (PNG recto-verso)"}
-                      {!form.documentType && "Documents (PNG recto-verso)"}
-                    </Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {[0, 1].map((idx) => {
-                        // Erreur dynamique pour chaque document
-                        let docErrors = [];
-                        if (typeof validateDocuments === 'function') {
-                          docErrors = validateDocuments(form.documents);
-                        }
-                        return (
-                          <div key={idx} className="relative flex flex-col items-center justify-center">
-                            <Input
-                              id={`documents-${idx}`}
-                              name="documents"
-                              type="file"
-                              accept="image/*,.pdf"
-                              data-idx={idx}
-                              onChange={handleChange}
-                              className="border-neutral-300 w-full"
-                            />
-                            {docErrors && Array.isArray(docErrors) && docErrors[idx] && (
-                              <span className="text-xs text-red-500 mt-1 flex items-center w-full text-left"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {docErrors[idx]}</span>
-                            )}
-                            {form.documents[idx] && (
-                              <img
-                                src={URL.createObjectURL(form.documents[idx])}
-                                alt={`Document ${idx + 1}`}
-                                className="w-20 h-20 md:w-24 md:h-24 object-cover mt-2 rounded border"
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Entreprise: Logo + Carte Stat + Carte Fiscale */}
-                  {form.userType === 'Entreprise' && (
-                    <div className="space-y-4">
-                      {/* Logo */}
-                      <div className="p-4 bg-neutral-50 rounded-lg flex items-center gap-6">
-                        <div className="flex flex-col gap-2">
-                          <Label htmlFor="logo">Logo (JPEG)</Label>
-                          <Input
-                            id="logo"
-                            name="logo"
-                            type="file"
-                            accept="image/jpeg"
-                            onChange={handleChange}
-                            className="border-neutral-300"
-                          />
-                          {fieldErrors.logo && (
-                            <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.logo}</span>
-                          )}
-                        </div>
-                        {form.logo && (
-                          <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 border-violet-400 shadow-lg">
-                            <img src={URL.createObjectURL(form.logo)} alt="Logo" className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Carte Stat (recto + verso) */}
-                      <div className="p-4 bg-neutral-50 rounded-lg space-y-4">
-                        <Label>Carte Stat (PNG recto-verso)</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {[0, 1].map((idx) => (
-                            <div key={idx} className="relative border rounded-lg p-2 flex flex-col items-center justify-center bg-white shadow-sm">
-                              <Input
-                                id={`carteStat-${idx}`}
-                                name="carteStat"
-                                type="file"
-                                accept="image/*,.pdf"
-                                data-idx={idx}
-                                onChange={handleChange}
-                                className="border-neutral-300 w-full"
-                              />
-                              {fieldErrors.carteStat && Array.isArray(fieldErrors.carteStat) && fieldErrors.carteStat.includes(`carte stat ${idx + 1}`) && (
-                                <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.carteStat}</span>
-                              )}
-                              {form.carteStat && form.carteStat[idx] && (
-                                <img
-                                  src={URL.createObjectURL(form.carteStat[idx])}
-                                  alt={`Carte Stat ${idx + 1}`}
-                                  className="w-20 h-20 md:w-24 md:h-24 object-cover mt-2 rounded border"
-                                />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Carte Fiscale (fixe: 2 inputs) */}
-                      <div className="p-4 bg-neutral-50 rounded-lg space-y-4">
-                        <Label>Carte fiscale (PNG recto-verso)</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {[0, 1].map((idx) => (
-                            <div key={idx} className="relative border rounded-lg p-2 flex flex-col items-center justify-center bg-white shadow-sm">
-                              <Input
-                                id={`carteFiscal-${idx}`}
-                                name="carteFiscal"
-                                type="file"
-                                accept="image/*,.pdf"
-                                data-idx={idx}
-                                onChange={handleChange}
-                                className="border-neutral-300 w-full"
-                              />
-                              {fieldErrors.carteFiscal && fieldErrors.carteFiscal.includes(`carte fiscale ${idx + 1}`) && (
-                                <span className="text-xs text-red-500 mt-1 flex items-center"><InfoOutlinedIcon fontSize="small" className="mr-1 inline" /> {fieldErrors.carteFiscal}</span>
-                              )}
-                              {form.carteFiscal[idx] && (
-                                <img
-                                  src={URL.createObjectURL(form.carteFiscal[idx])}
-                                  alt={`Carte fiscale ${idx + 1}`}
-                                  className="w-20 h-20 md:w-24 md:h-24 object-cover mt-2 rounded border"
-                                />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                  {form.avatar && (
+                    <img src={URL.createObjectURL(form.avatar)} alt="Avatar" className="h-20 w-20 border border-violet-200 object-cover" />
                   )}
                 </div>
-              )}
-              <div className="flex gap-2 pt-2 flex-wrap">
-                {step > 0 && (
-                  <Button type="button" variant="outline" onClick={prevStep} disabled={loading}>
-                    {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                    Précédent
-                  </Button>
-                )}
-                {step < steps.length - 1 && (
-                  <Button type="button" status="active" color="default" onClick={nextStep} disabled={loading}>
-                    Suivant
-                  </Button>
-                )}
-                {step === steps.length - 1 && (
-                  <Button
-                    type="submit"
-                    status={loading ? "loading" : "active"}
-                    color="default"
-                    disabled={loading}
-                  >
-                    {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                    S'inscrire
-                  </Button>
-                )}
               </div>
-            </form>
-            <div className="text-center text-sm mt-6">
-              <span className="text-neutral-600">Déjà un compte ? </span>
-              <Link to="/login" className="text-violet-600 hover:text-violet-700">
-                Se connecter
-              </Link>
+
+              <div>
+                <h3 className={sectionTitleClass}>
+                  {form.documentType === 'cin' && 'CIN (recto-verso)'}
+                  {form.documentType === 'passeport' && 'Passeport (recto-verso)'}
+                  {form.documentType === 'permis-de-conduire' && 'Permis (recto-verso)'}
+                  {!form.documentType && 'Documents (recto-verso)'}
+                </h3>
+                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {[0, 1].map((idx) => (
+                    <div key={idx} className="border border-neutral-200 bg-neutral-50 p-4">
+                      <Label htmlFor={`documents-${idx}`}>{idx === 0 ? 'Recto' : 'Verso'}</Label>
+                      <label htmlFor={`documents-${idx}`} className="mt-2 flex cursor-pointer items-center gap-3 border border-dashed border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-500 hover:border-violet-400 hover:text-violet-700">
+                        <UploadOutlinedIcon fontSize="small" />
+                        <span className="truncate">{form.documents[idx] ? form.documents[idx].name : `Choisir le fichier ${idx + 1}…`}</span>
+                      </label>
+                      <Input id={`documents-${idx}`} name="documents" type="file" accept="image/*,.pdf" data-idx={idx} onChange={handleChange} className="hidden" />
+                      {Array.isArray(docErrors) && docErrors[idx] && (
+                        <span className={errorClass}><InfoOutlinedIcon fontSize="small" className="inline" /> {docErrors[idx]}</span>
+                      )}
+                      {form.documents[idx] && form.documents[idx].type?.startsWith('image/') && (
+                        <img src={URL.createObjectURL(form.documents[idx])} alt={`Document ${idx + 1}`} className="mt-2 h-20 w-full border border-neutral-200 object-cover" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {form.userType === 'Entreprise' && (
+                <>
+                  <div>
+                    <h3 className={sectionTitleClass}>Logo de l’entreprise (JPEG)</h3>
+                    <div className="mt-3 flex flex-col gap-4 border border-neutral-200 bg-neutral-50 p-4 sm:flex-row sm:items-center">
+                      <div className="flex-1 space-y-2">
+                        <Label htmlFor="logo">Logo</Label>
+                        <label htmlFor="logo" className="flex cursor-pointer items-center gap-3 border border-dashed border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-500 hover:border-violet-400 hover:text-violet-700">
+                          <UploadOutlinedIcon fontSize="small" />
+                          <span>{form.logo ? form.logo.name : 'Choisir le logo…'}</span>
+                        </label>
+                        <Input id="logo" name="logo" type="file" accept="image/jpeg" onChange={handleChange} className="hidden" />
+                        <FieldError message={fieldErrors.logo} />
+                      </div>
+                      {form.logo && (
+                        <img src={URL.createObjectURL(form.logo)} alt="Logo" className="h-20 w-20 border border-violet-200 object-cover" />
+                      )}
+                    </div>
+                  </div>
+
+                  {[
+                    { key: 'carteStat', title: 'Carte Stat (recto-verso)' },
+                    { key: 'carteFiscal', title: 'Carte fiscale (recto-verso)' },
+                  ].map(({ key, title }) => (
+                    <div key={key}>
+                      <h3 className={sectionTitleClass}>{title}</h3>
+                      <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {[0, 1].map((idx) => (
+                          <div key={idx} className="border border-neutral-200 bg-neutral-50 p-4">
+                            <Label htmlFor={`${key}-${idx}`}>{idx === 0 ? 'Recto' : 'Verso'}</Label>
+                            <label htmlFor={`${key}-${idx}`} className="mt-2 flex cursor-pointer items-center gap-3 border border-dashed border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-500 hover:border-violet-400 hover:text-violet-700">
+                              <UploadOutlinedIcon fontSize="small" />
+                              <span className="truncate">{form[key]?.[idx] ? form[key][idx].name : 'Choisir le fichier…'}</span>
+                            </label>
+                            <Input id={`${key}-${idx}`} name={key} type="file" accept="image/*,.pdf" data-idx={idx} onChange={handleChange} className="hidden" />
+                            {form[key]?.[idx] && form[key][idx].type?.startsWith('image/') && (
+                              <img src={URL.createObjectURL(form[key][idx])} alt={`${title} ${idx + 1}`} className="mt-2 h-20 w-full border border-neutral-200 object-cover" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <FieldError message={Array.isArray(fieldErrors[key]) ? fieldErrors[key].join(', ') : fieldErrors[key]} />
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="flex flex-col-reverse gap-3 border-t border-neutral-200 pt-5 sm:flex-row sm:items-center">
+            {step > 0 && (
+              <Button type="button" variant="outline" onClick={prevStep} disabled={loading} className="h-11 rounded-md border-neutral-300 bg-white px-6 shadow-none">
+                Précédent
+              </Button>
+            )}
+            <div className="sm:ml-auto">
+              {step < steps.length - 1 ? (
+                <Button type="button" status="active" onClick={nextStep} disabled={loading} className="h-11 w-full rounded-md px-8 font-semibold shadow-none sm:w-auto">
+                  Continuer
+                </Button>
+              ) : (
+                <Button type="submit" status={loading ? 'loading' : 'active'} disabled={loading} className="h-11 w-full rounded-md px-8 font-semibold shadow-none sm:w-auto">
+                  {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                  Créer mon compte
+                </Button>
+              )}
             </div>
           </div>
+        </form>
+
+        <div className="mt-6 border border-neutral-200 bg-neutral-50 px-4 py-3.5 text-center text-sm text-neutral-600">
+          Déjà un compte ?{' '}
+          <Link to="/login" className="font-semibold text-violet-700 hover:text-violet-800 hover:underline">
+            Se connecter
+          </Link>
         </div>
-      </Card>
-    </div>
+      </FormPanel>
+    </AuthShell>
   );
 };
 
