@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Label } from '../../components/ui/label';
 import { Loader } from '../../components/ui/loader';
 import { Input } from '../../components/ui/input';
 import {
@@ -16,7 +15,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import ActifsTable from '../../components/commons/ActifsTable';
-import { getAllUsersSelect } from '../../services/user.service';
+import { getAllUsersSelect, getUsers } from '../../services/user.service';
 import { virementDroit, getMyDepositsAtOthers } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
 import { getSitesByUser } from '../../services/site.service';
@@ -58,20 +57,24 @@ const VirementDroit = () => {
   const [selectedActifForVirement, setSelectedActifForVirement] = useState(null);
 
   const [usersOptions, setUsersOptions] = useState([]);
-  const [recipientSearch, setRecipientSearch] = useState('');
+  const [recipientCode, setRecipientCode] = useState('');
+  const [recipientName, setRecipientName] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState(null);
+  const [recipientLookupLoading, setRecipientLookupLoading] = useState(false);
+  const [recipientNotFound, setRecipientNotFound] = useState(false);
+  const recipientSearchCodeRef = useRef('');
   const [, setLoadingRecipients] = useState(false);
   const [loadingVirement, setLoadingVirement] = useState(false);
 
-	const [detenteurSearch, setDetenteurSearch] = useState('');
-	const [selectedDetenteur, setSelectedDetenteur] = useState(null);
+  const [detenteurSearch, setDetenteurSearch] = useState('');
+  const [selectedDetenteur, setSelectedDetenteur] = useState(null);
 
-	const [recipientSites, setRecipientSites] = useState([]);
-	const [loadingRecipientSites, setLoadingRecipientSites] = useState(false);
-	const [selectedRecipientSite, setSelectedRecipientSite] = useState(null);
-	const [siteSearch, setSiteSearch] = useState('');
-	const [siteOpen, setSiteOpen] = useState(false);
-	const [siteHighlighted, setSiteHighlighted] = useState(0);
+  const [recipientSites, setRecipientSites] = useState([]);
+  const [loadingRecipientSites, setLoadingRecipientSites] = useState(false);
+  const [selectedRecipientSite, setSelectedRecipientSite] = useState(null);
+  const [siteSearch, setSiteSearch] = useState('');
+  const [siteOpen, setSiteOpen] = useState(false);
+  const [siteHighlighted, setSiteHighlighted] = useState(0);
 
   const dateFormat = useDateFormat();
 
@@ -135,6 +138,20 @@ const VirementDroit = () => {
     }
   };
 
+  const resolveRecipientByCode = async (code) => {
+    setRecipientLookupLoading(true);
+    try {
+      const res = await getUsers({ search: code, limit: 10 });
+      const list = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      return list.find(member => member?.userId === code) || list[0] || null;
+    } catch (err) {
+      console.error('Erreur lors de la recherche du bénéficiaire:', err);
+      return null;
+    } finally {
+      setRecipientLookupLoading(false);
+    }
+  };
+
   const filteredSites = recipientSites.filter(site => (site?.siteName || '').toLowerCase().includes(siteSearch.toLowerCase()));
 
   useEffect(() => {
@@ -164,7 +181,10 @@ const VirementDroit = () => {
     setSelectedActifForVirement(actif);
     setForm({ quantite: '', observations: '' });
     setSelectedRecipient(null);
-    setRecipientSearch('');
+    setRecipientCode('');
+    setRecipientName('');
+    setRecipientNotFound(false);
+    recipientSearchCodeRef.current = '';
     setSelectedDetenteur(null);
     setSelectedRecipientSite(null);
     setSiteSearch('');
@@ -244,7 +264,10 @@ const VirementDroit = () => {
       setVirerModalOpen(false);
       setSelectedActifForVirement(null);
       setSelectedRecipient(null);
-      setRecipientSearch('');
+      setRecipientCode('');
+      setRecipientName('');
+      setRecipientNotFound(false);
+      recipientSearchCodeRef.current = '';
       setForm({ quantite: '', observations: '' });
       await fetchActifs();
     } catch (err) {
@@ -291,7 +314,10 @@ const VirementDroit = () => {
             if (!open) {
               setSelectedActifForVirement(null);
               setSelectedRecipient(null);
-              setRecipientSearch('');
+              setRecipientCode('');
+              setRecipientName('');
+              setRecipientNotFound(false);
+              recipientSearchCodeRef.current = '';
               setSelectedDetenteur(null);
               setDetenteurSearch('');
               setForm({ quantite: '', observations: '' });
@@ -318,34 +344,63 @@ const VirementDroit = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">Bénéficiaire (Z) <span className="text-red-500 ml-0.5">*</span></label>
-                  <UserAutocomplete
-                    users={usersOptions}
-                    value={recipientSearch}
-                    onChange={setRecipientSearch}
-                    onSelect={(user) => {
-                      setSelectedRecipient(user);
-                      setRecipientSearch(`${user.name || user.userName || user.userNickName || ''} - ${user.numeroMembre || user._id || ''}`);
-                    }}
-                    getSubLabel={(user) => `${user.numeroMembre || ''}`}
-                    placeholder={usersOptions.length === 0 ? 'Chargement...' : 'Rechercher le bénéficiaire...'}
-                    className="w-full border-neutral-300"
-                  />
-                </div>
+                  <div className={`rounded-md p-2 ${recipientNotFound ? 'border border-red-400 bg-red-50' : ''}`}>
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="ID du membre (8 caractères)"
+                        value={recipientCode}
+                        maxLength={8}
+                        style={{ textTransform: 'uppercase' }}
+                        onChange={e => {
+                          const value = e.target.value.toUpperCase();
+                          const code = value.trim();
+                          recipientSearchCodeRef.current = code;
+                          setRecipientCode(value);
+                          setSelectedRecipient(null);
+                          setRecipientName('');
+                          setRecipientNotFound(false);
 
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-neutral-700 mb-1">Détenteur (Y) <span className="text-red-500 ml-0.5">*</span></label>
-                  <UserAutocomplete
-                    users={usersOptions}
-                    value={detenteurSearch}
-                    onChange={setDetenteurSearch}
-                    onSelect={(user) => {
-                      setSelectedDetenteur(user);
-                      setDetenteurSearch(`${user.name || user.userName || user.userNickName || ''} - ${user.numeroMembre || user._id || ''}`);
-                    }}
-                    getSubLabel={(user) => `${user.numeroMembre || ''}`}
-                    placeholder={usersOptions.length === 0 ? 'Chargement...' : 'Rechercher le détenteur...'}
-                    className="w-full border-neutral-300"
-                  />
+                          if (code.length === 8) {
+                            resolveRecipientByCode(code).then(found => {
+                              if (recipientSearchCodeRef.current !== code) return;
+                              if (!found) {
+                                setRecipientNotFound(true);
+                                return;
+                              }
+                              const name = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || found.name || '');
+                              setSelectedRecipient(found);
+                              setRecipientName(name);
+                            });
+                          }
+                        }}
+                        className={`border-neutral-300 ${recipientNotFound ? 'border-red-400 bg-white' : ''}`}
+                      />
+                      <div className="flex items-center justify-between text-xs">
+                        {recipientLookupLoading ? (
+                          <span className="text-neutral-400">Recherche en cours...</span>
+                        ) : recipientName ? (
+                          <span className="text-emerald-600">Code valide</span>
+                        ) : recipientNotFound ? (
+                          <span className="text-red-600">Code invalide</span>
+                        ) : recipientCode && recipientCode.length !== 8 ? (
+                          <span className="text-amber-600">Le code doit contenir exactement 8 caractères</span>
+                        ) : (
+                          <span className="text-neutral-500" />
+                        )}
+                        <span className="text-neutral-400">{recipientCode.length}/8</span>
+                      </div>
+                      <Input
+                        placeholder={recipientNotFound ? 'Membre non trouvé' : 'Nom du bénéficiaire'}
+                        value={recipientName}
+                        readOnly
+                        disabled={recipientLookupLoading}
+                        className={`border-neutral-300 bg-neutral-100 text-neutral-700 ${recipientNotFound ? 'border-red-400 text-red-600' : ''}`}
+                      />
+                      {recipientNotFound && (
+                        <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre et le nom du membre.</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -401,6 +456,22 @@ const VirementDroit = () => {
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">Détenteur (Y) <span className="text-red-500 ml-0.5">*</span></label>
+                  <UserAutocomplete
+                    users={usersOptions}
+                    value={detenteurSearch}
+                    onChange={setDetenteurSearch}
+                    onSelect={(user) => {
+                      setSelectedDetenteur(user);
+                      setDetenteurSearch(`${user.name || user.userName || user.userNickName || ''} - ${user.numeroMembre || user._id || ''}`);
+                    }}
+                    getSubLabel={(user) => `${user.numeroMembre || ''}`}
+                    placeholder={usersOptions.length === 0 ? 'Chargement...' : 'Rechercher le détenteur...'}
+                    className="w-full border-neutral-300"
+                  />
                 </div>
 
                 <div>
