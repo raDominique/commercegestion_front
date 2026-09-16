@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import ActifsTable from '../../components/commons/ActifsTable';
+import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { getAllUsersSelect, getUsers } from '../../services/user.service';
 import { virementDroit, getMyDepositsAtOthers } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
@@ -80,9 +81,14 @@ const VirementDroit = () => {
 
   const [actifs, setActifs] = useState([]);
   const [loadingActifs, setLoadingActifs] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
 
   // Filtres
   const [filterSearch, setFilterSearch] = useState('');
+  const [filterSiteId, setFilterSiteId] = useState('');
+  const [filterProductId, setFilterProductId] = useState('');
   const [filterDetenteurId, setFilterDetenteurId] = useState('');
 
   const fetchActifs = async () => {
@@ -91,10 +97,18 @@ const VirementDroit = () => {
       const token = getAccessToken() || localStorage.getItem('token');
       if (!token) {
         setActifs([]);
+        setTotal(0);
         return;
       }
 
-      const params = { page: 1, limit: 100, search: filterSearch || undefined, detentaireId: filterDetenteurId || undefined };
+      const params = {
+        page,
+        limit,
+        search: filterSearch || undefined,
+        siteId: filterSiteId || undefined,
+        productId: filterProductId || undefined,
+        detentaireId: filterDetenteurId || undefined,
+      };
       const res = await getMyDepositsAtOthers(params, token);
       const body = res?.data;
       const rawList = Array.isArray(body?.data) ? body.data : (Array.isArray(body) ? body : []);
@@ -114,15 +128,18 @@ const VirementDroit = () => {
         depotId: item.siteDestinationId?._id || item.siteOrigineId?._id,
       }));
       setActifs(actifsList);
+      const totalCount = Number(body?.total ?? body?.pagination?.total ?? rawList.length);
+      setTotal(Number.isFinite(totalCount) ? totalCount : 0);
     } catch (err) {
       console.error('Erreur fetchActifs:', err);
       setActifs([]);
+      setTotal(0);
     } finally {
       setLoadingActifs(false);
     }
   };
 
-  useEffect(() => { fetchActifs(); }, [filterSearch, filterDetenteurId]);
+  useEffect(() => { fetchActifs(); }, [page, limit, filterSearch, filterSiteId, filterProductId, filterDetenteurId]);
 
   const fetchUsers = async () => {
     try {
@@ -300,12 +317,22 @@ const VirementDroit = () => {
                   <Input
                     placeholder="Rechercher par produit ou transaction..."
                     value={filterSearch}
-                    onChange={e => setFilterSearch(e.target.value)}
+                    onChange={e => { setFilterSearch(e.target.value); setPage(1); }}
                     className="border-neutral-300"
                   />
                 </div>
               </div>
               <ActifsTable loading={loadingActifs} actifs={actifs} dateFormat={dateFormat} isDesktop={isDesktop} onVirerDroit={handleOpenVirementFromActif} />
+              <PaginationControls
+                page={page}
+                total={total}
+                limit={limit}
+                loading={loadingActifs}
+                onPageChange={setPage}
+                onLimitChange={setLimit}
+                showLimitSelector
+                className="pt-2"
+              />
             </div>
           </Card>
 
