@@ -114,6 +114,7 @@ const VirementDroit = () => {
       const rawList = Array.isArray(body?.data) ? body.data : (Array.isArray(body) ? body : []);
       const actifsList = rawList.map(item => ({
         _id: item._id,
+        productId: item.productId,
         productName: item.productId?.productName || '-',
         productCode: item.productId?.codeCPC || '',
         productImage: item.productId?.productImage || null,
@@ -147,9 +148,11 @@ const VirementDroit = () => {
       const res = await getAllUsersSelect();
       const list = Array.isArray(res) ? res : (res?.data ?? []);
       setUsersOptions(list || []);
+      return list || [];
     } catch (err) {
       console.error('Erreur fetchUsers:', err);
       setUsersOptions([]);
+      return [];
     } finally {
       setLoadingRecipients(false);
     }
@@ -207,11 +210,26 @@ const VirementDroit = () => {
     setSiteSearch('');
     const detName = renderPerson(actif?.detentaire);
     setDetenteurSearch(detName);
-    // try to auto-select the detenteur from usersOptions
-    const found = findUserByName(detName, usersOptions);
-    if (found) setSelectedDetenteur(found);
+    const detenteurId = typeof actif?.detentaire === 'object'
+      ? (actif.detentaire?._id || actif.detentaire?.id)
+      : actif?.detentaire;
+    const found = detenteurId
+      ? usersOptions.find(option => (option?._id || option?.id || option?.userId) === detenteurId)
+      : findUserByName(detName, usersOptions);
+    if (found) {
+      setSelectedDetenteur(found);
+    } else if (detenteurId && typeof actif?.detentaire === 'object') {
+      setSelectedDetenteur(actif.detentaire);
+    }
     setVirerModalOpen(true);
-    if (!usersOptions || usersOptions.length === 0) fetchUsers();
+    if (!usersOptions || usersOptions.length === 0) {
+      fetchUsers().then(list => {
+        const loadedDetenteur = detenteurId
+          ? list.find(option => (option?._id || option?.id || option?.userId) === detenteurId)
+          : findUserByName(detName, list);
+        if (loadedDetenteur) setSelectedDetenteur(loadedDetenteur);
+      });
+    }
   };
 
   const handleConfirmVirement = async () => {
@@ -296,6 +314,21 @@ const VirementDroit = () => {
   };
 
   const actif = selectedActifForVirement;
+  const productId = actif?.productId?._id || actif?.productId || actif?.id || '';
+  const quantity = Number(form.quantite);
+  const quantityIsValid = form.quantite !== ''
+    && Number.isFinite(quantity)
+    && quantity > 0
+    && (actif?.quantite == null || quantity <= Number(actif.quantite));
+  const isVirementFormValid = Boolean(
+    selectedRecipient
+    && selectedDetenteur
+    && selectedRecipientSite
+    && productId
+    && quantityIsValid
+    && !recipientLookupLoading
+    && !loadingRecipientSites
+  );
 
   return (
     <div className="px-4 md:px-6 mx-auto">
@@ -372,37 +405,46 @@ const VirementDroit = () => {
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">Bénéficiaire (Z) <span className="text-red-500 ml-0.5">*</span></label>
                   <div className={`rounded-md p-2 ${recipientNotFound ? 'border border-red-400 bg-red-50' : ''}`}>
-                    <div className="space-y-2">
-                      <Input
-                        placeholder="ID du membre (8 caractères)"
-                        value={recipientCode}
-                        maxLength={8}
-                        style={{ textTransform: 'uppercase' }}
-                        onChange={e => {
-                          const value = e.target.value.toUpperCase();
-                          const code = value.trim();
-                          recipientSearchCodeRef.current = code;
-                          setRecipientCode(value);
-                          setSelectedRecipient(null);
-                          setRecipientName('');
-                          setRecipientNotFound(false);
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <Input
+                          placeholder="ID du membre (8 caractères)"
+                          value={recipientCode}
+                          maxLength={8}
+                          style={{ textTransform: 'uppercase' }}
+                          onChange={e => {
+                            const value = e.target.value.toUpperCase();
+                            const code = value.trim();
+                            recipientSearchCodeRef.current = code;
+                            setRecipientCode(value);
+                            setSelectedRecipient(null);
+                            setRecipientName('');
+                            setRecipientNotFound(false);
 
-                          if (code.length === 8) {
-                            resolveRecipientByCode(code).then(found => {
-                              if (recipientSearchCodeRef.current !== code) return;
-                              if (!found) {
-                                setRecipientNotFound(true);
-                                return;
-                              }
-                              const name = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || found.name || '');
-                              setSelectedRecipient(found);
-                              setRecipientName(name);
-                            });
-                          }
-                        }}
-                        className={`border-neutral-300 ${recipientNotFound ? 'border-red-400 bg-white' : ''}`}
+                            if (code.length === 8) {
+                              resolveRecipientByCode(code).then(found => {
+                                if (recipientSearchCodeRef.current !== code) return;
+                                if (!found) {
+                                  setRecipientNotFound(true);
+                                  return;
+                                }
+                                const name = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || found.name || '');
+                                setSelectedRecipient(found);
+                                setRecipientName(name);
+                              });
+                            }
+                          }}
+                          className={`border-neutral-300 ${recipientNotFound ? 'border-red-400 bg-white' : ''}`}
+                        />
+                      </div>
+                      <Input
+                        placeholder={recipientNotFound ? 'Membre non trouvé' : 'Nom du bénéficiaire'}
+                        value={recipientName}
+                        readOnly
+                        disabled={recipientLookupLoading}
+                        className={`border-neutral-300 bg-neutral-100 text-neutral-700 ${recipientNotFound ? 'border-red-400 text-red-600' : ''}`}
                       />
-                      <div className="flex items-center justify-between text-xs">
+                      <div className="sm:col-span-2 flex items-center justify-between text-xs">
                         {recipientLookupLoading ? (
                           <span className="text-neutral-400">Recherche en cours...</span>
                         ) : recipientName ? (
@@ -416,15 +458,8 @@ const VirementDroit = () => {
                         )}
                         <span className="text-neutral-400">{recipientCode.length}/8</span>
                       </div>
-                      <Input
-                        placeholder={recipientNotFound ? 'Membre non trouvé' : 'Nom du bénéficiaire'}
-                        value={recipientName}
-                        readOnly
-                        disabled={recipientLookupLoading}
-                        className={`border-neutral-300 bg-neutral-100 text-neutral-700 ${recipientNotFound ? 'border-red-400 text-red-600' : ''}`}
-                      />
                       {recipientNotFound && (
-                        <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre et le nom du membre.</p>
+                        <p className="sm:col-span-2 text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre et le nom du membre.</p>
                       )}
                     </div>
                   </div>
@@ -533,7 +568,7 @@ const VirementDroit = () => {
 
                 <div className="flex justify-end gap-2 pt-4">
                   <Button variant="outline" onClick={() => setVirerModalOpen(false)}>Annuler</Button>
-                  <Button status={loadingVirement ? 'loading' : (selectedRecipient && selectedDetenteur && selectedRecipientSite ? 'active' : 'inactive')} onClick={handleConfirmVirement} disabled={!selectedRecipient || !selectedDetenteur || !selectedRecipientSite || loadingVirement} color="default">
+                  <Button status={loadingVirement ? 'loading' : (isVirementFormValid ? 'active' : 'inactive')} onClick={handleConfirmVirement} disabled={!isVirementFormValid || loadingVirement} color="default">
                     {loadingVirement && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer le virement
                   </Button>
                 </div>
