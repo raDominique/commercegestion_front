@@ -88,15 +88,16 @@ const getQuantityLines = (item) => {
 	const hasPending = statuts.some(statutIsPending);
 	const isPartial = hasApproved && hasPending;
 	const realQuantity = getQuantityValue(item?.quantite);
+	const disponibleQuantity = getQuantityValue(item?.quantiteDisponible);
 	const lines = [];
 	if (hasApproved && realQuantity !== 0) {
-		lines.push({ label: 'Réelle', value: realQuantity });
+		lines.push({ label: 'Disponible', value: isPartial ? disponibleQuantity : realQuantity });
 	}
 	if (hasPending) {
 		lines.push({ label: 'En attente', value: getQuantityValue(item?.quantiteEnAttente) });
 	}
-	if (lines.length === 0 && realQuantity !== 0) {
-		lines.push({ label: 'Réelle', value: realQuantity });
+	if (lines.length === 0 && disponibleQuantity !== 0) {
+		lines.push({ label: 'Disponible', value: disponibleQuantity });
 	}
 	return { lines, isPartial, showLabels: isPartial || lines.length > 1 };
 };
