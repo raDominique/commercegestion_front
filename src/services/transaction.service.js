@@ -280,7 +280,7 @@ export const createVenteTransaction = async (params, token) => {
  * @param {Object} params - Paramètres du virement
  * @param {string} params.beneficiaryId - ID du bénéficiaire (Z)
  * @param {string} params.detentaireId - ID du détenteur (Y)
- * @param {string} params.siteId - ID du site où le produit est déposé
+ * @param {string} params.id_transactions - ID de la transaction de dépôt approuvée
  * @param {string} params.productId - ID du produit
  * @param {number} params.quantite - Quantité à transférer
  * @param {string} [params.observations] - Observations facultatives
@@ -291,12 +291,12 @@ export const virementDroit = async (params, token) => {
   return axiosInstance.post(
     '/api/v1/transactions/virement-droit',
     {
+      id_transactions: params.id_transactions,
       beneficiaryId: params.beneficiaryId,
       detentaireId: params.detentaireId,
-      siteId: params.siteId,
       productId: params.productId,
       quantite: Number(params.quantite),
-      observations: params.observations || '',
+      ...(params.observations ? { observations: params.observations } : {}),
     },
     {
       headers: {

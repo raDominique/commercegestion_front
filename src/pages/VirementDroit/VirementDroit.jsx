@@ -16,36 +16,12 @@ import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import ActifsTable from '../../components/commons/ActifsTable';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
-import { getAllUsersSelect, getUsers } from '../../services/user.service';
+import { getUsers } from '../../services/user.service';
 import { virementDroit, getMyDepositsAtOthers } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
-import { getSitesByUser } from '../../services/site.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import useScreenType from '../../utils/useScreenType';
 import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
-
-const findUserByName = (name, users) => {
-  if (!name || !users?.length) return null;
-  const q = name.toLowerCase();
-  return users.find(u =>
-    (u?.name || '').toLowerCase() === q ||
-    (u?.userName || '').toLowerCase() === q ||
-    (u?.userNickName || '').toLowerCase() === q ||
-    `${(u?.userNickName || '')} ${(u?.userName || '')}`.toLowerCase() === q ||
-    `${(u?.userName || '')} ${(u?.userNickName || '')}`.toLowerCase() === q ||
-    (u?.name || '').toLowerCase().includes(q) ||
-    (u?.userNickName || '').toLowerCase().includes(q)
-  ) || null;
-};
-
-const renderPerson = (person) => {
-  if (!person) return '-';
-  if (typeof person === 'string') return person;
-  if (person.userNickName) return person.userNickName;
-  if (person.userName) return person.userName;
-  if (person.name) return person.name;
-  return '-';
-};
 
 const VirementDroit = () => {
   usePageTitle('Virement de droit');
@@ -57,25 +33,27 @@ const VirementDroit = () => {
   const [virerModalOpen, setVirerModalOpen] = useState(false);
   const [selectedActifForVirement, setSelectedActifForVirement] = useState(null);
 
-  const [usersOptions, setUsersOptions] = useState([]);
   const [recipientCode, setRecipientCode] = useState('');
   const [recipientName, setRecipientName] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState(null);
   const [recipientLookupLoading, setRecipientLookupLoading] = useState(false);
   const [recipientNotFound, setRecipientNotFound] = useState(false);
   const recipientSearchCodeRef = useRef('');
-  const [, setLoadingRecipients] = useState(false);
   const [loadingVirement, setLoadingVirement] = useState(false);
-
+  // Conservés uniquement pendant la transition d'interface : le nouveau
+  // contrat n'envoie ni site ni détenteur choisi par l'utilisateur.
+  const [usersOptions] = useState([]);
   const [detenteurSearch, setDetenteurSearch] = useState('');
-  const [selectedDetenteur, setSelectedDetenteur] = useState(null);
-
-  const [recipientSites, setRecipientSites] = useState([]);
-  const [loadingRecipientSites, setLoadingRecipientSites] = useState(false);
-  const [selectedRecipientSite, setSelectedRecipientSite] = useState(null);
+  const [, setSelectedDetenteur] = useState(null);
+  const [recipientSites] = useState([]);
+  const [loadingRecipientSites] = useState(false);
+  const [, setSelectedRecipientSite] = useState(null);
   const [siteSearch, setSiteSearch] = useState('');
   const [siteOpen, setSiteOpen] = useState(false);
   const [siteHighlighted, setSiteHighlighted] = useState(0);
+  const filteredSites = recipientSites.filter((site) => (
+    (site?.siteName || '').toLowerCase().includes(siteSearch.toLowerCase())
+  ));
 
   const dateFormat = useDateFormat();
 
@@ -120,7 +98,8 @@ const VirementDroit = () => {
         productImage: item.productId?.productImage || null,
         depot: item.siteDestinationId?.siteName || item.siteOrigineId?.siteName || '-',
         depotAdresse: item.siteDestinationId?.siteAddress || item.siteOrigineId?.siteAddress || '-',
-        quantite: item.quantite,
+        quantite: item.remainingQuantity ?? item.remainingQuantite ?? item.reliquat ?? item.quantite,
+        status: item.status,
         detentaire: item.detentaire,
         ayant_droit: item.ayant_droit,
         dateCreation: item.createdAt,
@@ -142,22 +121,6 @@ const VirementDroit = () => {
 
   useEffect(() => { fetchActifs(); }, [page, limit, filterSearch, filterSiteId, filterProductId, filterDetenteurId]);
 
-  const fetchUsers = async () => {
-    try {
-      setLoadingRecipients(true);
-      const res = await getAllUsersSelect();
-      const list = Array.isArray(res) ? res : (res?.data ?? []);
-      setUsersOptions(list || []);
-      return list || [];
-    } catch (err) {
-      console.error('Erreur fetchUsers:', err);
-      setUsersOptions([]);
-      return [];
-    } finally {
-      setLoadingRecipients(false);
-    }
-  };
-
   const resolveRecipientByCode = async (code) => {
     setRecipientLookupLoading(true);
     try {
@@ -172,32 +135,19 @@ const VirementDroit = () => {
     }
   };
 
-  const filteredSites = recipientSites.filter(site => (site?.siteName || '').toLowerCase().includes(siteSearch.toLowerCase()));
-
-  useEffect(() => {
-    const recId = selectedRecipient?._id || selectedRecipient?.id;
-    if (recId) {
-      setLoadingRecipientSites(true);
-      setSelectedRecipientSite(null);
-      setSiteSearch('');
-      getSitesByUser(recId)
-        .then(res => {
-          const sites = Array.isArray(res) ? res : (res?.data ?? []);
-          setRecipientSites(Array.isArray(sites) ? sites : []);
-        })
-        .catch(() => {
-          toast.error('Erreur de chargement des sites du bénéficiaire');
-          setRecipientSites([]);
-        })
-        .finally(() => setLoadingRecipientSites(false));
-    } else {
-      setRecipientSites([]);
-      setSelectedRecipientSite(null);
-      setSiteSearch('');
-    }
-  }, [selectedRecipient]);
-
   const handleOpenVirementFromActif = (actif) => {
+    if (actif?.status && String(actif.status).toUpperCase() !== 'APPROVED') {
+      toast.error('Le dépôt de référence doit être approuvé.');
+      return;
+    }
+    const currentUserId = String(user?._id ?? user?.id ?? user?.sub ?? user?.userId ?? '');
+    const rightsHolderId = typeof actif?.ayant_droit === 'object'
+      ? actif.ayant_droit?._id || actif.ayant_droit?.id
+      : actif?.ayant_droit;
+    if (currentUserId && rightsHolderId && currentUserId !== String(rightsHolderId)) {
+      toast.error('Seul l’ayant droit actuel peut initier ce virement.');
+      return;
+    }
     setSelectedActifForVirement(actif);
     setForm({ quantite: '', observations: '' });
     setSelectedRecipient(null);
@@ -205,40 +155,12 @@ const VirementDroit = () => {
     setRecipientName('');
     setRecipientNotFound(false);
     recipientSearchCodeRef.current = '';
-    setSelectedDetenteur(null);
-    setSelectedRecipientSite(null);
-    setSiteSearch('');
-    const detName = renderPerson(actif?.detentaire);
-    setDetenteurSearch(detName);
-    const detenteurId = typeof actif?.detentaire === 'object'
-      ? (actif.detentaire?._id || actif.detentaire?.id)
-      : actif?.detentaire;
-    const found = detenteurId
-      ? usersOptions.find(option => (option?._id || option?.id || option?.userId) === detenteurId)
-      : findUserByName(detName, usersOptions);
-    if (found) {
-      setSelectedDetenteur(found);
-    } else if (detenteurId && typeof actif?.detentaire === 'object') {
-      setSelectedDetenteur(actif.detentaire);
-    }
     setVirerModalOpen(true);
-    if (!usersOptions || usersOptions.length === 0) {
-      fetchUsers().then(list => {
-        const loadedDetenteur = detenteurId
-          ? list.find(option => (option?._id || option?.id || option?.userId) === detenteurId)
-          : findUserByName(detName, list);
-        if (loadedDetenteur) setSelectedDetenteur(loadedDetenteur);
-      });
-    }
   };
 
   const handleConfirmVirement = async () => {
-    if (!selectedRecipient || !selectedDetenteur || !selectedActifForVirement) {
-      toast.error('Veuillez sélectionner un détenteur et un bénéficiaire');
-      return;
-    }
-    if (!selectedRecipientSite) {
-      toast.error('Veuillez sélectionner le site du bénéficiaire');
+    if (!selectedRecipient || !selectedActifForVirement) {
+      toast.error('Veuillez sélectionner un bénéficiaire');
       return;
     }
     try {
@@ -259,43 +181,39 @@ const VirementDroit = () => {
         return;
       }
 
-      const detentaireId = selectedDetenteur?._id || selectedDetenteur?.id || '';
+      const detentaireId = typeof actif?.detentaire === 'object'
+        ? actif.detentaire?._id || actif.detentaire?.id
+        : actif?.detentaire;
       if (!detentaireId) {
-        toast.error('Veuillez sélectionner le détenteur (Y)');
+        toast.error('Détenteur introuvable pour ce dépôt');
         setLoadingVirement(false);
         return;
       }
 
-      const siteId = selectedRecipientSite?._id || selectedRecipientSite?.id || '';
-      if (!siteId) {
-        toast.error('Site du bénéficiaire introuvable');
-        setLoadingVirement(false);
-        return;
-      }
-
-      const quantiteVal = Number(form.quantite || actif?.quantite || 1);
+      const quantiteVal = Number(form.quantite);
       if (!Number.isFinite(quantiteVal) || quantiteVal <= 0) {
         toast.error('Quantité invalide');
         setLoadingVirement(false);
         return;
       }
       if (actif?.quantite != null && quantiteVal > Number(actif.quantite)) {
-        toast.error('Quantité supérieure au stock disponible');
+        toast.error('Quantité supérieure au reliquat de ce dépôt');
         setLoadingVirement(false);
         return;
       }
 
       const payload = {
+        id_transactions: actif._id,
         beneficiaryId: selectedRecipient._id || selectedRecipient.id || selectedRecipient,
         detentaireId,
-        siteId,
         productId,
         quantite: quantiteVal,
-        observations: form.observations || `Virement de droit vers ${renderPerson(selectedRecipient)}`,
+        ...(form.observations.trim() ? { observations: form.observations.trim() } : {}),
       };
 
       await virementDroit(payload, token);
-      toast.success(`Virement de droit effectué vers ${renderPerson(selectedRecipient)}`);
+      const reliquat = Math.max(0, Number(actif.quantite) - quantiteVal);
+      toast.success(`Virement de droit effectué : ${quantiteVal} transféré(s) au bénéficiaire. Reliquat du dépôt : ${reliquat}.`);
       setVirerModalOpen(false);
       setSelectedActifForVirement(null);
       setSelectedRecipient(null);
@@ -322,12 +240,9 @@ const VirementDroit = () => {
     && (actif?.quantite == null || quantity <= Number(actif.quantite));
   const isVirementFormValid = Boolean(
     selectedRecipient
-    && selectedDetenteur
-    && selectedRecipientSite
     && productId
     && quantityIsValid
     && !recipientLookupLoading
-    && !loadingRecipientSites
   );
 
   return (
@@ -465,7 +380,7 @@ const VirementDroit = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="hidden">
                   <label className="block text-sm font-medium text-neutral-700 mb-1">Site du bénéficiaire (Z) <span className="text-red-500 ml-0.5">*</span></label>
                   <div className="relative">
                     <Input
@@ -520,7 +435,7 @@ const VirementDroit = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="hidden">
                   <label className="block text-sm font-medium text-neutral-700 mb-1">Détenteur (Y) <span className="text-red-500 ml-0.5">*</span></label>
                   <UserAutocomplete
                     users={usersOptions}
@@ -541,11 +456,16 @@ const VirementDroit = () => {
                   <Input disabled value={actif?.productName || '-'} className="border-neutral-300 bg-neutral-50" />
                 </div>
 
+                <p className="text-xs text-neutral-500">
+                  Le détenteur et le site du dépôt de référence restent inchangés.
+                </p>
+
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">Quantité <span className="text-red-500 ml-0.5">*</span></label>
                   <Input
                     type="number"
-                    min={1}
+                    min="any"
+                    step="any"
                     max={actif?.quantite ?? undefined}
                     value={form.quantite}
                     onChange={(e) => setForm(prev => ({ ...prev, quantite: e.target.value }))}
