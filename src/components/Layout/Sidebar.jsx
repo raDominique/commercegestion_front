@@ -1,12 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Separator } from '../ui/separator';
 import { privateRoutes } from '../../routes/routes';
-import { useNotificationsContext } from '../../context/NotificationsContext';
-import { formatNotifCount } from '../../utils/notificationTarget';
 
 function Sidebar({ user, isDesktop = true }) {
   const location = useLocation();
-  const { unreadByRoute } = useNotificationsContext();
   if (!user) return null;
 
   const isActive = (path) => location.pathname === path;
@@ -42,7 +39,6 @@ function Sidebar({ user, isDesktop = true }) {
   );
 
   const NavLink = ({ item }) => {
-    const count = unreadByRoute[item.path] || 0;
     const active = isActive(item.path);
     return (
       <Link
@@ -60,11 +56,6 @@ function Sidebar({ user, isDesktop = true }) {
           <span className="material-icons shrink-0">menu</span>
         )}
         <span className="text-xs whitespace-normal flex-1">{item.label || item.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-        {count > 0 && (
-          <span className={`min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold ${active ? 'bg-white text-violet-700' : 'bg-violet-600 text-white'}`}>
-            {formatNotifCount(count)}
-          </span>
-        )}
       </Link>
     );
   };
