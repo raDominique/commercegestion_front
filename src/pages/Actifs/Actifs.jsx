@@ -78,28 +78,39 @@ const getStatusBadges = (statut) => {
 	return arr.map((s) => getTransactionStatusBadgeProps(s));
 };
 
-// Lignes de quantité à afficher selon les statuts présents :
-// - approuvé (APPROVED) -> quantité disponible (réelle)
-// - en attente (PENDING) -> quantité en attente
-// `isPartial` indique un mélange APPROVED + PENDING (=> "Approuvé partiellement")
+// Quantité métier affichée selon le statut de l'actif :
+// - APPROVED -> quantiteDisponible
+// - PENDING -> quantiteEnAttente
 const getQuantityLines = (item) => {
 	const statuts = getStatutArray(item?.statut);
 	const hasApproved = statuts.some(statutIsApproved);
 	const hasPending = statuts.some(statutIsPending);
-	const isPartial = hasApproved && hasPending;
-	const realQuantity = getQuantityValue(item?.quantite);
 	const disponibleQuantity = getQuantityValue(item?.quantiteDisponible);
 	const lines = [];
-	if (hasApproved && realQuantity !== 0) {
-		lines.push({ label: 'Disponible', value: isPartial ? disponibleQuantity : realQuantity });
+  if (hasApproved) {
+    lines.push({ label: 'Disponible', value: disponibleQuantity });
 	}
 	if (hasPending) {
 		lines.push({ label: 'En attente', value: getQuantityValue(item?.quantiteEnAttente) });
 	}
-	if (lines.length === 0 && disponibleQuantity !== 0) {
-		lines.push({ label: 'Disponible', value: disponibleQuantity });
+  if (lines.length === 0) {
+    lines.push({ label: 'Quantité', value: getQuantityValue(item?.quantite) });
 	}
-	return { lines, isPartial, showLabels: isPartial || lines.length > 1 };
+  return { lines, showLabels: lines.length > 1 };
+};
+
+const getTypeBadgeProps = (type) => {
+  const normalizedType = String(type || '').toUpperCase();
+  const types = {
+    ACTIF: { label: 'Actif', className: 'bg-blue-50 text-blue-700 border-blue-200' },
+    DEPOT: { label: 'Dépôt', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    RETRAIT: { label: 'Retrait', className: 'bg-orange-50 text-orange-700 border-orange-200' },
+    VIREMENT_DROIT: { label: 'Virement de droit', className: 'bg-violet-50 text-violet-700 border-violet-200' },
+  };
+  return types[normalizedType] || {
+    label: type || '-',
+    className: 'bg-neutral-100 text-neutral-700 border-neutral-200',
+  };
 };
 
 // Style partagé pour la colonne Actions — garanti par inline style
@@ -978,6 +989,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-center">Quantité</TableHead>
+							<TableHead className="text-xs text-neutral-600">Type</TableHead>
 							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
@@ -993,6 +1005,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 					<TableBody>
 						{actifs.map(item => {
 						const statusBadges = getStatusBadges(item.statut);
+						const typeBadge = getTypeBadgeProps(item.type);
 						const { lines: quantityLines, showLabels } = getQuantityLines(item);
 						return (
 							<TableRow key={item.id}>
@@ -1016,6 +1029,9 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 											</div>
 										))}
 									</div>
+								</TableCell>
+								<TableCell className="text-sm">
+									<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>{typeBadge.label}</Badge>
 								</TableCell>
 								<TableCell className="text-sm">
 									<div className="flex flex-wrap gap-1">
@@ -1068,6 +1084,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 		<div className="space-y-4 p-4">
 				{actifs.map(item => {
 				const statusBadges = getStatusBadges(item.statut);
+				const typeBadge = getTypeBadgeProps(item.type);
 				const { lines: quantityLines, showLabels } = getQuantityLines(item);
 				return (
 					<Card key={item.id} className="p-4">
@@ -1096,6 +1113,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								))}
 							</div>
 							<div className="flex flex-wrap gap-1 sm:justify-end">
+								<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>{typeBadge.label}</Badge>
 								{statusBadges.map((statusBadge, idx) => (
 									<Badge key={idx} className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>
 								))}
