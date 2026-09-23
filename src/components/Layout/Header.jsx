@@ -33,21 +33,21 @@ function NotificationItem({ notif, formatRelative, onOpen }) {
         <button
             type="button"
             onClick={() => onOpen(notif)}
-            className={`w-full py-3 px-4 flex gap-2.5 text-left hover:bg-violet-50 cursor-pointer transition rounded-lg ${notif.isRead ? '' : 'bg-violet-50/50'}`}
+            className={`w-full py-3 px-4 flex gap-2.5 text-left hover:bg-violet-50 cursor-pointer transition rounded-lg ${notif.isRead ? 'text-neutral-400' : 'bg-violet-50/50'}`}
         >
             {!notif.isRead && <UnreadDot />}
             <span className="min-w-0 flex-1">
                 {notif.title && (
-                    <span className="block truncate text-sm font-semibold text-neutral-900">{notif.title}</span>
+                    <span className={`block truncate text-sm ${notif.isRead ? 'font-normal text-neutral-400' : 'font-semibold text-neutral-900'}`}>{notif.title}</span>
                 )}
-                <span className="mt-0.5 block text-sm leading-snug text-neutral-600 line-clamp-2">{notif.message}</span>
+                <span className={`mt-0.5 block text-sm leading-snug line-clamp-2 ${notif.isRead ? 'text-neutral-400' : 'text-neutral-600'}`}>{notif.message}</span>
                 <span className="mt-1 block text-xs text-neutral-400">{formatRelative(notif.createdAt)}</span>
             </span>
         </button>
     );
 }
 
-function NotificationBell({ notifications, unreadCount, loadingHistory, markAllRead, formatRelative, onOpen, align = 'end' }) {
+function NotificationBell({ notifications, unreadCount, loadingHistory, markAllRead, onViewAll, formatRelative, onOpen, align = 'end' }) {
     const [open, setOpen] = useState(false);
     const handleOpen = (notif) => {
         onOpen(notif);
@@ -73,6 +73,14 @@ function NotificationBell({ notifications, unreadCount, loadingHistory, markAllR
             <PopoverContent align={align} className="w-80 p-0 bg-white rounded-xl shadow-xl border border-neutral-100">
                 <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between rounded-t-xl">
                     <span className="font-semibold text-neutral-800 text-base">Notifications</span>
+                    <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => { setOpen(false); onViewAll(); }}
+                        className="text-xs font-semibold text-violet-600 hover:text-violet-700 hover:underline"
+                    >
+                        Tout afficher
+                    </button>
                     {unreadCount > 0 && (
                         <button
                             type="button"
@@ -82,6 +90,7 @@ function NotificationBell({ notifications, unreadCount, loadingHistory, markAllR
                             Tout marquer lu
                         </button>
                     )}
+                    </div>
                 </div>
                 <div className="divide-y divide-neutral-200 max-h-80 overflow-y-auto">
                     {loadingHistory ? (
@@ -98,7 +107,7 @@ function NotificationBell({ notifications, unreadCount, loadingHistory, markAllR
 }
 
 function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isDesktop }) {
-    const { profile, notifications, unreadCount, unreadByRoute, loadingHistory, markAllRead, openNotification, formatRelative } = useNotificationsContext();
+    const { profile, notifications, unreadCount, unreadByRoute, loadingHistory, markAllRead, setShowRead, openNotification, formatRelative } = useNotificationsContext();
     const { getTotalItems } = useCart();
     const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
     const [logoutLoading, setLogoutLoading] = useState(false);
@@ -186,7 +195,12 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
         );
     };
 
-    const recentMobile = notifications.slice(0, 8);
+    const unreadNotifications = notifications.filter((notification) => !notification.isRead);
+    const recentMobile = unreadNotifications.slice(0, 8);
+    const handleViewAllNotifications = () => {
+        setShowRead(true);
+        navigate('/notifications');
+    };
 
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-neutral-200">
@@ -203,10 +217,11 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                             {!isDesktop && (
                                 <div className="flex items-center gap-1">
                                     <NotificationBell
-                                        notifications={notifications}
+                                        notifications={unreadNotifications}
                                         unreadCount={unreadCount}
                                         loadingHistory={loadingHistory}
                                         markAllRead={markAllRead}
+                                        onViewAll={handleViewAllNotifications}
                                         formatRelative={formatRelative}
                                         onOpen={handleOpenNotification}
                                         align="end"
@@ -225,10 +240,11 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                             {isDesktop && (
                             <div className="flex items-center gap-2">
                                 <NotificationBell
-                                    notifications={notifications}
+                                    notifications={unreadNotifications}
                                     unreadCount={unreadCount}
                                     loadingHistory={loadingHistory}
                                     markAllRead={markAllRead}
+                                    onViewAll={handleViewAllNotifications}
                                     formatRelative={formatRelative}
                                     onOpen={handleOpenNotification}
                                     align="end"

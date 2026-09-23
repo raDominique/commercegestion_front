@@ -47,6 +47,7 @@ import Parrainages from '../pages/Parrainages/Parrainages.jsx';
 import OperationsAValider from '../pages/OperationsAValider/OperationsAValider.jsx';
 import EchangeActifs from '../pages/EchangeActifs/EchangeActifs.jsx';
 import AchatVente from '../pages/AchatVente/AchatVente.jsx';
+import Notifications from '../pages/Notifications/Notifications.jsx';
 
 export const publicRoutes = [
     { path: '/login', element: Login },
@@ -73,6 +74,7 @@ export const privateRoutes = [
     { path: '/mon-compte/audit', element: Audit, role: 'Utilisateur,Admin', userValidated: true, icon: Assessment, label: 'Audit' },
     { path: '/mes-produits', element: MesProduits, role: 'Utilisateur,Admin', userValidated: true, icon: Inventory },
     { path: '/mes-transactions', element: MesTransactions, role: 'Utilisateur,Admin', userValidated: true, icon: ReceiptLong },
+    { path: '/notifications', element: Notifications, role: 'Utilisateur,Admin', userValidated: [true, false], label: 'Notifications' },
     { path: '/operations-a-valider', element: OperationsAValider, role: 'Utilisateur,Admin', userValidated: true, icon: FactCheck, label: 'Opérations à valider' },
     { path: '/mes-sites', element: MesSites, role: 'Utilisateur,Admin', userValidated: true, icon: Public },
     { path: '/parrainages', element: Parrainages, role: 'Utilisateur,Admin', userValidated: true, icon: Group },

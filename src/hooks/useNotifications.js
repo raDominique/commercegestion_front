@@ -93,15 +93,12 @@ function loadReadIds(userKey) {
   }
 }
 
-function loadClearedAt(userKey) {
-  const raw = safeGet(storageKey('clearedAt', userKey));
-  const ts = raw ? Number(raw) : 0;
-  return Number.isFinite(ts) ? ts : 0;
-}
-
-function createdAtMs(value) {
-  const ts = new Date(value).getTime();
-  return Number.isNaN(ts) ? 0 : ts;
+function rememberReadId(userKey, id) {
+  const idStr = String(id);
+  const ids = loadReadIds(userKey);
+  if (!ids.includes(idStr)) {
+    safeSet(storageKey('read', userKey), JSON.stringify([...ids, idStr].slice(-MAX_STORED_READ_IDS)));
+  }
 }
 
 /**
@@ -110,14 +107,13 @@ function createdAtMs(value) {
  *  - query { userId (ObjectId), userAccess (USER|ADMIN|SUPERADMIN) }
  *  - events 'notification' (+ 'admin_event' pour ADMIN/SUPERADMIN)
  *  - historique GET /api/v1/notifications
- * Persistance locale par utilisateur : "Tout marquer lu" vide la liste et
- * mémorise un horodatage — les notifications antérieures ne réapparaissent
- * pas après actualisation, seules les nouvelles s'affichent.
+ * Les lectures sont synchronisées par REST et Socket.io entre les onglets.
  */
 export function useNotifications() {
   const [profile, setProfile] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [showRead, setShowRead] = useState(false);
   const subscribed = useRef(false);
   const navigate = useNavigate();
 
@@ -127,9 +123,6 @@ export function useNotifications() {
     () => String(profile?._id ?? profile?.userId ?? profile?.id ?? 'anon'),
     [profile],
   );
-  // Horodatage du dernier "Tout marquer lu" (0 = jamais) : les notifications
-  // créées avant sont considérées comme traitées, même après actualisation.
-  const clearedAtRef = useRef(0);
 
   // Profil une fois
   useEffect(() => {
@@ -140,13 +133,12 @@ export function useNotifications() {
     return () => { mounted = false; };
   }, []);
 
-  // Historique REST au chargement du profil, filtré par la persistance locale
+  // Historique REST au chargement du profil, complété par le cache local si
+  // une lecture n'a pas encore pu être enregistrée par le serveur.
   useEffect(() => {
     if (!profile) return;
     let mounted = true;
     setLoadingHistory(true);
-    const clearedAt = loadClearedAt(userKey);
-    clearedAtRef.current = clearedAt;
     const readIds = new Set(loadReadIds(userKey));
     getNotifications(1, 20)
       .then(({ items }) => {
@@ -155,8 +147,6 @@ export function useNotifications() {
           items
             .map(normalizeNotif)
             .filter(Boolean)
-            // "Tout marquer lu" déjà cliqué : on oublie tout ce qui est antérieur
-            .filter((n) => createdAtMs(n.createdAt) > clearedAt)
             .map((n) => (readIds.has(String(n._id)) ? { ...n, isRead: true } : n)),
         );
       })
@@ -169,11 +159,7 @@ export function useNotifications() {
     const idStr = String(id);
     setNotifications((prev) => prev.map((n) => (String(n._id) === idStr ? { ...n, isRead: true } : n)));
     // Persiste la lecture : le badge reste décrémenté après actualisation
-    const ids = loadReadIds(userKey);
-    if (!ids.includes(idStr)) {
-      ids.push(idStr);
-      safeSet(storageKey('read', userKey), JSON.stringify(ids.slice(-MAX_STORED_READ_IDS)));
-    }
+    rememberReadId(userKey, idStr);
     try {
       await markNotificationAsRead(id);
     } catch {
@@ -191,12 +177,9 @@ export function useNotifications() {
     const doMarkAsRead = markAsRead;
 
     const pushUnique = (item) => {
-      // Reçu après un "Tout marquer lu" mais créé avant : traité d'office, sans badge
-      const alreadyCleared = createdAtMs(item.createdAt) <= clearedAtRef.current;
-      const toInsert = alreadyCleared ? { ...item, isRead: true } : item;
       setNotifications((prev) => {
-        if (prev.some((n) => String(n._id) === String(toInsert._id))) return prev;
-        return [toInsert, ...prev];
+        if (prev.some((n) => String(n._id) === String(item._id))) return prev;
+        return [item, ...prev];
       });
     };
     const showToast = (item, admin) => {
@@ -230,26 +213,36 @@ export function useNotifications() {
 
     onSocketEvent('notification', notifHandler);
     if (isSocketAdmin(socketRole)) onSocketEvent('admin_event', adminHandler);
+    const notificationReadHandler = ({ notificationId } = {}) => {
+      if (notificationId == null) return;
+      const id = String(notificationId);
+      rememberReadId(userKey, id);
+      setNotifications((items) => items.map((item) => (
+        String(item._id) === id ? { ...item, isRead: true } : item
+      )));
+    };
+    const notificationsReadAllHandler = () => {
+      setNotifications((items) => items.map((item) => ({ ...item, isRead: true })));
+    };
+    onSocketEvent('notification_read', notificationReadHandler);
+    onSocketEvent('notifications_read_all', notificationsReadAllHandler);
 
     return () => {
       offSocketEvent('notification', notifHandler);
       if (isSocketAdmin(socketRole)) offSocketEvent('admin_event', adminHandler);
+      offSocketEvent('notification_read', notificationReadHandler);
+      offSocketEvent('notifications_read_all', notificationsReadAllHandler);
       subscribed.current = false;
     };
-  }, [profile, markAsRead, navigate]);
+  }, [profile, markAsRead, navigate, userKey]);
 
-  // "Tout marquer lu" : vide la liste + mémorise l'instant pour que les
-  // notifications et pastilles ne reviennent pas après actualisation.
+  // Les lues restent accessibles avec l'option « Tout afficher ».
   const markAllRead = useCallback(async () => {
-    const now = Date.now();
-    clearedAtRef.current = now;
-    safeSet(storageKey('clearedAt', userKey), String(now));
-    safeSet(storageKey('read', userKey), JSON.stringify([]));
-    setNotifications([]);
+    setNotifications((items) => items.map((item) => ({ ...item, isRead: true })));
     try {
       await markAllNotificationsAsRead();
     } catch {
-      // best-effort : la persistance locale garantit déjà le résultat
+      // L'état local reste cohérent ; le prochain chargement le synchronisera.
     }
   }, [userKey]);
 
@@ -268,6 +261,10 @@ export function useNotifications() {
   );
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const visibleNotifications = useMemo(
+    () => notifications.filter((notification) => showRead || !notification.isRead),
+    [notifications, showRead],
+  );
   const unreadByRoute = useMemo(
     () => countUnreadByRoute(notifications, { isAdmin }),
     [notifications, isAdmin],
@@ -277,6 +274,9 @@ export function useNotifications() {
     profile,
     isAdmin,
     notifications,
+    visibleNotifications,
+    showRead,
+    setShowRead,
     unreadCount,
     unreadByRoute,
     loadingHistory,
