@@ -500,7 +500,7 @@ const Retrait = () => {
 										{/* 3. Produit du site avec recherche */}
 										{withdrawalForm.siteOrigineId && (
 											<div className="space-y-2 md:col-span-2">
-												<Label required>3. Actif à retirer</Label>
+												<Label required>3. Nom de l'actif à retirer</Label>
 												<div className="relative">
 													<Input
 														placeholder={productsOnSite.length === 0 ? "Aucun actif disponible" : "Rechercher un actif..."}
