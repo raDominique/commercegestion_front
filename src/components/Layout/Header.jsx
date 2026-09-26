@@ -40,7 +40,7 @@ function NotificationItem({ notif, formatRelative, onOpen }) {
                 {notif.title && (
                     <span className={`block truncate text-sm ${notif.isRead ? 'font-normal text-neutral-400' : 'font-semibold text-neutral-900'}`}>{notif.title}</span>
                 )}
-                <span className={`mt-0.5 block text-sm leading-snug line-clamp-2 ${notif.isRead ? 'text-neutral-400' : 'text-neutral-600'}`}>{notif.message}</span>
+                <span className={`block truncate text-sm leading-snug ${notif.isRead ? 'text-neutral-400' : 'text-neutral-600'}`} title={notif.message}>{notif.message}</span>
                 <span className="mt-1 block text-xs text-neutral-400">{formatRelative(notif.createdAt)}</span>
             </span>
         </button>
@@ -371,7 +371,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                         {!notif.isRead && <UnreadDot />}
                                         <span className="min-w-0 flex-1">
                                             {notif.title && <span className="block truncate text-[13px] font-semibold">{notif.title}</span>}
-                                            <span className="block text-xs leading-snug line-clamp-2">{notif.message}</span>
+                                            <span className="block truncate text-xs leading-snug" title={notif.message}>{notif.message}</span>
                                             <span className="mt-0.5 block text-[11px] text-neutral-400">{formatRelative(notif.createdAt)}</span>
                                         </span>
                                     </button>
