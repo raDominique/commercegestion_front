@@ -384,7 +384,7 @@ const Actifs = () => {
 			};
 
 			await initializeTransaction(params, user?.token || localStorage.getItem('authToken'));
-			toast.success('Stock ajouté avec succès');
+			toast.success('Stock ajouté');
 			setStockModalOpen(false);
 			setStockForm({ quantite: '', observations: '' });
 			setSelectedActifForStock(null);
@@ -477,7 +477,7 @@ const Actifs = () => {
 			};
 
 			await addShopItem(payload, token);
-			toast.success('Produit mis en vente avec succès');
+			toast.success('Mise en vente effectuée');
 			setSellModalOpen(false);
 			setSellForm({ quantite: '', prixUnitaire: '', description: '' });
 			setSelectedActifForSale(null);
@@ -531,7 +531,7 @@ const Actifs = () => {
 			};
 
 			await initializeTransaction(params, user?.token || localStorage.getItem('authToken'));
-			toast.success('Produit ajouté au site avec succès');
+			toast.success('Opération hors plateforme effectuée');
 			setAddProductModalOpen(false);
 			setAddProductForm({ productId: '', siteId: '', quantite: '', prixUnitaire: '' });
 			setProductSearch('');
@@ -543,7 +543,7 @@ const Actifs = () => {
 			await fetchActifs();
 		} catch (error) {
 			console.error('Erreur lors de l\'ajout du produit:', error);
-			toast.error('Erreur lors de l\'ajout du produit');
+			toast.error('Erreur lors de l\'opération hors plateforme');
 		} finally {
 			setLoadingAddProduct(false);
 		}

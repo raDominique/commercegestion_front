@@ -303,7 +303,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                                     try {
                                                         setLogoutDialogOpen(false);
                                                         await handleLogout();
-                                                        toast.success('Déconnecté avec succès');
+                                                        toast.success('Déconnecté');
                                                     } catch (error) {
                                                         toast.error('Erreur lors de la déconnexion');
                                                     } finally {

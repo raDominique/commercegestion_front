@@ -125,7 +125,7 @@ const AdminCpc = () => {
         try {
             const token = localStorage.getItem('token');
             await createCpc(form, token);
-            toast.success('CPC ajouté avec succès');
+            toast.success('CPC ajouté');
             setOpen(false);
             setForm({ code: '', nom: '', niveau: '', parentCode: '', ancetres: [], correspondances: { sh: '', citi: '' } });
             fetchCpc();
@@ -172,7 +172,7 @@ const AdminCpc = () => {
         try {
             const token = localStorage.getItem('token');
             await updateCpc(editId, form, token);
-            toast.success('CPC modifié avec succès');
+            toast.success('CPC modifié');
             setEditOpen(false);
             setForm({ code: '', nom: '', niveau: '', parentCode: '', ancetres: [], correspondances: { sh: '', citi: '' } });
             fetchCpc();
@@ -193,7 +193,7 @@ const AdminCpc = () => {
         try {
             const token = localStorage.getItem('token');
             await deleteCpc(deleteId, token);
-            toast.success('CPC supprimé avec succès');
+            toast.success('CPC supprimé');
             setDeleteOpen(false);
             setDeleteId(null);
             fetchCpc();

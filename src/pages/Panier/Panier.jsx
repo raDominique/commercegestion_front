@@ -63,7 +63,7 @@ export default function Panier() {
     setCheckoutLoading(true);
     try {
       await checkout({ siteDestinationId, observations: observations || undefined });
-      toast.success('Commande validée avec succès');
+      toast.success('Commande validée');
       setCheckoutOpen(false);
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Erreur lors de la validation de la commande');

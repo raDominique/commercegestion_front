@@ -321,7 +321,7 @@ const Depot = () => {
 
 			await depositStockToAMember(payload, token);
 
-			toast.success('Transfert effectué');
+			toast.success('Dépôt effectué');
 			setTransferForm({
 				actifId: '',
 				productId: '',
@@ -340,7 +340,7 @@ const Depot = () => {
 			fetchActifs();
 		} catch (error) {
 			console.error('Erreur lors du transfert:', error);
-			toast.error('Erreur lors du transfert');
+			toast.error('Erreur lors du dépôt');
 		} finally {
 			setSaving(false);
 		}

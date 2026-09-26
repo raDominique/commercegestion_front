@@ -92,7 +92,7 @@ const MesProduits = () => {
         quantite: Number(depositForm.quantite),
         prixUnitaire: Number(depositForm.prixUnitaire),
       }, token);
-      const successMessage = 'Produit déposé avec succès';
+      const successMessage = 'Dépôt effectué';
       toast.success(successMessage);
       setDepositModalOpen(false);
       setDepositForm({
@@ -192,7 +192,7 @@ const MesProduits = () => {
         productName: editForm.productName,
         productHauteur: editForm.productHauteur,
       }, editForm.image, token);
-      toast.success('Produit modifié avec succès');
+      toast.success('Produit modifié');
       setEditModalOpen(false);
       setEditForm({
         // productState: '',
@@ -302,7 +302,7 @@ const MesProduits = () => {
         productName: form.productName,
         productHauteur: form.productHauteur,
       }, form.image, token);
-      toast.success('Produit ajouté avec succès');
+      toast.success('Produit ajouté');
       setAddModalOpen(false);
       setForm({
         // productState: '',
@@ -400,7 +400,7 @@ const MesProduits = () => {
     try {
       const token = localStorage.getItem('token');
       await deleteProduct(deleteId, token);
-      toast.success('Produit supprimé avec succès');
+      toast.success('Produit supprimé');
       setDeleteOpen(false);
       setDeleteId(null);
       fetchProducts();

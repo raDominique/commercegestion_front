@@ -76,7 +76,7 @@ export default function MonCompte() {
       };
       if (avatar) data.avatar = avatar;
       await updateUser(userId, data, token);
-      toast.success('Profil mis à jour avec succès');
+      toast.success('Profil mis à jour');
       // Rafraîchir le profil localement sans reload global
       const refreshed = await getProfile();
       setProfile(refreshed);
@@ -106,7 +106,7 @@ export default function MonCompte() {
         confirmPassword
       }, token);
       if (res.status === 'success') {
-        toast.success(res.message || 'Mot de passe modifié avec succès');
+        toast.success(res.message || 'Mot de passe modifié');
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');

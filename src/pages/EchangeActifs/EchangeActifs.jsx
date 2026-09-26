@@ -339,14 +339,14 @@ const EchangeActifs = () => {
       }
 
       await buyExchangeOffer(getId(selectedOffer), Number(buyQuantity), token);
-      toast.success('Achat effectué avec succès');
+      toast.success('Achat effectué');
       setBuyDialogOpen(false);
       setSelectedOffer(null);
       setBuyQuantity('');
       await loadOffers();
     } catch (err) {
       console.error("Erreur achat offre d'échange:", err);
-      toast.error(err?.response?.data?.message || "Erreur lors de l'achat de l'offre");
+      toast.error(err?.response?.data?.message || "Erreur lors de l'achat");
     } finally {
       setBuying(false);
     }

@@ -68,7 +68,7 @@ const MesSites = () => {
         siteLng: newSite.siteLng ? parseFloat(newSite.siteLng) : undefined,
       };
       await createSite(payload);
-      toast.success('Site ajouté avec succès');
+      toast.success('Site ajouté');
       setNewSite({ siteName: '', siteAddress: '', siteLat: '', siteLng: '' });
       setIsDialogOpen(false);
       // Recharge la liste après ajout
@@ -113,7 +113,7 @@ const MesSites = () => {
         siteLat: editSite.siteLat,
         siteLng: editSite.siteLng,
       });
-      toast.success('Site modifié avec succès');
+      toast.success('Site modifié');
       setIsEditDialogOpen(false);
       // Recharge la liste sans recharger la plateforme
       const data = await getMySites({ limit, page, search });
@@ -136,7 +136,7 @@ const MesSites = () => {
     setLoadingDelete(true);
     try {
       await deleteSite(siteToDelete._id);
-      toast.success('Site supprimé avec succès');
+      toast.success('Site supprimé');
       setIsDeleteDialogOpen(false);
       setSiteToDelete(null);
       // Recharge la liste sans changer la page

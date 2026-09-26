@@ -171,7 +171,7 @@ const Boutique = () => {
     setCheckoutLoading(true);
     try {
       await checkout({ siteDestinationId, observations: observations || undefined });
-      toast.success('Commande validée avec succès');
+      toast.success('Commande validée');
       setSiteDestinationId('');
       setObservations('');
     } catch (err) {

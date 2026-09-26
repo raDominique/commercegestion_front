@@ -221,10 +221,10 @@ const AchatVente = () => {
         rapportEchange: Number(rapportEchange),
         observations,
       }, token);
-      toast.success('Transaction effectuée avec succès');
+      toast.success(mode === 'exchange' ? 'Échange effectué' : 'Vente effectuée');
       resetForm();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Erreur lors de la transaction");
+      toast.error(err?.response?.data?.message || (mode === 'exchange' ? "Erreur lors de l'échange" : "Erreur lors de la vente"));
     } finally {
       setSaving(false);
     }

@@ -373,7 +373,7 @@ function MyTendersList() {
     try {
       const token = getAccessToken() || localStorage.getItem('token');
       await deleteTender(deleteTargetId, token);
-      toast.success("Appel d'offre annulé avec succès");
+      toast.success("Appel d'offre annulé");
       setDeleteConfirmOpen(false);
       setDeleteTargetId(null);
       fetchTenders();
@@ -388,7 +388,7 @@ function MyTendersList() {
     try {
       const token = getAccessToken() || localStorage.getItem('token');
       await openSealedBids(id, token);
-      toast.success("Dépouillement ouvert avec succès");
+      toast.success("Dépouillement ouvert");
       fetchTenders();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Erreur lors de l'ouverture du dépouillement");
@@ -418,7 +418,7 @@ function MyTendersList() {
     try {
       const token = getAccessToken() || localStorage.getItem('token');
       await awardTender(awardTarget.tenderId, { soumissionId: awardTarget.bidId, commentaire: awardTarget.commentaire }, token);
-      toast.success("Appel d'offre attribué avec succès");
+      toast.success("Appel d'offre attribué");
       setAwardTarget(null);
       setBidsOpen(false);
       fetchTenders();
@@ -748,7 +748,7 @@ function CreateTenderModal({ onSuccess }) {
         quantite: Number(form.quantite),
       };
       await createTender(payload, token);
-      toast.success('Appel d\'offre créé avec succès');
+      toast.success('Appel d\'offre créé');
       onSuccess();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Erreur lors de la création de l\'appel d\'offre');
@@ -983,7 +983,7 @@ function BidModal({ open, onOpenChange, tenderId }) {
         observations: form.observations,
       };
       await createBid(tenderId, payload, token);
-      toast.success('Soumission envoyée avec succès');
+      toast.success('Soumission envoyée');
       onOpenChange(false);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Erreur lors de l'envoi de la soumission");

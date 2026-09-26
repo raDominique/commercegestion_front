@@ -225,7 +225,7 @@ const VirementDroit = () => {
       await fetchActifs();
     } catch (err) {
       console.error('Erreur lors du virement :', err);
-      toast.error(err?.response?.data?.message || 'Erreur lors du virement');
+      toast.error(err?.response?.data?.message || 'Erreur lors du virement de droit');
     } finally {
       setLoadingVirement(false);
     }

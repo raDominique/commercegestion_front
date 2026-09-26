@@ -332,11 +332,11 @@ const Retrait = () => {
 			setProductSearch('');
 			setSiteDestinationSearch('');
 			setSiteDestinationHighlighted(0);
-			toast.success('Retrait effectué avec succès');
+			toast.success('Retrait effectué');
 			fetchPassifs();
 		} catch (error) {
 			console.error('Erreur lors du retrait du stock:', error);
-			toast.error('Erreur lors du retrait du stock');
+			toast.error('Erreur lors du retrait');
 		} finally {
 			setSaving(false);
 		}
