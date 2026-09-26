@@ -328,7 +328,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetContent side="right" className="bg-white text-neutral-900 p-0 w-[min(85vw,320px)]">
                     {/* User profile card */}
-                    <div className="px-5 pt-6 pb-4 bg-gradient-to-b from-violet-50 to-white border-b border-neutral-100">
+                    <div className="px-5 pt-6 pb-4 bg-linear-to-b from-violet-50 to-white border-b border-neutral-100">
                         <div className="flex items-center gap-3">
                             <UserAvatar size="lg" />
                             <div className="min-w-0">
