@@ -278,6 +278,11 @@ const Depot = () => {
 			return;
 		}
 
+		if (!Number.isFinite(Number(transferForm.quantite)) || Number(transferForm.quantite) <= 0) {
+			toast.error('Veuillez saisir une quantité supérieure à 0');
+			return;
+		}
+
 		try {
 			setSaving(true);
 			const token = getAccessToken();
@@ -438,6 +443,7 @@ const Depot = () => {
 															type="button"
 															key={site._id}
 															onMouseEnter={() => setSiteOriginHighlighted(idx)}
+															onMouseDown={(e) => e.preventDefault()}
 															onClick={() => {
 																handleSelectSiteOrigine(site._id);
 																setSiteOriginSearch(site.siteName);
@@ -502,6 +508,7 @@ const Depot = () => {
 															type="button"
 															key={item.productId}
 															onMouseEnter={() => setProductHighlighted(idx)}
+															onMouseDown={(e) => e.preventDefault()}
 															onClick={() => {
 																handleSelectProduct(item.productId);
 																setProductSearch(item.productName);
@@ -533,11 +540,12 @@ const Depot = () => {
 													}
 												}}
 												required
-												placeholder="Quantité à transférer"
-												className="border-neutral-300"
-												type="number"
-												min="1"
-												max={maxTransferQty || undefined}
+											placeholder="Quantité à transférer"
+											className="border-neutral-300"
+											type="number"
+											min="0"
+											step="any"
+											max={maxTransferQty || undefined}
 											/>
 										</div>
 										{/* <div className="space-y-2">
@@ -752,6 +760,7 @@ const Depot = () => {
 																type="button"
 																key={site._id}
 																onMouseEnter={() => setSiteDestinationHighlighted(idx)}
+																onMouseDown={(e) => e.preventDefault()}
 																onClick={() => {
 																	setTransferForm(f => ({ ...f, siteDestinationId: site._id }));
 																	setSiteDestinationSearch(site.siteName);

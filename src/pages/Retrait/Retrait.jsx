@@ -271,6 +271,11 @@ const Retrait = () => {
 			return;
 		}
 
+		if (!Number.isFinite(Number(withdrawalForm.quantite)) || Number(withdrawalForm.quantite) <= 0) {
+			toast.error('Veuillez saisir une quantité supérieure à 0');
+			return;
+		}
+
 		try {
 			setSaving(true);
 			const token = getAccessToken();
@@ -478,6 +483,7 @@ const Retrait = () => {
 																		type="button"
 																		key={site?._id ?? site?.id ?? idx}
 																		onMouseEnter={() => setSiteOriginHighlighted(idx)}
+																		onMouseDown={(e) => e.preventDefault()}
 																		onClick={() => {
 																			handleSelectSiteOrigine(site._id);
 																			setSiteOriginSearch(site.siteName || '');
@@ -543,6 +549,7 @@ const Retrait = () => {
 																	type="button"
 																	key={item?.productId?._id ?? item?.productId ?? item?._id ?? idx}
 																	onMouseEnter={() => setProductHighlighted(idx)}
+																	onMouseDown={(e) => e.preventDefault()}
 																	onClick={() => {
 																		handleSelectProduct(item.productId);
 																		setProductSearch(item.productId?.productName || '');
@@ -606,6 +613,7 @@ const Retrait = () => {
 																		type="button"
 																		key={site?._id ?? site?.id ?? idx}
 																		onMouseEnter={() => setSiteDestinationHighlighted(idx)}
+																		onMouseDown={(e) => e.preventDefault()}
 																		onClick={() => {
 																			setWithdrawalForm(f => ({ ...f, siteDestinationId: site._id }));
 																			setSiteDestinationSearch(site.siteName || '');
@@ -640,11 +648,12 @@ const Retrait = () => {
 														}
 													}}
 													required
-													placeholder="Quantité à retirer"
-													className="border-neutral-300"
-													type="number"
-													min="1"
-													max={maxWithdrawalQty || undefined}
+												placeholder="Quantité à retirer"
+												className="border-neutral-300"
+												type="number"
+												min="0"
+												step="any"
+												max={maxWithdrawalQty || undefined}
 												/>
 											</div>
 										)}

@@ -204,6 +204,7 @@ const AchatVente = () => {
     if (!quantite) missing.push('Quantité');
     if (!rapportEchange) missing.push(mode === 'monetary' ? 'Prix unitaire' : 'Rapport d\'échange');
     if (missing.length > 0) { toast.error(`Champs obligatoires : ${missing.join(', ')}`); return; }
+    if (!Number.isFinite(Number(quantite)) || Number(quantite) <= 0) { toast.error('Veuillez saisir une quantité supérieure à 0'); return; }
     const actualProductId = selectedProduct?.productId || selectedProduct?._id;
     if (!actualProductId && productId) { toast.error('Erreur de sélection du produit'); return; }
     setSaving(true);
@@ -297,7 +298,7 @@ const AchatVente = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
-                            <Input type="number" min="1" max={maxQty ?? undefined} value={quantite} onChange={e => {
+                            <Input type="number" min="0" step="any" max={maxQty ?? undefined} value={quantite} onChange={e => {
                               const val = e.target.value;
                               if (val === '' || Number(val) <= (maxQty ?? Infinity)) setQuantite(val);
                             }} className="bg-white" />
@@ -387,7 +388,7 @@ const AchatVente = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
-                            <Input type="number" min="1" max={maxQty ?? undefined} value={quantite} onChange={e => {
+                            <Input type="number" min="0" step="any" max={maxQty ?? undefined} value={quantite} onChange={e => {
                               const val = e.target.value;
                               if (val === '' || Number(val) <= (maxQty ?? Infinity)) setQuantite(val);
                             }} className="bg-white" />

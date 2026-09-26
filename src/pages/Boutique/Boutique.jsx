@@ -189,8 +189,8 @@ const Boutique = () => {
     const draftValue = cartQuantityDrafts[item.id] ?? String(item.quantity);
     const quantity = Number(draftValue);
 
-    if (!Number.isFinite(quantity) || quantity < 1 || !Number.isInteger(quantity)) {
-      toast.error('Veuillez saisir une quantité entière supérieure à 0');
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      toast.error('Veuillez saisir une quantité supérieure à 0');
       return;
     }
 
@@ -498,9 +498,9 @@ const Boutique = () => {
                               <div className="flex items-center justify-end gap-1">
                                 <Input
                                   type="number"
-                                  min="1"
+                                  min="0"
                                   max={item.stock}
-                                  step="1"
+                                  step="any"
                                   value={draftQuantity}
                                   onChange={(event) => handleCartQuantityChange(item.id, event.target.value)}
                                   onKeyDown={(event) => {

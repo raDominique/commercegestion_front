@@ -736,6 +736,10 @@ function CreateTenderModal({ onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!Number.isFinite(Number(form.quantite)) || Number(form.quantite) <= 0) {
+      toast.error('Veuillez saisir une quantité supérieure à 0');
+      return;
+    }
     setSubmitting(true);
     try {
       const token = getAccessToken() || localStorage.getItem('token');
@@ -775,7 +779,7 @@ function CreateTenderModal({ onSuccess }) {
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
             <Label htmlFor="quantite" required>Quantité</Label>
-            <Input id="quantite" name="quantite" type="number" value={form.quantite} onChange={handleChange} required min="1" />
+            <Input id="quantite" name="quantite" type="number" value={form.quantite} onChange={handleChange} required min="0" step="any" />
           </div>
 
           <div className="grid gap-2">
@@ -828,6 +832,7 @@ function CreateTenderModal({ onSuccess }) {
                     type="button"
                     key={product._id}
                     onMouseEnter={() => setProductHighlighted(idx)}
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       setForm(prev => ({ ...prev, productId: product._id }));
                       setProductSearch(product.productName);
@@ -892,6 +897,7 @@ function CreateTenderModal({ onSuccess }) {
                     type="button"
                     key={site._id}
                     onMouseEnter={() => setSiteHighlighted(idx)}
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       setForm(prev => ({ ...prev, siteLivraison: site._id }));
                       setSiteSearch(site.siteName);
@@ -962,6 +968,10 @@ function BidModal({ open, onOpenChange, tenderId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!tenderId) return;
+    if (!Number.isFinite(Number(form.quantite)) || Number(form.quantite) <= 0) {
+      toast.error('Veuillez saisir une quantité supérieure à 0');
+      return;
+    }
     setSubmitting(true);
     try {
       const token = getAccessToken() || localStorage.getItem('token');
@@ -999,7 +1009,7 @@ function BidModal({ open, onOpenChange, tenderId }) {
 
           <div className="grid gap-2">
             <Label htmlFor="quantite" required>Quantité</Label>
-            <Input id="quantite" name="quantite" type="number" value={form.quantite} onChange={handleChange} required min="1" placeholder="Quantité proposée" />
+            <Input id="quantite" name="quantite" type="number" value={form.quantite} onChange={handleChange} required min="0" step="any" placeholder="Quantité proposée" />
           </div>
 
           <div className="grid gap-2">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -172,6 +172,7 @@ const Actifs = () => {
 	const [productSearch, setProductSearch] = useState('');
 	const [productOpen, setProductOpen] = useState(false);
 	const [productHighlighted, setProductHighlighted] = useState(0);
+	const productInputRef = useRef(null);
 
 	// États pour la recherche du site
 	const [siteSearch, setSiteSearch] = useState('');
@@ -239,6 +240,16 @@ const Actifs = () => {
 	}, [shopPage, shopLimit, shopSearch, user]);
 
 	useEffect(() => { }, [deleteModalOpen, selectedSellItemToDelete]);
+
+	// Focus automatique sur le champ produit à l'ouverture du modal "Opération hors plateforme"
+	useEffect(() => {
+		if (addProductModalOpen) {
+			const t = setTimeout(() => {
+				productInputRef.current?.focus();
+			}, 50);
+			return () => clearTimeout(t);
+		}
+	}, [addProductModalOpen]);
 
 	// Map shop item shape to the actif shape used by ActifsTableOrList
 	const mapShopItemToActif = (item) => ({
@@ -349,6 +360,10 @@ const Actifs = () => {
 	const handleAddStock = async () => {
 		if (!stockForm.quantite || !selectedActifForStock) {
 			toast.error('Veuillez remplir la quantité');
+			return;
+		}
+		if (!Number.isFinite(Number(stockForm.quantite)) || Number(stockForm.quantite) <= 0) {
+			toast.error('Veuillez saisir une quantité supérieure à 0');
 			return;
 		}
 
@@ -500,6 +515,10 @@ const Actifs = () => {
 			toast.error('Veuillez remplir tous les champs');
 			return;
 		}
+		if (!Number.isFinite(Number(addProductForm.quantite)) || Number(addProductForm.quantite) <= 0) {
+			toast.error('Veuillez saisir une quantité supérieure à 0');
+			return;
+		}
 
 		try {
 			setLoadingAddProduct(true);
@@ -639,7 +658,8 @@ const Actifs = () => {
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité à vendre</label>
 									<Input
 										type="number"
-										min="1"
+										min="0"
+										step="any"
 										max={selectedActifForSale?.quantite ?? undefined}
 										placeholder="0"
 										value={sellForm.quantite}
@@ -650,7 +670,7 @@ const Actifs = () => {
 											const max = Number(selectedActifForSale?.quantite ?? Infinity);
 											if (isNaN(num)) { setSellForm({ ...sellForm, quantite: '' }); return; }
 											if (num > max) num = max;
-											if (num < 1) num = 1;
+											if (num <= 0) { setSellForm({ ...sellForm, quantite: val }); return; }
 											setSellForm({ ...sellForm, quantite: String(num) });
 										}}
 										className="border-neutral-300"
@@ -727,7 +747,8 @@ const Actifs = () => {
 									<label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</label>
 									<Input
 										type="number"
-										min="1"
+										min="0"
+										step="any"
 										placeholder="0"
 										value={stockForm.quantite}
 										onChange={(e) => setStockForm({ ...stockForm, quantite: e.target.value })}
@@ -755,7 +776,12 @@ const Actifs = () => {
 
 					{/* MODAL INITIALISER PRODUIT À UN SITE */}
 					<Dialog open={addProductModalOpen} onOpenChange={setAddProductModalOpen}>
-						<DialogContent>
+						<DialogContent
+							onOpenAutoFocus={(e) => {
+								e.preventDefault();
+								productInputRef.current?.focus();
+							}}
+						>
 							<DialogHeader>
 								<DialogTitle>Initialiser un produit à un site</DialogTitle>
 								<DialogDescription>Sélectionnez un produit et un site pour l'initialiser</DialogDescription>
@@ -765,6 +791,7 @@ const Actifs = () => {
 									<Label>Produit</Label>
 									<div className="relative">
 										<Input
+											ref={productInputRef}
 											placeholder={products.length === 0 ? 'Aucun produit disponible' : 'Rechercher un produit...'}
 											value={productSearch}
 											onChange={e => { setProductSearch(e.target.value); setProductHighlighted(0); }}
@@ -793,6 +820,7 @@ const Actifs = () => {
 														type="button"
 														key={product._id}
 														onMouseEnter={() => setProductHighlighted(idx)}
+														onMouseDown={(e) => e.preventDefault()}
 														onClick={() => { setAddProductForm(prev => ({ ...prev, productId: product._id })); setProductSearch(product.productName); setProductOpen(false); }}
 														className={`w-full text-left px-3 py-2 text-sm ${idx === productHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
 													>
@@ -841,6 +869,7 @@ const Actifs = () => {
 														type="button"
 														key={site._id}
 														onMouseEnter={() => setSiteHighlighted(idx)}
+														onMouseDown={(e) => e.preventDefault()}
 														onClick={() => { setAddProductForm(prev => ({ ...prev, siteId: site._id })); setSiteSearch(site.siteName); setSiteOpen(false); }}
 														className={`w-full text-left px-3 py-2 text-sm ${idx === siteHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
 													>
@@ -861,7 +890,8 @@ const Actifs = () => {
 									<Label className="block text-sm font-medium text-neutral-700 mb-1">Quantité</Label>
 									<Input
 										type="number"
-										min="1"
+										min="0"
+										step="any"
 										placeholder="0"
 										value={addProductForm.quantite}
 										onChange={(e) => setAddProductForm({ ...addProductForm, quantite: e.target.value })}

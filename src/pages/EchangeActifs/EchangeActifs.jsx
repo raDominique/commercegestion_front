@@ -266,6 +266,10 @@ const EchangeActifs = () => {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
+    if (!Number.isFinite(Number(offerForm.quantiteA)) || Number(offerForm.quantiteA) <= 0) {
+      toast.error('Veuillez saisir une quantité supérieure à 0');
+      return;
+    }
 
     try {
       setCreating(true);
@@ -319,6 +323,10 @@ const EchangeActifs = () => {
   const handleBuyOffer = async () => {
     if (!selectedOffer || !buyQuantity) {
       toast.error('Veuillez saisir la quantité à acheter');
+      return;
+    }
+    if (!Number.isFinite(Number(buyQuantity)) || Number(buyQuantity) <= 0) {
+      toast.error('Veuillez saisir une quantité supérieure à 0');
       return;
     }
 
@@ -617,7 +625,8 @@ const EchangeActifs = () => {
                 <Input
                   id="quantiteA"
                   type="number"
-                  min="1"
+                  min="0"
+                  step="any"
                   max={selectedProductA?.quantite ?? undefined}
                   value={offerForm.quantiteA}
                   onChange={(event) => setOfferForm((prev) => ({ ...prev, quantiteA: event.target.value }))}
@@ -950,7 +959,8 @@ const EchangeActifs = () => {
               <Input
                 id="buyQuantity"
                 type="number"
-                min="1"
+                min="0"
+                step="any"
                 max={selectedOffer?.quantiteA ?? undefined}
                 value={buyQuantity}
                 onChange={(event) => setBuyQuantity(event.target.value)}

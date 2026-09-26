@@ -424,6 +424,7 @@ const VirementDroit = () => {
                             type="button"
                             key={site._id}
                             onMouseEnter={() => setSiteHighlighted(idx)}
+                            onMouseDown={(e) => e.preventDefault()}
                             onClick={() => { setSelectedRecipientSite(site); setSiteSearch(site.siteName); setSiteOpen(false); }}
                             className={`w-full text-left px-3 py-2 text-sm ${idx === siteHighlighted ? 'bg-violet-50' : 'hover:bg-neutral-100'}`}
                           >

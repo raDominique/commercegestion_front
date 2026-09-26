@@ -669,6 +669,7 @@ const MesProduits = () => {
                                     type="button"
                                     key={opt.id}
                                     onMouseEnter={() => setCpcHighlighted(idx)}
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onClick={() => {
                                       handleCpcSelect(opt.id, opt.nom, opt.code);
                                       setCpcSearch(opt.nom);
@@ -856,6 +857,7 @@ const MesProduits = () => {
                               type="button"
                               key={opt.id}
                               onMouseEnter={() => setEditCpcHighlighted(idx)}
+                              onMouseDown={(e) => e.preventDefault()}
                               onClick={() => {
                                 setEditForm(f => ({ ...f, productCategory: opt.nom, categoryId: opt.id, codeCPC: opt.code }));
                                 setEditCpcSearch(opt.nom);
@@ -1002,6 +1004,7 @@ const MesProduits = () => {
                             type="button"
                             key={site._id}
                             onMouseEnter={() => setSiteOriginHighlighted(idx)}
+                            onMouseDown={(e) => e.preventDefault()}
                             onClick={() => {
                               setDepositForm(f => ({ ...f, siteOrigineId: site._id }));
                               setSiteOriginSearch(site.siteName);
@@ -1068,6 +1071,7 @@ const MesProduits = () => {
                             type="button"
                             key={site._id}
                             onMouseEnter={() => setSiteDestinationHighlighted(idx)}
+                            onMouseDown={(e) => e.preventDefault()}
                             onClick={() => {
                               setDepositForm(f => ({ ...f, siteDestinationId: site._id }));
                               setSiteDestinationSearch(site.siteName);
@@ -1091,7 +1095,7 @@ const MesProduits = () => {
                   {addProductFieldControl.quantite.label}
                   {addProductFieldControl.quantite.required && <span style={{ color: 'red' }}> *</span>}
                 </Label>
-                <Input name="quantite" value={depositForm.quantite} onChange={e => setDepositForm(f => ({ ...f, quantite: e.target.value }))} placeholder="Quantité à déposer" className="border-neutral-300" type="number" min="1" aria-invalid={!!depositErrors.quantite} />
+                <Input name="quantite" value={depositForm.quantite} onChange={e => setDepositForm(f => ({ ...f, quantite: e.target.value }))} placeholder="Quantité à déposer" className="border-neutral-300" type="number" min="0" step="any" aria-invalid={!!depositErrors.quantite} />
                 {depositErrors.quantite && <div className="text-red-600 text-xs mt-1">{depositErrors.quantite}</div>}
               </div>
               {/* Prix unitaire masqué */}
