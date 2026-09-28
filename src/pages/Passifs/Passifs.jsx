@@ -37,6 +37,14 @@ const renderPerson = (person) => {
 	return '-';
 };
 
+// Pour "type": "PASSIF" dont "statut": "APPROVED", on affiche quantiteDisponible
+const getQuantiteAffichee = (item) => {
+	if (item?.type === 'PASSIF' && item?.statut === 'APPROVED' && item?.quantiteDisponible != null) {
+		return item.quantiteDisponible;
+	}
+	return item?.quantite;
+};
+
 
 const Passifs = () => {
 	const dateFormat = useDateFormat();
@@ -222,7 +230,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									</TableCell>
 									<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
 									<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
-									<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
+									<TableCell className="text-sm text-right">{formatThousands(getQuantiteAffichee(item))}</TableCell>
 									{/* <TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
 									<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell> */}
 									{/* <TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell> */}
@@ -253,7 +261,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 		<div className="space-y-4 p-4">
 			{passifs.map((item, idx) => {
 				const produit = item.productName || (item.productId && (item.productId.productName || item.productId)) || '-';
-				const quantite = item.quantite ?? '-';
+				const quantite = getQuantiteAffichee(item) ?? '-';
 				const prixUnitaire = item.prixUnitaire ?? null;
 				const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
 				const depart = item.depot || item.siteOrigineId?.siteName || '-';
