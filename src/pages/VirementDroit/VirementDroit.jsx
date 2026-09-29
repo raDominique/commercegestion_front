@@ -190,6 +190,13 @@ const VirementDroit = () => {
         return;
       }
 
+      const siteId = actif?.depotId;
+      if (!siteId) {
+        toast.error('Site du dépôt introuvable pour cet actif');
+        setLoadingVirement(false);
+        return;
+      }
+
       const quantiteVal = Number(form.quantite);
       if (!Number.isFinite(quantiteVal) || quantiteVal <= 0) {
         toast.error('Quantité invalide');
@@ -207,6 +214,7 @@ const VirementDroit = () => {
         beneficiaryId: selectedRecipient._id || selectedRecipient.id || selectedRecipient,
         detentaireId,
         productId,
+        siteId,
         quantite: quantiteVal,
         ...(form.observations.trim() ? { observations: form.observations.trim() } : {}),
       };

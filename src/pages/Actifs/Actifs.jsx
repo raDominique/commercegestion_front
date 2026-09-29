@@ -942,8 +942,8 @@ const Actifs = () => {
 													<span><b>Adresse :</b> {actif.depotId?.siteAddress || '-'}</span>
 													<span><b>Qté :</b> {formatThousands(getQuantityValue(actif.quantite))}</span>
 													<span><b>Disponible :</b> {formatThousands(getQuantityValue(actif.quantiteDisponible ?? actif.quantite))}</span>
-													<span><b>Détenteur :</b> {renderPerson(actif.detentaire.userName)} {renderPerson(actif.detentaire.userFirstName)}</span>
-													{/* <span><b>Ayant droit :</b> {renderPerson(actif.ayant_droit)}</span> */}
+												<span><b>Détenteur :</b> {renderPerson(actif.detentaire.userName)} {renderPerson(actif.detentaire.userFirstName)}</span>
+												<span><b>Ayant droit :</b> {actif.ayant_droit ? [actif.ayant_droit.userNickName, actif.ayant_droit.userName].filter(Boolean).join(' ') : '-'}</span>
 													<span className="col-span-2"><b>Date :</b> {actif.createdAt ? dateFormat(actif.createdAt) : '-'}</span>
 												</div>
 											</div>
@@ -984,9 +984,9 @@ const Actifs = () => {
 										<div><b>Adresse dépôt :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
 										<div><b>QTE :</b> {formatThousands(getQuantityValue(detailActif.quantite))}</div>
 										<div><b>En attente :</b> {formatThousands(getQuantityValue(detailActif.quantiteEnAttente))}</div>
-										<div><b>Disponible :</b> {formatThousands(getQuantityValue(detailActif.quantiteDisponible ?? detailActif.quantite))}</div>
-										<div><b>Détenteur :</b> {renderPerson(detailActif.detentaire)}</div>
-									</div>
+										<div><b>Disponible :</b> {formatThousands(getQuantityValue(detailActif.quantiteDisponible ?? detailActif.quantite))}</div>									<div><b>Détenteur :</b> {renderPerson(detailActif.detentaire)}</div>
+									<div><b>Ayant droit :</b> {renderPerson(detailActif.ayant_droit || detailActif.ayantDroit)}</div>
+								</div>
 								)
 							) : null}
 						</DialogContent>

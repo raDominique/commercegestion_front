@@ -282,6 +282,7 @@ export const createVenteTransaction = async (params, token) => {
  * @param {string} params.detentaireId - ID du détenteur (Y)
  * @param {string} params.id_transactions - ID de la transaction de dépôt approuvée
  * @param {string} params.productId - ID du produit
+ * @param {string} params.siteId - ID du site de destination du dépôt (siteDestinationId._id)
  * @param {number} params.quantite - Quantité à transférer
  * @param {string} [params.observations] - Observations facultatives
  * @param {string} token - Token d'authentification
@@ -295,6 +296,7 @@ export const virementDroit = async (params, token) => {
       beneficiaryId: params.beneficiaryId,
       detentaireId: params.detentaireId,
       productId: params.productId,
+      siteId: params.siteId,
       quantite: Number(params.quantite),
       ...(params.observations ? { observations: params.observations } : {}),
     },

@@ -20,6 +20,7 @@ type CreateVirementDroitPayload = {
   beneficiaryId: string; // Nouvel ayant_droit
   detentaireId: string; // Détenteur physique du dépôt
   productId: string; // Produit du dépôt
+  siteId: string; // siteDestinationId._id du dépôt de référence
   quantite: number; // Nombre décimal positif à transférer
   observations?: string;
 };
@@ -33,19 +34,22 @@ await api.post('/v1/transactions/virement-droit', {
   beneficiaryId: form.beneficiaryId,
   detentaireId: deposit.detentaire,
   productId: deposit.productId,
+  siteId: deposit.siteDestinationId?._id,
   quantite: Number(form.quantite), // ex. 12.5
   observations: form.observations || undefined,
 });
 ```
 
-`siteId` ne doit plus être envoyé : le backend récupère le site depuis la
-transaction de dépôt de référence.
+`siteId` correspond au `siteDestinationId._id` du dépôt de référence : il est
+envoyé à l'API mais **n'est pas affiché ni sélectionné dans le modal** de
+virement de droit (aucun champ « Site du bénéficiaire » visible).
 
 ## Règles à appliquer dans l'interface
 
 - Le dépôt référencé doit avoir le statut `APPROVED`.
 - Seul son `ayant_droit` actuel peut initier le virement.
 - Le détenteur et le produit envoyés doivent correspondre au dépôt.
+- `siteId` = `siteDestinationId._id` du dépôt de référence, envoyé en arrière-plan sans être affiché dans le modal.
 - La quantité est décimale et strictement positive (`0.5`, `12.75`, etc.).
 - La quantité ne peut pas dépasser le reliquat de **ce dépôt**, indépendamment
   du stock total de l'utilisateur pour le même produit.
