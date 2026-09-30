@@ -3,7 +3,6 @@ import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import {
     Dialog,
-    DialogTrigger,
     DialogContent,
     DialogHeader,
     DialogTitle,
@@ -270,53 +269,14 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                     <span className="text-sm text-neutral-700">{typeof user.userName === 'string' ? user.userName : 'Utilisateur'}</span>
                                 </div>
 
-                                <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => setLogoutDialogOpen(true)}
-                                            className="text-neutral-600"
-                                        >
-                                            <Logout className="w-4 h-4" />
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Confirmer la déconnexion</DialogTitle>
-                                            <DialogDescription>
-                                                Êtes-vous sûr de vouloir vous déconnecter&nbsp;?
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <DialogFooter>
-                                            <DialogClose asChild>
-                                                <Button variant="outline" status="inactive" onClick={() => setLogoutDialogOpen(false)}>
-                                                    Annuler
-                                                </Button>
-                                            </DialogClose>
-                                            <Button
-                                                variant="destructive"
-                                                status={logoutLoading ? "loading" : "active"}
-                                                className="bg-red-600 hover:bg-red-700 text-white font-semibold"
-                                                onClick={async () => {
-                                                    setLogoutLoading(true);
-                                                    try {
-                                                        setLogoutDialogOpen(false);
-                                                        await handleLogout();
-                                                        toast.success('Déconnecté');
-                                                    } catch (error) {
-                                                        toast.error('Erreur lors de la déconnexion');
-                                                    } finally {
-                                                        setLogoutLoading(false);
-                                                    }
-                                                }}
-                                            >
-                                                {logoutLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                                                Se déconnecter
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setLogoutDialogOpen(true)}
+                                    className="text-neutral-600"
+                                >
+                                    <Logout className="w-4 h-4" />
+                                </Button>
                             </div>
                             )}
                         </>
@@ -429,6 +389,44 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                     </div>
                 </SheetContent>
             </Sheet>
+
+            <Dialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Confirmer la déconnexion</DialogTitle>
+                        <DialogDescription>
+                            Êtes-vous sûr de vouloir vous déconnecter&nbsp;?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline" status="inactive" onClick={() => setLogoutDialogOpen(false)}>
+                                Annuler
+                            </Button>
+                        </DialogClose>
+                        <Button
+                            variant="destructive"
+                            status={logoutLoading ? "loading" : "active"}
+                            className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+                            onClick={async () => {
+                                setLogoutLoading(true);
+                                try {
+                                    setLogoutDialogOpen(false);
+                                    await handleLogout();
+                                    toast.success('Déconnecté');
+                                } catch (error) {
+                                    toast.error('Erreur lors de la déconnexion');
+                                } finally {
+                                    setLogoutLoading(false);
+                                }
+                            }}
+                        >
+                            {logoutLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                            Se déconnecter
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </header>
     );
 }
