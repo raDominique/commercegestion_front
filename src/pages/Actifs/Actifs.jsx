@@ -927,7 +927,7 @@ const Actifs = () => {
 												: { className: 'bg-violet-50 text-violet-700 border-violet-200', label: 'Approuvé' };
 											return (
 											<div key={actif._id || idx} className="border border-neutral-200 rounded-lg p-3 space-y-1.5 text-sm">
-												<div className="flex items-start gap-3">
+												<div className="flex flex-col items-start gap-3 sm:flex-row">
 													{actif.productId?.productImage ? (
 														<img src={getFullMediaUrl(actif.productId.productImage)} alt={actif.productId.productName} className="w-12 h-12 rounded object-cover shrink-0" />
 													) : null}
@@ -937,22 +937,22 @@ const Actifs = () => {
 													</div>
 													<Badge className={`text-xs ${detailStatusBadge.className} px-2 py-0.5 rounded shrink-0`}>{detailStatusBadge.label}</Badge>
 												</div>
-												<div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-neutral-700">
-													<span><b>Dépôt :</b> {actif.depotId?.siteName || '-'}</span>
-													<span><b>Adresse :</b> {actif.depotId?.siteAddress || '-'}</span>
-													<span><b>Qté :</b> {formatThousands(getQuantityValue(actif.quantite))}</span>
-													<span><b>Disponible :</b> {formatThousands(getQuantityValue(actif.quantiteDisponible ?? actif.quantite))}</span>
-												<span><b>Détenteur :</b> {renderPerson(actif.detentaire.userName)} {renderPerson(actif.detentaire.userFirstName)}</span>
-												<span><b>Ayant droit :</b> {actif.ayant_droit ? [actif.ayant_droit.userNickName, actif.ayant_droit.userName].filter(Boolean).join(' ') : '-'}</span>
-													<span className="col-span-2"><b>Date :</b> {actif.createdAt ? dateFormat(actif.createdAt) : '-'}</span>
+												<div className="flex flex-col gap-y-1 text-xs text-neutral-700 wrap-break-word sm:grid sm:grid-cols-2 sm:gap-x-4">
+													<span className="block min-w-0"><b className="whitespace-nowrap">Dépôt :</b> {actif.depotId?.siteName || '-'}</span>
+													<span className="block min-w-0"><b className="whitespace-nowrap">Adresse :</b> {actif.depotId?.siteAddress || '-'}</span>
+													<span className="block min-w-0"><b className="whitespace-nowrap">Qté :</b> {formatThousands(getQuantityValue(actif.quantite))}</span>
+													<span className="block min-w-0"><b className="whitespace-nowrap">Disponible :</b> {formatThousands(getQuantityValue(actif.quantiteDisponible ?? actif.quantite))}</span>
+													<span className="block min-w-0"><b className="whitespace-nowrap">Détenteur :</b> {renderPerson(actif.detentaire.userName)} {renderPerson(actif.detentaire.userFirstName)}</span>
+													<span className="block min-w-0"><b className="whitespace-nowrap">Ayant droit :</b> {actif.ayant_droit ? [actif.ayant_droit.userNickName, actif.ayant_droit.userName].filter(Boolean).join(' ') : '-'}</span>
+													<span className="block min-w-0 sm:col-span-2"><b className="whitespace-nowrap">Date :</b> {actif.createdAt ? dateFormat(actif.createdAt) : '-'}</span>
 												</div>
 											</div>
 										);
 										})}
 									</div>
 								) : (detailActif._shopRaw || detailActif.shopItemId) ? (
-									<div className="space-y-4 text-sm">
-										<div className="flex items-start gap-4">
+									<div className="space-y-4 text-sm wrap-break-word">
+										<div className="flex flex-col items-start gap-4 sm:flex-row">
 											<div className="w-20 h-20 bg-neutral-100 rounded overflow-hidden">
 												{(detailActif.productId?.productImage || detailActif.productImage) ? (
 													<img src={getFullMediaUrl(detailActif.productId?.productImage || detailActif.productImage)} alt={detailActif.productId?.productName || detailActif.productName} className="w-full h-full object-cover" />
@@ -960,7 +960,7 @@ const Actifs = () => {
 													<span className="text-neutral-400">-</span>
 												)}
 											</div>
-											<div>
+											<div className="min-w-0 flex-1">
 												<div><b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}</div>
 												<div><b>Code produit :</b> {detailActif.productId?.codeCPC || detailActif.productCode || '-'}</div>
 												<div><b>Site :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}</div>
@@ -977,7 +977,7 @@ const Actifs = () => {
 										<div><b>Date mise à jour :</b> {detailActif.updatedAt ? dateFormat(detailActif.updatedAt) : (detailActif._shopRaw?.updatedAt ? dateFormat(detailActif._shopRaw.updatedAt) : '-')}</div>
 									</div>
 								) : (
-									<div className="space-y-4 text-sm">
+									<div className="space-y-4 text-sm wrap-break-word">
 										<div><b>Code produit :</b> {detailActif.productId?.codeCPC || detailActif.productCode || '-'}</div>
 										<div><b>Produit :</b> {detailActif.productId?.productName || detailActif.productName || '-'}</div>
 										<div><b>Dépôt :</b> {detailActif.depotId?.siteName || detailActif.depot || '-'}</div>

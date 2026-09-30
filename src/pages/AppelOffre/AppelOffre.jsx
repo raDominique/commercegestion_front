@@ -274,7 +274,7 @@ function TendersList() {
           {detailLoading ? (
             <div className="py-8 flex justify-center"><Loader message="Chargement..." /></div>
           ) : detailTender ? (
-            <div className="space-y-4 text-sm">
+            <div className="space-y-4 text-sm wrap-break-word">
               {detailTender.productId?.productImage && (
                 <div className="flex justify-center mb-4">
                   <img
@@ -284,8 +284,8 @@ function TendersList() {
                   />
                 </div>
               )}
-              <div className="flex items-start justify-between gap-2">
-                <div className="font-bold text-base text-neutral-900">{detailTender.titre}</div>
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between">
+                <div className="min-w-0 flex-1 font-bold text-base text-neutral-900 wrap-break-word">{detailTender.titre}</div>
                 <Badge className={`shrink-0 mt-0.5 ${statusColor(detailTender.statut || '')}`}>
                   {(detailTender.statut || '').replace('_', ' ')}
                 </Badge>
@@ -531,8 +531,8 @@ function MyTendersList() {
                   />
                 </div>
               )}
-              <div className="flex items-start justify-between gap-2">
-                <div className="font-bold text-base text-neutral-900">{detailTender.titre}</div>
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between">
+                <div className="min-w-0 flex-1 font-bold text-base text-neutral-900 wrap-break-word">{detailTender.titre}</div>
                 <Badge className={`shrink-0 mt-0.5 ${statusColor(detailTender.statut || '')}`}>
                   {(detailTender.statut || '').replace('_', ' ')}
                 </Badge>

@@ -40,7 +40,7 @@ function DialogContent({ className, children, ...props }) {
         data-slot="dialog-content"
         className={cn(
           // Palette personnalisée : fond clair, bordure violette, header violet, texte foncé, description grise
-          "bg-white border-2 border-violet-600 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-1/2 left-1/2 z-1001 grid w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl p-4 sm:p-6 shadow-2xl duration-200 max-h-[90vh] overflow-visible",
+          "bg-white border-2 border-violet-600 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-1/2 left-1/2 z-1001 grid w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl p-4 sm:p-6 shadow-2xl duration-200 max-h-[calc(100vh-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain wrap-break-word [&>*]:min-w-0",
           className,
         )}
         {...props}
@@ -59,7 +59,7 @@ function DialogHeader({ className, ...props }) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn("flex flex-col gap-2 pr-8 text-center sm:text-left", className)}
       {...props}
       style={{ color: '#4f46e5' }} // violet-600
     />
@@ -72,7 +72,7 @@ function DialogFooter({ className, ...props }) {
       data-slot="dialog-footer"
       className={cn(
         // Boutons côte à côte, Annuler à gauche, action à droite
-        "flex flex-row gap-2 justify-end mt-2",
+        "flex flex-row flex-wrap gap-2 justify-end mt-2",
         className,
       )}
       {...props}

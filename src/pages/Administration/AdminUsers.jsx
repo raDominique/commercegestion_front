@@ -329,15 +329,15 @@ export default function AdminUsers() {
                             <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
                         ) : detailUser ? (
                             <div>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex items-center gap-4 mb-4">
+                                <div className="space-y-2 text-sm wrap-break-word">
+                                    <div className="flex flex-col items-start gap-4 mb-4 min-w-0 sm:flex-row sm:items-center">
                                         <img
                                             src={getFullMediaUrl(detailUser.userType === 'Entreprise' ? (detailUser.logo || detailUser.userImage) : (detailUser.userImage || detailUser.logo))}
                                             alt={detailUser.userNickName}
                                             className={detailUser.userType === 'Entreprise' ? 'w-20 h-20 object-contain rounded border' : 'w-16 h-16 object-cover rounded-full border'}
                                         />
-                                        <div>
-                                            <div className="font-bold text-lg text-neutral-900">{detailUser.userName} {detailUser.userFirstname}</div>
+                                        <div className="min-w-0">
+                                            <div className="font-bold text-lg text-neutral-900 wrap-break-word">{detailUser.userName} {detailUser.userFirstname}</div>
                                             <div className="text-xs text-neutral-500">{detailUser.userType} - {detailUser.userAccess}</div>
                                         </div>
                                     </div>

@@ -200,9 +200,15 @@ const MesTransactions = () => {
 
       <Tabs defaultValue="transactions">
         <TabsList>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="actifs">Mouvements des Actifs</TabsTrigger>
-          <TabsTrigger value="passifs">Mouvements des Passifs</TabsTrigger>
+          <TabsTrigger value="transactions" className="min-w-0 flex-1 px-2 sm:flex-none sm:px-4">
+            <span className="block truncate" title="Transactions">Transactions</span>
+          </TabsTrigger>
+          <TabsTrigger value="actifs" className="min-w-0 flex-1 px-2 sm:flex-none sm:px-4">
+            <span className="block truncate" title="Mouvements des Actifs">Mouvements des Actifs</span>
+          </TabsTrigger>
+          <TabsTrigger value="passifs" className="min-w-0 flex-1 px-2 sm:flex-none sm:px-4">
+            <span className="block truncate" title="Mouvements des Passifs">Mouvements des Passifs</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="transactions">
@@ -274,7 +280,7 @@ const MesTransactions = () => {
                     <DialogDescription>Informations complètes de la transaction sélectionnée</DialogDescription>
                   </DialogHeader>
                   {selectedTransactionDetails ? (
-                    <div className="space-y-4 text-sm">
+                    <div className="space-y-4 text-sm wrap-break-word">
                       <div><b>N° transaction :</b> {selectedTransactionDetails.transactionNumber || selectedTransactionDetails._id}</div>
                       <div><b>Type :</b> {selectedTransactionDetails.type || '-'}</div>
                       <div><b>Statut :</b> {selectedTransactionDetails.status || '-'}</div>

@@ -1143,7 +1143,7 @@ const MesProduits = () => {
             <Card className="border-violet-200 bg-violet-50 p-6 space-y-6">
 
               {/* HEADER PRODUIT */}
-              <div className="flex gap-6 items-center">
+                <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
                 {detailProduct.productImage ? (
                   <img
                     src={getFullMediaUrl(detailProduct.productImage)}
@@ -1168,7 +1168,7 @@ const MesProduits = () => {
                     {detailProduct.productCategory}
                   </Badge>
 
-                  <div className="flex gap-2 mt-1">
+                  <div className="flex flex-wrap gap-2 mt-1">
                     <Badge
                       variant={detailProduct.isStocker ? 'default' : 'secondary'}
                       className={
@@ -1210,7 +1210,7 @@ const MesProduits = () => {
                   Informations techniques
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <div className="text-neutral-500">Code CPC</div>
                     <div className="font-medium">{detailProduct.codeCPC || '-'}</div>
