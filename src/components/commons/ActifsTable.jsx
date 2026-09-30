@@ -139,7 +139,7 @@ export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, on
         return (
           <div key={itemId || item.productId || JSON.stringify(item)} className="p-4 border rounded bg-white">
             <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-4">
+              <div className="flex min-w-0 flex-1 items-center gap-4">
                 <div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
                   {item.productImage ? (
                     <img src={getFullMediaUrl(item.productImage)} alt={item.productName} className="w-full h-full object-cover" />
@@ -147,13 +147,13 @@ export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, on
                     <span className="text-neutral-400">-</span>
                   )}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="font-medium text-neutral-900 truncate">{item.productName || '-'}</div>
                   <div className="text-xs text-neutral-500">{item.productCode || '-'}</div>
                   <div className="text-xs text-neutral-500 mt-1">{item.depot || '-'}</div>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex shrink-0 flex-col items-end gap-2">
                 <div className="text-sm font-medium text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
                 <div className="text-xs text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
                 <div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
