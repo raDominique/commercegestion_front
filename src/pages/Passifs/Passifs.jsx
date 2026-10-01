@@ -19,6 +19,7 @@ import { exportAndDownloadPassifs } from '../../services/export.service.js';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
+import { getMovementTypeBadgeProps } from '../../constants/transaction.enums';
 import { getFullMediaUrl } from '../../services/media.service';
 import InfoIcon from '@mui/icons-material/Info';
 import { Loader } from '../../components/ui/loader';
@@ -210,6 +211,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 							<TableHead className="text-xs text-neutral-600 text-right">Total (Ar)</TableHead> */}
 							{/* <TableHead className="text-xs text-neutral-600">Détenteur</TableHead> */}
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
+							<TableHead className="text-xs text-neutral-600">Type</TableHead>
 							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
@@ -235,6 +237,11 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell> */}
 									{/* <TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell> */}
 									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
+									<TableCell className="text-sm">
+										<Badge variant="outline" className={`text-xs px-2 py-0.5 rounded ${getMovementTypeBadgeProps(item.type).className}`}>
+											{getMovementTypeBadgeProps(item.type).label}
+										</Badge>
+									</TableCell>
 									<TableCell className="text-sm">
 										<Badge className={`text-xs px-2 py-0.5 rounded ${statutConfig[item.statut]?.className || 'bg-neutral-100 text-neutral-700 border-neutral-200'}`}>
 											{statutConfig[item.statut]?.label || item.statut || '-'}
@@ -282,6 +289,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<div>Montant: {montant !== null ? formatThousands(montant) : '-'}</div>
 									{/* <div>Détenteur: {detenteur}</div> */}
 									<div>Ayant droit: {ayantDroit}</div>
+									<div>Type: <Badge variant="outline" className={`text-xs px-2 py-0.5 rounded ${getMovementTypeBadgeProps(item.type).className}`}>{getMovementTypeBadgeProps(item.type).label}</Badge></div>
 									<div>Statut: <Badge className={`text-xs px-2 py-0.5 rounded ${statutConfig[item.statut]?.className || 'bg-neutral-100 text-neutral-700 border-neutral-200'}`}>{statutConfig[item.statut]?.label || item.statut || '-'}</Badge></div>
 									<div>{date ? dateFormat(date) : '-'}</div>
 								</div>
