@@ -13,6 +13,7 @@ import { getAllUsersSelect, getUsers } from '../../services/user.service';
 import { getMySites, getActifsBySite } from '../../services/site.service';
 import { getAccessToken } from '../../services/token.service';
 import { useAuth } from '../../context/AuthContext';
+import { UserAutocomplete } from '../../components/commons/UserAutocomplete.jsx';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { Loader } from '../../components/ui/loader';
 import { formatThousands } from '../../utils/formatNumber';
@@ -258,165 +259,165 @@ const AchatVente = () => {
                   <p className="text-sm text-neutral-600">Vendez un produit contre de l'argent.</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4 p-4">
+                  <div className="space-y-2">
+                    <Label required>1. Vendeur</Label>
+                    {vendeurField}
+                  </div>
+
+                  {ready.vendeur && (
                     <div className="space-y-2">
-                      <Label required>1. Vendeur</Label>
-                      {vendeurField}
+                      <Label required>2. Site d'origine</Label>
+                      <Select value={siteOrigineId} onValueChange={setSiteOrigineId}>
+                        <SelectTrigger className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
+                        <SelectContent>
+                          {sites.map(s => (
+                            <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+                  )}
 
-                    {ready.vendeur && (
-                      <div className="space-y-2">
-                        <Label required>2. Site d'origine</Label>
-                        <Select value={siteOrigineId} onValueChange={setSiteOrigineId}>
-                          <SelectTrigger className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
-                          <SelectContent>
-                            {sites.map(s => (
-                              <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    {ready.siteOrigine && (
-                      <div className="space-y-2">
-                        <Label required>3. Produit</Label>
-                        <Select value={productId} onValueChange={setProductId} disabled={loadingProducts}>
-                          <SelectTrigger className="bg-white">
-                            <SelectValue placeholder={loadingProducts ? "Chargement..." : "Sélectionner un produit"}>{displayProductName}</SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {products.map((p, i) => (
-                              <SelectItem key={i} value={String(i)}>{p.productName || p.name} (Stock: {formatThousands(p.quantite ?? 0)})</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    {ready.product && (
-                      <>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
-                            <Input type="number" min="0" step="any" max={maxQty ?? undefined} value={quantite} onChange={e => {
-                              const val = e.target.value;
-                              if (val === '' || Number(val) <= (maxQty ?? Infinity)) setQuantite(val);
-                            }} className="bg-white" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label required>Prix unitaire (Ar)</Label>
-                            <Input type="number" min="0" value={rapportEchange} onChange={e => setRapportEchange(e.target.value)} className="bg-white" />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label>5. Observations</Label>
-                          <Textarea value={observations} onChange={e => setObservations(e.target.value)} placeholder="Observations facultatives" rows={3} />
-                        </div>
-
-                        <div className="flex justify-end gap-2 pt-2">
-                          <Button variant="outline" type="button" onClick={resetForm}>Annuler</Button>
-                          <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving}>
-                            {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                            {saving ? 'Traitement...' : 'Effectuer la transaction'}
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </form>
-                </Card>
-              </TabsContent>
-
-                <TabsContent value="exchange">
-                  <Card className="border-neutral-200 bg-white">
-                    <div className="px-4 pt-4">
-                      <h2 className="text-lg font-semibold text-neutral-900">Échange produit</h2>
-                      <p className="text-sm text-neutral-600">Échangez un produit avec un autre membre.</p>
-                    </div>
-                  <form onSubmit={handleSubmit} className="space-y-4 p-4">
+                  {ready.siteOrigine && (
                     <div className="space-y-2">
-                      <Label required>1. Vendeur</Label>
-                      {vendeurField}
+                      <Label required>3. Produit</Label>
+                      <Select value={productId} onValueChange={setProductId} disabled={loadingProducts}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder={loadingProducts ? "Chargement..." : "Sélectionner un produit"}>{displayProductName}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {products.map((p, i) => (
+                            <SelectItem key={i} value={String(i)}>{p.productName || p.name} (Stock: {formatThousands(p.quantite ?? 0)})</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+                  )}
 
-                    {ready.vendeur && (
-                      <div className="space-y-2">
-                        <Label required>2. Contrepartie (acheteur)</Label>
-                        <UserAutocomplete
-                          users={users}
-                          value={contrepartieInput}
-                          onChange={(val) => { setContrepartieInput(val); if (!val) setContrepartieId(''); }}
-                          onSelect={(u) => setContrepartieId(u._id || u.id)}
-                          getDisplayName={getUserDisplayName}
-                          placeholder="Rechercher la contrepartie..."
-                        />
-                      </div>
-                    )}
-
-                    {ready.contrepartie && (
-                      <div className="space-y-2">
-                        <Label required>3. Site d'origine</Label>
-                        <Select value={siteOrigineId} onValueChange={setSiteOrigineId}>
-                          <SelectTrigger className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
-                          <SelectContent>
-                            {sites.map(s => (
-                              <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    {ready.siteOrigine && (
-                      <div className="space-y-2">
-                        <Label required>4. Produit</Label>
-                        <Select value={productId} onValueChange={setProductId} disabled={loadingProducts}>
-                          <SelectTrigger className="bg-white">
-                            <SelectValue placeholder={loadingProducts ? "Chargement..." : "Sélectionner un produit"}>{displayProductName}</SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {products.map((p, i) => (
-                              <SelectItem key={i} value={String(i)}>{p.productName || p.name} (Stock: {formatThousands(p.quantite ?? 0)})</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    {ready.product && (
-                      <>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
-                            <Input type="number" min="0" step="any" max={maxQty ?? undefined} value={quantite} onChange={e => {
-                              const val = e.target.value;
-                              if (val === '' || Number(val) <= (maxQty ?? Infinity)) setQuantite(val);
-                            }} className="bg-white" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label required>Rapport d'échange</Label>
-                            <Input type="number" min="0" value={rapportEchange} onChange={e => setRapportEchange(e.target.value)} className="bg-white" />
-                          </div>
-                        </div>
-
+                  {ready.product && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>6. Observations</Label>
-                          <Textarea value={observations} onChange={e => setObservations(e.target.value)} placeholder="Observations facultatives" rows={3} />
+                          <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
+                          <Input type="number" min="0" step="any" max={maxQty ?? undefined} value={quantite} onChange={e => {
+                            const val = e.target.value;
+                            if (val === '' || Number(val) <= (maxQty ?? Infinity)) setQuantite(val);
+                          }} className="bg-white" />
                         </div>
+                        <div className="space-y-2">
+                          <Label required>Prix unitaire (Ar)</Label>
+                          <Input type="number" min="0" value={rapportEchange} onChange={e => setRapportEchange(e.target.value)} className="bg-white" />
+                        </div>
+                      </div>
 
-                        <div className="flex justify-end gap-2 pt-2">
-                          <Button variant="outline" type="button" onClick={resetForm}>Annuler</Button>
-                          <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving}>
-                            {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                            {saving ? 'Traitement...' : 'Effectuer la transaction'}
-                          </Button>
+                      <div className="space-y-2">
+                        <Label>5. Observations</Label>
+                        <Textarea value={observations} onChange={e => setObservations(e.target.value)} placeholder="Observations facultatives" rows={3} />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="outline" type="button" onClick={resetForm}>Annuler</Button>
+                        <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving}>
+                          {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                          {saving ? 'Traitement...' : 'Effectuer la transaction'}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </form>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="exchange">
+              <Card className="border-neutral-200 bg-white">
+                <div className="px-4 pt-4">
+                  <h2 className="text-lg font-semibold text-neutral-900">Échange produit</h2>
+                  <p className="text-sm text-neutral-600">Échangez un produit avec un autre membre.</p>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-4 p-4">
+                  <div className="space-y-2">
+                    <Label required>1. Vendeur</Label>
+                    {vendeurField}
+                  </div>
+
+                  {ready.vendeur && (
+                    <div className="space-y-2">
+                      <Label required>2. Contrepartie (acheteur)</Label>
+                      <UserAutocomplete
+                        users={users}
+                        value={contrepartieInput}
+                        onChange={(val) => { setContrepartieInput(val); if (!val) setContrepartieId(''); }}
+                        onSelect={(u) => setContrepartieId(u._id || u.id)}
+                        getDisplayName={getUserDisplayName}
+                        placeholder="Rechercher la contrepartie..."
+                      />
+                    </div>
+                  )}
+
+                  {ready.contrepartie && (
+                    <div className="space-y-2">
+                      <Label required>3. Site d'origine</Label>
+                      <Select value={siteOrigineId} onValueChange={setSiteOrigineId}>
+                        <SelectTrigger className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
+                        <SelectContent>
+                          {sites.map(s => (
+                            <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {ready.siteOrigine && (
+                    <div className="space-y-2">
+                      <Label required>4. Produit</Label>
+                      <Select value={productId} onValueChange={setProductId} disabled={loadingProducts}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder={loadingProducts ? "Chargement..." : "Sélectionner un produit"}>{displayProductName}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {products.map((p, i) => (
+                            <SelectItem key={i} value={String(i)}>{p.productName || p.name} (Stock: {formatThousands(p.quantite ?? 0)})</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {ready.product && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
+                          <Input type="number" min="0" step="any" max={maxQty ?? undefined} value={quantite} onChange={e => {
+                            const val = e.target.value;
+                            if (val === '' || Number(val) <= (maxQty ?? Infinity)) setQuantite(val);
+                          }} className="bg-white" />
                         </div>
-                      </>
-                    )}
-                  </form>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+                        <div className="space-y-2">
+                          <Label required>Rapport d'échange</Label>
+                          <Input type="number" min="0" value={rapportEchange} onChange={e => setRapportEchange(e.target.value)} className="bg-white" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>6. Observations</Label>
+                        <Textarea value={observations} onChange={e => setObservations(e.target.value)} placeholder="Observations facultatives" rows={3} />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="outline" type="button" onClick={resetForm}>Annuler</Button>
+                        <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving}>
+                          {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                          {saving ? 'Traitement...' : 'Effectuer la transaction'}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </form>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </>
       )}
     </div>
