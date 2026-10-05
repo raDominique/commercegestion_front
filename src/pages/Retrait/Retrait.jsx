@@ -780,7 +780,7 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 		);
 	}
 
-	// Mobile cards
+	// Mobile cards — même pattern que Actifs/Passifs
 	return (
 		<div className="space-y-4 p-4">
 			{passifs.map((item) => {
@@ -788,51 +788,42 @@ function RetraitTableOrList({ loading, passifs, dateFormat, isDesktop }) {
 				const validationText = statusBadge.label;
 				const validationClass = statusBadge.className;
 
+				const produit = item.productId?.productName || '-';
 				const operatorName = item.initiatorId?.userNickName || item.initiatorId?.userName || item.operatorId?.userNickName || item.operatorId?.userName || '-';
 				const detenteurName = item.recipientId?.userNickName || item.recipientId?.userName || (typeof item.detentaire === 'string' ? item.detentaire : (item.detentaire?.userNickName || item.detentaire?.userName)) || '-';
+				const ayantDroitName = item.ayant_droit?.userNickName || item.ayant_droit?.userName || item.initiatorId?.userNickName || item.initiatorId?.userName || (typeof item.ayant_droit === 'string' ? item.ayant_droit : '-');
+				const siteOrigine = item.siteOrigineId?.siteName || '-';
+				const siteDestination = item.siteDestinationId?.siteName || '-';
 				const dateToShow = item.approvedAt || item.createdAt;
 
 				return (
 					<Card key={item._id} className="p-4">
-						<div className="flex items-start justify-between gap-4">
-							<div className="flex-1 min-w-0">
-							<div className="flex items-center gap-4">
-								<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden">
+						<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+							<div className="flex items-center gap-4 min-w-0">
+								<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden shrink-0">
 									{item.productId?.productImage ? (
 										<img src={getFullMediaUrl(item.productId.productImage)} alt={item.productId.productName} className="w-full h-full object-cover" />
 									) : (
 										<span className="text-neutral-400">-</span>
-										)}
-									</div>
-									<div className="min-w-0">
-										<div className="font-medium text-neutral-900 truncate">{item.productId?.productName || '-'}</div>
-										<div className="text-xs text-neutral-500 truncate">{item.siteOrigineId?.siteName || '-'}</div>
-									</div>
+									)}
 								</div>
-								<div className="grid grid-cols-2 gap-2 mt-4 text-xs">
-									<div>
-										<span className="text-neutral-600">Opérateur:</span>
-										<div className="font-medium text-neutral-900">{operatorName}</div>
-									</div>
-									<div>
-										<span className="text-neutral-600">Détenteur:</span>
-										<div className="font-medium text-neutral-900">{detenteurName}</div>
-									</div>
-									<div>
-										<span className="text-neutral-600">Quantité:</span>
-										<div className="font-medium text-neutral-900">{item.quantite !== undefined && item.quantite !== null ? formatThousands(item.quantite) : '-'}</div>
-									</div>
-									<div>
-										<span className="text-neutral-600">Prix unitaire:</span>
-										<div className="font-medium text-neutral-900">{item.prixUnitaire !== undefined && item.prixUnitaire !== null ? formatThousands(item.prixUnitaire) : '-'}</div>
-									</div>
-								</div>
-								<div className="mt-2">
-									<Badge className={`text-xs ${validationClass} px-2 py-0.5 rounded`}>{validationText}</Badge>
+								<div className="min-w-0">
+									<div className="font-medium text-neutral-900 truncate">{produit}</div>
+									<div className="text-xs text-neutral-500 truncate">{siteOrigine} → {siteDestination}</div>
 								</div>
 							</div>
-							<div className="text-xs text-neutral-500 text-right">
-								{dateToShow ? dateFormat(dateToShow) : '-'}
+							<div className="flex flex-col sm:items-end gap-2">
+								<div className="text-xs text-neutral-700 text-right">
+									<div className="font-semibold">Quantité</div>
+									<div>{item.quantite !== undefined && item.quantite !== null ? formatThousands(item.quantite) : '-'}</div>
+								</div>
+								<div className="flex flex-wrap gap-1 sm:justify-end">
+									<Badge className={`text-xs ${validationClass} px-2 py-0.5 rounded`}>{validationText}</Badge>
+								</div>
+								<div className="text-xs text-neutral-600">Opérateur: {operatorName}</div>
+								<div className="text-xs text-neutral-600">Détenteur: {detenteurName}</div>
+								<div className="text-xs text-neutral-600">Ayant droit: {ayantDroitName}</div>
+								<div className="text-xs text-neutral-500">{dateToShow ? dateFormat(dateToShow) : '-'}</div>
 							</div>
 						</div>
 					</Card>
