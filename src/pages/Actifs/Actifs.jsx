@@ -25,7 +25,7 @@ import {
 } from '../../components/ui/dialog';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
-import { getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
+import { getTransactionStatusBadgeProps, getTransactionStatusBadges, getTransactionTypeBadgeProps } from '../../constants/transaction.enums';
 import { formatThousands } from '../../utils/formatNumber';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
@@ -64,19 +64,9 @@ const getStatutArray = (statut) => {
 const statutIsPending = (s) => /PENDING|ATTENTE/.test(String(s).toUpperCase());
 const statutIsApproved = (s) => String(s).toUpperCase().includes('APPROVED');
 
-// Retourne les badges de statut (gère le cas où un actif mélange APPROVED + PENDING)
-const getStatusBadges = (statut) => {
-	const arr = getStatutArray(statut);
-	if (arr.length === 0) {
-		return [{ className: 'bg-neutral-100 text-neutral-700 border-neutral-200', label: '-' }];
-	}
-	const hasApproved = arr.some(statutIsApproved);
-	const hasPending = arr.some(statutIsPending);
-	if (hasApproved && hasPending) {
-		return [{ className: 'bg-amber-50 text-amber-700 border-amber-200', label: 'Approuvé partiellement' }];
-	}
-	return arr.map((s) => getTransactionStatusBadgeProps(s));
-};
+// Badges de statut/type : source unique dans constants/transaction.enums
+// (getTransactionStatusBadges gère le mélange APPROVED + PENDING)
+
 
 // Quantité métier affichée selon le statut de l'actif :
 // - APPROVED -> quantiteDisponible
@@ -97,20 +87,6 @@ const getQuantityLines = (item) => {
     lines.push({ label: 'Quantité', value: getQuantityValue(item?.quantite) });
 	}
   return { lines, showLabels: lines.length > 1 };
-};
-
-const getTypeBadgeProps = (type) => {
-  const normalizedType = String(type || '').toUpperCase();
-  const types = {
-    ACTIF: { label: 'Actif', className: 'bg-blue-50 text-blue-700 border-blue-200' },
-    DEPOT: { label: 'Dépôt', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    RETRAIT: { label: 'Retrait', className: 'bg-orange-50 text-orange-700 border-orange-200' },
-    VIREMENT_DROIT: { label: 'Virement de droit', className: 'bg-violet-50 text-violet-700 border-violet-200' },
-  };
-  return types[normalizedType] || {
-    label: type || '-',
-    className: 'bg-neutral-100 text-neutral-700 border-neutral-200',
-  };
 };
 
 // Style partagé pour la colonne Actions — garanti par inline style
@@ -1033,9 +1009,9 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{actifs.map(item => {
-						const statusBadges = getStatusBadges(item.statut);
-						const typeBadge = getTypeBadgeProps(item.type);
+					{actifs.map(item => {
+					const statusBadges = getTransactionStatusBadges(item.statut);
+					const typeBadge = getTransactionTypeBadgeProps(item.type);
 						const { lines: quantityLines, showLabels } = getQuantityLines(item);
 						return (
 							<TableRow key={item.id}>
@@ -1113,8 +1089,8 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 	return (
 		<div className="space-y-4 p-4">
 				{actifs.map(item => {
-				const statusBadges = getStatusBadges(item.statut);
-				const typeBadge = getTypeBadgeProps(item.type);
+				const statusBadges = getTransactionStatusBadges(item.statut);
+				const typeBadge = getTransactionTypeBadgeProps(item.type);
 				const { lines: quantityLines, showLabels } = getQuantityLines(item);
 				return (
 					<Card key={item.id} className="p-4">

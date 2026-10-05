@@ -28,6 +28,7 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { toast } from 'sonner';
+import { getTenderStatusBadgeProps } from '../../constants/transaction.enums';
 import InfoIcon from '@mui/icons-material/Info';
 import DeleteIcon from '@mui/icons-material/Delete';
 import HowToVoteIcon from '@mui/icons-material/HowToVote';
@@ -86,15 +87,10 @@ const AppelOffre = () => {
 
 export default AppelOffre;
 
-const statusColor = (statut) => {
-  const map = {
-    OUVERT: 'bg-green-100 text-green-800 border-green-200',
-    EN_ATTENTE: 'bg-amber-100 text-amber-800 border-amber-200',
-    DEPOUILLE: 'bg-blue-100 text-blue-800 border-blue-200',
-    ATTRIBUE: 'bg-purple-100 text-purple-800 border-purple-200',
-    ANNULE: 'bg-red-100 text-red-800 border-red-200',
-  };
-  return map[statut] || 'bg-neutral-100 text-neutral-800 border-neutral-200';
+// Badge de statut : source unique dans constants/transaction.enums (uniforme plateforme)
+const TenderStatusBadge = ({ statut, className = '' }) => {
+  const badge = getTenderStatusBadgeProps(statut);
+  return <Badge className={`text-xs px-2 py-0.5 rounded shrink-0 ${badge.className} ${className}`.trim()}>{badge.label}</Badge>;
 };
 
 function TendersList() {
@@ -231,9 +227,7 @@ function TendersList() {
                 <div className="px-4 py-3">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg font-semibold text-neutral-900 truncate">{item.titre}</CardTitle>
-                    <Badge className={`shrink-0 mt-0.5 ${statusColor(item.statut || '')}`}>
-                      {(item.statut || '').replace('_', ' ')}
-                    </Badge>
+                    <TenderStatusBadge statut={item.statut} className="mt-0.5" />
                   </div>
                 </div>
               </CardHeader>
@@ -286,9 +280,7 @@ function TendersList() {
               )}
               <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between">
                 <div className="min-w-0 flex-1 font-bold text-base text-neutral-900 wrap-break-word">{detailTender.titre}</div>
-                <Badge className={`shrink-0 mt-0.5 ${statusColor(detailTender.statut || '')}`}>
-                  {(detailTender.statut || '').replace('_', ' ')}
-                </Badge>
+                <TenderStatusBadge statut={detailTender.statut} className="mt-0.5" />
               </div>
               <div><b>Description :</b> {detailTender.description || '-'}</div>
               <div><b>Produit :</b> {detailTender.productId?.productName || '-'}</div>
@@ -478,7 +470,7 @@ function MyTendersList() {
               <TableRow key={t._id} className="border-t">
                 <TableCell className="py-3">{t.titre || t._id}</TableCell>
                 <TableCell className="py-3">
-                  <Badge className={statusColor(t.statut || '')}>{(t.statut || '').replace('_', ' ')}</Badge>
+                  <TenderStatusBadge statut={t.statut} />
                 </TableCell>
                 <TableCell className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</TableCell>
                 <TableCell className="py-3">
@@ -533,9 +525,7 @@ function MyTendersList() {
               )}
               <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between">
                 <div className="min-w-0 flex-1 font-bold text-base text-neutral-900 wrap-break-word">{detailTender.titre}</div>
-                <Badge className={`shrink-0 mt-0.5 ${statusColor(detailTender.statut || '')}`}>
-                  {(detailTender.statut || '').replace('_', ' ')}
-                </Badge>
+                <TenderStatusBadge statut={detailTender.statut} className="mt-0.5" />
               </div>
               <div><b>Description :</b> {detailTender.description || '-'}</div>
               <div><b>Produit :</b> {detailTender.productId?.productName || '-'}</div>
@@ -622,9 +612,7 @@ function MyTendersList() {
                       <TableCell className="py-3 px-2 font-medium">{total ? `${total.toLocaleString()} Ar` : '-'}</TableCell>
                       <TableCell className="py-3 px-2">{bid.delaiLivraison || '-'}</TableCell>
                       <TableCell className="py-3 px-2">
-                        <Badge className={bid.statut === 'RETENUE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200'}>
-                          {bid.statut || 'SOUMIS'}
-                        </Badge>
+                        <TenderStatusBadge statut={bid.statut || 'SOUMIS'} />
                       </TableCell>
                       <TableCell className="py-3 pl-2 text-right">
                         {bid.statut !== 'RETENUE' ? (
@@ -636,7 +624,7 @@ function MyTendersList() {
                             <CheckCircleIcon className="w-4 h-4 mr-1" /> Attribuer
                           </Button>
                         ) : (
-                          <span className="text-green-700 text-xs font-semibold">RETENUE</span>
+                          <span className="text-emerald-700 text-xs font-semibold">RETENUE</span>
                         )}
                       </TableCell>
                     </TableRow>

@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 import { getProfile } from '../../services/auth.service.js';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
+import { Tooltip, TooltipTrigger, TooltipContent } from '../../components/ui/tooltip';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
@@ -19,15 +20,13 @@ import { exportAndDownloadPassifs } from '../../services/export.service.js';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
-import { getMovementTypeBadgeProps } from '../../constants/transaction.enums';
+import { getMovementTypeBadgeProps, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
 import { getFullMediaUrl } from '../../services/media.service';
 import InfoIcon from '@mui/icons-material/Info';
 import { Loader } from '../../components/ui/loader';
-const statutConfig = {
-  PENDING: { label: 'En attente', className: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-  APPROVED: { label: 'Approuvé', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  REJECTED: { label: 'Rejeté', className: 'bg-red-50 text-red-700 border-red-200' },
-};
+
+// Largeur forcée de la colonne Actions — même pattern que Actifs.jsx
+const ACTION_COL_STYLE_LG = { minWidth: '200px', width: '200px' };
 
 const renderPerson = (person) => {
 	if (!person) return '-';
@@ -116,7 +115,7 @@ const Passifs = () => {
 			{user && user.userValidated === false ? (
 				<UserNotValidatedBanner />
 			) : (
-				<>
+				<div className="space-y-6">
 					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 						<div>
 							<h1 className="text-2xl text-neutral-900 mb-2">Mes Passifs</h1>
@@ -143,48 +142,78 @@ const Passifs = () => {
 					<Card className="border-neutral-200 bg-white">
 						<PassifsTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} />
 					</Card>
-					<PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="mt-4" />
+					<PaginationControls
+						page={page}
+						total={total}
+						limit={limit}
+						loading={loading}
+						onPageChange={setPage}
+						onLimitChange={setLimit}
+						showLimitSelector
+						limitLabel="Par page"
+						className="mt-4"
+					/>
 					{/* Modal de détail du passif avec Dialog */}
 					<Dialog open={detailOpen} onOpenChange={setDetailOpen}>
 						<DialogContent aria-describedby="detail-passif-desc">
-							<DialogTitle>Détail du Passif</DialogTitle>
-							<DialogDescription id="detail-passif-desc">
-								Informations détaillées sur le passif sélectionné.
-							</DialogDescription>
+							<DialogHeader>
+								<DialogTitle>Détail du Passif</DialogTitle>
+								<DialogDescription id="detail-passif-desc">
+									Informations détaillées sur le passif sélectionné.
+								</DialogDescription>
+							</DialogHeader>
 							{loadingDetail ? (
-								<div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>
+								<div className="flex justify-center py-8"><Loader message="Chargement..." /></div>
 							) : detailPassif ? (
-								<div className="flex flex-col sm:flex-row gap-6">
-									<div className="flex-1 space-y-2 text-sm min-w-0">
-										<div><b>Produit :</b> {detailPassif.productId?.productName || '-'}</div>
-										<div><b>Code CPC :</b> {detailPassif.productId?.codeCPC || '-'}</div>
-										<div><b>Quantité :</b> {detailPassif.quantite ?? '-'}</div>
-										<div><b>Prix unitaire :</b> {detailPassif.prixUnitaire != null ? formatThousands(detailPassif.prixUnitaire) : '-'}</div>
-										<div><b>Type :</b> {detailPassif.typePassif || '-'}</div>
-										<div><b>Dépôt :</b> {detailPassif.depotId?.siteName || '-'}</div>
-										<div><b>Adresse dépôt :</b> {detailPassif.depotId?.siteAddress || '-'}</div>
-										<div><b>Créancier :</b> {renderPerson(detailPassif.creancierId)}</div>
-										<div><b>Détenteur :</b> {renderPerson(detailPassif.detentaire)}</div>
-										<div><b>Ayant droit :</b> {renderPerson(detailPassif.ayant_droit)}</div>
-										<div><b>Utilisateur :</b> {detailPassif.userId?.userNickName || detailPassif.userId?.userName || '-'}</div>
-										<div><b>Email :</b> {detailPassif.userId?.userEmail || '-'}</div>
-										<div><b>Téléphone :</b> {detailPassif.userId?.userPhone || '-'}</div>
-										<div><b>Statut :</b> {detailPassif.isActive ? 'Actif' : 'Inactif'}</div>
-										<div><b>Créé le :</b> {detailPassif.createdAt ? dateFormat(detailPassif.createdAt) : '-'}</div>
-										<div><b>Mis à jour le :</b> {detailPassif.updatedAt ? dateFormat(detailPassif.updatedAt) : '-'}</div>
-									</div>
-									{detailPassif.productId?.productImage && (
-										<div className="shrink-0 mx-auto sm:mx-0">
-											<img src={getFullMediaUrl(detailPassif.productId.productImage)} alt={detailPassif.productId.productName || 'product'} className="w-28 h-28 rounded object-cover border" />
+								<div className="space-y-4 text-sm wrap-break-word">
+									<div className="flex flex-col items-start gap-4 sm:flex-row">
+										<div className="w-20 h-20 bg-neutral-100 rounded overflow-hidden shrink-0 flex items-center justify-center">
+											{detailPassif.productId?.productImage ? (
+												<img src={getFullMediaUrl(detailPassif.productId.productImage)} alt={detailPassif.productId.productName || 'product'} className="w-full h-full object-cover" />
+											) : (
+												<span className="text-neutral-400">-</span>
+											)}
 										</div>
-									)}
+										<div className="min-w-0 flex-1">
+											<div><b>Produit :</b> {detailPassif.productId?.productName || '-'}</div>
+											<div><b>Code CPC :</b> {detailPassif.productId?.codeCPC || '-'}</div>
+											<div><b>Dépôt :</b> {detailPassif.depotId?.siteName || '-'}</div>
+											<div><b>Adresse dépôt :</b> {detailPassif.depotId?.siteAddress || '-'}</div>
+										</div>
+										<div className="flex flex-wrap gap-1 shrink-0">
+											{(() => {
+												const typeBadge = getMovementTypeBadgeProps(detailPassif.typePassif || detailPassif.type);
+												const statusBadge = getTransactionStatusBadgeProps(detailPassif.statut || detailPassif.status);
+												return (
+													<>
+														<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>{typeBadge.label}</Badge>
+														<Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>
+													</>
+												);
+											})()}
+										</div>
+									</div>
+									<div className="flex flex-col gap-y-1 text-xs text-neutral-700 wrap-break-word sm:grid sm:grid-cols-2 sm:gap-x-4">
+										<span className="block min-w-0"><b className="whitespace-nowrap">Quantité :</b> {detailPassif.quantite != null ? formatThousands(detailPassif.quantite) : '-'}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Prix unitaire :</b> {detailPassif.prixUnitaire != null ? formatThousands(detailPassif.prixUnitaire) : '-'}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Créancier :</b> {renderPerson(detailPassif.creancierId)}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Détenteur :</b> {renderPerson(detailPassif.detentaire)}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Ayant droit :</b> {renderPerson(detailPassif.ayant_droit)}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Utilisateur :</b> {detailPassif.userId?.userNickName || detailPassif.userId?.userName || '-'}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Email :</b> {detailPassif.userId?.userEmail || '-'}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Téléphone :</b> {detailPassif.userId?.userPhone || '-'}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Statut :</b> {detailPassif.isActive ? 'Actif' : 'Inactif'}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Type :</b> {detailPassif.typePassif || detailPassif.type || '-'}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Créé le :</b> {detailPassif.createdAt ? dateFormat(detailPassif.createdAt) : '-'}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Mis à jour le :</b> {detailPassif.updatedAt ? dateFormat(detailPassif.updatedAt) : '-'}</span>
+									</div>
 								</div>
 							) : (
 								<div className="p-8 text-center text-neutral-400">Aucune donnée</div>
 							)}
 						</DialogContent>
 					</Dialog>
-				</>
+				</div>
 			)}
 		</div>
 	);
@@ -206,19 +235,23 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 							<TableHead className="text-xs text-neutral-600">Image</TableHead>
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
-							{/* <TableHead className="text-xs text-neutral-600 text-right">PU (Ar)</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right">Total (Ar)</TableHead> */}
-							{/* <TableHead className="text-xs text-neutral-600">Détenteur</TableHead> */}
+							<TableHead className="text-xs text-neutral-600 text-center">Quantité</TableHead>
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Type</TableHead>
 							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
-							<TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
+							<TableHead
+								className="text-xs text-neutral-600 text-right p-2 whitespace-nowrap"
+								style={ACTION_COL_STYLE_LG}
+							>
+								Actions
+							</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{passifs.map((item, idx) => {
+							const typeBadge = getMovementTypeBadgeProps(item.type);
+							const statusBadge = getTransactionStatusBadgeProps(item.statut);
 							return (
 								<TableRow key={item.id || item._id || idx}>
 									<TableCell className="text-sm truncate max-w-xs">{item.productName || '-'}</TableCell>
@@ -230,29 +263,31 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 											<span className="text-neutral-400">-</span>
 										)}
 									</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
-									<TableCell className="text-sm text-right">{formatThousands(getQuantiteAffichee(item))}</TableCell>
-									{/* <TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
-									<TableCell className="text-sm text-right">{formatThousands(item.valeurTotale)}</TableCell> */}
-									{/* <TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell> */}
+									<TableCell className="text-sm truncate max-w-35" title={item.depot || '-'}>{item.depot || '-'}</TableCell>
+									<TableCell className="text-sm truncate max-w-35" title={item.depotAdresse || '-'}>{item.depotAdresse || '-'}</TableCell>
+									<TableCell className="text-sm text-center font-medium">{formatThousands(getQuantiteAffichee(item))}</TableCell>
 									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
 									<TableCell className="text-sm">
-										<Badge variant="outline" className={`text-xs px-2 py-0.5 rounded ${getMovementTypeBadgeProps(item.type).className}`}>
-											{getMovementTypeBadgeProps(item.type).label}
+										<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>
+											{typeBadge.label}
 										</Badge>
 									</TableCell>
 									<TableCell className="text-sm">
-										<Badge className={`text-xs px-2 py-0.5 rounded ${statutConfig[item.statut]?.className || 'bg-neutral-100 text-neutral-700 border-neutral-200'}`}>
-											{statutConfig[item.statut]?.label || item.statut || '-'}
+										<Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>
+											{statusBadge.label}
 										</Badge>
 									</TableCell>
 									<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
-									<TableCell className="text-sm text-right">
-										<div className="flex gap-2 justify-end">
-											<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id || item._id)}>
-												<InfoIcon className="w-5 h-5 text-violet-600" />
-											</Button>
+									<TableCell className="text-sm text-right whitespace-nowrap" style={ACTION_COL_STYLE_LG}>
+										<div className="flex items-center justify-end gap-1">
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<Button variant="ghost" size="sm" onClick={() => onShowDetail(item.id || item._id)}>
+														<InfoIcon className="w-4 h-4 text-violet-600" />
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent>Détails</TooltipContent>
+											</Tooltip>
 										</div>
 									</TableCell>
 								</TableRow>
@@ -267,42 +302,52 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 	return (
 		<div className="space-y-4 p-4">
 			{passifs.map((item, idx) => {
+				const typeBadge = getMovementTypeBadgeProps(item.type);
+				const statusBadge = getTransactionStatusBadgeProps(item.statut);
 				const produit = item.productName || (item.productId && (item.productId.productName || item.productId)) || '-';
-				const quantite = getQuantiteAffichee(item) ?? '-';
-				const prixUnitaire = item.prixUnitaire ?? null;
-				const montant = prixUnitaire !== null && quantite !== '-' ? quantite * prixUnitaire : null;
-				const depart = item.depot || item.siteOrigineId?.siteName || '-';
-				const arrivee = item.depotAdresse || item.siteDestinationId?.siteName || '-';
-				// const detenteur = item.detentaire || item.detentaire?.userNickName || item.operatorId?.userNickName || '-';
-				const ayantDroit = item.ayantDroit || item.ayant_droit || item.ayant_droit?.userNickName || '-';
+				const code = item.productCode || item.productId?.codeCPC || '-';
+				const quantite = getQuantiteAffichee(item);
+				const ayantDroit = renderPerson(item.ayant_droit || item.ayantDroit);
 				const date = item.dateCreation || item.createdAt || item.approvedAt;
 
 				return (
 					<Card key={item._id || item.id || idx} className="p-4">
-						<div className="flex items-start justify-between gap-4">
-							<div className="flex-1 min-w-0">
-								<div className="font-medium text-neutral-900 truncate">{produit}</div>
-								<div className="text-xs text-neutral-500">{depart} → {arrivee}</div>
-								<div className="mt-2 flex flex-wrap gap-2 text-sm text-neutral-600">
-									<div>Quantité: {quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</div>
-									<div>Prix: {prixUnitaire !== null ? formatThousands(prixUnitaire) : '-'}</div>
-									<div>Montant: {montant !== null ? formatThousands(montant) : '-'}</div>
-									{/* <div>Détenteur: {detenteur}</div> */}
-									<div>Ayant droit: {ayantDroit}</div>
-									<div>Type: <Badge variant="outline" className={`text-xs px-2 py-0.5 rounded ${getMovementTypeBadgeProps(item.type).className}`}>{getMovementTypeBadgeProps(item.type).label}</Badge></div>
-									<div>Statut: <Badge className={`text-xs px-2 py-0.5 rounded ${statutConfig[item.statut]?.className || 'bg-neutral-100 text-neutral-700 border-neutral-200'}`}>{statutConfig[item.statut]?.label || item.statut || '-'}</Badge></div>
-									<div>{date ? dateFormat(date) : '-'}</div>
+						<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+							<div className="flex items-center gap-4 min-w-0">
+								<div className="w-12 h-12 flex items-center justify-center bg-neutral-100 rounded overflow-hidden shrink-0">
+									{item.productImage ? (
+										<img src={getFullMediaUrl(item.productImage)} alt={produit} className="w-full h-full object-cover" />
+									) : (
+										<span className="text-neutral-400">-</span>
+									)}
+								</div>
+								<div className="min-w-0">
+									<div className="font-medium text-neutral-900 truncate">{produit}</div>
+									<div className="text-xs text-neutral-500">{code}</div>
+									<div className="text-xs text-neutral-500 mt-1">{item.depot || '-'}</div>
 								</div>
 							</div>
-							<div className="flex flex-col items-end gap-2">
-								{item.isActive ? (
-									<Badge className={`text-xs bg-emerald-50 text-emerald-700 border-emerald-200 px-2 py-0.5 rounded`}>Actif</Badge>
-								) : (
-									<Badge className={`text-xs bg-neutral-100 text-neutral-700 border-neutral-200 px-2 py-0.5 rounded`}>Inactif</Badge>
-								)}
-								<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id || item.id)}>
-									<InfoIcon className="w-5 h-5 text-violet-600" />
-								</Button>
+							<div className="flex flex-col sm:items-end gap-2">
+								<div className="text-xs text-neutral-700 text-right">
+									<div className="font-semibold">Quantité</div>
+									<div>{quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</div>
+								</div>
+								<div className="flex flex-wrap gap-1 sm:justify-end">
+									<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>{typeBadge.label}</Badge>
+									<Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>
+								</div>
+								<div className="text-xs text-neutral-600">Ayant droit: {ayantDroit}</div>
+								<div className="text-xs text-neutral-500">{date ? dateFormat(date) : '-'}</div>
+								<div className="flex items-center gap-2 mt-2">
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button variant="ghost" size="sm" onClick={() => onShowDetail(item._id || item.id)}>
+												<InfoIcon className="w-4 h-4 text-violet-600" />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent>Détails</TooltipContent>
+									</Tooltip>
+								</div>
 							</div>
 						</div>
 					</Card>

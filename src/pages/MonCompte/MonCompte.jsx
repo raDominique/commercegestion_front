@@ -187,7 +187,7 @@ export default function MonCompte() {
                     Compte vérifié
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
                     Non vérifié
                   </Badge>
                 )}

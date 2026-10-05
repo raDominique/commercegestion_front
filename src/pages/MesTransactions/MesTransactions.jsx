@@ -25,6 +25,7 @@ import PaginationControls from '../../components/commons/PaginationControls.jsx'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import { formatThousands } from '../../utils/formatNumber.js';
 import { Badge } from '../../components/ui/badge';
+import { getTransactionTypeBadgeProps, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
 
 // IMPORTATION DES ICÔNES MATERIAL
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -42,29 +43,32 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import InfoIcon from '@mui/icons-material/Info';
 import { Loader } from '../../components/ui/loader';
 
-// --- CONFIGURATION DU DESIGN SYSTEM ET DES TRADUCTIONS EN FR ---
-
-const TYPE_CONFIG = {
-  'INITIALIZATION': { label: 'Initialisation', className: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50', Icon: SettingsIcon },
-  'INITIALISATION': { label: 'Initialisation', className: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50', Icon: SettingsIcon },
-  'DEPOT': { label: 'Dépôt', className: 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50', Icon: ArrowDownwardIcon },
-  'Dépôt': { label: 'Dépôt', className: 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50', Icon: ArrowDownwardIcon },
-  'RETRAIT': { label: 'Retrait', className: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-50', Icon: ArrowUpwardIcon },
-  'Retrait': { label: 'Retrait', className: 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-50', Icon: ArrowUpwardIcon }
+// --- BADGES : couleurs/labels depuis constants/transaction.enums (uniformes plateforme) ---
+// Seules les icônes restent locales (décoration, sans valeur sémantique couleur).
+const getTypeIcon = (type) => {
+  const key = String(type || '').toUpperCase();
+  if (key.includes('DEPOT') || key.includes('DÉPÔT')) return ArrowDownwardIcon;
+  if (key.includes('RETRAIT')) return ArrowUpwardIcon;
+  if (key.includes('INIT')) return SettingsIcon;
+  return SwapHorizIcon;
 };
 
-const STATUS_CONFIG = {
-  'PENDING': { label: 'En attente', className: 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-50', Icon: ScheduleIcon },
-  'APPROVED': { label: 'Approuvé', className: 'bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-50', Icon: CheckCircleIcon },
-  'REJECTED': { label: 'Rejeté', className: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-50', Icon: CancelIcon }
+const getStatusIcon = (status) => {
+  const key = String(status || '').toUpperCase();
+  if (key.includes('PENDING') || key.includes('ATTENTE')) return ScheduleIcon;
+  if (key.includes('APPROV') || key.includes('APPROUV')) return CheckCircleIcon;
+  if (key.includes('REJECT') || key.includes('REJET')) return CancelIcon;
+  return HelpOutlineIcon;
 };
 
 const getTypeBadgeProps = (type) => {
-  return TYPE_CONFIG[type] || { label: type, className: 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-50', Icon: SwapHorizIcon };
+  const badge = getTransactionTypeBadgeProps(type);
+  return { ...badge, Icon: getTypeIcon(type) };
 };
 
 const getStatusBadgeProps = (status) => {
-  return STATUS_CONFIG[status] || { label: status, className: 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-50', Icon: HelpOutlineIcon };
+  const badge = getTransactionStatusBadgeProps(status);
+  return { ...badge, Icon: getStatusIcon(status) };
 };
 
 // --- COMPOSANT PRINCIPAL ---
