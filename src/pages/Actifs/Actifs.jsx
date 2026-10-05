@@ -539,8 +539,8 @@ const Actifs = () => {
 				<>
 					<Tabs defaultValue="list">
 						<TabsList>
-							<TabsTrigger value="list">Mes Actifs</TabsTrigger>
-							<TabsTrigger value="annonces">Mes Produits en vente</TabsTrigger>
+							<TabsTrigger value="list" title="Mes Actifs">Mes Actifs</TabsTrigger>
+							<TabsTrigger value="annonces" title="Mes Produits en vente">Mes Produits en vente</TabsTrigger>
 						</TabsList>
 
 						<TabsContent value="list" className="space-y-6">
@@ -550,7 +550,7 @@ const Actifs = () => {
 									<p className="text-sm text-neutral-600">Vos actifs et leur disponibilité</p>
 								</div>
 							<div className="flex flex-wrap gap-3 items-center">
-								<Button onClick={handleOpenAddProductModal} status="active" color="default">
+								<Button onClick={handleOpenAddProductModal} status="active" color="default" className="w-full sm:w-auto">
 									Opération hors plateforme
 									</Button>
 									<ExportButton
@@ -561,6 +561,7 @@ const Actifs = () => {
 										]}
 										title="Exporter les actifs"
 										buttonLabel="Exporter"
+										className="w-full sm:w-auto"
 									/>
 									<Input
 										placeholder="Rechercher..."

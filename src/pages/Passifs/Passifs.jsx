@@ -130,6 +130,7 @@ const Passifs = () => {
 								]}
 								title="Exporter les passifs"
 								buttonLabel="Exporter"
+								className="w-full sm:w-auto"
 							/>
 							<Input
 								placeholder="Rechercher..."

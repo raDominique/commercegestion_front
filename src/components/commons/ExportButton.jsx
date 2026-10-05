@@ -17,7 +17,8 @@ export const ExportButton = ({
     formats = [],
     title = 'Exporter les données',
     buttonLabel = 'Exporter',
-    buttonVariant = 'outline'
+    buttonVariant = 'outline',
+    className = ''
 }) => {
     const { isOpen, openDialog, closeDialog, isLoading, handleExport } = useExport(exportFunction, formats);
 
@@ -28,6 +29,7 @@ export const ExportButton = ({
                 onClick={openDialog}
                 disabled={isLoading}
                 size="sm"
+                className={className}
             >
                 <Download className="mr-2 h-4 w-4" />
                 {buttonLabel}

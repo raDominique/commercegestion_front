@@ -169,7 +169,7 @@ const AdminProducts = () => {
 
       {/* Modal détail produit */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent aria-describedby="product-detail-desc" className="max-w-3xl">
+        <DialogContent aria-describedby="product-detail-desc" className="w-[calc(100vw-2rem)] sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Détail du produit</DialogTitle>
             <DialogDescription id="product-detail-desc">
@@ -183,32 +183,32 @@ const AdminProducts = () => {
             <Card className="border-violet-200 bg-violet-50 p-6 space-y-6">
 
               {/* HEADER PRODUIT */}
-              <div className="flex gap-6 items-center">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-center">
                 {detailProduct.productImage ? (
                   <img
                     src={getFullMediaUrl(detailProduct.productImage)}
                     alt={detailProduct.productName}
-                    className="w-24 h-24 object-cover rounded shadow"
+                    className="w-24 h-24 object-cover rounded shadow shrink-0"
                   />
                 ) : (
-                  <div className="w-24 h-24 flex items-center justify-center bg-neutral-200 rounded text-neutral-400">
+                  <div className="w-24 h-24 flex items-center justify-center bg-neutral-200 rounded text-neutral-400 shrink-0">
                     -
                   </div>
                 )}
 
                 <div className="flex flex-col gap-2 min-w-0 flex-1">
-                  <div className="text-xl font-bold text-violet-700 wrap-break-words">
+                  <div className="text-xl font-bold text-violet-700 wrap-break-word">
                     {detailProduct.productName}
                   </div>
 
                   <Badge
                     variant="secondary"
-                    className="text-xs capitalize w-fit max-w-full wrap-break-words whitespace-normal"
+                    className="text-xs capitalize w-fit max-w-full wrap-break-word whitespace-normal"
                   >
                     {detailProduct.productCategory}
                   </Badge>
 
-                  <div className="flex gap-2 mt-1">
+                  <div className="flex flex-wrap gap-2 mt-1">
                     <Badge
                       variant={detailProduct.isStocker ? 'default' : 'secondary'}
                       className={
@@ -239,7 +239,7 @@ const AdminProducts = () => {
                 <div className="text-sm font-semibold text-neutral-700 mb-1">
                   Description
                 </div>
-                <div className="text-sm text-neutral-900 wrap-break-words">
+                <div className="text-sm text-neutral-900 wrap-break-word">
                   {detailProduct.productDescription || '-'}
                 </div>
               </div>

@@ -544,7 +544,7 @@ const MesProduits = () => {
                     <div className="text-sm font-medium text-neutral-900 truncate">{product.name}</div>
                     <div className="text-sm text-neutral-600">{product.codeCPC || '-'}</div>
                   </div>
-                  <div className="text-sm text-neutral-600 max-w-full wrap-wrap-break-words whitespace-normal">{product.categoryNom || '-'}</div>
+                  <div className="text-sm text-neutral-600 max-w-full wrap-break-word">{product.categoryNom || '-'}</div>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge
                       variant={product.validation ? 'default' : 'secondary'}
@@ -564,7 +564,7 @@ const MesProduits = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2 mt-4 justify-end">
+              <div className="flex flex-wrap gap-2 mt-4 justify-end">
                 <Button variant="ghost" size="sm" onClick={() => handleShowDetail(product._id)} aria-label={`Voir détails ${product.name}`}>
                   <InfoIcon className="w-5 h-5 mr-2" />Détails
                 </Button>
@@ -1129,7 +1129,7 @@ const MesProduits = () => {
 
       {/* Modal détail produit */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent aria-describedby="product-detail-desc" className="max-w-3xl">
+        <DialogContent aria-describedby="product-detail-desc" className="w-[calc(100vw-2rem)] sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Détail du produit</DialogTitle>
             <DialogDescription id="product-detail-desc">
@@ -1157,13 +1157,13 @@ const MesProduits = () => {
                 )}
 
                 <div className="flex flex-col gap-2 min-w-0 flex-1">
-                  <div className="text-xl font-bold text-violet-700 wrap-break-words">
+                  <div className="text-xl font-bold text-violet-700 wrap-break-word">
                     {detailProduct.productName}
                   </div>
 
                   <Badge
                     variant="secondary"
-                    className="text-xs capitalize w-fit max-w-full wrap-break-words whitespace-normal"
+                    className="text-xs capitalize w-fit max-w-full wrap-break-word whitespace-normal"
                   >
                     {detailProduct.productCategory}
                   </Badge>
@@ -1199,7 +1199,7 @@ const MesProduits = () => {
                 <div className="text-sm font-semibold text-neutral-700 mb-1">
                   Description
                 </div>
-                <div className="text-sm text-neutral-900 wrap-break-words">
+                <div className="text-sm text-neutral-900 wrap-break-word">
                   {detailProduct.productDescription || '-'}
                 </div>
               </div>
@@ -1231,7 +1231,7 @@ const MesProduits = () => {
                     <div className="font-medium">{detailProduct.productPoids || '-'}</div>
                   </div>
 
-                  <div className="col-span-2">
+                  <div className="col-span-1 sm:col-span-2">
                     <div className="text-neutral-500">Dimensions</div>
                     <div className="font-medium">
                       {detailProduct.productLongueur || '-'} ×{' '}

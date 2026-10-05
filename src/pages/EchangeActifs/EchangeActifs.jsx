@@ -555,7 +555,7 @@ const EchangeActifs = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
                       {detenteurWLookupLoading ? (
                         <span className="text-neutral-400" />
                       ) : resolvedDetenteurW ? (
@@ -885,7 +885,7 @@ const EchangeActifs = () => {
                         <div className="text-xs text-neutral-500">Produit A</div>
                         <div className="font-medium text-neutral-900 wrap-break-word">{productLabel(offer.productAId || offer.productA)}</div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div>
                           <div className="text-xs text-neutral-500">Quantité A</div>
                           <div className="text-neutral-900">{offer.quantiteA != null ? formatThousands(offer.quantiteA) : '-'}</div>

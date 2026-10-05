@@ -135,14 +135,14 @@ function ParrainageTableContent({ loading, referrals, isDesktop, onShowDetail, o
             {referrals.map((referral) => (
                 <Card key={referral._id} className="p-4">
                     <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-neutral-100 text-sm">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-neutral-100 text-sm shrink-0">
                                     {(referral.userNickName || referral.userName || '').charAt(0).toUpperCase()}
                                 </div>
-                                <div>
-                                    <div className="font-medium text-neutral-900">{referral.userNickName || referral.userName}</div>
-                                    <div className="text-xs text-neutral-500">{referral.userEmail}</div>
+                                <div className="min-w-0">
+                                    <div className="font-medium text-neutral-900 truncate">{referral.userNickName || referral.userName}</div>
+                                    <div className="text-xs text-neutral-500 break-all">{referral.userEmail}</div>
                                 </div>
                             </div>
                             <div className="mt-4 flex flex-wrap gap-2 items-center">

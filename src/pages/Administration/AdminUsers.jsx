@@ -341,14 +341,14 @@ export default function AdminUsers() {
                                             <div className="text-xs text-neutral-500">{detailUser.userType} - {detailUser.userAccess}</div>
                                         </div>
                                     </div>
-                                    <div><b>Email :</b> {detailUser.userEmail}</div>
+                                    <div className="break-all"><b>Email :</b> {detailUser.userEmail}</div>
                                     {detailUser.userType === 'Entreprise' ? (
                                         <div><b>Date de création de l'entreprise :</b> {formatBirthDate(detailUser.userDateOfBirth)}</div>
                                     ) : (
                                         <div><b>Date de naissance:</b> {formatBirthDate(detailUser.userDateOfBirth)}</div>
                                     )}
                                     <div><b>Téléphone :</b> {detailUser.userPhone}</div>
-                                    <div><b>Adresse :</b> {detailUser.userAddress}</div>
+                                    <div className="break-all"><b>Adresse :</b> {detailUser.userAddress}</div>
                                     <div><b>Longitude :</b> {detailUser.userMainLng}</div>
                                     <div><b>Latitude :</b> {detailUser.userMainLat}</div>
                                     <div><b>Validé :</b> {detailUser.userValidated ? 'Oui' : 'Non'}</div>
@@ -357,7 +357,7 @@ export default function AdminUsers() {
                                     <div><b>Numéro Parrain 2 :</b> {detailUser.parrain2ID}</div>
                                     <div><b>Type document :</b> {detailUser.documentType}</div>
                                     <div><b>Numéro document :</b> {detailUser.identityCardNumber}</div>
-                                    <div><b>Manager :</b> {detailUser.managerName} ({detailUser.managerEmail})</div>
+                                    <div className="break-all"><b>Manager :</b> {detailUser.managerName} ({detailUser.managerEmail})</div>
                                     <div><b>Date création :</b> {detailUser.createdAt ? dateFormat(detailUser.createdAt) : '-'}</div>
 
                                     {/* Téléchargement documents selon le type d'utilisateur */}
@@ -516,12 +516,12 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
             {users.map((user) => (
                 <Card key={user.id} className="p-4">
                     <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${user.status === 'Actif' ? 'bg-violet-600 text-white' : 'bg-neutral-300 text-neutral-700'}`}>{user.name && user.name.charAt(0).toUpperCase()}</div>
-                                <div>
-                                    <div className="font-medium text-neutral-900">{user.name}</div>
-                                    <div className="text-xs text-neutral-500">{user.email}</div>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${user.status === 'Actif' ? 'bg-violet-600 text-white' : 'bg-neutral-300 text-neutral-700'}`}>{user.name && user.name.charAt(0).toUpperCase()}</div>
+                                <div className="min-w-0">
+                                    <div className="font-medium text-neutral-900 truncate">{user.name}</div>
+                                    <div className="text-xs text-neutral-500 break-all">{user.email}</div>
                                 </div>
                             </div>
                             <div className="mt-4 flex flex-wrap gap-2 items-center">

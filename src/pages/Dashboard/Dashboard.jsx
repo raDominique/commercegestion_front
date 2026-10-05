@@ -334,7 +334,7 @@ function StatisticCard({ title, value, subtitle, icon, trend, description }) {
                 <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                         <p className="text-sm text-black font-semibold">{title}</p>
-                        <p className="text-4xl font-bold mt-4 text-violet-900">{value}</p>
+                        <p className="text-2xl sm:text-4xl font-bold mt-4 text-violet-900 break-words">{value}</p>
                         {subtitle && <p className="text-sm font-medium text-violet-700 mt-1">{subtitle}</p>}
                         {trend && (
                             <div className="flex items-center gap-1 mt-2">
@@ -355,8 +355,8 @@ function StatisticCard({ title, value, subtitle, icon, trend, description }) {
 function MetricRow({ label, value }) {
     return (
         <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white">
-            <p className="text-sm font-medium text-gray-700">{label}</p>
-            <p className="text-2xl font-bold text-violet-900">{value}</p>
+            <p className="text-sm font-medium text-gray-700 min-w-0 break-words">{label}</p>
+            <p className="text-xl sm:text-2xl font-bold text-violet-900 text-right break-words">{value}</p>
         </div>
     );
 }
@@ -415,7 +415,7 @@ function ChartCard({ title, data, dataKey, xAxisKey, transformData }) {
                             height={70}
                             angle={-45}
                             textAnchor="end"
-                            interval={0}
+                            interval="preserveStartEnd"
                         />
                         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatNumber(v)} />
                         <Tooltip
@@ -453,7 +453,7 @@ function TransactionsChart({ title, data, mode, onModeChange, transformData }) {
         return (
             <Card className="border border-gray-200 bg-white">
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <CardTitle className="text-black font-semibold">{title}</CardTitle>
                         <ModeToggle mode={mode} onModeChange={onModeChange} />
                     </div>
@@ -482,7 +482,7 @@ function TransactionsChart({ title, data, mode, onModeChange, transformData }) {
                         <XAxis
                             dataKey="name"
                             tick={{ fontSize: 11 }}
-                            interval={0}
+                            interval="preserveStartEnd"
                         />
                         <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatNumber(v)} />
                         <Tooltip

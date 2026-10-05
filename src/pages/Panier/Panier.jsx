@@ -95,7 +95,7 @@ export default function Panier() {
         </div>
 
         {items.length === 0 ? (
-          <Card className="p-12 text-center border-neutral-200 bg-white">
+          <Card className="p-6 sm:p-12 text-center border-neutral-200 bg-white">
             <div className="flex flex-col items-center space-y-4">
               <div className="w-24 h-24 bg-neutral-100 rounded-full flex items-center justify-center">
                 <ShoppingBagIcon className="w-12 h-12 text-neutral-400" />
@@ -119,7 +119,7 @@ export default function Panier() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
               <Card className="border-neutral-200 bg-white">
-                <div className="p-4 border-b border-neutral-200 flex items-center justify-between">
+                <div className="p-4 border-b border-neutral-200 flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-neutral-900">Articles ({items.length})</h2>
                   <Button
                     variant="ghost"
@@ -146,7 +146,7 @@ export default function Panier() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0">
-                              <h3 className="text-neutral-900 font-semibold truncate">{item.name}</h3>
+                              <h3 className="text-neutral-900 font-semibold line-clamp-2 wrap-break-word">{item.name}</h3>
                               <div className="mt-1"><Badge variant="secondary" className="text-xs">{item.category}</Badge></div>
                             </div>
                           </div>
@@ -201,7 +201,7 @@ export default function Panier() {
             </div>
 
             <div className="space-y-4">
-              <Card className="border-neutral-200 p-4 sticky top-6 bg-white">
+              <Card className="border-neutral-200 p-4 lg:sticky lg:top-6 bg-white">
                 <div className="space-y-4 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-neutral-600">Sous-total</span>

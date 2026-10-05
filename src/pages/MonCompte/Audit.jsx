@@ -268,7 +268,7 @@ const Audit = () => {
         {Object.entries(obj).map(([k, v]) => (
           <div key={k} className="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4 items-start">
             <div className="text-sm text-neutral-600 sm:col-span-1">{humanKey(k)}</div>
-            <div className="text-sm font-medium sm:col-span-2 text-left sm:text-right wrap-break-words whitespace-normal overflow-x-auto">{formatDetailValue(k, v)}</div>
+            <div className="text-sm font-medium sm:col-span-2 text-left sm:text-right wrap-break-word">{formatDetailValue(k, v)}</div>
           </div>
         ))}
       </div>
@@ -342,7 +342,7 @@ const Audit = () => {
                             <span className="material-icons size-4 text-white">{meta.iconName || 'info'}</span>
                           </div>
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0 break-words">
                           <div className="text-sm text-neutral-900">
                             <span className="font-medium">{Actor}</span>
                             <span className="text-neutral-600"> {verb} </span>
@@ -354,7 +354,7 @@ const Audit = () => {
                             <span>{formatTimestamp(item.timestamp || item.createdAt)}</span>
                           </div>
                         </div>
-                        <div className="ml-2">
+                        <div className="ml-2 shrink-0">
                           <Button variant="ghost" onClick={() => { setSelectedAudit(item); setDialogOpen(true); }}>Détails</Button>
                         </div>
                       </div>
@@ -374,20 +374,20 @@ const Audit = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedAudit ? `${selectedAudit.action || '-'} — ${getEntityDisplayName(selectedAudit)}` : 'Détails'}</DialogTitle>
-            <DialogDescription>{selectedAudit ? `${getActorName(selectedAudit)} • ${selectedAudit.entityType || ''} • ${selectedAudit.entityId || ''}` : ''}</DialogDescription>
+            <DialogTitle className="wrap-break-word">{selectedAudit ? `${selectedAudit.action || '-'} — ${getEntityDisplayName(selectedAudit)}` : 'Détails'}</DialogTitle>
+            <DialogDescription className="break-all">{selectedAudit ? `${getActorName(selectedAudit)} • ${selectedAudit.entityType || ''} • ${selectedAudit.entityId || ''}` : ''}</DialogDescription>
           </DialogHeader>
           <div className="p-4 max-h-[70vh] overflow-y-auto show-scrollbar">
             {selectedAudit ? (
               <div className="text-sm space-y-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="min-w-0">
                     <div className="text-sm text-neutral-600">Acteur</div>
-                    <div className="font-medium">{getActorName(selectedAudit)}</div>
+                    <div className="font-medium wrap-break-word">{getActorName(selectedAudit)}</div>
                   </div>
-                  <div className="text-right">
+                  <div className="sm:text-right min-w-0">
                     <div className="text-sm text-neutral-600">Date</div>
-                    <div className="font-medium">{formatTimestamp(selectedAudit.timestamp || selectedAudit.createdAt)}</div>
+                    <div className="font-medium break-words">{formatTimestamp(selectedAudit.timestamp || selectedAudit.createdAt)}</div>
                   </div>
                 </div>
 

@@ -367,7 +367,7 @@ const VirementDroit = () => {
                         disabled={recipientLookupLoading}
                         className={`border-neutral-300 bg-neutral-100 text-neutral-700 ${recipientNotFound ? 'border-red-400 text-red-600' : ''}`}
                       />
-                      <div className="sm:col-span-2 flex items-center justify-between text-xs">
+                      <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-1 text-xs">
                         {recipientLookupLoading ? (
                           <span className="text-neutral-400">Recherche en cours...</span>
                         ) : recipientName ? (
@@ -495,9 +495,9 @@ const VirementDroit = () => {
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button variant="outline" onClick={() => setVirerModalOpen(false)}>Annuler</Button>
-                  <Button status={loadingVirement ? 'loading' : (isVirementFormValid ? 'active' : 'inactive')} onClick={handleConfirmVirement} disabled={!isVirementFormValid || loadingVirement} color="default">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4">
+                  <Button variant="outline" onClick={() => setVirerModalOpen(false)} className="w-full sm:w-auto">Annuler</Button>
+                  <Button status={loadingVirement ? 'loading' : (isVirementFormValid ? 'active' : 'inactive')} onClick={handleConfirmVirement} disabled={!isVirementFormValid || loadingVirement} color="default" className="w-full sm:w-auto">
                     {loadingVirement && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer le virement
                   </Button>
                 </div>

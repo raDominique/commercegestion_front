@@ -298,7 +298,7 @@ const AchatVente = () => {
 
                   {ready.product && (
                     <>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
                           <Input type="number" min="0" step="any" max={maxQty ?? undefined} value={quantite} onChange={e => {
@@ -317,9 +317,9 @@ const AchatVente = () => {
                         <Textarea value={observations} onChange={e => setObservations(e.target.value)} placeholder="Observations facultatives" rows={3} />
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" type="button" onClick={resetForm}>Annuler</Button>
-                        <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving}>
+                      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+                        <Button variant="outline" type="button" onClick={resetForm} className="w-full sm:w-auto">Annuler</Button>
+                        <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving} className="w-full sm:w-auto">
                           {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
                           {saving ? 'Traitement...' : 'Effectuer la vente'}
                         </Button>
@@ -388,7 +388,7 @@ const AchatVente = () => {
 
                   {ready.product && (
                     <>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
                           <Input type="number" min="0" step="any" max={maxQty ?? undefined} value={quantite} onChange={e => {
@@ -407,9 +407,9 @@ const AchatVente = () => {
                         <Textarea value={observations} onChange={e => setObservations(e.target.value)} placeholder="Observations facultatives" rows={3} />
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" type="button" onClick={resetForm}>Annuler</Button>
-                        <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving}>
+                      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+                        <Button variant="outline" type="button" onClick={resetForm} className="w-full sm:w-auto">Annuler</Button>
+                        <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving} className="w-full sm:w-auto">
                           {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
                           {saving ? 'Traitement...' : 'Effectuer la vente'}
                         </Button>

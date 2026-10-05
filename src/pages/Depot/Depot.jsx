@@ -365,8 +365,8 @@ const Depot = () => {
 
 		<Tabs defaultValue="list">
 			<TabsList>
-				<TabsTrigger value="list">Historique de mes dépôts</TabsTrigger>
-				<TabsTrigger value="form">Formulaire de dépôt</TabsTrigger>
+				<TabsTrigger value="list" title="Historique de mes dépôts">Historique de mes dépôts</TabsTrigger>
+				<TabsTrigger value="form" title="Formulaire de dépôt">Formulaire de dépôt</TabsTrigger>
 				</TabsList>
 				<TabsContent value="list" className="space-y-6">
 					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -798,8 +798,8 @@ const Depot = () => {
 								)}
 							</div>
 
-							<div className="flex justify-end gap-2">
-							<Button variant="outline" type="button" onClick={() => {
+							<div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+							<Button variant="outline" type="button" className="w-full sm:w-auto" onClick={() => {
 									setTransferForm({
 										actifId: '',
 										productId: '',
@@ -826,6 +826,7 @@ const Depot = () => {
 								status={saving ? 'loading' : 'active'}
 								color="default"
 								type="submit"
+								className="w-full sm:w-auto"
 								disabled={!transferForm.siteOrigineId || !transferForm.productId || !transferForm.quantite || !transferForm.siteDestinationId || !transferForm.detentaire}
 							>
 								{saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Valider le dépôt

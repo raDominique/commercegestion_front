@@ -84,7 +84,7 @@ function TableCell({ className, ...props }) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle overflow-hidden text-ellipsis wrap-break-words min-w-0 [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5 bg-white",
+        "p-2 align-middle overflow-hidden text-ellipsis wrap-break-word min-w-0 [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5 bg-white",
         className,
       )}
       {...props}

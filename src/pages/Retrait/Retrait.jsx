@@ -350,8 +350,8 @@ const Retrait = () => {
 				<>
 				<Tabs defaultValue="list">
 					<TabsList>
-						<TabsTrigger value="list">Historique de mes retraits</TabsTrigger>
-						<TabsTrigger value="form">Formulaire de retrait</TabsTrigger>
+						<TabsTrigger value="list" title="Historique de mes retraits">Historique de mes retraits</TabsTrigger>
+						<TabsTrigger value="form" title="Formulaire de retrait">Formulaire de retrait</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="list" className="space-y-6">
@@ -673,8 +673,8 @@ const Retrait = () => {
 										)}
 									</div>
 
-									<div className="flex justify-end gap-2">
-										<Button variant="outline" type="button" onClick={() => {
+									<div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+										<Button variant="outline" type="button" className="w-full sm:w-auto" onClick={() => {
 											setWithdrawalForm({
 												actifId: '',
 												productId: '',
@@ -703,6 +703,7 @@ const Retrait = () => {
 											status={saving ? 'loading' : 'active'}
 											color="default"
 											type="submit"
+											className="w-full sm:w-auto"
 											disabled={!withdrawalForm.detentaire || !withdrawalForm.siteOrigineId || !withdrawalForm.productId || !withdrawalForm.quantite || !withdrawalForm.siteDestinationId}
 										>
 											{saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Valider le retrait

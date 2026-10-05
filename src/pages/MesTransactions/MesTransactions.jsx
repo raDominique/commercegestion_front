@@ -221,7 +221,7 @@ const MesTransactions = () => {
           </p>
 
           <div className="flex flex-wrap items-center gap-4 mb-4">
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <Select value={typeFilter} onValueChange={value => { setPage(1); setTypeFilter(value); }}>
                 <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
                   <SelectValue placeholder="Filtrer par Type" />
@@ -235,7 +235,7 @@ const MesTransactions = () => {
               </Select>
             </div>
 
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <Select value={statusFilter} onValueChange={value => { setPage(1); setStatusFilter(value); }}>
                 <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
                   <SelectValue placeholder="Filtrer par Statut" />
@@ -249,7 +249,7 @@ const MesTransactions = () => {
               </Select>
             </div>
 
-            <div className="w-44 ml-auto">
+            <div className="w-full sm:w-44 sm:ml-auto">
               <Select value={order} onValueChange={value => { setPage(1); setOrder(value); }}>
                 <SelectTrigger className="w-full border-neutral-300 bg-white min-w-0">
                   <SelectValue placeholder="Ordre d'affichage" />
@@ -354,7 +354,7 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat,
   if (loading) return <div className="flex justify-center py-8"><Loader /></div>;
   if (!transactions || transactions.length === 0) {
     return (
-      <div className="p-12 text-center text-neutral-400 flex flex-col items-center justify-center gap-2">
+      <div className="p-6 sm:p-12 text-center text-neutral-400 flex flex-col items-center justify-center gap-2">
         <ReceiptLongIcon className="text-neutral-300" sx={{ fontSize: 40 }} />
         Aucune transaction trouvée
       </div>
@@ -484,7 +484,7 @@ function TransactionsTableOrList({ loading, transactions, isDesktop, dateFormat,
                 </div>
               </div>
 
-              <div className="flex items-center justify-between gap-2 pt-0.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
                 <div className="text-xs text-neutral-500 flex items-center gap-1">
                   <CalendarTodayIcon sx={{ fontSize: 12 }} className="text-neutral-400" />
                   {date ? dateFormat(date) : '-'}
@@ -554,7 +554,7 @@ function MouvementsActifsTable({ loading, actifs, renderPerson }) {
                   {item.quantite ?? '-'}
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-y-2 gap-x-4 border-t border-neutral-100 pt-3 text-sm">
+              <div className="mt-3 grid grid-cols-2 gap-y-2 gap-x-4 border-t border-neutral-100 pt-3 text-sm [&>div]:min-w-0 [&>div]:overflow-hidden">
                 <div>
                   <span className="text-xs text-neutral-400 block">Membre</span>
                   <span className="text-neutral-900 truncate block">{renderPerson(item.membre)}</span>
@@ -569,7 +569,7 @@ function MouvementsActifsTable({ loading, actifs, renderPerson }) {
                 </div>
                 <div>
                   <span className="text-xs text-neutral-400 block">Date</span>
-                  <span className="text-neutral-700 block whitespace-nowrap">{date ? formatDateMultiline(date).join(' ') : '-'}</span>
+                  <span className="text-neutral-700 block break-words text-xs">{date ? formatDateMultiline(date).join(' ') : '-'}</span>
                 </div>
                 <div>
                   <span className="text-xs text-neutral-400 block">Stock initial</span>
@@ -664,7 +664,7 @@ function MouvementsPassifsTable({ loading, passifs, renderPerson }) {
                   {item.quantite ?? '-'}
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-y-2 gap-x-4 border-t border-neutral-100 pt-3 text-sm">
+              <div className="mt-3 grid grid-cols-2 gap-y-2 gap-x-4 border-t border-neutral-100 pt-3 text-sm [&>div]:min-w-0 [&>div]:overflow-hidden">
                 <div>
                   <span className="text-xs text-neutral-400 block">Membre</span>
                   <span className="text-neutral-900 truncate block">{renderPerson(item.membre)}</span>
@@ -679,7 +679,7 @@ function MouvementsPassifsTable({ loading, passifs, renderPerson }) {
                 </div>
                 <div>
                   <span className="text-xs text-neutral-400 block">Date</span>
-                  <span className="text-neutral-700 block whitespace-nowrap">{date ? formatDateMultiline(date).join(' ') : '-'}</span>
+                  <span className="text-neutral-700 block break-words text-xs">{date ? formatDateMultiline(date).join(' ') : '-'}</span>
                 </div>
                 <div>
                   <span className="text-xs text-neutral-400 block">Stock initial</span>

@@ -59,8 +59,8 @@ const AppelOffre = () => {
             </div>
             <Tabs defaultValue="list">
                 <TabsList>
-            <TabsTrigger value="list">Tous les appels d'offres</TabsTrigger>
-            <TabsTrigger value="form">Mes appels d'offre</TabsTrigger>
+            <TabsTrigger value="list" title="Tous les appels d'offres">Tous les appels d'offres</TabsTrigger>
+            <TabsTrigger value="form" title="Mes appels d'offre">Mes appels d'offre</TabsTrigger>
           </TabsList>
 
           <TabsContent value="list">
@@ -238,7 +238,7 @@ function TendersList() {
                   <div className="text-sm text-neutral-700"><span className="font-bold">Date limite:</span> {item.dateLimite ? new Date(item.dateLimite).toLocaleDateString('fr-FR') : '-'}</div>
                   {item.lanceurId?.userNickName && <div className="text-sm text-neutral-700"><span className="font-bold">Lanceur:</span> {item.lanceurId.userNickName}</div>}
                 </div>
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex flex-col sm:flex-row gap-2">
                   <Button className="flex-1" status="active" color="default" onClick={() => handleView(item._id)}>Voir</Button>
                   <Button className="flex-1" status={item.statut !== 'OUVERT' || item.hasBid ? 'inactive' : 'active'} color="default" disabled={item.statut !== 'OUVERT' || item.hasBid} onClick={() => { setBidTenderId(item._id); setBidOpen(true); }}>{item.statut !== 'OUVERT' ? 'Fermé' : item.hasBid ? 'Déjà soumis' : 'Soumissionner'}</Button>
                 </div>
@@ -456,6 +456,7 @@ function MyTendersList() {
       {!tenders || tenders.length === 0 ? (
         <div className="p-6 text-neutral-500">Aucun appel d'offre trouvé</div>
       ) : (
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="text-xs text-neutral-600">
@@ -474,7 +475,7 @@ function MyTendersList() {
                 </TableCell>
                 <TableCell className="py-3">{t.createdAt ? new Date(t.createdAt).toLocaleString('fr-FR') : '-'}</TableCell>
                 <TableCell className="py-3">
-                  <div className="flex gap-1 items-center">
+                  <div className="flex flex-wrap gap-1 items-center">
                     <Button variant="ghost" size="sm" onClick={() => handleView(t._id)} className="text-xs gap-1">
                       <InfoIcon className="w-4 h-4 text-violet-600" /> Détails
                     </Button>
@@ -495,6 +496,7 @@ function MyTendersList() {
             ))}
           </TableBody>
         </Table>
+        </div>
       )}
 
       <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
@@ -588,6 +590,7 @@ function MyTendersList() {
           ) : bids.length === 0 ? (
             <div className="py-8 text-center text-neutral-500">Aucune soumission pour le moment</div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="text-xs text-neutral-500 uppercase">
@@ -632,6 +635,7 @@ function MyTendersList() {
                 })}
               </TableBody>
             </Table>
+            </div>
           )}
 
           <DialogFooter>
@@ -764,7 +768,7 @@ function CreateTenderModal({ onSuccess }) {
           <Textarea id="description" name="description" value={form.description} onChange={handleChange} required placeholder="Description détaillée du besoin (incluant les TDR)" rows={4} />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="grid gap-2">
             <Label htmlFor="quantite" required>Quantité</Label>
             <Input id="quantite" name="quantite" type="number" value={form.quantite} onChange={handleChange} required min="0" step="any" />

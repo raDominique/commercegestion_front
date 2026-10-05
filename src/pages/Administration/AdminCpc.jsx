@@ -383,10 +383,10 @@ const AdminCpc = () => {
                                 <span className="text-lg font-bold text-violet-700">{selectedCpc.code}</span>
                                 <Badge variant="secondary" className="text-xs capitalize">{selectedCpc.niveau}</Badge>
                             </div>
-                            <div className="mb-2 text-neutral-900 font-semibold">{selectedCpc.nom}</div>
+                            <div className="mb-2 text-neutral-900 font-semibold wrap-break-word">{selectedCpc.nom}</div>
                             <div className="text-sm text-neutral-700 mb-1"><b>Parent :</b> {selectedCpc.parentCode || <span className="italic text-neutral-400">Aucun</span>}</div>
-                            <div className="text-sm text-neutral-700 mb-1"><b>Ancêtres :</b> {selectedCpc.ancetres?.length ? selectedCpc.ancetres.join(' > ') : <span className="italic text-neutral-400">Aucun</span>}</div>
-                            <div className="flex gap-4 mt-2">
+                            <div className="text-sm text-neutral-700 mb-1 break-all"><b>Ancêtres :</b> {selectedCpc.ancetres?.length ? selectedCpc.ancetres.join(' > ') : <span className="italic text-neutral-400">Aucun</span>}</div>
+                            <div className="flex flex-wrap gap-4 mt-2">
                                 <div className="text-xs text-neutral-600"><b>SH :</b> {selectedCpc.correspondances?.sh || <span className="italic text-neutral-400">-</span>}</div>
                                 <div className="text-xs text-neutral-600"><b>CITI :</b> {selectedCpc.correspondances?.citi || <span className="italic text-neutral-400">-</span>}</div>
                                 <div className="text-xs text-neutral-600"><b>CTCI :</b> {selectedCpc.correspondances?.ctci || <span className="italic text-neutral-400">-</span>}</div>
@@ -525,7 +525,7 @@ function CpcTableOrList({ loading, items, handleShowInfo, handleEditCpc, handleD
                             <div className="flex items-center gap-4">
                                 <div className="flex flex-col">
                                     <span className="font-bold text-neutral-900">{item.code}</span>
-                                    <span className="text-xs text-neutral-500 max-w-full wrap-break-words whitespace-normal">{item.nom}</span>
+                                    <span className="text-xs text-neutral-500 max-w-full wrap-break-word whitespace-normal">{item.nom}</span>
                                 </div>
                             </div>
                             <div className="mt-4 flex items-center gap-2 flex-wrap">

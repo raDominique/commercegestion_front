@@ -212,9 +212,23 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
 
                     {user && (
                         <>
-                            {/* ===== MOBILE TOP BAR : cloche + menu ===== */}
+                            {/* ===== MOBILE TOP BAR : panier + cloche + menu ===== */}
                             {!isDesktop && (
                                 <div className="flex items-center gap-1">
+                                    <Link to="/panier" aria-label="Panier">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="relative text-neutral-600"
+                                        >
+                                            <ShoppingCart className="w-5 h-5" />
+                                            {getTotalItems() > 0 && (
+                                                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1.5 py-0.5">
+                                                    {getTotalItems()}
+                                                </span>
+                                            )}
+                                        </Button>
+                                    </Link>
                                     <NotificationBell
                                         notifications={unreadNotifications}
                                         unreadCount={unreadCount}
@@ -349,6 +363,7 @@ function Header({ mobileMenuOpen, setMobileMenuOpen, handleLogout, isActive, isD
                                 {userNavItems.map((item) => (
                                     <MobileNavLink key={item.path} item={item} />
                                 ))}
+                                <MobileNavLink item={{ path: '/panier', label: 'Panier', icon: ShoppingCart }} />
                             </nav>
 
                             <Separator className="bg-neutral-100" />

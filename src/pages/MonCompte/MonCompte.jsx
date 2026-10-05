@@ -167,8 +167,8 @@ export default function MonCompte() {
               )}
             </div>
             <div className="flex-1 text-center sm:text-left">
-              <h2 className="text-lg text-neutral-900 wrap-break-words">{profile.userName} {profile.userFirstname}</h2>
-              <p className="text-sm text-neutral-600">{profile.userEmail}</p>
+              <h2 className="text-lg text-neutral-900 wrap-break-word">{profile.userName} {profile.userFirstname}</h2>
+              <p className="text-sm text-neutral-600 break-all">{profile.userEmail}</p>
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 <Badge variant="secondary" className="capitalize bg-violet-50 text-violet-700 border-violet-200">
                   {profile.userAccess === 'Admin' ? 'Administrateur' : (profile.userAccess || 'Utilisateur')}
@@ -192,7 +192,7 @@ export default function MonCompte() {
                   </Badge>
                 )}
                 <div className="flex items-center gap-1 mt-2 sm:mt-0">
-                  <Badge variant="outline" className="bg-neutral-50 text-neutral-700 border-neutral-700 px-2 py-1 text-xs font-mono">
+                  <Badge variant="outline" className="bg-neutral-50 text-neutral-700 border-neutral-700 px-2 py-1 text-xs font-mono max-w-full truncate">
                     ID: {profile.userId}
                   </Badge>
                   <Button

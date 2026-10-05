@@ -18,6 +18,7 @@ function TabsList({ className, ...props }) {
       className={cn(
         "flex items-end gap-0 px-2",
         "border-b-2 border-violet-300",
+        "overflow-x-auto max-w-full",
         className,
       )}
       {...props}
@@ -30,9 +31,10 @@ function TabsTrigger({ className, ...props }) {
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        // Base — onglet inactif
-        "relative -mb-0.5 min-w-22.5 rounded-t-md px-4 py-1.5",
-        "text-sm font-normal whitespace-nowrap text-center",
+        // Base — onglet inactif (compact sur mobile, confortable sur desktop)
+        // flex-1 + truncate : les libellés longs sont tronqués avec ellipsis sur mobile
+        "relative -mb-0.5 min-w-0 flex-1 truncate rounded-t-md px-2 py-1.5 sm:flex-none sm:px-4",
+        "text-xs sm:text-sm font-normal whitespace-nowrap text-center",
         "bg-gray-100 text-gray-700",
         "border border-b-2 border-gray-200 border-b-violet-300",
         "transition-colors duration-100 cursor-pointer",

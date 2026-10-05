@@ -214,7 +214,7 @@ const MesSites = () => {
                     onChange={({ lat, lng }) => setNewSite({ ...newSite, siteLat: lat, siteLng: lng })}
                   />
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <div className="space-y-2 flex-1">
                     <Label htmlFor="siteLat">Latitude</Label>
                     <Input
@@ -290,8 +290,8 @@ const MesSites = () => {
             <Card key={site.id} className="p-6 border-neutral-200 bg-white hover:border-violet-200 transition-colors">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg text-neutral-900 mb-1 flex items-center gap-2">
-                    {site.siteName}
+                  <h3 className="text-lg text-neutral-900 mb-1 flex items-center gap-2 min-w-0">
+                    <span className="truncate">{site.siteName}</span>
                   </h3>
                   <div className="flex items-center gap-1 text-sm text-neutral-700">
                     <LocationOnIcon className="w-4 h-4 text-violet-600" />
@@ -373,7 +373,7 @@ const MesSites = () => {
                     onChange={({ lat, lng }) => setEditSite({ ...editSite, siteLat: lat, siteLng: lng })}
                   />
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <div className="space-y-2 flex-1">
                     <Label htmlFor="editSiteLat">Latitude</Label>
                     <Input

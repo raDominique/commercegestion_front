@@ -391,6 +391,7 @@ const Boutique = () => {
                 <div className="text-center text-neutral-400 py-12">Aucun produit trouvé</div>
               ) : (
                 <>
+                  <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -443,6 +444,7 @@ const Boutique = () => {
                       })}
                     </TableBody>
                   </Table>
+                  </div>
 
                   <PaginationControls page={page} total={total} limit={limit} loading={loading} onPageChange={setPage} className="p-4" />
                 </>
@@ -475,6 +477,7 @@ const Boutique = () => {
                 {items.length === 0 ? (
                   <div className="text-center text-neutral-400 py-12">Aucun produit dans le panier</div>
                 ) : (
+              <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -493,7 +496,7 @@ const Boutique = () => {
 
                         return (
                           <TableRow key={item.id} className="odd:bg-neutral-50">
-                            <TableCell className="font-medium text-neutral-900 whitespace-nowrap truncate">{item.name || '-'}</TableCell>
+                            <TableCell className="font-medium text-neutral-900 whitespace-nowrap truncate max-w-40" title={item.name || '-'}>{item.name || '-'}</TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center justify-end gap-1">
                                 <Input
@@ -544,12 +547,13 @@ const Boutique = () => {
                       })}
                     </TableBody>
                   </Table>
+                  </div>
                 )}
 
                 <div className="px-4 py-4 border-t border-neutral-200 space-y-4">
                   <div className="flex items-center justify-end gap-6">
                     <span className="text-sm font-semibold text-neutral-700 whitespace-nowrap">TOTAL</span>
-                    <span className="min-w-32 text-right text-lg font-bold text-neutral-900 whitespace-nowrap">{formatThousands(getTotalPrice())} Ar</span>
+                    <span className="text-right text-base sm:text-lg font-bold text-neutral-900 break-words">{formatThousands(getTotalPrice())} Ar</span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
