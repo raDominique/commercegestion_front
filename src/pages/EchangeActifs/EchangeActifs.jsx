@@ -29,7 +29,8 @@ import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { getAllUsersSelect, getUsers } from '../../services/user.service';
-import { getSitesByUser, getActifsBySite } from '../../services/site.service';
+import { getSitesByUser } from '../../services/site.service';
+import { getQuantiteVendableBySite } from '../../services/actifs.service';
 import { selectAllProduits } from '../../services/product.service';
 import { createExchangeOffer, getExchangeOffers, buyExchangeOffer } from '../../services/exchange.service';
 import { getAccessToken } from '../../services/token.service';
@@ -213,7 +214,7 @@ const EchangeActifs = () => {
     }
     try {
       setLoadingActifs(true);
-      const res = await getActifsBySite(siteId);
+      const res = await getQuantiteVendableBySite(siteId);
       setSiteActifs(asArray(res));
     } catch (err) {
       console.error('Erreur chargement actifs dépôt:', err);
@@ -585,7 +586,7 @@ const EchangeActifs = () => {
                   disabled={!offerForm.detenteurAId || loadingSites}
                 >
                   <SelectTrigger id="depotAId" className="bg-white">
-                    <SelectValue placeholder={offerForm.detenteurAId ? 'Sélectionner le dépôt' : "Choisissez d'abord le détenteur"} />
+                    <SelectValue placeholder={offerForm.detenteurAId ? 'Sélectionner le dépôt' : "Choisissez d'abord le dépôt du détenteur"} />
                   </SelectTrigger>
                   <SelectContent>
                     {detenteurSiteOptions.map((site) => (

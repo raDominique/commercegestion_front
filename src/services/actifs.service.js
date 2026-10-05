@@ -65,8 +65,30 @@ export const getMyDeposits = async (params = {}, token) => {
   return response.data;
 };
 
+/**
+ * Récupère les quantités vendables par site (GET /api/v1/actifs/quantite-vendable-by-site/:siteId)
+ * @param {string} siteId - ID du site
+ * @param {Object} [params] - Paramètres de requête optionnels (pagination, filtres, ...)
+ * @param {string} [token] - Token d'authentification (optionnel, injecté automatiquement via axios si absent)
+ * @returns {Promise<Object>} - Données de l'API
+ */
+export const getQuantiteVendableBySite = async (siteId, params = {}, token) => {
+  const response = await axiosInstance.get(
+    `/api/v1/actifs/quantite-vendable-by-site/${siteId}`,
+    {
+      params,
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+        'accept': 'application/json',
+      },
+    }
+  );
+  return response.data;
+};
+
 export default {
   getActifById,
   getActifsByIds,
   getMyDeposits,
+  getQuantiteVendableBySite,
 };

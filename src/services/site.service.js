@@ -99,6 +99,9 @@ export async function deleteSite(id) {
 
 /**
  * Récupère tous les actifs d'un site (GET /actifs/all-by-site/:siteId)
+ * @deprecated Utiliser `getQuantiteVendableBySite(siteId)` de `actifs.service.js`
+ * (GET /api/v1/actifs/quantite-vendable-by-site/:siteId) qui retourne
+ * `[{ quantite, productId, productName }]`.
  * @param {string} siteId - L'identifiant du site
  * @return {Promise} - Une promesse qui résout la réponse de l'API
  */

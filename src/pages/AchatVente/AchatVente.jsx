@@ -10,7 +10,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/ta
 import { toast } from 'sonner';
 import { createVenteTransaction } from '../../services/transaction.service';
 import { getAllUsersSelect, getUsers } from '../../services/user.service';
-import { getMySites, getActifsBySite } from '../../services/site.service';
+import { getMySites } from '../../services/site.service';
+import { getQuantiteVendableBySite } from '../../services/actifs.service';
 import { getAccessToken } from '../../services/token.service';
 import { useAuth } from '../../context/AuthContext';
 import { UserAutocomplete } from '../../components/commons/UserAutocomplete.jsx';
@@ -57,7 +58,7 @@ const AchatVente = () => {
   useEffect(() => {
     if (siteOrigineId) {
       setLoadingProducts(true);
-      getActifsBySite(siteOrigineId).then(res => {
+      getQuantiteVendableBySite(siteOrigineId).then(res => {
         const items = Array.isArray(res) ? res : (res?.data && Array.isArray(res.data) ? res.data : []);
         setProducts(items);
         setProductId('');
@@ -206,7 +207,8 @@ const AchatVente = () => {
     if (!rapportEchange) missing.push(mode === 'monetary' ? 'Prix unitaire' : 'Rapport d\'échange');
     if (missing.length > 0) { toast.error(`Champs obligatoires : ${missing.join(', ')}`); return; }
     if (!Number.isFinite(Number(quantite)) || Number(quantite) <= 0) { toast.error('Veuillez saisir une quantité supérieure à 0'); return; }
-    const actualProductId = selectedProduct?.productId || selectedProduct?._id;
+    const rawProductId = selectedProduct?.productId ?? selectedProduct?._id;
+    const actualProductId = typeof rawProductId === 'string' ? rawProductId : (rawProductId?._id || rawProductId?.id);
     if (!actualProductId && productId) { toast.error('Erreur de sélection du produit'); return; }
     setSaving(true);
     try {
@@ -319,7 +321,7 @@ const AchatVente = () => {
                         <Button variant="outline" type="button" onClick={resetForm}>Annuler</Button>
                         <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving}>
                           {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                          {saving ? 'Traitement...' : 'Effectuer la transaction'}
+                          {saving ? 'Traitement...' : 'Effectuer la vente'}
                         </Button>
                       </div>
                     </>
@@ -409,7 +411,7 @@ const AchatVente = () => {
                         <Button variant="outline" type="button" onClick={resetForm}>Annuler</Button>
                         <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving}>
                           {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                          {saving ? 'Traitement...' : 'Effectuer la transaction'}
+                          {saving ? 'Traitement...' : 'Effectuer la vente'}
                         </Button>
                       </div>
                     </>

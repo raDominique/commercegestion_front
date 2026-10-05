@@ -202,7 +202,7 @@ const Actifs = () => {
 					throw new Error("Impossible de récupérer l'identifiant utilisateur");
 				}
 			}
-			const params = { page, limit, search, group: false };
+			const params = { page, limit, search, group: true };
 			const res = await getActifs(userId, params);
 			const actifsList = Array.isArray(res.data) ? res.data : [];
 			setActifs(actifsList);

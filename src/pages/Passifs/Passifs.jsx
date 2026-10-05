@@ -76,7 +76,7 @@ const Passifs = () => {
 					throw new Error("Impossible de récupérer l'identifiant utilisateur");
 				}
 			}
-			const params = { limit, page };
+			const params = { page, limit, search, group: true };
 			const res = await getPassifs(userId, params);
 			const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
 			setPassifs(items);

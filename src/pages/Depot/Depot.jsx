@@ -27,7 +27,8 @@ import PaginationControls from '../../components/commons/PaginationControls.jsx'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 import { getUsers } from '../../services/user.service';
-import { getMySites, getActifsBySite, getSitesByUser } from '../../services/site.service';
+import { getMySites, getSitesByUser } from '../../services/site.service';
+import { getQuantiteVendableBySite } from '../../services/actifs.service';
 import { getAccessToken } from '../../services/token.service';
 import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
 
@@ -233,7 +234,7 @@ const Depot = () => {
 		setLoadingSiteProducts(true);
 
 		try {
-			const res = await getActifsBySite(siteId);
+			const res = await getQuantiteVendableBySite(siteId);
 			let siteProducts = [];
 			if (Array.isArray(res)) {
 				siteProducts = res;
@@ -256,18 +257,20 @@ const Depot = () => {
 	};
 
 	const handleSelectProduct = productId => {
-		const actif = productsOnSite.find(item => item.productId === productId);
+		const normalizeId = value => (typeof value === 'string' ? value : (value?._id || value?.id || ''));
+		const actif = productsOnSite.find(item => String(normalizeId(item.productId)) === String(normalizeId(productId)));
+		const resolvedProductId = normalizeId(actif?.productId) || normalizeId(productId);
 		setTransferForm(prev => ({
 			...prev,
-			actifId: actif?.productId || '',
-			productId: actif?.productId || '',
+			actifId: resolvedProductId,
+			productId: resolvedProductId,
 			quantite: '',
-			prixUnitaire: actif?.prixUnitaire || '',
+			prixUnitaire: actif?.prixUnitaire ?? '',
 			detentaire: '',
 			detentaireCode: '',
 			ayant_droit: '',
 		}));
-		setMaxTransferQty(actif?.quantite || null);
+		setMaxTransferQty(actif?.quantite ?? null);
 	};
 
 	const handleTransferSubmit = async e => {

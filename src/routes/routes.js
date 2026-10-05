@@ -66,7 +66,7 @@ export const privateRoutes = [
     { path: '/depot', element: Depot, role: 'Utilisateur,Admin', userValidated: true, icon: CreditCard },
     { path: '/retrait', element: Retrait, role: 'Utilisateur,Admin', userValidated: true, icon: AccountBalanceWallet },
     { path: '/virement-droit', element: VirementDroit, role: 'Utilisateur,Admin', userValidated: true, icon: Outbox, label: 'Virement de droit auprès d\'un détenteur tiers' },
-    { path: '/echange-actifs', element: EchangeActifs, role: 'Utilisateur,Admin', userValidated: true, icon: SwapHoriz, label: "Echange d'actifs entre deux membres" },
+    { path: '/echange-actifs', element: EchangeActifs, role: 'Utilisateur,Admin', userValidated: true, icon: SwapHoriz, label: "Echange publics d'actifs" },
     { path: '/achat-vente', element: AchatVente, role: 'Utilisateur,Admin', userValidated: true, icon: ShoppingCart, label: 'Achat/Vente' },
     { path: '/appel-offre', element: AppelOffre, role: 'Utilisateur,Admin', userValidated: true, icon: CampaignIcon, label: "Appel d'offres" },
     { path: '/panier', element: Panier, role: 'Utilisateur,Admin', userValidated: true, icon: ShoppingBag },
