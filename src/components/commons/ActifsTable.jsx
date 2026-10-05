@@ -19,10 +19,10 @@ const renderPerson = (person) => {
 };
 
 export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal, onVirerDroit }) {
+  const [loadingStates, setLoadingStates] = useState({});
+
   if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
   if (!actifs || actifs.length === 0) return <div className="p-8 text-center text-neutral-400">Aucun actif trouvé</div>;
-
-  const [loadingStates, setLoadingStates] = useState({});
 
   const handleActionClick = async (actionType, itemId, actionFunction, item) => {
     setLoadingStates(prev => ({ ...prev, [`${actionType}-${itemId}`]: true }));
