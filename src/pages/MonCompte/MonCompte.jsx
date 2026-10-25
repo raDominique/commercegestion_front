@@ -8,7 +8,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useAuth } from '../../context/AuthContext';
-import { getProfile, changePassword } from '../../services/auth.service';
+import { getProfile, changePassword, disableTwoFactor, enableTwoFactor, verifyTwoFactor } from '../../services/auth.service';
 import { updateUser } from '../../services/user.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getAccessToken } from '../../services/token.service';
@@ -33,6 +33,11 @@ export default function MonCompte() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [twoFactorSetup, setTwoFactorSetup] = useState(null);
+  const [twoFactorToken, setTwoFactorToken] = useState('');
+  const [twoFactorLoading, setTwoFactorLoading] = useState(false);
+  const [backupCodes, setBackupCodes] = useState([]);
+  const [showDisableTwoFactor, setShowDisableTwoFactor] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -123,6 +128,52 @@ export default function MonCompte() {
       }
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const startTwoFactorSetup = async () => {
+    setTwoFactorLoading(true);
+    try {
+      const data = await enableTwoFactor();
+      setTwoFactorSetup(data);
+      setTwoFactorToken('');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Impossible de préparer l’authentification à deux facteurs');
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
+
+  const confirmTwoFactorSetup = async (event) => {
+    event.preventDefault();
+    setTwoFactorLoading(true);
+    try {
+      const data = await verifyTwoFactor(twoFactorToken);
+      setProfile((current) => ({ ...current, twoFactorEnabled: true }));
+      setBackupCodes(data.backupCodes || data.twoFactorBackupCodes || []);
+      setTwoFactorSetup(null);
+      setTwoFactorToken('');
+      toast.success('Authentification à deux facteurs activée');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Code d’authentification invalide');
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
+
+  const confirmDisableTwoFactor = async (event) => {
+    event.preventDefault();
+    setTwoFactorLoading(true);
+    try {
+      await disableTwoFactor(twoFactorToken);
+      setProfile((current) => ({ ...current, twoFactorEnabled: false }));
+      setTwoFactorToken('');
+      setShowDisableTwoFactor(false);
+      toast.success('Authentification à deux facteurs désactivée');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Code d’authentification invalide');
+    } finally {
+      setTwoFactorLoading(false);
     }
   };
 
@@ -361,6 +412,64 @@ export default function MonCompte() {
                   Modifier le mot de passe
                 </Button>
               </form>
+
+              <div className="mt-8 border-t border-neutral-200 pt-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="font-medium text-neutral-900">Authentification à deux facteurs</h3>
+                    <p className="mt-1 text-sm text-neutral-600">Protégez votre connexion avec un code temporaire généré par votre application d’authentification.</p>
+                  </div>
+                  {profile.twoFactorEnabled ? (
+                    <Button type="button" variant="outline" onClick={() => { setTwoFactorToken(''); setShowDisableTwoFactor(true); }}>
+                      Désactiver la 2FA
+                    </Button>
+                  ) : (
+                    <Button type="button" onClick={startTwoFactorSetup} disabled={twoFactorLoading}>
+                      {twoFactorLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                      Activer la 2FA
+                    </Button>
+                  )}
+                </div>
+                <Badge variant={profile.twoFactorEnabled ? 'default' : 'outline'} className="mt-4">
+                  {profile.twoFactorEnabled ? '2FA activée' : '2FA désactivée'}
+                </Badge>
+              </div>
+
+              <Dialog open={Boolean(twoFactorSetup)} onOpenChange={(open) => { if (!open) setTwoFactorSetup(null); }}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Configurer l’authentification à deux facteurs</DialogTitle>
+                    <DialogDescription>Scannez ce QR code avec votre application d’authentification, puis saisissez le code à six chiffres affiché.</DialogDescription>
+                  </DialogHeader>
+                  {twoFactorSetup?.qrCodeDataUrl && <img src={twoFactorSetup.qrCodeDataUrl} alt="QR code de configuration 2FA" className="mx-auto h-48 w-48" />}
+                  {twoFactorSetup?.secret && <p className="break-all rounded bg-neutral-100 p-3 text-center font-mono text-sm">Clé manuelle : {twoFactorSetup.secret}</p>}
+                  <form onSubmit={confirmTwoFactorSetup} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="setup-totp-token">Code à 6 chiffres</Label>
+                      <Input id="setup-totp-token" value={twoFactorToken} onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required className="text-center font-mono text-lg tracking-[0.45em]" />
+                    </div>
+                    <DialogFooter><Button type="submit" disabled={twoFactorLoading}>{twoFactorLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}Confirmer l’activation</Button></DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={showDisableTwoFactor} onOpenChange={setShowDisableTwoFactor}>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Désactiver la 2FA</DialogTitle><DialogDescription>Saisissez un code actuel de votre application d’authentification pour confirmer.</DialogDescription></DialogHeader>
+                  <form onSubmit={confirmDisableTwoFactor} className="space-y-4">
+                    <Input value={twoFactorToken} onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required placeholder="123456" className="text-center font-mono text-lg tracking-[0.45em]" />
+                    <DialogFooter><Button type="submit" variant="destructive" disabled={twoFactorLoading}>{twoFactorLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}Désactiver</Button></DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={backupCodes.length > 0} onOpenChange={(open) => { if (!open) setBackupCodes([]); }}>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Codes de secours</DialogTitle><DialogDescription>Conservez ces codes dans un endroit sûr. Ils peuvent servir si vous perdez l’accès à votre application d’authentification.</DialogDescription></DialogHeader>
+                  <div className="grid grid-cols-2 gap-2 rounded bg-neutral-100 p-4 font-mono text-sm">{backupCodes.map((code) => <span key={code}>{code}</span>)}</div>
+                  <DialogFooter><Button type="button" onClick={() => setBackupCodes([])}>J’ai enregistré mes codes</Button></DialogFooter>
+                </DialogContent>
+              </Dialog>
             </Card>
           </TabsContent>
         </Tabs>

@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true); // loading initial
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState(null);
+  const [twoFactorEnrollmentRequired, setTwoFactorEnrollmentRequired] = useState(false);
 
 
   // Décoder le payload du JWT (sans vérif signature)
@@ -37,6 +38,8 @@ export function AuthProvider({ children }) {
           try {
             const newToken = await refreshTokenFn();
             setAccessToken(newToken);
+            const profile = await getProfile();
+            setTwoFactorEnrollmentRequired(profile?.twoFactorEnabled !== true);
             const decoded = decodeJWT(newToken);
             setUser(decoded);
             setIsAuthenticated(true);
@@ -52,6 +55,7 @@ export function AuthProvider({ children }) {
         } else {
           setUser(null);
           setIsAuthenticated(false);
+          setTwoFactorEnrollmentRequired(false);
           setError(null);
           clearAccessToken();
         }
@@ -67,29 +71,35 @@ export function AuthProvider({ children }) {
 
 
   // Login
-  const login = async (email, password) => {
+  const login = async (email, password, totpToken) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await loginUser(email, password);
+      const data = await loginUser(email, password, totpToken);
       if (data && data.accessToken) {
         setAccessToken(data.accessToken);
+        const profile = await getProfile();
+        setTwoFactorEnrollmentRequired(profile?.twoFactorEnabled !== true);
         const decoded = decodeJWT(data.accessToken);
         setUser(decoded);
         setIsAuthenticated(true);
         setError(null);
+        return profile;
       } else {
         throw new Error('Aucun accessToken reçu');
       }
     } catch (err) {
       setUser(null);
       setIsAuthenticated(false);
+      setTwoFactorEnrollmentRequired(false);
       setError('Identifiants invalides');
       throw err;
     } finally {
       setLoading(false);
     }
   };
+
+  const completeTwoFactorEnrollment = () => setTwoFactorEnrollmentRequired(false);
 
 
   // Logout
@@ -100,6 +110,7 @@ export function AuthProvider({ children }) {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
+      setTwoFactorEnrollmentRequired(false);
       setError(null);
       clearAccessToken();
       setLoading(false);
@@ -114,7 +125,9 @@ export function AuthProvider({ children }) {
         isAuthenticated,
         loading,
         error,
+        twoFactorEnrollmentRequired,
         login,
+        completeTwoFactorEnrollment,
         logout,
         getProfile,
       }}

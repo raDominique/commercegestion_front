@@ -6,9 +6,10 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
-    const { user, loading } = useAuth();
+    const { user, loading, twoFactorEnrollmentRequired } = useAuth();
     if (loading) return null; // ou un composant de chargement si souhaité
     if (!user) return <Navigate to="/login" />;
+    if (twoFactorEnrollmentRequired) return <Navigate to="/login" replace />;
     if (allowedRoles && !allowedRoles.includes(user.userAccess)) {
         return <Navigate to="/dashboard" replace />;
     }
@@ -17,7 +18,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
 
 
 const AppRoutes = () => {
-    const { user } = useAuth();
+    const { user, twoFactorEnrollmentRequired } = useAuth();
 
     return (
         <Router>
@@ -25,7 +26,7 @@ const AppRoutes = () => {
                 {/* Redirection par défaut selon l'état d'authentification */}
                 <Route
                     path="/"
-                    element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
+                    element={user ? <Navigate to={twoFactorEnrollmentRequired ? "/login" : "/dashboard"} replace /> : <Navigate to="/login" replace />}
                 />
                 {/* Routes publiques (login/register sans layout, autres avec layout) */}
                 {publicRoutes.map(({ path, element }, idx) => {
@@ -35,7 +36,7 @@ const AppRoutes = () => {
                             <Route
                                 key={idx}
                                 path={path}
-                                element={user ? <Navigate to="/dashboard" replace /> : React.createElement(element)}
+                                element={user && !twoFactorEnrollmentRequired ? <Navigate to="/dashboard" replace /> : React.createElement(element)}
                             />
                         );
                     }

@@ -93,9 +93,11 @@ export async function createUser(data) {
 }
 
 // Connexion utilisateur : POST /auth/login
-export async function loginUser(userEmail, userPassword) {
+export async function loginUser(userEmail, userPassword, totpToken) {
   try {
-    const response = await axiosInstance.post('/api/v1/auth/login', { userEmail, userPassword }, {
+    const payload = { userEmail, userPassword };
+    if (totpToken) payload.totpToken = totpToken;
+    const response = await axiosInstance.post('/api/v1/auth/login', payload, {
       headers: { 'Content-Type': 'application/json', 'accept': 'application/json' },
     });
     if (response.data && response.data.accessToken) {
@@ -114,6 +116,22 @@ export async function loginUser(userEmail, userPassword) {
     }
     throw error;
   }
+}
+
+// Authentification à deux facteurs (TOTP)
+export async function enableTwoFactor() {
+  const response = await axiosInstance.post('/api/v1/auth/2fa/enable');
+  return response.data;
+}
+
+export async function verifyTwoFactor(token) {
+  const response = await axiosInstance.post('/api/v1/auth/2fa/verify', { token });
+  return response.data;
+}
+
+export async function disableTwoFactor(token) {
+  const response = await axiosInstance.post('/api/v1/auth/2fa/disable', { token });
+  return response.data;
 }
 
 // Demande de réinitialisation du mot de passe : POST /auth/forgot-password

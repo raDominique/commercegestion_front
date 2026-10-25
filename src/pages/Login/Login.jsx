@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getProfile } from '../../services/auth.service';
+import { enableTwoFactor, verifyTwoFactor } from '../../services/auth.service';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -13,6 +13,8 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import { Loader } from '../../components/ui/loader';
 import { AuthShell, BrandPanel, BrandPoints, FormPanel, AuthHeader } from '../../components/commons/authLayout';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../components/ui/input-otp';
 
 const inputClass =
   'h-11 rounded-md border-neutral-200 bg-neutral-50 pl-10 text-[15px] shadow-none focus-visible:border-violet-600 focus-visible:ring-0';
@@ -21,28 +23,51 @@ export default function Login() {
   usePageTitle('Connexion');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [totpToken, setTotpToken] = useState('');
+  const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
+  const [twoFactorSetup, setTwoFactorSetup] = useState(null);
+  const [setupToken, setSetupToken] = useState('');
+  const [setupLoading, setSetupLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, twoFactorEnrollmentRequired, completeTwoFactorEnrollment } = useAuth();
   const navigate = useNavigate();
 
   const allowedRoles = ['Utilisateur', 'Moderateur', 'Admin'];
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (requiresTwoFactor && totpToken.length !== 6) {
+      toast.error('Saisissez le code 2FA à 6 chiffres.');
+      return;
+    }
     setLoading(true);
     try {
-      await login(email, password);
-      const profile = await getProfile();
+      const profile = await login(email, password, requiresTwoFactor ? totpToken : undefined);
       if (profile && allowedRoles.includes(profile.userAccess)) {
-        toast.success('Connexion réussie !');
-        navigate('/dashboard', { replace: true });
+        if (profile.twoFactorEnabled === true) {
+          toast.success('Connexion réussie !');
+          navigate('/dashboard', { replace: true });
+        }
       } else {
         toast.error("Votre rôle ne permet pas d'accéder à cette application.");
       }
     } catch (error) {
       console.error('Erreur de connexion:', error);
       const apiMessage = error?.response?.data?.message;
+      const responseData = error?.response?.data;
       const url = error?.config?.url;
+      const message = Array.isArray(apiMessage) ? apiMessage.join(' ') : String(apiMessage || '');
+      const twoFactorRequired = message === 'Code 2FA requis'
+        || responseData?.requiresTwoFactor
+        || responseData?.twoFactorRequired
+        || responseData?.code === 'TWO_FACTOR_REQUIRED'
+        || /(?:totp|2fa|two.factor).*(?:required|requis)|(?:required|requis).*(?:totp|2fa|two.factor)/i.test(message);
+      if (twoFactorRequired && !requiresTwoFactor) {
+        setRequiresTwoFactor(true);
+        setTotpToken('');
+        toast.info('Saisissez le code généré par votre application d’authentification.');
+        return;
+      }
       if (url?.includes('/auth/login')) {
         if (apiMessage) {
           toast.error(apiMessage);
@@ -58,6 +83,35 @@ export default function Login() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const startTwoFactorSetup = async () => {
+    setSetupLoading(true);
+    try {
+      const data = await enableTwoFactor();
+      setTwoFactorSetup(data);
+      setSetupToken('');
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Impossible de préparer l’authentification à deux facteurs');
+    } finally {
+      setSetupLoading(false);
+    }
+  };
+
+  const confirmTwoFactorSetup = async (event) => {
+    event.preventDefault();
+    setSetupLoading(true);
+    try {
+      await verifyTwoFactor(setupToken);
+      completeTwoFactorEnrollment();
+      setTwoFactorSetup(null);
+      toast.success('Authentification à deux facteurs activée.');
+      navigate('/dashboard', { replace: true });
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Code d’authentification invalide');
+    } finally {
+      setSetupLoading(false);
     }
   };
 
@@ -82,16 +136,18 @@ export default function Login() {
 
       <FormPanel>
         <AuthHeader
-          title="Bon retour parmi nous"
+          title={requiresTwoFactor ? 'Vérification en deux étapes' : 'Bon retour parmi nous'}
           subtitle={
-            <>
-              Connectez-vous à votre compte <span className="font-semibold text-violet-700">Etokisana</span> pour reprendre votre activité.
-            </>
+            requiresTwoFactor
+              ? 'Saisissez le code à six chiffres de votre application d’authentification pour terminer votre connexion.'
+              : <>
+                  Connectez-vous à votre compte <span className="font-semibold text-violet-700">Etokisana</span> pour reprendre votre activité.
+                </>
           }
         />
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
+          {!requiresTwoFactor && <div className="space-y-2">
             <Label htmlFor="email">Adresse e-mail</Label>
             <div className="relative">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
@@ -108,9 +164,37 @@ export default function Login() {
                 className={inputClass}
               />
             </div>
-          </div>
+          </div>}
 
-          <div className="space-y-2">
+          {requiresTwoFactor && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="totpToken">Code d’authentification</Label>
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-violet-700 hover:text-violet-800 hover:underline"
+                  onClick={() => { setRequiresTwoFactor(false); setTotpToken(''); }}
+                >
+                  Utiliser un autre compte
+                </button>
+              </div>
+              <InputOTP
+                value={totpToken}
+                onChange={(value) => setTotpToken(value.replace(/\D/g, '').slice(0, 6))}
+                autoComplete="one-time-code"
+                maxLength={6}
+                autoFocus
+                aria-label="Code d’authentification à six chiffres"
+              >
+                <InputOTPGroup className="gap-2">
+                  {Array.from({ length: 6 }, (_, index) => <InputOTPSlot key={index} index={index} className="h-11 w-11 rounded-md border text-lg" />)}
+                </InputOTPGroup>
+              </InputOTP>
+              <p className="text-xs text-neutral-500">Ouvrez Google Authenticator, Authy ou votre application équivalente.</p>
+            </div>
+          )}
+
+          {!requiresTwoFactor && <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Mot de passe</Label>
               <Link to="/forgot-password" className="text-xs font-semibold text-violet-700 hover:text-violet-800 hover:underline">
@@ -142,7 +226,7 @@ export default function Login() {
                 {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
               </button>
             </div>
-          </div>
+          </div>}
 
           <Button
             type="submit"
@@ -151,10 +235,11 @@ export default function Login() {
             disabled={loading}
           >
             {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-            Se connecter
+            {requiresTwoFactor ? 'Vérifier le code' : 'Se connecter'}
           </Button>
         </form>
 
+        {!requiresTwoFactor && <>
         <div className="mt-6 flex items-center gap-3" aria-hidden="true">
           <span className="h-px flex-1 bg-neutral-200" />
           <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400">Nouveau ici</span>
@@ -174,7 +259,54 @@ export default function Login() {
         <p className="mt-6 text-center text-xs text-neutral-400">
           En vous connectant, vous acceptez nos conditions d’utilisation.
         </p>
+        </>}
       </FormPanel>
+      <Dialog open={twoFactorEnrollmentRequired}>
+        <DialogContent onPointerDownOutside={(event) => event.preventDefault()} onEscapeKeyDown={(event) => event.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Protégez votre compte avec la 2FA</DialogTitle>
+            <DialogDescription>Avant d’accéder à votre espace, activez l’authentification à deux facteurs avec Google Authenticator, Authy ou une application compatible.</DialogDescription>
+          </DialogHeader>
+          {!twoFactorSetup ? (
+            <div className="space-y-4">
+              <p className="text-sm text-neutral-600">Cette protection demandera un code temporaire lors de chaque connexion.</p>
+              <DialogFooter>
+                <Button type="button" onClick={startTwoFactorSetup} disabled={setupLoading}>
+                  {setupLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                  Activer maintenant
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <form onSubmit={confirmTwoFactorSetup} className="space-y-4">
+              {twoFactorSetup.qrCodeDataUrl && <img src={twoFactorSetup.qrCodeDataUrl} alt="QR code de configuration 2FA" className="mx-auto h-48 w-48" />}
+              {twoFactorSetup.secret && <p className="break-all rounded bg-neutral-100 p-3 text-center font-mono text-sm">Clé manuelle : {twoFactorSetup.secret}</p>}
+              <div className="space-y-2">
+                <Label htmlFor="enrollment-totp">Code à 6 chiffres</Label>
+                <InputOTP
+                  id="enrollment-totp"
+                  value={setupToken}
+                  onChange={(value) => setSetupToken(value.replace(/\D/g, '').slice(0, 6))}
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  autoFocus
+                  aria-label="Code de confirmation à six chiffres"
+                >
+                  <InputOTPGroup className="gap-2">
+                    {Array.from({ length: 6 }, (_, index) => <InputOTPSlot key={index} index={index} className="h-11 w-11 rounded-md border text-lg" />)}
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={setupLoading}>
+                  {setupLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                  Confirmer l’activation
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </AuthShell>
   );
 }
