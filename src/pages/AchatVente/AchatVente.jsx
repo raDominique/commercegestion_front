@@ -30,8 +30,6 @@ const AchatVente = () => {
   const [sites, setSites] = useState([]);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const [mode, setMode] = useState('monetary');
-
   const [vendeurInput, setVendeurInput] = useState('');
   const [vendeurId, setVendeurId] = useState('');
   const [vendeurName, setVendeurName] = useState('');
@@ -183,28 +181,22 @@ const AchatVente = () => {
     </div>
   );
 
-  const handleModeChange = (newMode) => {
-    setMode(newMode);
-    resetForm();
-  };
-
   const ready = {
     vendeur: !!vendeurId,
-    contrepartie: mode !== 'exchange' || !!contrepartieId,
+    contrepartie: !!contrepartieId,
     siteOrigine: !!siteOrigineId,
     product: !!productId,
-    submit: !!vendeurId && !!siteOrigineId && !!productId && !!quantite && !!rapportEchange && (mode !== 'exchange' || !!contrepartieId),
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const missing = [];
     if (!vendeurId) missing.push('Vendeur');
-    if (mode === 'exchange' && !contrepartieId) missing.push('Contrepartie');
+    if (!contrepartieId) missing.push('Contrepartie');
     if (!siteOrigineId) missing.push('Site d\'origine');
     if (!productId) missing.push('Produit');
     if (!quantite) missing.push('Quantité');
-    if (!rapportEchange) missing.push(mode === 'monetary' ? 'Prix unitaire' : 'Rapport d\'échange');
+    if (!rapportEchange) missing.push('Rapport d\'échange');
     if (missing.length > 0) { toast.error(`Champs obligatoires : ${missing.join(', ')}`); return; }
     if (!Number.isFinite(Number(quantite)) || Number(quantite) <= 0) { toast.error('Veuillez saisir une quantité supérieure à 0'); return; }
     const rawProductId = selectedProduct?.productId ?? selectedProduct?._id;
@@ -220,14 +212,14 @@ const AchatVente = () => {
         siteOrigineId,
         siteDestinationId: siteOrigineId,
         quantite: Number(quantite),
-        contrepartieId: mode === 'exchange' ? contrepartieId : null,
+        contrepartieId,
         rapportEchange: Number(rapportEchange),
         observations,
       }, token);
-      toast.success(mode === 'exchange' ? 'Échange effectué' : 'Vente effectuée');
+      toast.success('Échange effectué');
       resetForm();
     } catch (err) {
-      toast.error(err?.response?.data?.message || (mode === 'exchange' ? "Erreur lors de l'échange" : "Erreur lors de la vente"));
+      toast.error(err?.response?.data?.message || "Erreur lors de l'échange");
     } finally {
       setSaving(false);
     }
@@ -249,87 +241,10 @@ const AchatVente = () => {
               <p className="text-sm text-neutral-600">Achat et vente de produits entre membres</p>
             </div>
           </div>
-          <Tabs value={mode} onValueChange={handleModeChange}>
+          <Tabs value="exchange">
             <TabsList>
-              <TabsTrigger value="monetary">Vente monétaire</TabsTrigger>
               <TabsTrigger value="exchange">Échange produit</TabsTrigger>
             </TabsList>
-            <TabsContent value="monetary">
-              <Card className="border-neutral-200 bg-white">
-                <div className="px-4 pt-4">
-                  <h2 className="text-lg font-semibold text-neutral-900">Vente monétaire</h2>
-                  <p className="text-sm text-neutral-600">Vendez un produit contre de l'argent.</p>
-                </div>
-                <form onSubmit={handleSubmit} className="space-y-4 p-4">
-                  <div className="space-y-2">
-                    <Label required>1. Vendeur</Label>
-                    {vendeurField}
-                  </div>
-
-                  {ready.vendeur && (
-                    <div className="space-y-2">
-                      <Label required>2. Site d'origine</Label>
-                      <Select value={siteOrigineId} onValueChange={setSiteOrigineId}>
-                        <SelectTrigger className="bg-white"><SelectValue placeholder="Sélectionner un site" /></SelectTrigger>
-                        <SelectContent>
-                          {sites.map(s => (
-                            <SelectItem key={s._id || s.id} value={s._id || s.id}>{s.siteName || s.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {ready.siteOrigine && (
-                    <div className="space-y-2">
-                      <Label required>3. Produit</Label>
-                      <Select value={productId} onValueChange={setProductId} disabled={loadingProducts}>
-                        <SelectTrigger className="bg-white">
-                          <SelectValue placeholder={loadingProducts ? "Chargement..." : "Sélectionner un produit"}>{displayProductName}</SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products.map((p, i) => (
-                            <SelectItem key={i} value={String(i)}>{p.productName || p.name} (Stock: {formatThousands(p.quantite ?? 0)})</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {ready.product && (
-                    <>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label required>5. Quantité{maxQty != null ? ` (Stock: ${formatThousands(maxQty)})` : ''}</Label>
-                          <Input type="number" min="0" step="any" max={maxQty ?? undefined} value={quantite} onChange={e => {
-                            const val = e.target.value;
-                            if (val === '' || Number(val) <= (maxQty ?? Infinity)) setQuantite(val);
-                          }} className="bg-white" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label required>Prix unitaire (Ar)</Label>
-                          <Input type="number" min="0" value={rapportEchange} onChange={e => setRapportEchange(e.target.value)} className="bg-white" />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>5. Observations</Label>
-                        <Textarea value={observations} onChange={e => setObservations(e.target.value)} placeholder="Observations facultatives" rows={3} />
-                      </div>
-
-                      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
-                        <Button variant="outline" type="button" onClick={resetForm} className="w-full sm:w-auto">Annuler</Button>
-                        <Button variant="default" status={saving ? 'loading' : 'active'} color="default" type="submit" disabled={saving} className="w-full sm:w-auto">
-                          {saving && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                          {saving ? 'Traitement...' : 'Effectuer la vente'}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </form>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="exchange">
               <Card className="border-neutral-200 bg-white">
                 <div className="px-4 pt-4">
