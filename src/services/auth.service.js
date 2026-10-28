@@ -105,14 +105,19 @@ function saveAuthTokens(data, rememberMe) {
 }
 
 // Connexion utilisateur : POST /auth/login
-export async function loginUser(userEmail, userPassword, rememberMe = false, totpToken) {
+export async function loginUser(userEmail, userPassword, rememberMe = false) {
   try {
     const payload = { userEmail, userPassword, rememberMe };
-    if (totpToken) payload.totpToken = totpToken;
     const response = await axiosInstance.post('/api/v1/auth/login', payload, {
       headers: { 'Content-Type': 'application/json', 'accept': 'application/json' },
     });
-    saveAuthTokens(response.data, rememberMe);
+    if (
+      !response.data?.require2FA
+      && !response.data?.requireBothFactors
+      && !response.data?.loginChallenge
+    ) {
+      saveAuthTokens(response.data, rememberMe);
+    }
     return response.data;
   } catch (error) {
     if (error?.response?.status === 500) {
@@ -123,18 +128,29 @@ export async function loginUser(userEmail, userPassword, rememberMe = false, tot
   }
 }
 
-export async function completeTwoFactorLogin(loginChallenge, factor, rememberMe = false) {
-  const response = await axiosInstance.post('/api/v1/auth/2fa/complete', {
+export async function verifyLoginTotp(loginChallenge, totpToken) {
+  const response = await axiosInstance.post('/api/v1/auth/2fa/totp/verify', {
     loginChallenge,
-    ...factor,
+    totpToken,
   });
+  return response.data;
+}
+
+export async function verifyLoginEmailOtp(emailChallengeToken, emailOtpToken, rememberMe = false) {
+  const response = await axiosInstance.post('/api/v1/auth/2fa/email/verify', {
+    loginChallenge: emailChallengeToken,
+    emailOtpToken,
+  });
+  if (!response.data?.accessToken) {
+    throw new Error('Le serveur n’a pas confirmé la connexion après la vérification e-mail.');
+  }
   saveAuthTokens(response.data, rememberMe);
   return response.data;
 }
 
-export async function requestEmailOtp(loginChallenge) {
+export async function requestEmailOtp(emailChallengeToken) {
   const response = await axiosInstance.post('/api/v1/auth/2fa/email-challenge', {
-    loginChallenge,
+    loginChallenge: emailChallengeToken,
   });
   return response.data;
 }

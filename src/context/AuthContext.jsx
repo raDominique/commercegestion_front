@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 import {
-  completeTwoFactorLogin as completeTwoFactorLoginRequest,
   loginUser,
   refreshToken,
   logoutUser,
   getProfile,
-  useBackupCode as redeemBackupCode,
+  verifyLoginEmailOtp as verifyLoginEmailOtpRequest,
+  verifyLoginTotp as verifyLoginTotpRequest,
 } from '../services/auth.service';
 import { getAccessToken, setAccessToken, clearAccessToken } from '../services/token.service';
 import { setAxiosBootstrapping } from '../services/axios.config';
@@ -83,11 +83,11 @@ export function AuthProvider({ children }) {
 
 
   // Login
-  const login = async (email, password, rememberMe, totpToken) => {
+  const login = async (email, password, rememberMe) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await loginUser(email, password, rememberMe, totpToken);
+      const data = await loginUser(email, password, rememberMe);
       if (data?.loginChallenge) {
         return data;
       } else {
@@ -112,13 +112,19 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const completeTwoFactorLogin = async (loginChallenge, factor, rememberMe) => {
-    const data = await completeTwoFactorLoginRequest(loginChallenge, factor, rememberMe);
-    return establishSession(data);
+  const verifyLoginTotp = async (loginChallenge, totpToken) => {
+    const data = await verifyLoginTotpRequest(loginChallenge, totpToken);
+    if (data?.requireEmailOtp !== true || !data?.emailChallengeToken) {
+      throw new Error('Le serveur n’a pas confirmé le code Authenticator ou fourni le challenge e-mail.');
+    }
+    return data;
   };
 
-  const completeBackupCodeLogin = async (loginChallenge, backupCode, rememberMe) => {
-    const data = await redeemBackupCode(loginChallenge, backupCode, rememberMe);
+  const completeEmailOtpLogin = async (emailChallengeToken, emailOtpToken, rememberMe) => {
+    const data = await verifyLoginEmailOtpRequest(emailChallengeToken, emailOtpToken, rememberMe);
+    if (!data?.accessToken) {
+      throw new Error('Le serveur n’a pas confirmé la connexion avec le code e-mail.');
+    }
     return establishSession(data);
   };
 
@@ -160,8 +166,8 @@ export function AuthProvider({ children }) {
         error,
         twoFactorEnrollmentRequired,
         login,
-        completeTwoFactorLogin,
-        completeBackupCodeLogin,
+        verifyLoginTotp,
+        completeEmailOtpLogin,
         completeTwoFactorEnrollment,
         logout,
         getProfile,
