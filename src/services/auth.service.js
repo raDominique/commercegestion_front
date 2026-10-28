@@ -141,8 +141,11 @@ export async function verifyLoginEmailOtp(emailChallengeToken, emailOtpToken, re
     loginChallenge: emailChallengeToken,
     emailOtpToken,
   });
-  if (!response.data?.accessToken) {
-    throw new Error('Le serveur n’a pas confirmé la connexion après la vérification e-mail.');
+  if (response.data?.status === 'error' || !response.data?.accessToken) {
+    throw new Error(
+      response.data?.message
+        || 'Le serveur n’a pas confirmé la connexion après la vérification e-mail.',
+    );
   }
   saveAuthTokens(response.data, rememberMe);
   return response.data;
