@@ -1,7 +1,14 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
-import { loginUser, refreshToken, logoutUser, getProfile } from '../services/auth.service';
-import { setAccessToken, clearAccessToken, getRefreshToken } from '../services/token.service';
+import {
+  completeTwoFactorLogin as completeTwoFactorLoginRequest,
+  loginUser,
+  refreshToken,
+  logoutUser,
+  getProfile,
+  useBackupCode as redeemBackupCode,
+} from '../services/auth.service';
+import { getAccessToken, setAccessToken, clearAccessToken } from '../services/token.service';
 import { setAxiosBootstrapping } from '../services/axios.config';
 
 const AuthContext = createContext();
@@ -25,40 +32,45 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const establishSession = async (data) => {
+    if (!data?.accessToken) {
+      throw new Error('Aucun accessToken reçu');
+    }
+
+    const profile = await getProfile();
+    setTwoFactorEnrollmentRequired(profile?.twoFactorEnabled !== true);
+    setUser({ ...decodeJWT(data.accessToken), ...profile });
+    setIsAuthenticated(true);
+    setError(null);
+    return profile;
+  };
 
 
-  // Initialisation robuste : session persistante via refreshToken JS cookie
+
+  // The refresh endpoint also supports server-managed HttpOnly cookies.
   useEffect(() => {
     async function initAuth() {
       setAxiosBootstrapping(true);
       setLoading(true);
       try {
-        const refreshToken = getRefreshToken();
-        if (refreshToken) {
-          try {
-            const newToken = await refreshTokenFn();
-            setAccessToken(newToken);
-            const profile = await getProfile();
-            setTwoFactorEnrollmentRequired(profile?.twoFactorEnabled !== true);
-            const decoded = decodeJWT(newToken);
-            setUser(decoded);
-            setIsAuthenticated(true);
-            setError(null);
-            console.debug('[DEBUG] Session restaurée via refreshToken cookie');
-          } catch (err) {
-            setUser(null);
-            setIsAuthenticated(false);
-            setError('Session expirée');
-            clearAccessToken();
-            console.debug('[DEBUG] Echec du refresh au mount:', err);
-          }
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
-          setTwoFactorEnrollmentRequired(false);
-          setError(null);
-          clearAccessToken();
+        const newToken = await refreshTokenFn();
+        setAccessToken(newToken);
+        const profile = await getProfile();
+        setTwoFactorEnrollmentRequired(profile?.twoFactorEnabled !== true);
+        const decoded = decodeJWT(newToken);
+        setUser(decoded || profile);
+        setIsAuthenticated(true);
+        setError(null);
+      } catch (err) {
+        setUser(null);
+        setIsAuthenticated(false);
+        setTwoFactorEnrollmentRequired(false);
+        const sessionRejected = [401, 403].includes(err?.response?.status);
+        setError(sessionRejected ? null : 'Impossible de vérifier la session');
+        if (!sessionRejected) {
+          console.error('[AUTH] Impossible de restaurer la session:', err);
         }
+        clearAccessToken();
       } finally {
         setLoading(false);
         setAxiosBootstrapping(false);
@@ -71,35 +83,56 @@ export function AuthProvider({ children }) {
 
 
   // Login
-  const login = async (email, password, totpToken) => {
+  const login = async (email, password, rememberMe, totpToken) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await loginUser(email, password, totpToken);
-      if (data && data.accessToken) {
-        setAccessToken(data.accessToken);
-        const profile = await getProfile();
-        setTwoFactorEnrollmentRequired(profile?.twoFactorEnabled !== true);
-        const decoded = decodeJWT(data.accessToken);
-        setUser(decoded);
-        setIsAuthenticated(true);
-        setError(null);
-        return profile;
+      const data = await loginUser(email, password, rememberMe, totpToken);
+      if (data?.loginChallenge) {
+        return data;
       } else {
-        throw new Error('Aucun accessToken reçu');
+        if (data?.require2faSetup && data?.setupToken) {
+          setAccessToken(data.setupToken);
+          setUser(decodeJWT(data.setupToken) || data.user || { setupOnly: true });
+          setIsAuthenticated(true);
+          setTwoFactorEnrollmentRequired(true);
+          return data;
+        }
+        return await establishSession(data);
       }
     } catch (err) {
       setUser(null);
       setIsAuthenticated(false);
       setTwoFactorEnrollmentRequired(false);
       setError('Identifiants invalides');
+      clearAccessToken();
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const completeTwoFactorEnrollment = () => setTwoFactorEnrollmentRequired(false);
+  const completeTwoFactorLogin = async (loginChallenge, factor, rememberMe) => {
+    const data = await completeTwoFactorLoginRequest(loginChallenge, factor, rememberMe);
+    return establishSession(data);
+  };
+
+  const completeBackupCodeLogin = async (loginChallenge, backupCode, rememberMe) => {
+    const data = await redeemBackupCode(loginChallenge, backupCode, rememberMe);
+    return establishSession(data);
+  };
+
+  const completeTwoFactorEnrollment = async () => {
+    const profile = await getProfile();
+    if (profile?.twoFactorEnabled !== true) {
+      throw new Error('La configuration 2FA n’a pas été confirmée par le serveur.');
+    }
+    const token = getAccessToken();
+    setUser({ ...decodeJWT(token), ...profile });
+    setIsAuthenticated(true);
+    setTwoFactorEnrollmentRequired(false);
+    return profile;
+  };
 
 
   // Logout
@@ -127,6 +160,8 @@ export function AuthProvider({ children }) {
         error,
         twoFactorEnrollmentRequired,
         login,
+        completeTwoFactorLogin,
+        completeBackupCodeLogin,
         completeTwoFactorEnrollment,
         logout,
         getProfile,

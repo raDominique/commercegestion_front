@@ -5,17 +5,6 @@ const axiosConfig = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
 });
-// Debug : log à chaque requête
-
-// Debug : log à chaque requête /auth/refresh
-axiosConfig.interceptors.request.use((config) => {
-  if (config.url?.includes('/api/v1/auth/refresh')) {
-    console.debug('[DEBUG] Appel /auth/refresh, cookie envoyé:', document.cookie);
-  }
-  return config;
-});
-
-
 let isRefreshing = false;
 let failedQueue = [];
 let isBootstrapping = true;
@@ -72,7 +61,10 @@ axiosConfig.interceptors.response.use(
       error.response &&
       error.response.status === 401 &&
       !originalRequest._retry &&
-      !(originalRequest.url && originalRequest.url.includes('/auth/login'))
+      !(originalRequest.url && (
+        originalRequest.url.includes('/auth/login')
+        || originalRequest.url.includes('/auth/refresh')
+      ))
     ) {
       if (isBootstrapping) {
         // Pas de refresh auto pendant bootstrap

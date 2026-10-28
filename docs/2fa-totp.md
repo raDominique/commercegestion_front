@@ -37,13 +37,24 @@ La 2FA utilise le protocole TOTP (Time-based One-Time Password), compatible avec
 ```
 
 ### 4. Login avec 2FA
-- **POST** `/auth/login`
+- **POST** `/api/v1/auth/login`
 - **Body** :
 ```json
-{ "userEmail": "user@example.com", "userPassword": "password", "totpToken": "123456" }
+{
+  "userEmail": "user@example.com",
+  "userPassword": "password",
+  "rememberMe": true
+}
 ```
-- Si la 2FA est activée pour l'utilisateur, `totpToken` est requis. Sinon, connexion normale.
-- (Note : la vérification TOTP lors du login doit être intégrée côté service selon votre implémentation.)
+- Pour un compte avec 2FA activée, le backend renvoie un challenge temporaire sans tokens :
+```json
+{ "loginChallenge": "...", "methods": ["totp", "email-otp"] }
+```
+- TOTP : **POST** `/api/v1/auth/2fa/complete` avec `{ "loginChallenge": "...", "totpToken": "123456" }`.
+- OTP e-mail : **POST** `/api/v1/auth/2fa/email-challenge` avec `{ "loginChallenge": "..." }`, puis `/api/v1/auth/2fa/complete` avec `{ "loginChallenge": "...", "emailOtpToken": "123456" }`.
+- Code de secours : **POST** `/api/v1/auth/2fa/use-backup-code` avec `{ "loginChallenge": "...", "backupCode": "..." }`.
+- Pour un compte nécessitant l’enrôlement initial, le backend renvoie `{ "require2faSetup": true, "setupToken": "..." }`. Le frontend garde ce jeton en mémoire, bloque les routes métier et demande l’activation avant de continuer.
+- Les noms `userEmail` et `userPassword` correspondent au contrat API déjà utilisé par ce frontend.
 
 ## Champs utilisateur (schéma MongoDB)
 - `twoFactorSecret?: string` (select: false — ne jamais renvoyer au client)
@@ -65,10 +76,11 @@ La 2FA utilise le protocole TOTP (Time-based One-Time Password), compatible avec
 
 ### Connexion
 1. L'utilisateur saisit email + mot de passe.
-2. Si 2FA activée, le backend renvoie une erreur indiquant que le code TOTP est requis.
-3. Le frontend affiche un champ pour le code TOTP.
-4. L'utilisateur saisit le code → renvoyer la requête avec `totpToken`.
-5. Si valide, retour des tokens JWT.
+2. Le frontend transmet également `rememberMe`. Si la 2FA est activée, le backend retourne `loginChallenge` et les méthodes autorisées, sans access token ni refresh token.
+3. Le frontend permet de choisir TOTP ou OTP e-mail. Pour l’OTP, le code est demandé au backend avant d’afficher le champ de saisie.
+4. Le facteur est envoyé avec le challenge à `/auth/2fa/complete`. Un code de secours à usage unique peut aussi être utilisé.
+5. Seule la validation du facteur permet d’établir la session. Le challenge ne doit pas être renvoyé avec le mot de passe.
+6. Le bouton « Se souvenir de moi » est transmis au backend : celui-ci doit appliquer la durée de vie correspondante aux refresh tokens.
 
 ### Désactivation
 1. L'utilisateur saisit son code TOTP actuel.
@@ -81,8 +93,11 @@ La 2FA utilise le protocole TOTP (Time-based One-Time Password), compatible avec
 
 ## Sécurité
 - Le secret TOTP est stocké avec `select: false` pour ne jamais être exposé.
-- Rate limiting recommandé sur `/auth/2fa/verify` et `/auth/login`.
+- Rate limiting requis sur `/auth/2fa/verify`, `/auth/2fa/complete`, `/auth/2fa/email-challenge`, `/auth/2fa/use-backup-code` et `/auth/2fa/disable`.
 - Les codes de secours doivent être hashés (comme les mots de passe).
+- Le backend doit invalider le challenge après utilisation, expiration ou trois échecs et empêcher la réutilisation d’un code TOTP.
+- Le facteur e-mail ne doit être proposé que si l’adresse est vérifiée; les OTP doivent expirer et les renvois être limités.
+- En production, le refresh token doit être émis et révoqué par le serveur dans un cookie `HttpOnly; Secure; SameSite=Strict`. Un refresh token renvoyé dans le JSON ne peut pas être rendu HttpOnly par le frontend.
 - Utiliser HTTPS en production.
 
 ## Dépendances
@@ -92,5 +107,6 @@ La 2FA utilise le protocole TOTP (Time-based One-Time Password), compatible avec
 ## Notes d'implémentation backend
 - Les méthodes `enable2FA`, `verify2FA`, `disable2FA` sont dans `AuthService`.
 - Les endpoints sont dans `AuthController` sous `/auth/2fa/*`.
-- La vérification TOTP lors du login (`login` method) doit être adaptée pour exiger le `totpToken` si `twoFactorEnabled === true`.
-- Ajouter un champ optionnel `totpToken` au `LoginDto`.
+- Le backend doit implémenter les endpoints de challenge TOTP/e-mail et de validation des codes de secours décrits plus haut; ils ne peuvent pas être remplacés par du code frontend.
+- Ajouter `rememberMe` au DTO de login et renvoyer le cookie refresh sécurisé côté serveur. Les tokens ne doivent être émis qu’après validation du facteur.
+- À l’enrôlement forcé, le `setupToken` doit être restreint aux endpoints d’activation/vérification et ne doit pas donner accès aux routes métier.

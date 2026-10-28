@@ -92,22 +92,27 @@ export async function createUser(data) {
   return res.data;
 }
 
+function saveAuthTokens(data, rememberMe) {
+  if (data?.accessToken) {
+    setAccessToken(data.accessToken);
+  }
+  if (data?.refreshToken) {
+    const options = rememberMe
+      ? { expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }
+      : {};
+    setRefreshToken(data.refreshToken, options);
+  }
+}
+
 // Connexion utilisateur : POST /auth/login
-export async function loginUser(userEmail, userPassword, totpToken) {
+export async function loginUser(userEmail, userPassword, rememberMe = false, totpToken) {
   try {
-    const payload = { userEmail, userPassword };
+    const payload = { userEmail, userPassword, rememberMe };
     if (totpToken) payload.totpToken = totpToken;
     const response = await axiosInstance.post('/api/v1/auth/login', payload, {
       headers: { 'Content-Type': 'application/json', 'accept': 'application/json' },
     });
-    if (response.data && response.data.accessToken) {
-      setAccessToken(response.data.accessToken);
-    }
-    if (response.data && response.data.refreshToken) {
-      // Expiration 7 jours par défaut
-      const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      setRefreshToken(response.data.refreshToken, { expires });
-    }
+    saveAuthTokens(response.data, rememberMe);
     return response.data;
   } catch (error) {
     if (error?.response?.status === 500) {
@@ -118,14 +123,40 @@ export async function loginUser(userEmail, userPassword, totpToken) {
   }
 }
 
+export async function completeTwoFactorLogin(loginChallenge, factor, rememberMe = false) {
+  const response = await axiosInstance.post('/api/v1/auth/2fa/complete', {
+    loginChallenge,
+    ...factor,
+  });
+  saveAuthTokens(response.data, rememberMe);
+  return response.data;
+}
+
+export async function requestEmailOtp(loginChallenge) {
+  const response = await axiosInstance.post('/api/v1/auth/2fa/email-challenge', {
+    loginChallenge,
+  });
+  return response.data;
+}
+
+export async function useBackupCode(loginChallenge, backupCode, rememberMe = false) {
+  const response = await axiosInstance.post('/api/v1/auth/2fa/use-backup-code', {
+    loginChallenge,
+    backupCode,
+  });
+  saveAuthTokens(response.data, rememberMe);
+  return response.data;
+}
+
 // Authentification à deux facteurs (TOTP)
 export async function enableTwoFactor() {
   const response = await axiosInstance.post('/api/v1/auth/2fa/enable');
   return response.data;
 }
 
-export async function verifyTwoFactor(token) {
+export async function verifyTwoFactor(token, rememberMe = false) {
   const response = await axiosInstance.post('/api/v1/auth/2fa/verify', { token });
+  saveAuthTokens(response.data, rememberMe);
   return response.data;
 }
 
@@ -152,18 +183,18 @@ export async function resetPassword(payload) {
   return response.data;
 }
 
-// Refresh accessToken : POST /auth/refresh (refreshToken envoyé via cookie JS)
+// Refresh accessToken using a server HttpOnly cookie or the legacy JSON-token cookie.
 export async function refreshToken() {
   try {
     const refreshToken = getRefreshToken();
-    if (!refreshToken) throw new Error('Aucun refreshToken trouvé');
-    const response = await axiosInstance.post('/api/v1/auth/refresh', { refreshToken });
+    const response = await axiosInstance.post(
+      '/api/v1/auth/refresh',
+      refreshToken ? { refreshToken } : {},
+    );
     if (response.data && response.data.accessToken) {
       setAccessToken(response.data.accessToken);
       if (response.data.refreshToken) {
-        // Si le backend renvoie un nouveau refreshToken, on le met à jour
-        const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        setRefreshToken(response.data.refreshToken, { expires });
+        setRefreshToken(response.data.refreshToken);
       }
       return response.data.accessToken;
     } else {
@@ -186,7 +217,7 @@ export async function getProfile() {
 export async function logoutUser() {
   try {
     const refreshToken = getRefreshToken();
-    await axiosInstance.post('/api/v1/auth/logout', { refreshToken });
+    await axiosInstance.post('/api/v1/auth/logout', refreshToken ? { refreshToken } : {});
   } finally {
     clearAccessToken();
     clearRefreshToken();

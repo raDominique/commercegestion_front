@@ -14,7 +14,8 @@ export function clearAccessToken() {
 }
 
 
-// --- Gestion secure du refreshToken en cookie JS ---
+// Compatibility fallback for APIs that return refresh tokens in JSON.
+// HttpOnly refresh cookies must be issued by the server.
 const REFRESH_COOKIE = 'refreshToken';
 
 function getCookie(name) {
