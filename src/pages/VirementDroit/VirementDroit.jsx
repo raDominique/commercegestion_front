@@ -16,12 +16,13 @@ import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import ActifsTable from '../../components/commons/ActifsTable';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
-import { getUsers } from '../../services/user.service';
+import { getUserByEmail, getUsers } from '../../services/user.service';
 import { virementDroit, getMyDepositsAtOthers } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import useScreenType from '../../utils/useScreenType';
 import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
+import { MemberIdLookupInput } from '../../components/commons/MemberIdLookupInput.jsx';
 
 const VirementDroit = () => {
   usePageTitle('Virement de droit');
@@ -38,6 +39,7 @@ const VirementDroit = () => {
   const [selectedRecipient, setSelectedRecipient] = useState(null);
   const [recipientLookupLoading, setRecipientLookupLoading] = useState(false);
   const [recipientNotFound, setRecipientNotFound] = useState(false);
+  const [recipientSearchMode, setRecipientSearchMode] = useState('id');
   const recipientSearchCodeRef = useRef('');
   const [loadingVirement, setLoadingVirement] = useState(false);
   // Conservés uniquement pendant la transition d'interface : le nouveau
@@ -129,6 +131,18 @@ const VirementDroit = () => {
       return list.find(member => member?.userId === code) || list[0] || null;
     } catch (err) {
       console.error('Erreur lors de la recherche du bénéficiaire:', err);
+      return null;
+    } finally {
+      setRecipientLookupLoading(false);
+    }
+  };
+
+  const resolveRecipientByEmail = async (email) => {
+    setRecipientLookupLoading(true);
+    try {
+      return await getUserByEmail(email);
+    } catch (err) {
+      console.error('Erreur lors de la recherche du bénéficiaire par e-mail:', err);
       return null;
     } finally {
       setRecipientLookupLoading(false);
@@ -328,25 +342,24 @@ const VirementDroit = () => {
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">Bénéficiaire (Z) <span className="text-red-500 ml-0.5">*</span></label>
                   <div className={`rounded-md p-2 ${recipientNotFound ? 'border border-red-400 bg-red-50' : ''}`}>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3">
                       <div>
-                        <Input
-                          placeholder="ID du membre (8 caractères)"
+                        <MemberIdLookupInput
+                          placeholder="ID du membre (8 caractères) ou e-mail"
                           value={recipientCode}
-                          maxLength={8}
-                          style={{ textTransform: 'uppercase' }}
-                          onChange={e => {
-                            const value = e.target.value.toUpperCase();
-                            const code = value.trim();
-                            recipientSearchCodeRef.current = code;
-                            setRecipientCode(value);
-                            setSelectedRecipient(null);
-                            setRecipientName('');
-                            setRecipientNotFound(false);
-
-                            if (code.length === 8) {
-                              resolveRecipientByCode(code).then(found => {
-                                if (recipientSearchCodeRef.current !== code) return;
+                          emailLookupLoading={recipientLookupLoading}
+                          searchMode={recipientSearchMode}
+                          onSearchModeChange={setRecipientSearchMode}
+                          onSearch={(value, mode) => {
+                            const searchValue = String(value || '').trim();
+                            if (mode === 'email') {
+                              const search = searchValue.toLowerCase();
+                              recipientSearchCodeRef.current = search;
+                              setSelectedRecipient(null);
+                              setRecipientName('');
+                              setRecipientNotFound(false);
+                              resolveRecipientByEmail(search).then(found => {
+                                if (recipientSearchCodeRef.current !== search) return;
                                 if (!found) {
                                   setRecipientNotFound(true);
                                   return;
@@ -355,7 +368,35 @@ const VirementDroit = () => {
                                 setSelectedRecipient(found);
                                 setRecipientName(name);
                               });
+                              return;
                             }
+                            const code = searchValue.toUpperCase();
+                            if (code.length !== 8) return;
+                            recipientSearchCodeRef.current = code;
+                            setRecipientCode(code);
+                            setSelectedRecipient(null);
+                            setRecipientName('');
+                            setRecipientNotFound(false);
+                            resolveRecipientByCode(code).then(found => {
+                              if (recipientSearchCodeRef.current !== code) return;
+                              if (!found) {
+                                setRecipientNotFound(true);
+                                return;
+                              }
+                              const name = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || found.name || '');
+                              setSelectedRecipient(found);
+                              setRecipientName(name);
+                            });
+                          }}
+                          onChange={e => {
+                            const rawValue = e.target.value;
+                            const value = recipientSearchMode === 'email' ? rawValue : rawValue.toUpperCase();
+                            const code = value.trim();
+                            recipientSearchCodeRef.current = recipientSearchMode === 'email' ? code.toLowerCase() : code;
+                            setRecipientCode(value);
+                            setSelectedRecipient(null);
+                            setRecipientName('');
+                            setRecipientNotFound(false);
                           }}
                           className={`border-neutral-300 ${recipientNotFound ? 'border-red-400 bg-white' : ''}`}
                         />
@@ -367,22 +408,22 @@ const VirementDroit = () => {
                         disabled={recipientLookupLoading}
                         className={`border-neutral-300 bg-neutral-100 text-neutral-700 ${recipientNotFound ? 'border-red-400 text-red-600' : ''}`}
                       />
-                      <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-1 text-xs">
+                      <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
                         {recipientLookupLoading ? (
                           <span className="text-neutral-400">Recherche en cours...</span>
                         ) : recipientName ? (
-                          <span className="text-emerald-600">Code valide</span>
+                          <span className="text-emerald-600">Membre valide</span>
                         ) : recipientNotFound ? (
-                          <span className="text-red-600">Code invalide</span>
-                        ) : recipientCode && recipientCode.length !== 8 ? (
+                          <span className="text-red-600">Membre invalide</span>
+                        ) : recipientCode && !recipientCode.includes('@') && recipientCode.length !== 8 ? (
                           <span className="text-amber-600">Le code doit contenir exactement 8 caractères</span>
                         ) : (
                           <span className="text-neutral-500" />
                         )}
-                        <span className="text-neutral-400">{recipientCode.length}/8</span>
+                        <span className="text-neutral-400">{recipientCode.includes('@') ? '' : `${recipientCode.length}/8`}</span>
                       </div>
                       {recipientNotFound && (
-                        <p className="sm:col-span-2 text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre et le nom du membre.</p>
+                        <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID ou cette adresse e-mail.</p>
                       )}
                     </div>
                   </div>

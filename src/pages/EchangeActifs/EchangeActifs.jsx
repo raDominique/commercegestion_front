@@ -28,7 +28,8 @@ import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
-import { getAllUsersSelect, getUsers } from '../../services/user.service';
+import { getAllUsersSelect, getUserByEmail, getUsers } from '../../services/user.service';
+import { MemberIdLookupInput } from '../../components/commons/MemberIdLookupInput.jsx';
 import { getSitesByUser } from '../../services/site.service';
 import { getQuantiteVendableBySite } from '../../services/actifs.service';
 import { selectAllProduits } from '../../services/product.service';
@@ -109,6 +110,7 @@ const EchangeActifs = () => {
   // Saisie des détenteurs Y acceptés par ID (style parrain)
   const [acceptedDetenteurCode, setAcceptedDetenteurCode] = useState('');
   const [acceptedDetenteurName, setAcceptedDetenteurName] = useState('');
+  const [acceptedDetenteurSearchMode, setAcceptedDetenteurSearchMode] = useState('id');
   const [resolvedAcceptedDetenteur, setResolvedAcceptedDetenteur] = useState(null);
   const [acceptedDetenteurLookupLoading, setAcceptedDetenteurLookupLoading] = useState(false);
   const [acceptedDetenteurNotFound, setAcceptedDetenteurNotFound] = useState(false);
@@ -117,6 +119,7 @@ const EchangeActifs = () => {
 
   const [detenteurWCode, setDetenteurWCode] = useState('');
   const [detenteurWName, setDetenteurWName] = useState('');
+  const [detenteurWSearchMode, setDetenteurWSearchMode] = useState('id');
   const [resolvedDetenteurW, setResolvedDetenteurW] = useState(null);
   const [detenteurWLookupLoading, setDetenteurWLookupLoading] = useState(false);
   const [detenteurWNotFound, setDetenteurWNotFound] = useState(false);
@@ -410,10 +413,84 @@ const EchangeActifs = () => {
     }
   };
 
+  const resolveAcceptedDetenteurByEmail = async (email) => {
+    setAcceptedDetenteurLookupLoading(true);
+    try {
+      const member = await getUserByEmail(email);
+      if (acceptedDetenteurSearchRef.current !== email) return;
+      if (!member?.userId) {
+        setAcceptedDetenteurNotFound(true);
+        setResolvedAcceptedDetenteur(null);
+        setAcceptedDetenteurName('');
+        return;
+      }
+      setResolvedAcceptedDetenteur(member);
+      setAcceptedDetenteurName(userLabel(member));
+    } catch (err) {
+      console.error('Erreur lors de la recherche du détenteur Y par e-mail:', err);
+      if (acceptedDetenteurSearchRef.current === email) {
+        setAcceptedDetenteurNotFound(true);
+        setResolvedAcceptedDetenteur(null);
+        setAcceptedDetenteurName('');
+      }
+    } finally {
+      setAcceptedDetenteurLookupLoading(false);
+    }
+  };
+
+  const resolveDetenteurWByEmail = async (email) => {
+    setDetenteurWLookupLoading(true);
+    try {
+      const member = await getUserByEmail(email);
+      if (detenteurWSearchRef.current !== email) return;
+      if (!member?.userId) {
+        setDetenteurWNotFound(true);
+        setResolvedDetenteurW(null);
+        setDetenteurWName('');
+        return;
+      }
+      setResolvedDetenteurW(member);
+      setDetenteurWName(userLabel(member));
+      setOfferForm((prev) => ({ ...prev, detenteurAId: getId(member) }));
+      loadDetenteurSites(getId(member));
+    } catch (err) {
+      console.error('Erreur lors de la recherche du détenteur W par e-mail:', err);
+      if (detenteurWSearchRef.current === email) {
+        setDetenteurWNotFound(true);
+        setResolvedDetenteurW(null);
+        setDetenteurWName('');
+      }
+    } finally {
+      setDetenteurWLookupLoading(false);
+    }
+  };
+
+  const handleDetenteurWEmailSearch = (email) => {
+    const search = email.trim().toLowerCase();
+    detenteurWSearchRef.current = search;
+    setDetenteurWNotFound(false);
+    setResolvedDetenteurW(null);
+    setDetenteurWName('');
+    setOfferForm((prev) => ({ ...prev, detenteurAId: '', depotAId: '', productAId: '' }));
+    setDetenteurSites([]);
+    setSiteActifs([]);
+    resolveDetenteurWByEmail(search);
+  };
+
+  const handleAcceptedDetenteurEmailSearch = (email) => {
+    const search = email.trim().toLowerCase();
+    acceptedDetenteurSearchRef.current = search;
+    setAcceptedDetenteurNotFound(false);
+    setResolvedAcceptedDetenteur(null);
+    setAcceptedDetenteurName('');
+    resolveAcceptedDetenteurByEmail(search);
+  };
+
   const handleDetenteurWCodeChange = (event) => {
-    const val = event.target.value.toUpperCase();
+    const rawValue = event.target.value;
+    const val = rawValue.includes('@') ? rawValue : rawValue.toUpperCase();
     const code = (val || '').trim();
-    detenteurWSearchRef.current = code;
+    detenteurWSearchRef.current = code.includes('@') ? code.toLowerCase() : code;
     setDetenteurWNotFound(false);
     setResolvedDetenteurW(null);
     setDetenteurWName('');
@@ -421,38 +498,56 @@ const EchangeActifs = () => {
     setOfferForm((prev) => ({ ...prev, detenteurAId: '', depotAId: '', productAId: '' }));
     setDetenteurSites([]);
     setSiteActifs([]);
+  };
 
-    if (code.length === 8) {
-      const member = usersMap[code] || null;
-      if (member) {
-        setResolvedDetenteurW(member);
-        setDetenteurWName(userLabel(member));
-        setOfferForm((prev) => ({ ...prev, detenteurAId: getId(member) }));
-        loadDetenteurSites(getId(member));
-        return;
-      }
-      resolveDetenteurWByCode(code);
+  const handleDetenteurWIdSearch = (value) => {
+    const code = String(value || '').trim().toUpperCase();
+    if (code.length !== 8) return;
+    detenteurWSearchRef.current = code;
+    setDetenteurWCode(code);
+    setDetenteurWNotFound(false);
+    setResolvedDetenteurW(null);
+    setDetenteurWName('');
+    setOfferForm((prev) => ({ ...prev, detenteurAId: '', depotAId: '', productAId: '' }));
+    setDetenteurSites([]);
+    setSiteActifs([]);
+    const member = usersMap[code] || null;
+    if (member) {
+      setResolvedDetenteurW(member);
+      setDetenteurWName(userLabel(member));
+      setOfferForm((prev) => ({ ...prev, detenteurAId: getId(member) }));
+      loadDetenteurSites(getId(member));
+      return;
     }
+    resolveDetenteurWByCode(code);
   };
 
   const handleAcceptedDetenteurCodeChange = (event) => {
-    const val = event.target.value.toUpperCase();
+    const rawValue = event.target.value;
+    const val = rawValue.includes('@') ? rawValue : rawValue.toUpperCase();
     const code = (val || '').trim();
-    acceptedDetenteurSearchRef.current = code;
+    acceptedDetenteurSearchRef.current = code.includes('@') ? code.toLowerCase() : code;
     setAcceptedDetenteurNotFound(false);
     setResolvedAcceptedDetenteur(null);
     setAcceptedDetenteurName('');
     setAcceptedDetenteurCode(val);
+  };
 
-    if (code.length === 8) {
-      const member = usersMap[code] || null;
-      if (member) {
-        setResolvedAcceptedDetenteur(member);
-        setAcceptedDetenteurName(userLabel(member));
-        return;
-      }
-      resolveAcceptedDetenteurByCode(code);
+  const handleAcceptedDetenteurIdSearch = (value) => {
+    const code = String(value || '').trim().toUpperCase();
+    if (code.length !== 8) return;
+    acceptedDetenteurSearchRef.current = code;
+    setAcceptedDetenteurCode(code);
+    setAcceptedDetenteurNotFound(false);
+    setResolvedAcceptedDetenteur(null);
+    setAcceptedDetenteurName('');
+    const member = usersMap[code] || null;
+    if (member) {
+      setResolvedAcceptedDetenteur(member);
+      setAcceptedDetenteurName(userLabel(member));
+      return;
     }
+    resolveAcceptedDetenteurByCode(code);
   };
 
   const addAcceptedDetenteur = () => {
@@ -532,13 +627,21 @@ const EchangeActifs = () => {
               <div className="grid gap-2">
                 <Label htmlFor="detenteurAId" required>Détenteur W</Label>
                   <div className="space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Input
+                    <div className="space-y-2">
+                      <MemberIdLookupInput
                         id="detenteurAId"
-                        placeholder="ID du détenteur W (8 caractères)"
+                        placeholder="ID du détenteur W (8 caractères) ou e-mail"
                         value={detenteurWCode}
-                        maxLength={8}
-                        style={{ textTransform: 'uppercase' }}
+                        emailLookupLoading={detenteurWLookupLoading}
+                        searchMode={detenteurWSearchMode}
+                        onSearchModeChange={setDetenteurWSearchMode}
+                        onSearch={(value, mode) => {
+                          if (mode === 'email') {
+                            handleDetenteurWEmailSearch(String(value || '').trim());
+                            return;
+                          }
+                          handleDetenteurWIdSearch(value);
+                        }}
                         onChange={handleDetenteurWCodeChange}
                         className={`bg-white ${detenteurWNotFound ? 'border-red-400' : ''}`}
                       />
@@ -559,18 +662,18 @@ const EchangeActifs = () => {
                       {detenteurWLookupLoading ? (
                         <span className="text-neutral-400" />
                       ) : resolvedDetenteurW ? (
-                        <span className="text-emerald-600">ID valide</span>
+                        <span className="text-emerald-600">Membre valide</span>
                       ) : detenteurWNotFound ? (
-                        <span className="text-red-600">ID invalide</span>
-                      ) : (detenteurWCode && detenteurWCode.length !== 8) ? (
+                        <span className="text-red-600">Membre invalide</span>
+                      ) : (detenteurWCode && !detenteurWCode.includes('@') && detenteurWCode.length !== 8) ? (
                         <span className="text-amber-600">L'ID doit contenir exactement 8 caractères</span>
                       ) : (
                         <span className="text-neutral-500" />
                       )}
-                      <span className="text-neutral-400">{detenteurWCode.length}/8</span>
+                      <span className="text-neutral-400">{detenteurWCode.includes('@') ? '' : `${detenteurWCode.length}/8`}</span>
                     </div>
                     {detenteurWNotFound && (
-                      <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre.</p>
+                      <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID ou cette adresse e-mail.</p>
                     )}
                   </div>
               </div>
@@ -674,16 +777,24 @@ const EchangeActifs = () => {
               <div className="p-4">
                 <Label>Détenteurs Y acceptés pour le produit B</Label>
                 <p className="text-xs text-neutral-500 mt-1">
-                  Saisissez l'ID du détenteur Y (8 caractères) puis validez pour l'ajouter.
+                  Saisissez l'ID du détenteur Y ou son adresse e-mail pour le rechercher, puis ajoutez-le.
                 </p>
                 <div className="mt-4">
                   <div className="space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Input
-                        placeholder="ID du détenteur Y (8 caractères)"
+                    <div className="space-y-2">
+                      <MemberIdLookupInput
+                        placeholder="ID du détenteur Y (8 caractères) ou e-mail"
                         value={acceptedDetenteurCode}
-                        maxLength={8}
-                        style={{ textTransform: 'uppercase' }}
+                        emailLookupLoading={acceptedDetenteurLookupLoading}
+                        searchMode={acceptedDetenteurSearchMode}
+                        onSearchModeChange={setAcceptedDetenteurSearchMode}
+                        onSearch={(value, mode) => {
+                          if (mode === 'email') {
+                            handleAcceptedDetenteurEmailSearch(String(value || '').trim());
+                            return;
+                          }
+                          handleAcceptedDetenteurIdSearch(value);
+                        }}
                         onChange={handleAcceptedDetenteurCodeChange}
                         className={`bg-white ${acceptedDetenteurNotFound ? 'border-red-400' : ''}`}
                       />
@@ -704,18 +815,18 @@ const EchangeActifs = () => {
                       {acceptedDetenteurLookupLoading ? (
                         <span className="text-neutral-400" />
                       ) : resolvedAcceptedDetenteur ? (
-                        <span className="text-emerald-600">ID valide</span>
+                        <span className="text-emerald-600">Membre valide</span>
                       ) : acceptedDetenteurNotFound ? (
-                        <span className="text-red-600">ID invalide</span>
-                      ) : (acceptedDetenteurCode && acceptedDetenteurCode.length !== 8) ? (
+                        <span className="text-red-600">Membre invalide</span>
+                      ) : (acceptedDetenteurCode && !acceptedDetenteurCode.includes('@') && acceptedDetenteurCode.length !== 8) ? (
                         <span className="text-amber-600">L'ID doit contenir exactement 8 caractères</span>
                       ) : (
                         <span className="text-neutral-500" />
                       )}
-                      <span className="text-neutral-400">{acceptedDetenteurCode.length}/8</span>
+                      <span className="text-neutral-400">{acceptedDetenteurCode.includes('@') ? '' : `${acceptedDetenteurCode.length}/8`}</span>
                     </div>
                     {acceptedDetenteurNotFound && (
-                      <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre.</p>
+                      <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID ou cette adresse e-mail.</p>
                     )}
                     <div className="flex justify-end">
                       <Button

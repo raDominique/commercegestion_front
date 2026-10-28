@@ -26,7 +26,8 @@ import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBan
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
-import { getUsers } from '../../services/user.service';
+import { getUserByEmail, getUsers } from '../../services/user.service';
+import { MemberIdLookupInput } from '../../components/commons/MemberIdLookupInput.jsx';
 import { getMySites, getSitesByUser } from '../../services/site.service';
 import { getQuantiteVendableBySite } from '../../services/actifs.service';
 import { getAccessToken } from '../../services/token.service';
@@ -76,9 +77,6 @@ const Depot = () => {
 	const [productOpen, setProductOpen] = useState(false);
 	const [productHighlighted, setProductHighlighted] = useState(0);
 
-	// Mapping code membre (userId) -> utilisateur pour résoudre le _id du détenteur
-	const [usersMap, setUsersMap] = useState({});
-
 	// États pour les recherches - Site de destination
 	const [siteDestinationSearch, setSiteDestinationSearch] = useState('');
 	const [siteDestinationOpen, setSiteDestinationOpen] = useState(false);
@@ -88,6 +86,7 @@ const Depot = () => {
 	// Recherche du membre en cours via l'API
 	const [memberLookupLoading, setMemberLookupLoading] = useState(false);
 	const [memberNotFound, setMemberNotFound] = useState(false);
+	const [memberSearchMode, setMemberSearchMode] = useState('id');
 	const memberSearchCodeRef = useRef('');
 	// Données filtrées
 	const filteredOriginSites = allSites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
@@ -154,35 +153,29 @@ const Depot = () => {
 		});
 	}, []);
 
-	// Charger la map des utilisateurs pour résolution ID -> nom (sans afficher la liste)
-	useEffect(() => {
-		let mounted = true;
-		getUsers({ limit: 1000 }).then(res => {
-			if (!mounted) return;
-			const arr = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
-			const map = arr.reduce((acc, u) => {
-				if (u && u.userId) acc[u.userId] = u;
-				return acc;
-			}, {});
-			setUsersMap(map);
-		}).catch(() => { });
-		return () => { mounted = false; };
-	}, []);
-
-	// Recherche à la demande d'un membre non présent dans la map locale
-	// via getUsers avec params (search) pour récupérer ses informations
+	// Recherche à la demande d'un membre via son ID
 	const resolveMemberByCode = async code => {
 		setMemberLookupLoading(true);
 		try {
 			const res = await getUsers({ search: code, limit: 10 });
 			const arr = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
 			const member = arr.find(u => u && u.userId === code) || arr[0] || null;
-			if (member && member.userId) {
-				setUsersMap(prev => ({ ...prev, [member.userId]: member }));
-			}
 			return member;
 		} catch (error) {
 			console.error('Erreur lors de la recherche du membre:', error);
+			return null;
+		} finally {
+			setMemberLookupLoading(false);
+		}
+	};
+
+	const resolveMemberByEmail = async email => {
+		setMemberLookupLoading(true);
+		try {
+			const member = await getUserByEmail(email);
+			return member;
+		} catch (error) {
+			console.error('Erreur lors de la recherche du membre par e-mail:', error);
 			return null;
 		} finally {
 			setMemberLookupLoading(false);
@@ -573,44 +566,57 @@ const Depot = () => {
 										<Label required>4. Détenteur</Label>
 										<div className={`rounded-md p-2 ${memberNotFound ? 'border border-red-400 bg-red-50' : ''}`}>
 											<div className="space-y-2">
-												<Input
-													placeholder="ID du membre (8 caractères)"
+												<MemberIdLookupInput
+													placeholder="ID du membre (8 caractères) ou e-mail"
 													value={transferForm.detentaireCode}
-													maxLength={8}
-													style={{ textTransform: 'uppercase' }}
-													onChange={e => {
-														const val = e.target.value.toUpperCase();
-														const code = (val || '').trim();
+													emailLookupLoading={memberLookupLoading}
+													searchMode={memberSearchMode}
+													onSearchModeChange={setMemberSearchMode}
+													onSearch={(value, mode) => {
+														const inputValue = String(value || '').trim();
+														if (mode === 'email') {
+															const search = inputValue.toLowerCase();
+															memberSearchCodeRef.current = search;
+															setMemberNotFound(false);
+															setTransferForm(prev => ({ ...prev, detentaire: '', detentaireName: '' }));
+															resolveMemberByEmail(search).then(found => {
+																if (memberSearchCodeRef.current !== search) return;
+																if (!found) {
+																	setMemberNotFound(true);
+																	return;
+																}
+																const fullName = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || '');
+																setTransferForm(prev => ({ ...prev, detentaire: found._id, detentaireName: fullName }));
+															});
+															return;
+														}
+														const code = inputValue.toUpperCase();
+														if (code.length !== 8) return;
 														memberSearchCodeRef.current = code;
 														setMemberNotFound(false);
-														const member = code.length === 8 ? (usersMap[code] || null) : null;
-														const fullName = member ? ([member.userName, member.userFirstname].filter(Boolean).join(' ') || member.userNickName || '') : '';
+														resolveMemberByCode(code).then(found => {
+															if (memberSearchCodeRef.current !== code) return;
+															if (!found) {
+																setMemberNotFound(true);
+																setTransferForm(prev => ({ ...prev, detentaire: '', detentaireName: '' }));
+																return;
+															}
+															const foundName = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || '');
+															setTransferForm(prev => ({ ...prev, detentaire: found._id, detentaireName: foundName }));
+														});
+													}}
+													onChange={e => {
+														const rawValue = e.target.value;
+														const val = memberSearchMode === 'email' ? rawValue : rawValue.toUpperCase();
+														const code = (val || '').trim();
+														memberSearchCodeRef.current = memberSearchMode === 'email' ? code.toLowerCase() : code;
+														setMemberNotFound(false);
 														setTransferForm(prev => ({
 															...prev,
 															detentaireCode: val,
-															detentaire: member ? member._id : '',
-															detentaireName: fullName,
+															detentaire: '',
+															detentaireName: '',
 														}));
-														if (code.length === 8 && !member) {
-															resolveMemberByCode(code).then(found => {
-																if (memberSearchCodeRef.current !== code) return;
-																if (!found) {
-																	setMemberNotFound(true);
-																	setTransferForm(prev => ({
-																		...prev,
-																		detentaire: '',
-																		detentaireName: '',
-																	}));
-																	return;
-																}
-																const foundName = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || '');
-																setTransferForm(prev => ({
-																	...prev,
-																	detentaire: found._id,
-																	detentaireName: foundName,
-																}));
-															});
-														}
 													}}
 													className={`border-neutral-300 ${memberNotFound ? 'border-red-400 bg-white' : ''}`}
 												/>
@@ -621,7 +627,7 @@ const Depot = () => {
 														<span className="text-emerald-600">Code valide</span>
 													) : memberNotFound ? (
 														<span className="text-red-600">Code invalide</span>
-													) : (transferForm.detentaireCode && (transferForm.detentaireCode || '').length !== 8) ? (
+													) : (transferForm.detentaireCode && !transferForm.detentaireCode.includes('@') && transferForm.detentaireCode.length !== 8) ? (
 														<span className="text-amber-600">Le code doit contenir exactement 8 caractères</span>
 													) : (
 														<span className="text-neutral-500" />

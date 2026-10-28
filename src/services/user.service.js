@@ -1,4 +1,5 @@
 import axiosConfig from './axios.config';
+import { isCompleteEmail } from '../utils/emailValidation';
 
 /**
  * Récupère un utilisateur par son ID (GET /users/get-by-id/:id)
@@ -57,6 +58,27 @@ export async function getUsers(params = {}) {
     // Sinon, requête avec paramètres
     const res = await axiosConfig.get('/api/v1/users', { params });
     return res.data;
+}
+
+export async function getUserByEmail(email) {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (!isCompleteEmail(normalizedEmail)) {
+        throw new Error('Une adresse e-mail complète est requise');
+    }
+
+    const response = await getUsers({ search: normalizedEmail, limit: 10 });
+    const users = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+            ? response.data
+            : Array.isArray(response?.data?.data)
+                ? response.data.data
+                : [];
+
+    return users.find((user) => {
+        const userEmail = user?.userEmail || user?.email;
+        return typeof userEmail === 'string' && userEmail.trim().toLowerCase() === normalizedEmail;
+    }) || null;
 }
 
 // Exemple d'utilisation :

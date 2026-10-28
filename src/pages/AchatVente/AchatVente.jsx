@@ -9,7 +9,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
 import { createVenteTransaction } from '../../services/transaction.service';
-import { getAllUsersSelect, getUsers } from '../../services/user.service';
+import { getAllUsersSelect, getUserByEmail, getUsers } from '../../services/user.service';
 import { getMySites } from '../../services/site.service';
 import { getQuantiteVendableBySite } from '../../services/actifs.service';
 import { getAccessToken } from '../../services/token.service';
@@ -18,6 +18,7 @@ import { UserAutocomplete } from '../../components/commons/UserAutocomplete.jsx'
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { Loader } from '../../components/ui/loader';
 import { formatThousands } from '../../utils/formatNumber';
+import { MemberIdLookupInput } from '../../components/commons/MemberIdLookupInput.jsx';
 
 const getUserDisplayName = (u) => u?.name || u?.userNickName || u?.userName || u?.email || '';
 const truncate = (text, max = 35) => !text || text.length <= max ? text : text.slice(0, max) + '…';
@@ -36,6 +37,7 @@ const AchatVente = () => {
   const [vendeurLookupLoading, setVendeurLookupLoading] = useState(false);
   const [vendeurNotFound, setVendeurNotFound] = useState(false);
   const [resolvedVendeur, setResolvedVendeur] = useState(null);
+  const [vendeurSearchMode, setVendeurSearchMode] = useState('id');
   const vendeurSearchRef = useRef('');
   const [contrepartieInput, setContrepartieInput] = useState('');
   const [contrepartieId, setContrepartieId] = useState('');
@@ -115,36 +117,91 @@ const AchatVente = () => {
     }
   };
 
+  const resolveVendeurByEmail = async (email) => {
+    setVendeurLookupLoading(true);
+    try {
+      const member = await getUserByEmail(email);
+      if (vendeurSearchRef.current !== email) return;
+      if (!member?.userId) {
+        setVendeurId('');
+        setResolvedVendeur(null);
+        setVendeurName('');
+        setVendeurNotFound(true);
+        return;
+      }
+      setVendeurId(member._id || member.id || '');
+      setResolvedVendeur(member);
+      setVendeurName(getUserDisplayName(member));
+    } catch (err) {
+      console.error('Erreur lors de la recherche du vendeur par e-mail:', err);
+      if (vendeurSearchRef.current === email) {
+        setVendeurId('');
+        setResolvedVendeur(null);
+        setVendeurName('');
+        setVendeurNotFound(true);
+      }
+    } finally {
+      setVendeurLookupLoading(false);
+    }
+  };
+
+  const handleVendeurEmailSearch = (email) => {
+    const search = email.trim().toLowerCase();
+    vendeurSearchRef.current = search;
+    setVendeurNotFound(false);
+    setVendeurId('');
+    setVendeurName('');
+    setResolvedVendeur(null);
+    resolveVendeurByEmail(search);
+  };
+
   const handleVendeurCodeChange = (event) => {
-    const value = event.target.value.toUpperCase();
+    const rawValue = event.target.value;
+    const value = rawValue.includes('@') ? rawValue : rawValue.toUpperCase();
     const code = value.trim();
-    vendeurSearchRef.current = code;
+    vendeurSearchRef.current = code.includes('@') ? code.toLowerCase() : code;
     setVendeurInput(value);
     setVendeurId('');
     setVendeurName('');
     setResolvedVendeur(null);
     setVendeurNotFound(false);
+  };
 
-    if (code.length === 8) {
-      const member = users.find((item) => item?.userId === code);
-      if (member) {
-        setVendeurId(member._id || member.id || '');
-        setResolvedVendeur(member);
-        setVendeurName(getUserDisplayName(member));
-        return;
-      }
-      resolveVendeurByCode(code);
+  const handleVendeurIdSearch = (value) => {
+    const code = String(value || '').trim().toUpperCase();
+    if (code.length !== 8) return;
+    vendeurSearchRef.current = code;
+    setVendeurInput(code);
+    setVendeurId('');
+    setVendeurName('');
+    setResolvedVendeur(null);
+    setVendeurNotFound(false);
+    const member = users.find((item) => item?.userId === code);
+    if (member) {
+      setVendeurId(member._id || member.id || '');
+      setResolvedVendeur(member);
+      setVendeurName(getUserDisplayName(member));
+      return;
     }
+    resolveVendeurByCode(code);
   };
 
   const vendeurField = (
     <div className="space-y-2">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <Input
-          placeholder="ID du vendeur (8 caractères)"
+      <div className="space-y-2">
+        <MemberIdLookupInput
+          placeholder="ID du vendeur (8 caractères) ou e-mail"
           value={vendeurInput}
-          maxLength={8}
-          style={{ textTransform: 'uppercase' }}
+          emailLookupLoading={vendeurLookupLoading}
+          searchMode={vendeurSearchMode}
+          onSearchModeChange={setVendeurSearchMode}
+          onSearch={(value, mode) => {
+            if (mode === 'email') {
+              handleVendeurEmailSearch(value);
+              return;
+            }
+            handleVendeurIdSearch(value);
+          }}
           onChange={handleVendeurCodeChange}
           className={`bg-white ${vendeurNotFound ? 'border-red-400' : ''}`}
         />
@@ -165,18 +222,18 @@ const AchatVente = () => {
         {vendeurLookupLoading ? (
           <span className="text-neutral-400" />
         ) : resolvedVendeur ? (
-          <span className="text-emerald-600">ID valide</span>
+          <span className="text-emerald-600">Membre valide</span>
         ) : vendeurNotFound ? (
-          <span className="text-red-600">ID invalide</span>
-        ) : (vendeurInput && vendeurInput.length !== 8) ? (
+          <span className="text-red-600">Membre invalide</span>
+        ) : (vendeurInput && !vendeurInput.includes('@') && vendeurInput.length !== 8) ? (
           <span className="text-amber-600">L'ID doit contenir exactement 8 caractères</span>
         ) : (
           <span className="text-neutral-500" />
         )}
-        <span className="text-neutral-400">{vendeurInput.length}/8</span>
+        <span className="text-neutral-400">{vendeurInput.includes('@') ? '' : `${vendeurInput.length}/8`}</span>
       </div>
       {vendeurNotFound && (
-        <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID. Vérifiez l'ID membre.</p>
+        <p className="text-xs text-red-600">Aucun membre trouvé avec cet ID ou cette adresse e-mail.</p>
       )}
     </div>
   );
