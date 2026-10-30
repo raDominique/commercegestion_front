@@ -114,8 +114,15 @@ export function AuthProvider({ children }) {
 
   const verifyLoginTotp = async (loginChallenge, totpToken) => {
     const data = await verifyLoginTotpRequest(loginChallenge, totpToken);
-    if (data?.requireEmailOtp !== true || !data?.emailChallengeToken) {
-      throw new Error('Le serveur n’a pas confirmé le code Authenticator ou fourni le challenge e-mail.');
+    if (data?.status === 'error') {
+      throw new Error(data?.message || 'Le serveur n’a pas confirmé le code Authenticator.');
+    }
+    return data;
+  };
+
+  const completeLoginChallenge = async (data) => {
+    if (data?.accessToken) {
+      return establishSession(data);
     }
     return data;
   };
@@ -167,6 +174,7 @@ export function AuthProvider({ children }) {
         twoFactorEnrollmentRequired,
         login,
         verifyLoginTotp,
+        completeLoginChallenge,
         completeEmailOtpLogin,
         completeTwoFactorEnrollment,
         logout,

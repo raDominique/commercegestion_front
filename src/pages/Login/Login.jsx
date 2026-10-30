@@ -30,6 +30,8 @@ export default function Login() {
   const [emailChallengeToken, setEmailChallengeToken] = useState('');
   const [emailOtpToken, setEmailOtpToken] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [availableMethods, setAvailableMethods] = useState([]);
+  const [selectedFactor, setSelectedFactor] = useState('totp');
   const [twoFactorSetup, setTwoFactorSetup] = useState(null);
   const [setupToken, setSetupToken] = useState('');
   const [setupLoading, setSetupLoading] = useState(false);
@@ -38,6 +40,7 @@ export default function Login() {
   const {
     login,
     verifyLoginTotp,
+    completeLoginChallenge,
     completeEmailOtpLogin,
     twoFactorEnrollmentRequired,
     completeTwoFactorEnrollment,
@@ -58,46 +61,69 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loginChallenge && !emailChallengeToken && totpToken.length !== 6) {
+    if (loginChallenge && selectedFactor === 'totp' && totpToken.length !== 6) {
       toast.error('Saisissez le code Authenticator à 6 chiffres.');
       return;
     }
-    if (emailChallengeToken && emailOtpToken.length !== 6) {
+    if (loginChallenge && selectedFactor === 'email-otp' && emailChallengeToken && emailOtpToken.length !== 6) {
       toast.error('Saisissez le code reçu par e-mail.');
       return;
     }
     setLoading(true);
     try {
       if (loginChallenge) {
-        if (emailChallengeToken) {
+        if (selectedFactor === 'email-otp') {
+          if (!emailChallengeToken) {
+            const challenge = await requestEmailOtp(loginChallenge);
+            const challengeToken = challenge?.emailChallengeToken || challenge?.challengeToken || challenge?.loginChallenge || loginChallenge;
+            setEmailChallengeToken(challengeToken);
+            setEmailOtpToken('');
+            toast.success('Un code de vérification a été envoyé par e-mail.');
+            return;
+          }
           const profile = await completeEmailOtpLogin(emailChallengeToken, emailOtpToken, rememberMe);
           finishLogin(profile);
-        } else {
-          const result = await verifyLoginTotp(loginChallenge, totpToken);
-          setEmailChallengeToken(result.emailChallengeToken);
+          return;
+        }
+
+        const result = await verifyLoginTotp(loginChallenge, totpToken);
+        if (result?.accessToken) {
+          const profile = await completeLoginChallenge(result);
+          finishLogin(profile);
+          return;
+        }
+
+        if (result?.emailChallengeToken || result?.challengeToken || result?.requireEmailOtp) {
+          const challengeToken = result.emailChallengeToken || result.challengeToken || loginChallenge;
+          setEmailChallengeToken(challengeToken);
+          setSelectedFactor('email-otp');
           setTotpToken('');
           setEmailOtpToken('');
-          toast.success('Code Authenticator validé. Un code de vérification a été envoyé par e-mail.');
+          toast.success('Code Authenticator validé. Saisissez maintenant le code reçu par e-mail.');
+          return;
         }
+
+        throw new Error('Le serveur n’a pas confirmé la validation du second facteur.');
+      }
+
+      const result = await login(email, password, rememberMe);
+      if (result?.require2FA || result?.loginChallenge) {
+        const methods = Array.isArray(result.methods) && result.methods.length > 0
+          ? result.methods
+          : ['totp', 'email-otp'];
+        setAvailableMethods(methods);
+        setSelectedFactor(methods.includes('totp') ? 'totp' : methods[0]);
+        setLoginChallenge(result.loginChallenge || '');
+        setEmailChallengeToken('');
+        setEmailOtpToken('');
+        setTotpToken('');
+        setPassword('');
+        toast.info(methods.includes('totp') ? 'Choisissez votre facteur de vérification pour terminer la connexion.' : 'Un code de vérification a été préparé pour votre e-mail.');
+      } else if (result?.require2faSetup) {
+        setPassword('');
+        toast.info('Configurez l’authentification à deux facteurs pour continuer.');
       } else {
-        const result = await login(email, password, rememberMe);
-        if (result?.require2FA && result?.requireBothFactors && result?.loginChallenge) {
-          setLoginChallenge(result.loginChallenge);
-          setEmailChallengeToken('');
-          setEmailOtpToken('');
-          setTotpToken('');
-          setPassword('');
-          toast.info('Commencez par valider votre code Authenticator.');
-        } else if (result?.require2FA) {
-          throw new Error('Le serveur n’a pas fourni le challenge 2FA obligatoire.');
-        } else if (result?.loginChallenge) {
-          throw new Error('La réponse du serveur ne contient pas les deux facteurs obligatoires.');
-        } else if (result?.require2faSetup) {
-          setPassword('');
-          toast.info('Configurez l’authentification à deux facteurs pour continuer.');
-        } else {
-          finishLogin(result);
-        }
+        finishLogin(result);
       }
     } catch (error) {
       console.error('Erreur de connexion:', error);
@@ -124,7 +150,7 @@ export default function Login() {
   const resendEmailOtp = async () => {
     setLoading(true);
     try {
-      await requestEmailOtp(emailChallengeToken);
+      await requestEmailOtp(emailChallengeToken || loginChallenge);
       toast.success('Un nouveau code de vérification a été envoyé par e-mail.');
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Impossible de renvoyer le code de vérification.');
@@ -186,9 +212,13 @@ export default function Login() {
           title={loginChallenge ? 'Vérifiez votre identité' : 'Bon retour parmi nous'}
           subtitle={
             loginChallenge
-              ? emailChallengeToken
-                ? 'Saisissez le code à six chiffres envoyé à votre adresse e-mail pour terminer votre connexion.'
-                : 'Saisissez votre code Authenticator. Un code de confirmation sera ensuite envoyé par e-mail.'
+              ? selectedFactor === 'email-otp'
+                ? emailChallengeToken
+                  ? 'Saisissez le code à six chiffres envoyé à votre adresse e-mail pour terminer votre connexion.'
+                  : 'Un code sécurisé va vous être envoyé par e-mail pour finaliser l’accès.'
+                : emailChallengeToken
+                  ? 'Le code Authenticator est validé. Saisissez maintenant le code reçu par e-mail.'
+                  : 'Choisissez votre facteur de vérification et saisissez le code correspondant.'
               : <>
                   Connectez-vous à votre compte <span className="font-semibold text-violet-700">Etokisana</span> pour reprendre votre activité.
                 </>
@@ -234,53 +264,88 @@ export default function Login() {
                 </span>
               </div>
 
+              {availableMethods.length > 1 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-neutral-700">Choisir le facteur</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {availableMethods.map((method) => {
+                      const isSelected = selectedFactor === method;
+                      const label = method === 'totp' ? 'Code Authenticator' : 'Code par e-mail';
+                      return (
+                        <button
+                          key={method}
+                          type="button"
+                          onClick={() => {
+                            setSelectedFactor(method);
+                            setTotpToken('');
+                            setEmailOtpToken('');
+                            setEmailChallengeToken(method === 'email-otp' ? (emailChallengeToken || '') : '');
+                          }}
+                          className={`rounded-md border px-3 py-2 text-left text-sm transition ${isSelected ? 'border-violet-500 bg-violet-50 text-violet-800' : 'border-neutral-200 bg-white text-neutral-600 hover:border-violet-200'}`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <h3 id="two-factor-step-title" className="text-sm font-semibold text-neutral-900">
-                  {emailChallengeToken ? 'Vérification par e-mail' : 'Vérification Authenticator'}
+                  {selectedFactor === 'email-otp' ? 'Vérification par e-mail' : 'Vérification Authenticator'}
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-neutral-500">
-                  {emailChallengeToken
-                    ? 'Le code Authenticator est validé. Saisissez maintenant le code à usage unique envoyé à votre adresse e-mail.'
+                  {selectedFactor === 'email-otp'
+                    ? emailChallengeToken
+                      ? 'Saisissez le code à usage unique envoyé à votre adresse e-mail.'
+                      : 'Le code de vérification vous sera envoyé rapidement par e-mail.'
                     : 'Ouvrez Google Authenticator, Authy ou une application compatible et saisissez le code affiché.'}
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor={emailChallengeToken ? 'emailOtpToken' : 'totpToken'}>
-                  {emailChallengeToken ? 'Code reçu par e-mail' : 'Code Authenticator'}
-                </Label>
-                <InputOTP
-                  id={emailChallengeToken ? 'emailOtpToken' : 'totpToken'}
-                  value={emailChallengeToken ? emailOtpToken : totpToken}
-                  onChange={(value) => {
-                    const code = value.replace(/\D/g, '').slice(0, 6);
-                    if (emailChallengeToken) setEmailOtpToken(code);
-                    else setTotpToken(code);
-                  }}
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  aria-label={emailChallengeToken
-                    ? 'Code reçu par e-mail à six chiffres'
-                    : 'Code Authenticator à six chiffres'}
-                >
-                  <InputOTPGroup className="gap-2">
-                    {Array.from({ length: 6 }, (_, index) => <InputOTPSlot key={index} index={index} className="h-11 w-11 rounded-md border text-lg" />)}
-                  </InputOTPGroup>
-                </InputOTP>
-                {emailChallengeToken && (
-                  <>
-                    <p className="text-xs text-neutral-500">Le code expire dans 10 minutes. Vérifiez vos courriers indésirables si besoin.</p>
-                    <button
-                      type="button"
-                      className="text-xs font-semibold text-violet-700 hover:text-violet-800 hover:underline disabled:opacity-50"
-                      onClick={resendEmailOtp}
-                      disabled={loading}
-                    >
-                      Renvoyer le code
-                    </button>
-                  </>
-                )}
-              </div>
+              {(selectedFactor === 'totp' || !emailChallengeToken) && selectedFactor !== 'email-otp' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="totpToken">Code Authenticator</Label>
+                  <InputOTP
+                    id="totpToken"
+                    value={totpToken}
+                    onChange={(value) => setTotpToken(value.replace(/\D/g, '').slice(0, 6))}
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    aria-label="Code Authenticator à six chiffres"
+                  >
+                    <InputOTPGroup className="gap-2">
+                      {Array.from({ length: 6 }, (_, index) => <InputOTPSlot key={index} index={index} className="h-11 w-11 rounded-md border text-lg" />)}
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="emailOtpToken">Code reçu par e-mail</Label>
+                  <InputOTP
+                    id="emailOtpToken"
+                    value={emailOtpToken}
+                    onChange={(value) => setEmailOtpToken(value.replace(/\D/g, '').slice(0, 6))}
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    aria-label="Code reçu par e-mail à six chiffres"
+                  >
+                    <InputOTPGroup className="gap-2">
+                      {Array.from({ length: 6 }, (_, index) => <InputOTPSlot key={index} index={index} className="h-11 w-11 rounded-md border text-lg" />)}
+                    </InputOTPGroup>
+                  </InputOTP>
+                  <p className="text-xs text-neutral-500">Le code expire dans 10 minutes. Vérifiez vos courriers indésirables si besoin.</p>
+                  <button
+                    type="button"
+                    className="text-xs font-semibold text-violet-700 hover:text-violet-800 hover:underline disabled:opacity-50"
+                    onClick={resendEmailOtp}
+                    disabled={loading}
+                  >
+                    Renvoyer le code
+                  </button>
+                </div>
+              )}
 
               <button
                 type="button"
@@ -288,6 +353,8 @@ export default function Login() {
                 onClick={() => {
                   setLoginChallenge('');
                   setEmailChallengeToken('');
+                  setAvailableMethods([]);
+                  setSelectedFactor('totp');
                   setTotpToken('');
                   setEmailOtpToken('');
                   setPassword('');
@@ -351,7 +418,9 @@ export default function Login() {
           >
             {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
             {loginChallenge
-              ? emailChallengeToken ? 'Valider le code e-mail' : 'Valider le code Authenticator'
+              ? selectedFactor === 'email-otp'
+                ? emailChallengeToken ? 'Valider le code e-mail' : 'Envoyer le code par e-mail'
+                : 'Valider le code Authenticator'
               : 'Se connecter'}
           </Button>
         </form>

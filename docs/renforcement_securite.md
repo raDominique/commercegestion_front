@@ -9,52 +9,55 @@ sequenceDiagram
     participant B as Backend
     participant M as MailService
 
-    U->>F: Saisit email + mot de passe (+ rememberMe)
+    U->>F: Saisit email et mot de passe
     F->>B: POST /auth/login
     alt 2FA activée
-        B-->>F: { require2FA:true, requireBothFactors:true, loginChallenge, methods }
-        F-->>U: Demande le code Authenticator
-        U->>F: Saisit code Authenticator
-        F->>B: POST /auth/2fa/totp/verify {loginChallenge, totpToken}
-        B->>M: Envoie automatiquement l'OTP par email (TTL 10 min)
-        M-->>U: Email avec code OTP
-        B-->>F: { requireEmailOtp:true, emailChallengeToken }
-        U->>F: Saisit le code reçu par email
-        F->>B: POST /auth/2fa/email/verify {loginChallenge:emailChallengeToken, emailOtpToken}
-        B-->>F: { accessToken, refreshToken }
-    else 2FA non configurée (1ère connexion)
-        B-->>F: { require2faSetup, setupToken }
+        B-->>F: require2FA, loginChallenge, methods
+        F-->>U: Propose le choix du facteur
+        alt Choix Authenticator TOTP
+            U->>F: Saisit le code Authenticator
+            F->>B: POST /auth/2fa/totp/verify
+            B-->>F: accessToken et refreshToken
+        else Choix OTP email
+            U->>F: Demande le code par email
+            F->>B: POST /auth/2fa/email-challenge
+            B->>M: Envoie le code OTP
+            M-->>U: Email avec code OTP
+            B-->>F: sent true
+            U->>F: Saisit le code reçu
+            F->>B: POST /auth/2fa/email/verify
+            B-->>F: accessToken et refreshToken
+        end
+    else 2FA non configurée
+        B-->>F: require2faSetup et setupToken
         F-->>U: Force l'enrôlement 2FA
-        U->>F: Scan QR + saisit code
+        U->>F: Scan QR et saisit code
         F->>B: POST /auth/2fa/verify
-        B-->>F: { enabled: true }
+        B-->>F: enabled true
     end
     F-->>U: Accès à l'application
 ```
 
-## 1. Flux cible — Triple authentification obligatoire
-À chaque connexion, les trois étapes sont **obligatoires et successives** :
+## 1. Flux cible — Choix du facteur (TOTP **ou** OTP email)
+À chaque connexion, l'utilisateur choisit **un seul** second facteur :
 1. **Login** : `POST /auth/login` (email + password)
-   - Si 2FA activée → `{ require2FA: true, requireBothFactors: true, loginChallenge, methods: ["totp","email-otp"] }` (TTL 5 min).
-2. **Authenticator (TOTP)** : `POST /auth/2fa/totp/verify` avec `{ loginChallenge, totpToken }`.
-   - Le backend vérifie le TOTP, envoie automatiquement un OTP par email et retourne `{ requireEmailOtp: true, emailChallengeToken }` (TTL 10 min).
-3. **OTP email** : `POST /auth/2fa/email/verify` avec `{ loginChallenge: emailChallengeToken, emailOtpToken }`.
-   - Le backend vérifie l'OTP email puis émet les tokens JWT + refresh.
-   - Renvoi possible : `POST /auth/2fa/email-challenge`.
+   - Si 2FA activée → `{ require2FA: true, loginChallenge, methods: ["totp","email-otp"] }` (TTL 5 min).
+2. **Choix du facteur** :
+   - **Authenticator (TOTP)** : `POST /auth/2fa/totp/verify` avec `{ loginChallenge, totpToken }` → session émise directement.
+   - **OTP email** : `POST /auth/2fa/email-challenge` avec `{ loginChallenge }` pour recevoir le code, puis `POST /auth/2fa/email/verify` avec `{ loginChallenge, emailOtpToken }` → session émise.
 4. **Remember me** : `rememberMe: boolean` dans `POST /auth/login`. Si actif → refresh token persistant (30 j, cookie httpOnly). Sinon TTL court (24 h).
 
 ## 2. Sécurité
 - `loginChallenge` usage unique, TTL 5 min, invalidé après 3 échecs.
 - Email OTP : code à 6 chiffres, TTL 10 min, invalidation du code précédent, rate limiting sur la régénération.
-- Audit : `2FA_TOTP_VERIFIED`, `2FA_EMAIL_CODE_SENT`, `2FA_FAILED`, `LOGIN_REMEMBER_ME`.
+- Audit : `2FA_CHOSEN_METHOD`, `2FA_EMAIL_CODE_SENT`, `2FA_FAILED`, `LOGIN_REMEMBER_ME`.
 - Facteur email activable uniquement si email vérifié.
 - Revocation des refresh tokens à l'activation/désactivation de la 2FA.
 
 ## 3. Endpoints
-- `POST /auth/login` → `{ require2FA, requireBothFactors, loginChallenge, methods }` ou `{ require2faSetup, setupToken }`
-- `POST /auth/2fa/totp/verify` avec `{ loginChallenge, totpToken }` → `{ requireEmailOtp, emailChallengeToken }`
-- `POST /auth/2fa/email/verify` avec `{ loginChallenge: emailChallengeToken, emailOtpToken }` → `{ accessToken, refreshToken }`
-- `POST /auth/2fa/email-challenge` avec `{ loginChallenge: emailChallengeToken }` → `{ sent: true }` pour renvoyer l'OTP
+- `POST /auth/login` → `{ loginChallenge, methods }` ou `{ require2faSetup, setupToken }`
+- `POST /auth/2fa/complete` → `{ accessToken, refreshToken }`
+- `POST /auth/2fa/email-challenge` → `{ sent: true }`
 - `POST /auth/2fa/enable`, `/verify`, `/disable` (comme documenté dans 2fa-totp.md)
 
 ## 4. Remember me
@@ -66,15 +69,15 @@ sequenceDiagram
 ## 5. Phases de mise en œuvre (case à cocher)
 
 ### Phase 1 — Login à 2 étapes (sans renvoyer le mot de passe)
-- [x] `AuthService.login` : si 2FA activée → renvoyer `{ require2FA, requireBothFactors, loginChallenge }` sans émettre les tokens.
-- [x] `POST /auth/2fa/totp/verify`, puis `POST /auth/2fa/email/verify` : valider les facteurs successivement et émettre les tokens seulement après les deux validations.
-- [x] `LoginDto` : conserver `email/password` et ajouter `rememberMe?`.
+- [x] `AuthService.login` : si 2FA activée → renvoyer `{ loginChallenge, methods }` (token interne TTL 5 min).
+- [x] `POST /auth/2fa/complete` : valider le facteur choisi puis émettre les tokens.
+- [x] `LoginDto` : conserver `email/password`, ajouter `totpToken?` et `emailOtpToken?`.
 - [x] Tests unitaires + Swagger.
 
-### Phase 2 — OTP e-mail après validation TOTP
-- [x] Après succès de `/auth/2fa/totp/verify`, envoyer l'OTP et renvoyer `emailChallengeToken`.
-- [x] `POST /auth/2fa/email-challenge` : renvoyer l'OTP 6 chiffres, TTL 10 min, max 3 renvois/15 min.
-- [x] Audit : `2FA_TOTP_VERIFIED`, `2FA_EMAIL_CODE_SENT`, `2FA_FAILED`.
+### Phase 2 — Choix du facteur (TOTP / OTP email)
+- [x] `POST /auth/2fa/email-challenge` : code OTP 6 chiffres, TTL 10 min, max 3 renvois/15 min.
+- [x] `POST /auth/2fa/complete` : accepter `totpToken` **ou** `emailOtpToken`.
+- [x] Audit : `2FA_CHOSEN_METHOD`, `2FA_EMAIL_CODE_SENT`, `2FA_FAILED`.
 
 ### Phase 3 — Codes de secours + chiffrement du secret
 - [x] 8 codes de secours à l'activation (hashés), renvoyés une seule fois.
