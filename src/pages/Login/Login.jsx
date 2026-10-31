@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { enableTwoFactor, requestEmailOtp, verifyTwoFactor } from '../../services/auth.service';
@@ -20,6 +20,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../components/ui/input
 
 const inputClass =
   'h-11 rounded-md border-neutral-200 bg-neutral-50 pl-10 text-[15px] shadow-none focus-visible:border-violet-600 focus-visible:ring-0';
+const EMAIL_REQUEST_COOLDOWN_MS = 2 * 60 * 1000;
 
 export default function Login() {
   usePageTitle('Connexion');
@@ -29,6 +30,8 @@ export default function Login() {
   const [loginChallenge, setLoginChallenge] = useState('');
   const [emailChallengeToken, setEmailChallengeToken] = useState('');
   const [emailOtpToken, setEmailOtpToken] = useState('');
+  const [emailRequestCooldownUntil, setEmailRequestCooldownUntil] = useState(null);
+  const [emailRequestCooldown, setEmailRequestCooldown] = useState(0);
   const [rememberMe, setRememberMe] = useState(false);
   const [availableMethods, setAvailableMethods] = useState([]);
   const [selectedFactor, setSelectedFactor] = useState('totp');
@@ -46,6 +49,62 @@ export default function Login() {
     completeTwoFactorEnrollment,
   } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!emailRequestCooldownUntil) {
+      setEmailRequestCooldown(0);
+      return undefined;
+    }
+
+    const updateCountdown = () => {
+      const remaining = Math.max(0, Math.ceil((emailRequestCooldownUntil - Date.now()) / 1000));
+      setEmailRequestCooldown(remaining);
+      if (remaining === 0) setEmailRequestCooldownUntil(null);
+    };
+
+    updateCountdown();
+    const intervalId = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [emailRequestCooldownUntil]);
+
+  const sendEmailOtp = async (challengeToken) => {
+    try {
+      const challenge = await requestEmailOtp(challengeToken);
+      const token = challenge?.emailChallengeToken
+        || challenge?.challengeToken
+        || challenge?.loginChallenge
+        || challengeToken;
+      setEmailChallengeToken(token);
+      setEmailOtpToken('');
+      setEmailRequestCooldownUntil(null);
+    } catch (error) {
+      setEmailRequestCooldownUntil(Date.now() + EMAIL_REQUEST_COOLDOWN_MS);
+      throw error;
+    }
+  };
+
+  const selectFactor = async (method) => {
+    setSelectedFactor(method);
+    setTotpToken('');
+    setEmailOtpToken('');
+
+    if (method !== 'email-otp') {
+      setEmailChallengeToken('');
+      return;
+    }
+
+    if (emailChallengeToken || emailRequestCooldown > 0) return;
+
+    setLoading(true);
+    try {
+      await sendEmailOtp(loginChallenge);
+      toast.success('Un code de vérification a été envoyé par e-mail.');
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Impossible d’envoyer le code de vérification.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const allowedRoles = ['Utilisateur', 'Moderateur', 'Admin'];
   const finishLogin = (profile) => {
@@ -69,15 +128,13 @@ export default function Login() {
       toast.error('Saisissez le code reçu par e-mail.');
       return;
     }
+    if (loginChallenge && selectedFactor === 'email-otp' && !emailChallengeToken && emailRequestCooldown > 0) return;
     setLoading(true);
     try {
       if (loginChallenge) {
         if (selectedFactor === 'email-otp') {
           if (!emailChallengeToken) {
-            const challenge = await requestEmailOtp(loginChallenge);
-            const challengeToken = challenge?.emailChallengeToken || challenge?.challengeToken || challenge?.loginChallenge || loginChallenge;
-            setEmailChallengeToken(challengeToken);
-            setEmailOtpToken('');
+            await sendEmailOtp(loginChallenge);
             toast.success('Un code de vérification a été envoyé par e-mail.');
             return;
           }
@@ -115,6 +172,7 @@ export default function Login() {
         setSelectedFactor(methods.includes('totp') ? 'totp' : methods[0]);
         setLoginChallenge(result.loginChallenge || '');
         setEmailChallengeToken('');
+        setEmailRequestCooldownUntil(null);
         setEmailOtpToken('');
         setTotpToken('');
         setPassword('');
@@ -150,7 +208,7 @@ export default function Login() {
   const resendEmailOtp = async () => {
     setLoading(true);
     try {
-      await requestEmailOtp(emailChallengeToken || loginChallenge);
+      await sendEmailOtp(emailChallengeToken || loginChallenge);
       toast.success('Un nouveau code de vérification a été envoyé par e-mail.');
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Impossible de renvoyer le code de vérification.');
@@ -275,12 +333,8 @@ export default function Login() {
                         <button
                           key={method}
                           type="button"
-                          onClick={() => {
-                            setSelectedFactor(method);
-                            setTotpToken('');
-                            setEmailOtpToken('');
-                            setEmailChallengeToken(method === 'email-otp' ? (emailChallengeToken || '') : '');
-                          }}
+                          onClick={() => selectFactor(method)}
+                          disabled={loading}
                           className={`rounded-md border px-3 py-2 text-left text-sm transition ${isSelected ? 'border-violet-500 bg-violet-50 text-violet-800' : 'border-neutral-200 bg-white text-neutral-600 hover:border-violet-200'}`}
                         >
                           {label}
@@ -335,12 +389,18 @@ export default function Login() {
                       {Array.from({ length: 6 }, (_, index) => <InputOTPSlot key={index} index={index} className="h-11 w-11 rounded-md border text-lg" />)}
                     </InputOTPGroup>
                   </InputOTP>
-                  <p className="text-xs text-neutral-500">Le code expire dans 10 minutes. Vérifiez vos courriers indésirables si besoin.</p>
+                  <p className="text-xs text-neutral-500" role="status" aria-live="polite">
+                    {emailRequestCooldown > 0
+                      ? `Nouvelle tentative possible dans ${String(Math.floor(emailRequestCooldown / 60)).padStart(2, '0')}:${String(emailRequestCooldown % 60).padStart(2, '0')}.`
+                      : emailChallengeToken
+                        ? 'Le code expire dans 10 minutes. Vérifiez vos courriers indésirables si besoin.'
+                        : loading ? 'Envoi du code en cours…' : 'Un code vous sera envoyé par e-mail.'}
+                  </p>
                   <button
                     type="button"
                     className="text-xs font-semibold text-violet-700 hover:text-violet-800 hover:underline disabled:opacity-50"
                     onClick={resendEmailOtp}
-                    disabled={loading}
+                    disabled={loading || emailRequestCooldown > 0}
                   >
                     Renvoyer le code
                   </button>
@@ -353,6 +413,7 @@ export default function Login() {
                 onClick={() => {
                   setLoginChallenge('');
                   setEmailChallengeToken('');
+                  setEmailRequestCooldownUntil(null);
                   setAvailableMethods([]);
                   setSelectedFactor('totp');
                   setTotpToken('');
@@ -414,7 +475,7 @@ export default function Login() {
             type="submit"
             status={loading ? 'loading' : 'active'}
             className="h-11 w-full rounded-md text-[15px] font-semibold shadow-none"
-            disabled={loading}
+            disabled={loading || (loginChallenge && selectedFactor === 'email-otp' && !emailChallengeToken && emailRequestCooldown > 0)}
           >
             {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
             {loginChallenge
