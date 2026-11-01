@@ -8,7 +8,7 @@ import {
   verifyLoginEmailOtp as verifyLoginEmailOtpRequest,
   verifyLoginTotp as verifyLoginTotpRequest,
 } from '../services/auth.service';
-import { getAccessToken, setAccessToken, clearAccessToken } from '../services/token.service';
+import { setAccessToken, clearAccessToken } from '../services/token.service';
 import { setAxiosBootstrapping } from '../services/axios.config';
 
 const AuthContext = createContext();
@@ -19,7 +19,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true); // loading initial
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState(null);
-  const [twoFactorEnrollmentRequired, setTwoFactorEnrollmentRequired] = useState(false);
 
 
   // Décoder le payload du JWT (sans vérif signature)
@@ -38,7 +37,6 @@ export function AuthProvider({ children }) {
     }
 
     const profile = await getProfile();
-    setTwoFactorEnrollmentRequired(profile?.twoFactorEnabled !== true);
     setUser({ ...decodeJWT(data.accessToken), ...profile });
     setIsAuthenticated(true);
     setError(null);
@@ -56,7 +54,6 @@ export function AuthProvider({ children }) {
         const newToken = await refreshTokenFn();
         setAccessToken(newToken);
         const profile = await getProfile();
-        setTwoFactorEnrollmentRequired(profile?.twoFactorEnabled !== true);
         const decoded = decodeJWT(newToken);
         setUser(decoded || profile);
         setIsAuthenticated(true);
@@ -64,7 +61,6 @@ export function AuthProvider({ children }) {
       } catch (err) {
         setUser(null);
         setIsAuthenticated(false);
-        setTwoFactorEnrollmentRequired(false);
         const sessionRejected = [401, 403].includes(err?.response?.status);
         setError(sessionRejected ? null : 'Impossible de vérifier la session');
         if (!sessionRejected) {
@@ -90,20 +86,11 @@ export function AuthProvider({ children }) {
       const data = await loginUser(email, password, rememberMe);
       if (data?.loginChallenge) {
         return data;
-      } else {
-        if (data?.require2faSetup && data?.setupToken) {
-          setAccessToken(data.setupToken);
-          setUser(decodeJWT(data.setupToken) || data.user || { setupOnly: true });
-          setIsAuthenticated(true);
-          setTwoFactorEnrollmentRequired(true);
-          return data;
-        }
-        return await establishSession(data);
       }
+      return await establishSession(data);
     } catch (err) {
       setUser(null);
       setIsAuthenticated(false);
-      setTwoFactorEnrollmentRequired(false);
       setError('Identifiants invalides');
       clearAccessToken();
       throw err;
@@ -135,19 +122,6 @@ export function AuthProvider({ children }) {
     return establishSession(data);
   };
 
-  const completeTwoFactorEnrollment = async () => {
-    const profile = await getProfile();
-    if (profile?.twoFactorEnabled !== true) {
-      throw new Error('La configuration 2FA n’a pas été confirmée par le serveur.');
-    }
-    const token = getAccessToken();
-    setUser({ ...decodeJWT(token), ...profile });
-    setIsAuthenticated(true);
-    setTwoFactorEnrollmentRequired(false);
-    return profile;
-  };
-
-
   // Logout
   const logout = async () => {
     setLoading(true);
@@ -156,7 +130,6 @@ export function AuthProvider({ children }) {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
-      setTwoFactorEnrollmentRequired(false);
       setError(null);
       clearAccessToken();
       setLoading(false);
@@ -171,12 +144,10 @@ export function AuthProvider({ children }) {
         isAuthenticated,
         loading,
         error,
-        twoFactorEnrollmentRequired,
         login,
         verifyLoginTotp,
         completeLoginChallenge,
         completeEmailOtpLogin,
-        completeTwoFactorEnrollment,
         logout,
         getProfile,
       }}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { enableTwoFactor, requestEmailOtp, verifyTwoFactor } from '../../services/auth.service';
+import { requestEmailOtp } from '../../services/auth.service';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -15,7 +15,6 @@ import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import { MailCheck, ShieldCheck } from 'lucide-react';
 import { Loader } from '../../components/ui/loader';
 import { AuthShell, BrandPanel, BrandPoints, FormPanel, AuthHeader } from '../../components/commons/authLayout';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '../../components/ui/input-otp';
 
 const inputClass =
@@ -35,9 +34,6 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [availableMethods, setAvailableMethods] = useState([]);
   const [selectedFactor, setSelectedFactor] = useState('totp');
-  const [twoFactorSetup, setTwoFactorSetup] = useState(null);
-  const [setupToken, setSetupToken] = useState('');
-  const [setupLoading, setSetupLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const {
@@ -45,8 +41,6 @@ export default function Login() {
     verifyLoginTotp,
     completeLoginChallenge,
     completeEmailOtpLogin,
-    twoFactorEnrollmentRequired,
-    completeTwoFactorEnrollment,
   } = useAuth();
   const navigate = useNavigate();
 
@@ -109,10 +103,8 @@ export default function Login() {
   const allowedRoles = ['Utilisateur', 'Moderateur', 'Admin'];
   const finishLogin = (profile) => {
     if (profile && allowedRoles.includes(profile.userAccess)) {
-      if (profile.twoFactorEnabled === true) {
-        toast.success('Connexion réussie !');
-        navigate('/dashboard', { replace: true });
-      }
+      toast.success('Connexion réussie !');
+      navigate('/dashboard', { replace: true });
     } else {
       toast.error("Votre rôle ne permet pas d'accéder à cette application.");
     }
@@ -150,36 +142,33 @@ export default function Login() {
           return;
         }
 
-        if (result?.emailChallengeToken || result?.challengeToken || result?.requireEmailOtp) {
-          const challengeToken = result.emailChallengeToken || result.challengeToken || loginChallenge;
-          setEmailChallengeToken(challengeToken);
-          setSelectedFactor('email-otp');
-          setTotpToken('');
-          setEmailOtpToken('');
-          toast.success('Code Authenticator validé. Saisissez maintenant le code reçu par e-mail.');
-          return;
-        }
-
-        throw new Error('Le serveur n’a pas confirmé la validation du second facteur.');
+        throw new Error('Le serveur n’a pas confirmé la validation du facteur choisi.');
       }
 
       const result = await login(email, password, rememberMe);
       if (result?.require2FA || result?.loginChallenge) {
-        const methods = Array.isArray(result.methods) && result.methods.length > 0
+        const availableMethodsFromApi = Array.isArray(result.methods) && result.methods.length > 0
           ? result.methods
           : ['totp', 'email-otp'];
+        const methods = [
+          ...availableMethodsFromApi.filter((method) => method === 'email-otp'),
+          ...availableMethodsFromApi.filter((method) => method !== 'email-otp'),
+        ];
+        const preferredFactor = methods.includes('email-otp') ? 'email-otp' : methods[0];
         setAvailableMethods(methods);
-        setSelectedFactor(methods.includes('totp') ? 'totp' : methods[0]);
+        setSelectedFactor(preferredFactor);
         setLoginChallenge(result.loginChallenge || '');
         setEmailChallengeToken('');
         setEmailRequestCooldownUntil(null);
         setEmailOtpToken('');
         setTotpToken('');
         setPassword('');
-        toast.info(methods.includes('totp') ? 'Choisissez votre facteur de vérification pour terminer la connexion.' : 'Un code de vérification a été préparé pour votre e-mail.');
-      } else if (result?.require2faSetup) {
-        setPassword('');
-        toast.info('Configurez l’authentification à deux facteurs pour continuer.');
+        if (preferredFactor === 'email-otp') {
+          await sendEmailOtp(result.loginChallenge);
+          toast.success('Un code de vérification a été envoyé par e-mail.');
+        } else {
+          toast.info('Choisissez votre facteur de vérification pour terminer la connexion.');
+        }
       } else {
         finishLogin(result);
       }
@@ -214,35 +203,6 @@ export default function Login() {
       toast.error(error?.response?.data?.message || 'Impossible de renvoyer le code de vérification.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const startTwoFactorSetup = async () => {
-    setSetupLoading(true);
-    try {
-      const data = await enableTwoFactor();
-      setTwoFactorSetup(data);
-      setSetupToken('');
-    } catch (error) {
-      toast.error(error?.response?.data?.message || 'Impossible de préparer l’authentification à deux facteurs');
-    } finally {
-      setSetupLoading(false);
-    }
-  };
-
-  const confirmTwoFactorSetup = async (event) => {
-    event.preventDefault();
-    setSetupLoading(true);
-    try {
-      await verifyTwoFactor(setupToken, rememberMe);
-      await completeTwoFactorEnrollment();
-      setTwoFactorSetup(null);
-      toast.success('Authentification à deux facteurs activée.');
-      navigate('/dashboard', { replace: true });
-    } catch (error) {
-      toast.error(error?.response?.data?.message || 'Code d’authentification invalide');
-    } finally {
-      setSetupLoading(false);
     }
   };
 
@@ -508,52 +468,6 @@ export default function Login() {
         </p>
         </>}
       </FormPanel>
-      <Dialog open={twoFactorEnrollmentRequired}>
-        <DialogContent onPointerDownOutside={(event) => event.preventDefault()} onEscapeKeyDown={(event) => event.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle>Protégez votre compte avec la 2FA</DialogTitle>
-            <DialogDescription>Avant d’accéder à votre espace, activez l’authentification à deux facteurs avec Google Authenticator, Authy ou une application compatible.</DialogDescription>
-          </DialogHeader>
-          {!twoFactorSetup ? (
-            <div className="space-y-4">
-              <p className="text-sm text-neutral-600">Cette protection demandera un code temporaire lors de chaque connexion.</p>
-              <DialogFooter>
-                <Button type="button" onClick={startTwoFactorSetup} disabled={setupLoading}>
-                  {setupLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                  Activer maintenant
-                </Button>
-              </DialogFooter>
-            </div>
-          ) : (
-            <form onSubmit={confirmTwoFactorSetup} className="space-y-4">
-              {twoFactorSetup.qrCodeDataUrl && <img src={twoFactorSetup.qrCodeDataUrl} alt="QR code de configuration 2FA" className="mx-auto h-48 w-48" />}
-              {twoFactorSetup.secret && <p className="break-all rounded bg-neutral-100 p-3 text-center font-mono text-sm">Clé manuelle : {twoFactorSetup.secret}</p>}
-              <div className="space-y-2">
-                <Label htmlFor="enrollment-totp">Code à 6 chiffres</Label>
-                <InputOTP
-                  id="enrollment-totp"
-                  value={setupToken}
-                  onChange={(value) => setSetupToken(value.replace(/\D/g, '').slice(0, 6))}
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  autoFocus
-                  aria-label="Code de confirmation à six chiffres"
-                >
-                  <InputOTPGroup className="gap-2">
-                    {Array.from({ length: 6 }, (_, index) => <InputOTPSlot key={index} index={index} className="h-11 w-11 rounded-md border text-lg" />)}
-                  </InputOTPGroup>
-                </InputOTP>
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={setupLoading}>
-                  {setupLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                  Confirmer l’activation
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
     </AuthShell>
   );
 }

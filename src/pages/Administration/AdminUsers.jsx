@@ -16,7 +16,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import { toast } from 'sonner';
-import { getUsers, deleteUser, toggleUserRole, activateUser, getUserById } from '../../services/user.service';
+import { getUsers, deleteUser, toggleUserRole, activateUser, getUserById, resetUserTwoFactor } from '../../services/user.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '../../components/ui/dialog';
 import ExportButton from '../../components/commons/ExportButton.jsx';
 import { exportAndDownloadUsers } from '../../services/export.service.js';
@@ -51,6 +51,7 @@ export default function AdminUsers() {
         createdAt: apiUser.createdAt,
         updatedAt: apiUser.updatedAt,
         emailVerified: apiUser.userEmailVerified,
+        twoFactorEnabled: apiUser.twoFactorEnabled === true,
         raw: apiUser,
         referralCode: apiUser.userId, // code de parrainage / identifiant court
     });
@@ -92,6 +93,13 @@ export default function AdminUsers() {
     const [modalAction, setModalAction] = useState(null); // 'delete' | 'role' | 'activate'
     const [modalOpen, setModalOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
+    const modalUser = users.find((user) => user.id === modalUserId);
+
+    const openResetTwoFactor = (userId) => {
+        setModalUserId(userId);
+        setModalAction('reset-2fa');
+        setModalOpen(true);
+    };
 
     // Token à récupérer selon votre logique d'auth (ex: localStorage)
     const token = localStorage.getItem('token');
@@ -133,6 +141,33 @@ export default function AdminUsers() {
             fetchUsers();
         } catch (err) {
             toast.error("Erreur lors de l'activation");
+        } finally {
+            setActionLoading(false);
+            setModalOpen(false);
+        }
+    };
+
+    const handleResetTwoFactor = async (userId) => {
+        setActionLoading(true);
+        try {
+            await resetUserTwoFactor(userId);
+            setUsers((current) => current.map((user) => (
+                user.id === userId
+                    ? {
+                        ...user,
+                        twoFactorEnabled: false,
+                        raw: { ...user.raw, twoFactorEnabled: false },
+                    }
+                    : user
+            )));
+            setDetailUser((current) => (
+                current && (current._id === userId || current.id === userId)
+                    ? { ...current, twoFactorEnabled: false }
+                    : current
+            ));
+            toast.success('Authentification à deux facteurs réinitialisée');
+        } catch (err) {
+            toast.error(err?.response?.data?.message || 'Erreur lors de la réinitialisation de la 2FA');
         } finally {
             setActionLoading(false);
             setModalOpen(false);
@@ -277,43 +312,61 @@ export default function AdminUsers() {
                         setModalUserId={setModalUserId}
                         setModalAction={setModalAction}
                         setModalOpen={setModalOpen}
+                        onResetTwoFactor={openResetTwoFactor}
                         handleShowUserDetail={handleShowUserDetail}
                     />
                 </Card>
 
                 {/* Modals de validation */}
                 <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                    <DialogContent >
+                    <DialogContent className={modalAction === 'reset-2fa' ? 'max-w-md' : undefined}>
                         <DialogHeader>
                             <DialogTitle>
                                 {modalAction === 'delete' && 'Confirmer la suppression'}
                                 {modalAction === 'role' && 'Confirmer le changement de rôle'}
                                 {modalAction === 'activate' && 'Confirmer l’activation/suspension'}
+                                {modalAction === 'reset-2fa' && 'Désactiver la double authentification ?'}
                             </DialogTitle>
                             <DialogDescription>
                                 {modalAction === 'delete' && 'Voulez-vous vraiment supprimer cet utilisateur ? Cette action est irréversible.'}
                                 {modalAction === 'role' && 'Voulez-vous vraiment changer le rôle de cet utilisateur ?'}
                                 {modalAction === 'activate' && 'Voulez-vous vraiment activer ou suspendre cet utilisateur ?'}
+                                {modalAction === 'reset-2fa' && 'La méthode d’authentification actuelle sera réinitialisée. L’utilisateur pourra configurer à nouveau la 2FA depuis son profil.'}
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="flex justify-end gap-2 mt-4">
+                        {modalAction === 'reset-2fa' && (
+                            <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-amber-700 ring-1 ring-amber-200">
+                                    <ShieldOutlinedIcon fontSize="small" />
+                                </span>
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-neutral-900">{modalUser?.name || 'Utilisateur'}</p>
+                                    {modalUser?.email && <p className="mt-0.5 break-all text-sm text-neutral-600">{modalUser.email}</p>}
+                                    <p className="mt-2 text-xs leading-relaxed text-amber-900">
+                                        La 2FA sera désactivée pour ce compte. Cette opération ne supprime pas le compte utilisateur.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                             <DialogClose asChild>
                                 <Button variant="outline" status="inactive">Annuler</Button>
                             </DialogClose>
                             <Button
-                                variant="default"
-                                status={actionLoading ? "loading" : "active"}
-                                color="default"
+                                variant={modalAction === 'reset-2fa' ? 'destructive' : 'default'}
+                                status={actionLoading ? 'loading' : (modalAction === 'reset-2fa' ? null : 'active')}
                                 disabled={actionLoading}
                                 onClick={() => {
                                     if (modalUserId && modalAction) {
                                         if (modalAction === 'delete') handleDeleteUser(modalUserId);
                                         if (modalAction === 'role') handleToggleRole(modalUserId);
                                         if (modalAction === 'activate') handleActivateUser(modalUserId);
+                                        if (modalAction === 'reset-2fa') handleResetTwoFactor(modalUserId);
                                     }
                                 }}
                             >
-                                {actionLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer
+                                {actionLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
+                                {modalAction === 'reset-2fa' ? 'Désactiver la 2FA' : 'Confirmer'}
                             </Button>
                         </div>
                     </DialogContent>
@@ -353,6 +406,10 @@ export default function AdminUsers() {
                                     <div><b>Latitude :</b> {detailUser.userMainLat}</div>
                                     <div><b>Validé :</b> {detailUser.userValidated ? 'Oui' : 'Non'}</div>
                                     <div><b>Email vérifié :</b> {detailUser.userEmailVerified ? 'Oui' : 'Non'}</div>
+                                    <div>
+                                        <b>Authentification à deux facteurs :</b>{' '}
+                                        {detailUser.twoFactorEnabled === true ? 'Activée' : 'Désactivée'}
+                                    </div>
                                     <div><b>Numéro Parrain 1 :</b> {detailUser.parrain1ID}</div>
                                     <div><b>Numéro Parrain 2 :</b> {detailUser.parrain2ID}</div>
                                     <div><b>Type document :</b> {detailUser.documentType}</div>
@@ -406,6 +463,19 @@ export default function AdminUsers() {
                                 </div>
 
                                 <div className="flex justify-end gap-2 mt-4">
+                                    {detailUser.twoFactorEnabled === true && (
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            onClick={() => {
+                                                const userId = detailUser._id || detailUser.id || detailUser.userId;
+                                                setDetailOpen(false);
+                                                openResetTwoFactor(userId);
+                                            }}
+                                        >
+                                            Désactiver la 2FA
+                                        </Button>
+                                    )}
                                     <DialogClose asChild>
                                         <Button variant="outline" status="inactive">Fermer</Button>
                                     </DialogClose>
@@ -437,7 +507,15 @@ export default function AdminUsers() {
     );
 }
 
-function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setModalOpen, handleShowUserDetail }) {
+function UsersTableOrList({
+    loading,
+    users,
+    setModalUserId,
+    setModalAction,
+    setModalOpen,
+    onResetTwoFactor,
+    handleShowUserDetail,
+}) {
     const { isDesktop } = useScreenType();
     const dateFormat = useDateFormat();
 
@@ -458,6 +536,7 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
                         <TableHead className="text-xs text-neutral-600">Utilisateur</TableHead>
                         <TableHead className="text-xs text-neutral-600">Email</TableHead>
                         <TableHead className="text-xs text-neutral-600">Vérification e-mail</TableHead>
+                        <TableHead className="text-xs text-neutral-600">2FA</TableHead>
                         <TableHead className="text-xs text-neutral-600">Date d'inscription</TableHead>
                         <TableHead className="text-xs text-neutral-600">Date de validation</TableHead>
                         <TableHead className="text-xs text-neutral-600">Rôle</TableHead>
@@ -482,6 +561,21 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
                             <TableCell className={`text-sm ${user.status === 'Actif' ? 'text-neutral-600' : 'text-neutral-400'} truncate max-w-xs`}>{user.email}</TableCell>
                             <TableCell>
                                 <Badge variant={user.emailVerified ? 'default' : 'secondary'} className={user.emailVerified ? 'bg-violet-100 text-violet-700 border-violet-200' : 'bg-neutral-200 text-neutral-500 border-neutral-200'}>{user.emailVerified ? 'Vérifié' : 'Non vérifié'}</Badge>
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-2">
+                                    <Switch
+                                        aria-label={`Désactiver la 2FA de ${user.name}`}
+                                        checked={user.twoFactorEnabled}
+                                        disabled={!user.twoFactorEnabled}
+                                        onCheckedChange={(enabled) => {
+                                            if (!enabled) onResetTwoFactor(user.id);
+                                        }}
+                                    />
+                                    <Badge variant={user.twoFactorEnabled ? 'default' : 'secondary'} className="text-xs">
+                                        {user.twoFactorEnabled ? 'Activée' : 'Désactivée'}
+                                    </Badge>
+                                </div>
                             </TableCell>
                             <TableCell className="text-sm text-neutral-900">{user.createdAt ? dateFormat(user.createdAt) : '-'}</TableCell>
                             <TableCell className="text-sm text-neutral-900">{user.status !== 'Non validé' && user.updatedAt ? dateFormat(user.updatedAt) : '-'}</TableCell>
@@ -537,6 +631,19 @@ function UsersTableOrList({ loading, users, setModalUserId, setModalAction, setM
                                 <Button variant="ghost" size="sm" onClick={() => { setModalUserId(user.id); setModalAction('delete'); setModalOpen(true); }}><DeleteIcon className="w-4 h-4 text-red-600" /></Button>
                             </div>
                             <div className="flex flex-col items-end gap-2">
+                                <div className="flex items-center gap-2">
+                                    <Switch
+                                        aria-label={`Désactiver la 2FA de ${user.name}`}
+                                        checked={user.twoFactorEnabled}
+                                        disabled={!user.twoFactorEnabled}
+                                        onCheckedChange={(enabled) => {
+                                            if (!enabled) onResetTwoFactor(user.id);
+                                        }}
+                                    />
+                                    <span className="text-xs text-neutral-600">
+                                        2FA {user.twoFactorEnabled ? 'activée' : 'désactivée'}
+                                    </span>
+                                </div>
                                 <div className="flex items-center gap-2">
                                     <Switch aria-label="Basculer rôle admin" checked={user.role === 'admin'} onCheckedChange={() => { setModalUserId(user.id); setModalAction('role'); setModalOpen(true); }} />
                                     <span className="text-xs text-neutral-600">{user.role === 'admin' ? 'Admin' : 'Utilisateur'}</span>

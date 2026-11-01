@@ -96,6 +96,12 @@ export async function activateUser(userId) {
     return res.data;
 }
 
+export async function resetUserTwoFactor(userId) {
+    if (!userId) throw new Error('userId est requis');
+    const res = await axiosConfig.patch(`/api/v1/users/reset-2fa/${userId}`);
+    return res.data;
+}
+
 /**
  * Met à jour un utilisateur (PATCH /users/update/:id)
  * @param {string|number} userId - L'identifiant de l'utilisateur à mettre à jour
@@ -111,6 +117,9 @@ export async function updateUser(userId, data, token) {
     if (data.userNickName) formData.append('userNickName', data.userNickName);
     if (data.userPhone) formData.append('userPhone', data.userPhone);
     if (data.avatar) formData.append('avatar', data.avatar, data.avatar.name);
+    if (typeof data.twoFactorEnabled === 'boolean') {
+        formData.append('twoFactorEnabled', String(data.twoFactorEnabled));
+    }
     // Ajoutez d'autres champs si nécessaire
     const res = await axiosConfig.patch(
         `/api/v1/users/update/${userId}`,

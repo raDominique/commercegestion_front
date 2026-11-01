@@ -15,6 +15,7 @@ import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
 import { Person as UserIcon, Security as ShieldIcon } from '@mui/icons-material';
 import { Badge } from '../../components/ui/badge';
+import { Switch } from '../../components/ui/switch';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 export default function MonCompte() {
@@ -419,19 +420,25 @@ export default function MonCompte() {
                     <h3 className="font-medium text-neutral-900">Authentification à deux facteurs</h3>
                     <p className="mt-1 text-sm text-neutral-600">Protégez votre connexion avec un code temporaire généré par votre application d’authentification.</p>
                   </div>
-                  {profile.twoFactorEnabled ? (
-                    <Button type="button" variant="outline" onClick={() => { setTwoFactorToken(''); setShowDisableTwoFactor(true); }}>
-                      Désactiver la 2FA
-                    </Button>
-                  ) : (
-                    <Button type="button" onClick={startTwoFactorSetup} disabled={twoFactorLoading}>
-                      {twoFactorLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                      Activer la 2FA
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {twoFactorLoading && <Loader size="sm" className="border-violet-600 border-t-transparent shrink-0" />}
+                    <Switch
+                      checked={profile.twoFactorEnabled === true}
+                      disabled={twoFactorLoading}
+                      aria-label="Activer ou désactiver l’authentification à deux facteurs"
+                      onCheckedChange={(enabled) => {
+                        if (enabled) {
+                          startTwoFactorSetup();
+                        } else {
+                          setTwoFactorToken('');
+                          setShowDisableTwoFactor(true);
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
-                <Badge variant={profile.twoFactorEnabled ? 'default' : 'outline'} className="mt-4">
-                  {profile.twoFactorEnabled ? '2FA activée' : '2FA désactivée'}
+                <Badge variant={profile.twoFactorEnabled === true ? 'default' : 'outline'} className="mt-4">
+                  {profile.twoFactorEnabled === true ? 'true — 2FA activée' : 'false — 2FA désactivée'}
                 </Badge>
               </div>
 

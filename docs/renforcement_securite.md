@@ -28,12 +28,8 @@ sequenceDiagram
             F->>B: POST /auth/2fa/email/verify
             B-->>F: accessToken et refreshToken
         end
-    else 2FA non configurée
-        B-->>F: require2faSetup et setupToken
-        F-->>U: Force l'enrôlement 2FA
-        U->>F: Scan QR et saisit code
-        F->>B: POST /auth/2fa/verify
-        B-->>F: enabled true
+    else 2FA non activée
+        B-->>F: accessToken et refreshToken
     end
     F-->>U: Accès à l'application
 ```
@@ -55,7 +51,7 @@ sequenceDiagram
 - Revocation des refresh tokens à l'activation/désactivation de la 2FA.
 
 ## 3. Endpoints
-- `POST /auth/login` → `{ loginChallenge, methods }` ou `{ require2faSetup, setupToken }`
+- `POST /auth/login` → `{ loginChallenge, methods }` si la 2FA est activée, sinon session directe.
 - `POST /auth/2fa/complete` → `{ accessToken, refreshToken }`
 - `POST /auth/2fa/email-challenge` → `{ sent: true }`
 - `POST /auth/2fa/enable`, `/verify`, `/disable` (comme documenté dans 2fa-totp.md)
@@ -94,9 +90,9 @@ sequenceDiagram
 - [x] Refresh token persistant (30 j) vs court (24 h).
 - [x] Révocation à la déconnexion / changement de mot de passe / réinitialisation.
 
-### Phase 6 — 2FA obligatoire à la première connexion
-- [x] Flag `require2faSetup` + `setupToken` à la première connexion.
-- [x] Guard JWT bloquant l'accès métier tant que `twoFactorEnabled === false`.
-- [x] Audit : `2FA_FORCED_SETUP`.
+### Phase 6 — 2FA facultative à la première connexion
+- [x] Si `twoFactorEnabled === false` → login email/mot de passe accepté directement (session créée).
+- [x] Suppression du flag `require2faSetup` / `setupToken` et du blocage d'accès.
+- [x] L'utilisateur peut activer la 2FA depuis ses paramètres de sécurité.
 
 > Chaque phase est indépendante et peut être validée (tests + Swagger) avant de passer à la suivante.
