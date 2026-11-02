@@ -33,7 +33,8 @@ import { MemberIdLookupInput } from '../../components/commons/MemberIdLookupInpu
 import { getSitesByUser } from '../../services/site.service';
 import { getQuantiteVendableBySite } from '../../services/actifs.service';
 import { selectAllProduits } from '../../services/product.service';
-import { createExchangeOffer, getExchangeOffers, buyExchangeOffer } from '../../services/exchange.service';
+import { createExchangeOffer, getExchangeOffers } from '../../services/exchange.service';
+import { exchangeMovement, getMovementErrorMessage } from '../../services/movements-v2.service';
 import { getAccessToken } from '../../services/token.service';
 import { formatThousands } from '../../utils/formatNumber.js';
 
@@ -342,7 +343,10 @@ const EchangeActifs = () => {
         return;
       }
 
-      await buyExchangeOffer(getId(selectedOffer), Number(buyQuantity), token);
+      await exchangeMovement({
+        offerId: getId(selectedOffer),
+        quantiteA: Number(buyQuantity),
+      });
       toast.success('Achat effectué');
       setBuyDialogOpen(false);
       setSelectedOffer(null);
@@ -350,7 +354,7 @@ const EchangeActifs = () => {
       await loadOffers();
     } catch (err) {
       console.error("Erreur achat offre d'échange:", err);
-      toast.error(err?.response?.data?.message || "Erreur lors de l'achat");
+      toast.error(getMovementErrorMessage(err, "Erreur lors de l'achat"));
     } finally {
       setBuying(false);
     }

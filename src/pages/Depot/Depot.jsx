@@ -16,7 +16,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { depositStockToAMember, getUserTransactions } from '../../services/transaction.service';
+import { getUserTransactions } from '../../services/transaction.service';
+import { depositMovement, getMovementErrorMessage } from '../../services/movements-v2.service';
 import { getProfile } from '../../services/auth.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
@@ -35,6 +36,7 @@ import { TransactionType, getTransactionStatusBadgeProps } from '../../constants
 
 const Depot = () => {
 	const { user } = useAuth();
+	const currentUserId = String(user?._id || user?.id || user?.sub || user?.userId || '');
 	const dateFormat = useDateFormat();
 	usePageTitle('Dépôt');
 
@@ -92,6 +94,11 @@ const Depot = () => {
 	const filteredOriginSites = allSites.filter(site => site.siteName.toLowerCase().includes(siteOriginSearch.toLowerCase()));
 	const filteredProducts = productsOnSite.filter(item => (item.productName || '').toLowerCase().includes(productSearch.toLowerCase()));
 	const filteredDestinationSites = detentaireSites.filter(site => site.siteName.toLowerCase().includes(siteDestinationSearch.toLowerCase()));
+	const isSelfDeposit = Boolean(
+		transferForm.detentaire
+		&& currentUserId
+		&& String(transferForm.detentaire) === currentUserId
+	);
 
 	const fetchActifs = async () => {
 		setLoading(true);
@@ -303,19 +310,16 @@ const Depot = () => {
 				return;
 			}
 
-			const payload = {
-				detentaire: transferForm.detentaire,
-				detentaireCode: (transferForm.detentaireCode || '').toUpperCase(),
-				ayant_droit: ayantDroitId,
+			await depositMovement({
+				ayantDroitId,
+				detentaireId: transferForm.detentaire,
+				depotId: transferForm.siteDestinationId,
 				productId: transferForm.productId,
-				siteOrigineId: transferForm.siteOrigineId,
-				siteDestinationId: transferForm.siteDestinationId,
 				quantite: Number(transferForm.quantite),
 				prixUnitaire: Number(transferForm.prixUnitaire),
+				siteOrigineId: transferForm.siteOrigineId,
 				observations: transferForm.observations || '',
-			};
-
-			await depositStockToAMember(payload, token);
+			});
 
 			toast.success('Dépôt effectué');
 			setTransferForm({
@@ -336,7 +340,7 @@ const Depot = () => {
 			fetchActifs();
 		} catch (error) {
 			console.error('Erreur lors du transfert:', error);
-			toast.error('Erreur lors du dépôt');
+			toast.error(getMovementErrorMessage(error, 'Erreur lors du dépôt'));
 		} finally {
 			setSaving(false);
 		}
@@ -651,6 +655,11 @@ const Depot = () => {
 												)}
 												{!memberLookupLoading && !memberNotFound && transferForm.detentaireName && (
 													<p className="text-xs text-emerald-600">Membre trouvé</p>
+												)}
+												{isSelfDeposit && (
+													<p className="text-xs text-blue-700">
+														Le détenteur et l’ayant droit sont identiques : aucun passif ne sera créé. Les champs nécessaires au dépôt restent actifs.
+													</p>
 												)}
 											</div>
 										</div>

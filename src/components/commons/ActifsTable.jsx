@@ -12,10 +12,9 @@ import { Loader } from '../ui/loader';
 const renderPerson = (person) => {
   if (!person) return '-';
   if (typeof person === 'string') return person;
-  if (person.userNickName) return person.userNickName;
-  if (person.userName) return person.userName;
-  if (person.name) return person.name;
-  return '-';
+  const name = person.userNickName || person.userName || person.name || '';
+  const email = person.userEmail || person.email || '';
+  return [name, email].filter(Boolean).join(' · ') || '-';
 };
 
 export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal, onVirerDroit }) {

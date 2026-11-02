@@ -70,6 +70,17 @@ const DashboardPage = () => {
     const stats = data?.stats || {};
     const inventory = data?.inventory || {};
     const isAdmin = user?.userAccess === 'Admin';
+    const debtorLiabilityQuantity = stats.quantitePassifsDebiteur;
+    const beneficiaryClaimQuantity = stats.quantiteCreancesBeneficiaire;
+    const hasSeparatedLiabilityStats = debtorLiabilityQuantity != null
+        && beneficiaryClaimQuantity != null
+        && Number.isFinite(Number(debtorLiabilityQuantity))
+        && Number.isFinite(Number(beneficiaryClaimQuantity));
+    const canCheckBalance = hasSeparatedLiabilityStats
+        && stats.quantiteTotaleActifs != null
+        && Number.isFinite(Number(stats.quantiteTotaleActifs));
+    const balanceIsConsistent = canCheckBalance
+        && Number(stats.quantiteTotaleActifs) >= Number(debtorLiabilityQuantity);
 
     return (
         <div className="px-4 md:px-6 mx-auto space-y-8">
@@ -90,13 +101,30 @@ const DashboardPage = () => {
                     icon={<Inventory className="text-violet-600" />}
                     description={`${formatNumber(stats.quantiteDisponibleActifs)} dispo. · ${formatNumber(stats.quantiteEnAttenteActifs)} en attente`}
                 />
-                <StatisticCard
-                    title="Passifs"
-                    value={stats.passifs || 0}
-                    subtitle={`${formatNumber(stats.quantiteTotalePassifs)} en quantité totale`}
-                    icon={<TrendingDown className="text-violet-600" />}
-                    description={`${formatNumber(stats.quantiteDisponiblePassifs)} dispo. · ${formatNumber(stats.quantiteEnAttentePassifs)} en attente`}
-                />
+                {hasSeparatedLiabilityStats ? (
+                    <>
+                        <StatisticCard
+                            title="Passifs dont je suis débiteur"
+                            value={stats.passifsDebiteur || 0}
+                            subtitle={`${formatNumber(debtorLiabilityQuantity)} en quantité`}
+                            icon={<TrendingDown className="text-violet-600" />}
+                        />
+                        <StatisticCard
+                            title="Créances dont je suis bénéficiaire"
+                            value={stats.creancesBeneficiaire || 0}
+                            subtitle={`${formatNumber(beneficiaryClaimQuantity)} en quantité`}
+                            icon={<AccountBalanceWallet className="text-violet-600" />}
+                        />
+                    </>
+                ) : (
+                    <StatisticCard
+                        title="Passifs"
+                        value={stats.passifs || 0}
+                        subtitle={`${formatNumber(stats.quantiteTotalePassifs)} en quantité totale`}
+                        icon={<TrendingDown className="text-violet-600" />}
+                        description={`${formatNumber(stats.quantiteDisponiblePassifs)} dispo. · ${formatNumber(stats.quantiteEnAttentePassifs)} en attente`}
+                    />
+                )}
                 <StatisticCard
                     title="Retraits Effectués"
                     value={stats.retraitEffectue || 0}
@@ -110,6 +138,15 @@ const DashboardPage = () => {
                     icon={<TrendingUp className="text-blue-600" />}
                 />
             </div>
+            {canCheckBalance && (
+                <Alert variant={balanceIsConsistent ? 'default' : 'destructive'}>
+                    <AlertDescription>
+                        {balanceIsConsistent
+                            ? 'Contrôle des soldes : le total des actifs couvre les passifs dont vous êtes débiteur.'
+                            : 'Attention : le total des actifs est inférieur aux passifs dont vous êtes débiteur.'}
+                    </AlertDescription>
+                </Alert>
+            )}
 
             {/* Statistiques Admin - visible uniquement pour les admins */}
             {isAdmin && stats.admin && (
@@ -334,7 +371,7 @@ function StatisticCard({ title, value, subtitle, icon, trend, description }) {
                 <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                         <p className="text-sm text-black font-semibold">{title}</p>
-                        <p className="text-2xl sm:text-4xl font-bold mt-4 text-violet-900 break-words">{value}</p>
+                        <p className="text-2xl sm:text-4xl font-bold mt-4 text-violet-900 wrap-break-word">{value}</p>
                         {subtitle && <p className="text-sm font-medium text-violet-700 mt-1">{subtitle}</p>}
                         {trend && (
                             <div className="flex items-center gap-1 mt-2">
@@ -355,8 +392,8 @@ function StatisticCard({ title, value, subtitle, icon, trend, description }) {
 function MetricRow({ label, value }) {
     return (
         <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white">
-            <p className="text-sm font-medium text-gray-700 min-w-0 break-words">{label}</p>
-            <p className="text-xl sm:text-2xl font-bold text-violet-900 text-right break-words">{value}</p>
+            <p className="text-sm font-medium text-gray-700 min-w-0 wrap-break-word">{label}</p>
+            <p className="text-xl sm:text-2xl font-bold text-violet-900 text-right wrap-break-word">{value}</p>
         </div>
     );
 }

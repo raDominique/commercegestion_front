@@ -1,6 +1,32 @@
 # Frontend — Virement de droit
 
-## Endpoint
+## Route utilisée par l'interface
+
+L'écran utilise maintenant `POST /api/v2/movements/transfer`. Le service V1
+`virementDroit` et son endpoint historique restent disponibles pour les
+intégrations existantes.
+
+Le frontend envoie les champs suivants à partir du dépôt de référence et du
+bénéficiaire sélectionné :
+
+```json
+{
+  "id_transactions": "ID_DEPOT",
+  "ayantDroitSourceId": "ID_AYANT_DROIT_ACTUEL",
+  "ayantDroitDestinationId": "ID_NOUVEL_AYANT_DROIT",
+  "detentaireId": "ID_DETENTEUR",
+  "productId": "ID_ARTICLE",
+  "depotId": "ID_SITE",
+  "quantite": 12.5,
+  "observations": "Note facultative"
+}
+```
+
+Le backend doit ignorer un transfert réflexif (ayant droit source identique à
+la destination). Les champs de la requête V2 doivent rester synchronisés avec
+le DTO backend.
+
+## Contrat V1 conservé
 
 ```http
 POST /api/v1/transactions/virement-droit

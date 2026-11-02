@@ -17,7 +17,8 @@ import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBan
 import ActifsTable from '../../components/commons/ActifsTable';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { getUserByEmail, getUsers } from '../../services/user.service';
-import { virementDroit, getMyDepositsAtOthers } from '../../services/transaction.service';
+import { getMyDepositsAtOthers } from '../../services/transaction.service';
+import { getMovementErrorMessage, transferMovement } from '../../services/movements-v2.service';
 import { getAccessToken } from '../../services/token.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import useScreenType from '../../utils/useScreenType';
@@ -223,17 +224,32 @@ const VirementDroit = () => {
         return;
       }
 
-      const payload = {
+      const sourceAyantDroitId = String(
+        user?._id
+        || user?.id
+        || user?.sub
+        || user?.userId
+        || actif?.ayant_droit?._id
+        || actif?.ayant_droit?.id
+        || actif?.ayant_droit
+        || ''
+      );
+      const destinationAyantDroitId = selectedRecipient._id || selectedRecipient.id || selectedRecipient;
+      if (sourceAyantDroitId === String(destinationAyantDroitId)) {
+        toast.error('Le bénéficiaire doit être différent de l’ayant droit actuel.');
+        return;
+      }
+
+      await transferMovement({
         id_transactions: actif._id,
-        beneficiaryId: selectedRecipient._id || selectedRecipient.id || selectedRecipient,
+        ayantDroitSourceId: sourceAyantDroitId,
+        ayantDroitDestinationId: destinationAyantDroitId,
         detentaireId,
         productId,
-        siteId,
+        depotId: siteId,
         quantite: quantiteVal,
         ...(form.observations.trim() ? { observations: form.observations.trim() } : {}),
-      };
-
-      await virementDroit(payload, token);
+      });
       const reliquat = Math.max(0, Number(actif.quantite) - quantiteVal);
       toast.success(`Virement de droit effectué : ${quantiteVal} transféré(s) au bénéficiaire. Reliquat du dépôt : ${reliquat}.`);
       setVirerModalOpen(false);
@@ -247,7 +263,7 @@ const VirementDroit = () => {
       await fetchActifs();
     } catch (err) {
       console.error('Erreur lors du virement :', err);
-      toast.error(err?.response?.data?.message || 'Erreur lors du virement de droit');
+      toast.error(getMovementErrorMessage(err, 'Erreur lors du virement de droit'));
     } finally {
       setLoadingVirement(false);
     }

@@ -8,7 +8,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
-import { createVenteTransaction } from '../../services/transaction.service';
+import { exchangeMovement, getMovementErrorMessage } from '../../services/movements-v2.service';
 import { getAllUsersSelect, getUserByEmail, getUsers } from '../../services/user.service';
 import { getMySites } from '../../services/site.service';
 import { getQuantiteVendableBySite } from '../../services/actifs.service';
@@ -263,9 +263,10 @@ const AchatVente = () => {
     try {
       const token = getAccessToken();
       if (!token) { toast.error('Authentification requise'); return; }
-      await createVenteTransaction({
+      await exchangeMovement({
         vendeurId,
         productId: actualProductId,
+        depotId: siteOrigineId,
         siteOrigineId,
         siteDestinationId: siteOrigineId,
         quantite: Number(quantite),
@@ -276,7 +277,7 @@ const AchatVente = () => {
       toast.success('Échange effectué');
       resetForm();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Erreur lors de l'échange");
+      toast.error(getMovementErrorMessage(err, "Erreur lors de l'échange"));
     } finally {
       setSaving(false);
     }

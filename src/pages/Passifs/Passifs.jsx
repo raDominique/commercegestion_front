@@ -24,6 +24,8 @@ import { getMovementTypeBadgeProps, getTransactionStatusBadgeProps } from '../..
 import { getFullMediaUrl } from '../../services/media.service';
 import InfoIcon from '@mui/icons-material/Info';
 import { Loader } from '../../components/ui/loader';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { deduplicateMovementRows, getRelationIdForDisplay } from '../../utils/movementRows.js';
 
 // Largeur forcée de la colonne Actions — même pattern que Actifs.jsx
 const ACTION_COL_STYLE_LG = { minWidth: '200px', width: '200px' };
@@ -31,10 +33,9 @@ const ACTION_COL_STYLE_LG = { minWidth: '200px', width: '200px' };
 const renderPerson = (person) => {
 	if (!person) return '-';
 	if (typeof person === 'string') return person;
-	if (person.userNickName) return person.userNickName;
-	if (person.userName) return person.userName;
-	if (person.name) return person.name;
-	return '-';
+	const name = person.userNickName || person.userName || person.name || '';
+	const email = person.userEmail || person.email || '';
+	return [name, email].filter(Boolean).join(' · ') || '-';
 };
 
 // Pour "type": "PASSIF" dont "statut": "APPROVED", on affiche quantiteDisponible
@@ -51,6 +52,7 @@ const Passifs = () => {
 	const { isDesktop } = useScreenType();
 	usePageTitle('Passifs');
 	const [passifs, setPassifs] = useState([]);
+	const [creances, setCreances] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [search, setSearch] = useState('');
 	const [page, setPage] = useState(1);
@@ -66,7 +68,7 @@ const Passifs = () => {
 	const fetchPassifs = async () => {
 		setLoading(true);
 		try {
-			let userId = user?._id;
+			let userId = user?._id || user?.id || user?.sub || user?.userId;
 			if (!userId) {
 				try {
 					const profile = await getProfile();
@@ -78,11 +80,25 @@ const Passifs = () => {
 			const params = { page, limit, search, group: true };
 			const res = await getPassifs(userId, params);
 			const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-			setPassifs(items);
-			const totalCount = Number(res?.total ?? res?.pagination?.total ?? items.length);
+			const uniqueRows = deduplicateMovementRows(items, getQuantiteAffichee);
+			const userIdValue = String(userId);
+			const debtorRows = uniqueRows.filter((item) => {
+				const debtorId = getRelationIdForDisplay(item.userId || item.debtorId || item.debtor);
+				const beneficiaryId = getRelationIdForDisplay(item.ayantDroitId || item.ayant_droit || item.ayantDroit);
+				return debtorId ? debtorId === userIdValue : beneficiaryId !== userIdValue;
+			});
+			const claimRows = uniqueRows.filter((item) => {
+				const debtorId = getRelationIdForDisplay(item.userId || item.debtorId || item.debtor);
+				const beneficiaryId = getRelationIdForDisplay(item.ayantDroitId || item.ayant_droit || item.ayantDroit);
+				return beneficiaryId === userIdValue && debtorId !== userIdValue;
+			});
+			setPassifs(debtorRows);
+			setCreances(claimRows);
+			const totalCount = Number(res?.total ?? res?.pagination?.total ?? uniqueRows.length);
 			setTotal(Number.isFinite(totalCount) ? totalCount : 0);
 		} catch (err) {
 			setPassifs([]);
+			setCreances([]);
 			setTotal(0);
 		} finally {
 			setLoading(false);
@@ -119,7 +135,7 @@ const Passifs = () => {
 					<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 						<div>
 							<h1 className="text-2xl text-neutral-900 mb-2">Mes Passifs</h1>
-							<p className="text-sm text-neutral-600">Historique de vos passifs</p>
+							<p className="text-sm text-neutral-600">Dettes dont vous êtes débiteur et créances dont vous êtes bénéficiaire.</p>
 						</div>
 						<div className="flex flex-wrap gap-3 items-center">
 							<ExportButton
@@ -140,9 +156,22 @@ const Passifs = () => {
 							/>
 						</div>
 					</div>
-					<Card className="border-neutral-200 bg-white">
-						<PassifsTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} />
-					</Card>
+					<Tabs defaultValue="debtor">
+						<TabsList>
+							<TabsTrigger value="debtor">Passifs dont je suis débiteur ({passifs.length})</TabsTrigger>
+							<TabsTrigger value="claims">Créances dont je suis bénéficiaire ({creances.length})</TabsTrigger>
+						</TabsList>
+						<TabsContent value="debtor">
+							<Card className="border-neutral-200 bg-white">
+								<PassifsTableOrList loading={loading} passifs={passifs} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} />
+							</Card>
+						</TabsContent>
+						<TabsContent value="claims">
+							<Card className="border-neutral-200 bg-white">
+								<PassifsTableOrList loading={loading} passifs={creances} dateFormat={dateFormat} isDesktop={isDesktop} onShowDetail={handleShowDetail} />
+							</Card>
+						</TabsContent>
+					</Tabs>
 					<PaginationControls
 						page={page}
 						total={total}
@@ -237,6 +266,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-center">Quantité</TableHead>
+							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Type</TableHead>
 							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
@@ -267,6 +297,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<TableCell className="text-sm truncate max-w-35" title={item.depot || '-'}>{item.depot || '-'}</TableCell>
 									<TableCell className="text-sm truncate max-w-35" title={item.depotAdresse || '-'}>{item.depotAdresse || '-'}</TableCell>
 									<TableCell className="text-sm text-center font-medium">{formatThousands(getQuantiteAffichee(item))}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
 									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
 									<TableCell className="text-sm">
 										<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>
@@ -333,6 +364,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<div className="font-semibold">Quantité</div>
 									<div>{quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</div>
 								</div>
+								<div className="text-xs text-neutral-600">Détenteur: {renderPerson(item.detentaire || item.detentaireId)}</div>
 								<div className="flex flex-wrap gap-1 sm:justify-end">
 									<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>{typeBadge.label}</Badge>
 									<Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>

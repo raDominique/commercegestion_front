@@ -10,7 +10,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { returnStockToAMember, getUserTransactions } from '../../services/transaction.service';
+import { getUserTransactions } from '../../services/transaction.service';
+import { getMovementErrorMessage, withdrawMovement } from '../../services/movements-v2.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getUserByEmail, getUsers } from '../../services/user.service';
 import { getMySites, getSitesByUser } from '../../services/site.service';
@@ -297,18 +298,16 @@ const Retrait = () => {
 				return;
 			}
 
-			const payload = {
-				detentaire: withdrawalForm.detentaire,
-				ayant_droit: ayantDroitId,
+			await withdrawMovement({
+				ayantDroitId,
+				detentaireId: withdrawalForm.detentaire,
+				depotId: withdrawalForm.siteOrigineId,
 				productId: withdrawalForm.productId,
-				siteOrigineId: withdrawalForm.siteOrigineId,
-				siteDestinationId: withdrawalForm.siteDestinationId,
 				quantite: Number(withdrawalForm.quantite),
 				prixUnitaire: withdrawalForm.prixUnitaire !== '' ? Number(withdrawalForm.prixUnitaire) : null,
+				siteDestinationId: withdrawalForm.siteDestinationId,
 				observations: withdrawalForm.observations || '',
-			};
-
-			await returnStockToAMember(payload, token);
+			});
 			setWithdrawalForm({
 				actifId: '',
 				productId: '',
@@ -333,7 +332,7 @@ const Retrait = () => {
 			fetchPassifs();
 		} catch (error) {
 			console.error('Erreur lors du retrait du stock:', error);
-			toast.error('Erreur lors du retrait');
+			toast.error(getMovementErrorMessage(error, 'Erreur lors du retrait'));
 		} finally {
 			setSaving(false);
 		}

@@ -39,14 +39,14 @@ import { getFullMediaUrl } from '../../services/media.service';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
+import { deduplicateMovementRows } from '../../utils/movementRows.js';
 
 const renderPerson = (person) => {
 	if (!person) return '-';
 	if (typeof person === 'string') return person;
-	if (person.userNickName) return person.userNickName;
-	if (person.userName) return person.userName;
-	if (person.name) return person.name;
-	return '-';
+	const name = person.userNickName || person.userName || person.name || '';
+	const email = person.userEmail || person.email || '';
+	return [name, email].filter(Boolean).join(' · ') || '-';
 };
 
 const getQuantityValue = (value) => {
@@ -180,9 +180,11 @@ const Actifs = () => {
 			}
 			const params = { page, limit, search, group: true };
 			const res = await getActifs(userId, params);
-			const actifsList = Array.isArray(res.data) ? res.data : [];
+			const rawRows = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+			const actifsList = deduplicateMovementRows(rawRows);
 			setActifs(actifsList);
-			setTotal(actifsList.length);
+			const totalCount = Number(res?.total ?? res?.pagination?.total ?? actifsList.length);
+			setTotal(Number.isFinite(totalCount) ? totalCount : actifsList.length);
 		} finally {
 			setLoading(false);
 		}
@@ -999,6 +1001,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 							<TableHead className="text-xs text-neutral-600">Type</TableHead>
 							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
+							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
 							{/* ✅ FIX : largeur forcée via style inline */}
 							<TableHead
@@ -1048,6 +1051,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 									</div>
 								</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit || item.ayantDroitId)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								<TableCell className="text-sm text-right whitespace-nowrap" style={ACTION_COL_STYLE_LG}>
 									<div className="flex items-center justify-end gap-1">
@@ -1126,6 +1130,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 								))}
 							</div>
 							<div className="text-xs text-neutral-600">Détenteur: {renderPerson(item.detentaire || item.detentaireId)}</div>
+							<div className="text-xs text-neutral-600">Ayant droit: {renderPerson(item.ayant_droit || item.ayantDroit || item.ayantDroitId)}</div>
 							<div className="flex items-center gap-2 mt-2">
 								<Tooltip>
 									<TooltipTrigger asChild>
