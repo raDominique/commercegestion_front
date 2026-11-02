@@ -455,7 +455,7 @@ export default function MonCompte() {
                       <Label htmlFor="setup-totp-token">Code à 6 chiffres</Label>
                       <Input id="setup-totp-token" value={twoFactorToken} onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required className="text-center font-mono text-lg tracking-[0.45em]" />
                     </div>
-                    <DialogFooter><Button type="submit" disabled={twoFactorLoading}>{twoFactorLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}Confirmer l’activation</Button></DialogFooter>
+                    <DialogFooter><Button type="submit" className="cursor-pointer" disabled={twoFactorLoading}>{twoFactorLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}Confirmer l’activation</Button></DialogFooter>
                   </form>
                 </DialogContent>
               </Dialog>
