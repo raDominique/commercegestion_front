@@ -58,7 +58,7 @@ export const publicRoutes = [
 
 export const privateRoutes = [
     // Route tableau de bord accessible à tous les utilisateurs
-    { path: '/dashboard', element: DashboardPage, role: 'Utilisateur,Admin', userValidated: [true, false], icon: Dashboard, label: 'Tableau de bord' },
+    // { path: '/dashboard', element: DashboardPage, role: 'Utilisateur,Admin', userValidated: [true, false], icon: Dashboard, label: 'Tableau de bord' },
     // Routes accessibles à Utilisateur et Moderateur et Admin
     { path: '/actifs', element: Actifs, role: 'Utilisateur,Admin', userValidated: true, icon: TrendingUp },
     { path: '/passifs', element: Passifs, role: 'Utilisateur,Admin', userValidated: true, icon: TrendingDown },

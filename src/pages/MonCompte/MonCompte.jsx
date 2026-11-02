@@ -465,7 +465,7 @@ export default function MonCompte() {
                   <DialogHeader><DialogTitle>Désactiver la 2FA</DialogTitle><DialogDescription>Saisissez un code actuel de votre application d’authentification pour confirmer.</DialogDescription></DialogHeader>
                   <form onSubmit={confirmDisableTwoFactor} className="space-y-4">
                     <Input value={twoFactorToken} onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required placeholder="123456" className="text-center font-mono text-lg tracking-[0.45em]" />
-                    <DialogFooter><Button type="submit" variant="destructive" disabled={twoFactorLoading}>{twoFactorLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}Désactiver</Button></DialogFooter>
+                    <DialogFooter><Button type="submit" variant="default" color="default" disabled={twoFactorLoading}>{twoFactorLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}Désactiver</Button></DialogFooter>
                   </form>
                 </DialogContent>
               </Dialog>

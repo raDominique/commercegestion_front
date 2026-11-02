@@ -353,7 +353,8 @@ export default function AdminUsers() {
                                 <Button variant="outline" status="inactive">Annuler</Button>
                             </DialogClose>
                             <Button
-                                variant={modalAction === 'reset-2fa' ? 'destructive' : 'default'}
+                                variant="default"
+                                color={modalAction === 'reset-2fa' ? 'default' : undefined}
                                 status={actionLoading ? 'loading' : (modalAction === 'reset-2fa' ? null : 'active')}
                                 disabled={actionLoading}
                                 onClick={() => {
@@ -466,7 +467,8 @@ export default function AdminUsers() {
                                     {detailUser.twoFactorEnabled === true && (
                                         <Button
                                             type="button"
-                                            variant="destructive"
+                                            variant="default"
+                                            color="default"
                                             onClick={() => {
                                                 const userId = detailUser._id || detailUser.id || detailUser.userId;
                                                 setDetailOpen(false);

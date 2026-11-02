@@ -104,7 +104,7 @@ export default function Login() {
   const finishLogin = (profile) => {
     if (profile && allowedRoles.includes(profile.userAccess)) {
       toast.success('Connexion réussie !');
-      navigate('/dashboard', { replace: true });
+      navigate('/actifs', { replace: true });
     } else {
       toast.error("Votre rôle ne permet pas d'accéder à cette application.");
     }
