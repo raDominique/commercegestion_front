@@ -26,15 +26,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '../../components/ui/dialog';
-
-const extractApiErrorMessage = (err) => {
-  return (
-    err?.response?.data?.message ||
-    err?.response?.data?.data?.message ||
-    err?.message ||
-    'Une erreur est survenue'
-  );
-};
+import { getTransactionErrorMessage } from '../../utils/transactionErrors.js';
 
 const OperationsAValider = () => {
   usePageTitle('Opérations à valider');
@@ -188,13 +180,13 @@ const OperationsAValider = () => {
       }, token);
 
       toast.success('Transaction approuvée');
-      refreshPendingTransactions();
+      await refreshPendingTransactions();
       setIsApproveDialogOpen(false);
       setSelectedTransactionForApprove(null);
       setObservations('');
     } catch (err) {
       console.error('Error approving transaction:', err);
-      toast.error(extractApiErrorMessage(err));
+      toast.error(getTransactionErrorMessage(err, 'Impossible d’approuver la transaction.'));
     } finally {
       setActionLoading(false);
       setActionTransactionId(null);
@@ -238,13 +230,13 @@ const OperationsAValider = () => {
       }, token);
 
       toast.success('Transaction rejetée');
-      refreshPendingTransactions();
+      await refreshPendingTransactions();
       setIsRejectDialogOpen(false);
       setSelectedTransactionForReject(null);
       setMotifRejet('');
     } catch (err) {
       console.error('Error rejecting transaction:', err);
-      toast.error(extractApiErrorMessage(err));
+      toast.error(getTransactionErrorMessage(err, 'Impossible de rejeter la transaction.'));
     } finally {
       setActionLoading(false);
       setActionTransactionId(null);

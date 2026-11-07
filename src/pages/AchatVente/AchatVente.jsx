@@ -8,7 +8,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { toast } from 'sonner';
-import { exchangeMovement, getMovementErrorMessage } from '../../services/movements-v2.service';
+import { createVenteTransaction } from '../../services/transaction.service';
 import { getAllUsersSelect, getUserByEmail, getUsers } from '../../services/user.service';
 import { getMySites } from '../../services/site.service';
 import { getQuantiteVendableBySite } from '../../services/actifs.service';
@@ -19,6 +19,7 @@ import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBan
 import { Loader } from '../../components/ui/loader';
 import { formatThousands } from '../../utils/formatNumber';
 import { MemberIdLookupInput } from '../../components/commons/MemberIdLookupInput.jsx';
+import { getTransactionErrorMessage } from '../../utils/transactionErrors.js';
 
 const getUserDisplayName = (u) => u?.name || u?.userNickName || u?.userName || u?.email || '';
 const truncate = (text, max = 35) => !text || text.length <= max ? text : text.slice(0, max) + '…';
@@ -263,10 +264,9 @@ const AchatVente = () => {
     try {
       const token = getAccessToken();
       if (!token) { toast.error('Authentification requise'); return; }
-      await exchangeMovement({
+      const response = await createVenteTransaction({
         vendeurId,
         productId: actualProductId,
-        depotId: siteOrigineId,
         siteOrigineId,
         siteDestinationId: siteOrigineId,
         quantite: Number(quantite),
@@ -274,10 +274,10 @@ const AchatVente = () => {
         rapportEchange: Number(rapportEchange),
         observations,
       }, token);
-      toast.success('Échange effectué');
+      toast.success(response?.data?.message || 'Échange envoyé et en attente d’approbation.');
       resetForm();
     } catch (err) {
-      toast.error(getMovementErrorMessage(err, "Erreur lors de l'échange"));
+      toast.error(getTransactionErrorMessage(err, "Erreur lors de l'échange"));
     } finally {
       setSaving(false);
     }

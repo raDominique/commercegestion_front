@@ -10,8 +10,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { getUserTransactions } from '../../services/transaction.service';
-import { getMovementErrorMessage, withdrawMovement } from '../../services/movements-v2.service';
+import { getUserTransactions, returnStockToAMember } from '../../services/transaction.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getUserByEmail, getUsers } from '../../services/user.service';
 import { getMySites, getSitesByUser } from '../../services/site.service';
@@ -26,6 +25,7 @@ import { getProfile } from '../../services/auth.service.js';
 import { getAccessToken } from '../../services/token.service';
 import { toast } from 'sonner';
 import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
+import { getTransactionErrorMessage } from '../../utils/transactionErrors.js';
 
 const Retrait = () => {
 	const { user } = useAuth();
@@ -298,16 +298,16 @@ const Retrait = () => {
 				return;
 			}
 
-			await withdrawMovement({
-				ayantDroitId,
-				detentaireId: withdrawalForm.detentaire,
-				depotId: withdrawalForm.siteOrigineId,
+			const response = await returnStockToAMember({
+				detentaire: withdrawalForm.detentaire,
+				ayant_droit: ayantDroitId,
 				productId: withdrawalForm.productId,
+				siteOrigineId: withdrawalForm.siteOrigineId,
+				siteDestinationId: withdrawalForm.siteDestinationId,
 				quantite: Number(withdrawalForm.quantite),
 				prixUnitaire: withdrawalForm.prixUnitaire !== '' ? Number(withdrawalForm.prixUnitaire) : null,
-				siteDestinationId: withdrawalForm.siteDestinationId,
 				observations: withdrawalForm.observations || '',
-			});
+			}, token);
 			setWithdrawalForm({
 				actifId: '',
 				productId: '',
@@ -328,11 +328,11 @@ const Retrait = () => {
 			setProductSearch('');
 			setSiteDestinationSearch('');
 			setSiteDestinationHighlighted(0);
-			toast.success('Retrait effectué');
-			fetchPassifs();
+			toast.success(response?.data?.message || 'Retrait envoyé et en attente d’approbation.');
+			await fetchPassifs();
 		} catch (error) {
 			console.error('Erreur lors du retrait du stock:', error);
-			toast.error(getMovementErrorMessage(error, 'Erreur lors du retrait'));
+			toast.error(getTransactionErrorMessage(error, 'Erreur lors du retrait'));
 		} finally {
 			setSaving(false);
 		}

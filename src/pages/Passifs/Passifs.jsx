@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { getPassifs } from '../../services/ledger.service.js';
+import { getActifs, getPassifs } from '../../services/ledger.service.js';
 import { getPassifById } from '../../services/passifs.service';
 import { toast } from 'sonner';
 import { getProfile } from '../../services/auth.service.js';
@@ -25,7 +25,14 @@ import { getFullMediaUrl } from '../../services/media.service';
 import InfoIcon from '@mui/icons-material/Info';
 import { Loader } from '../../components/ui/loader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { deduplicateMovementRows, getRelationIdForDisplay } from '../../utils/movementRows.js';
+import { Alert, AlertDescription } from '../../components/ui/alert';
+import {
+	classifyPassifRows,
+	deduplicateMovementRows,
+	extractLedgerRows,
+	fetchAllLedgerPages,
+	sumMovementQuantities,
+} from '../../utils/movementRows.js';
 
 // Largeur forcée de la colonne Actions — même pattern que Actifs.jsx
 const ACTION_COL_STYLE_LG = { minWidth: '200px', width: '200px' };
@@ -46,6 +53,14 @@ const getQuantiteAffichee = (item) => {
 	return item?.quantite;
 };
 
+const getQuantiteActif = (item) => {
+	const quantity = Number(item?.quantite);
+	if (Number.isFinite(quantity)) return quantity;
+	const available = Number(item?.quantiteDisponible);
+	const pending = Number(item?.quantiteEnAttente);
+	return (Number.isFinite(available) ? available : 0) + (Number.isFinite(pending) ? pending : 0);
+};
+
 
 const Passifs = () => {
 	const dateFormat = useDateFormat();
@@ -53,6 +68,13 @@ const Passifs = () => {
 	usePageTitle('Passifs');
 	const [passifs, setPassifs] = useState([]);
 	const [creances, setCreances] = useState([]);
+	const [unclassifiedCount, setUnclassifiedCount] = useState(0);
+	const [incompleteCount, setIncompleteCount] = useState(0);
+	const [totalActifs, setTotalActifs] = useState(null);
+	const [totalPassifsDebiteur, setTotalPassifsDebiteur] = useState(null);
+	const [totalCreances, setTotalCreances] = useState(null);
+	const [balanceLoading, setBalanceLoading] = useState(false);
+	const [balanceError, setBalanceError] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [search, setSearch] = useState('');
 	const [page, setPage] = useState(1);
@@ -79,26 +101,29 @@ const Passifs = () => {
 			}
 			const params = { page, limit, search, group: true };
 			const res = await getPassifs(userId, params);
-			const items = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
-			const uniqueRows = deduplicateMovementRows(items, getQuantiteAffichee);
-			const userIdValue = String(userId);
-			const debtorRows = uniqueRows.filter((item) => {
-				const debtorId = getRelationIdForDisplay(item.userId || item.debtorId || item.debtor);
-				const beneficiaryId = getRelationIdForDisplay(item.ayantDroitId || item.ayant_droit || item.ayantDroit);
-				return debtorId ? debtorId === userIdValue : beneficiaryId !== userIdValue;
-			});
-			const claimRows = uniqueRows.filter((item) => {
-				const debtorId = getRelationIdForDisplay(item.userId || item.debtorId || item.debtor);
-				const beneficiaryId = getRelationIdForDisplay(item.ayantDroitId || item.ayant_droit || item.ayantDroit);
-				return beneficiaryId === userIdValue && debtorId !== userIdValue;
-			});
+			const items = extractLedgerRows(res);
+			const { debtorRows, claimRows, unclassifiedRows, incompleteRows } = classifyPassifRows(
+				items,
+				userId,
+				getQuantiteAffichee
+			);
 			setPassifs(debtorRows);
 			setCreances(claimRows);
-			const totalCount = Number(res?.total ?? res?.pagination?.total ?? uniqueRows.length);
+			setUnclassifiedCount(unclassifiedRows.length);
+			setIncompleteCount(incompleteRows.length);
+			const totalCount = Number(
+				res?.total
+				?? res?.pagination?.total
+				?? res?.data?.total
+				?? res?.data?.pagination?.total
+				?? items.length
+			);
 			setTotal(Number.isFinite(totalCount) ? totalCount : 0);
 		} catch (err) {
 			setPassifs([]);
 			setCreances([]);
+			setUnclassifiedCount(0);
+			setIncompleteCount(0);
 			setTotal(0);
 		} finally {
 			setLoading(false);
@@ -108,6 +133,46 @@ const Passifs = () => {
 	useEffect(() => {
 		fetchPassifs();
 	}, [search, page, limit]);
+
+	useEffect(() => {
+		const fetchBalanceTotals = async () => {
+			setBalanceLoading(true);
+			setBalanceError('');
+			try {
+				let userId = user?._id || user?.id || user?.sub || user?.userId;
+				if (!userId) {
+					const profile = await getProfile();
+					userId = profile?._id || profile?.id;
+				}
+				if (!userId) throw new Error("Impossible de récupérer l'identifiant utilisateur.");
+
+				const [rawAssetRows, passifRows] = await Promise.all([
+					fetchAllLedgerPages(getActifs, userId, { group: true }),
+					fetchAllLedgerPages(getPassifs, userId, { group: true }),
+				]);
+				const assetRows = deduplicateMovementRows(rawAssetRows, getQuantiteActif);
+				const { debtorRows, claimRows } = classifyPassifRows(
+					passifRows,
+					userId,
+					getQuantiteAffichee
+				);
+
+				setTotalActifs(sumMovementQuantities(assetRows, getQuantiteActif));
+				setTotalPassifsDebiteur(sumMovementQuantities(debtorRows, getQuantiteAffichee));
+				setTotalCreances(sumMovementQuantities(claimRows, getQuantiteAffichee));
+			} catch (error) {
+				console.error('Erreur lors du calcul du bilan actifs/passifs:', error);
+				setTotalActifs(null);
+				setTotalPassifsDebiteur(null);
+				setTotalCreances(null);
+				setBalanceError(error?.message || 'Impossible de vérifier les totaux actifs et passifs.');
+			} finally {
+				setBalanceLoading(false);
+			}
+		};
+
+		fetchBalanceTotals();
+	}, [user?._id, user?.id, user?.sub, user?.userId]);
 
 	// Fonction pour afficher le détail d'un passif
 	const handleShowDetail = async (passifId) => {
@@ -156,6 +221,49 @@ const Passifs = () => {
 							/>
 						</div>
 					</div>
+					{unclassifiedCount > 0 && (
+						<Alert variant="destructive">
+							<AlertDescription>
+								{unclassifiedCount} ligne(s) de passif n’ont pas pu être classée(s) : rôle ou identifiants débiteur/bénéficiaire manquants. Elles sont exclues des sections et des totaux.
+							</AlertDescription>
+						</Alert>
+					)}
+					{incompleteCount > 0 && (
+						<Alert variant="destructive">
+							<AlertDescription>
+								{incompleteCount} ligne(s) ne contiennent pas tous les identifiants attendus (`detentaireId`, `ayantDroitId`, `userId`). Le rôle fourni par l’API est utilisé pour classer les lignes reconnues.
+							</AlertDescription>
+						</Alert>
+					)}
+					{balanceLoading ? (
+						<div className="flex justify-center py-4"><Loader message="Vérification des totaux actifs et passifs..." /></div>
+					) : balanceError ? (
+						<Alert variant="destructive"><AlertDescription>{balanceError}</AlertDescription></Alert>
+					) : (
+						<>
+							<div className="grid gap-3 sm:grid-cols-3" aria-live="polite">
+								<Card className="border-neutral-200 bg-white p-4">
+									<div className="text-sm text-neutral-600">Total actifs (toutes les pages)</div>
+									<div className="mt-1 text-xl font-semibold">{formatThousands(totalActifs)} MGA</div>
+								</Card>
+								<Card className="border-neutral-200 bg-white p-4">
+									<div className="text-sm text-neutral-600">Passifs dont je suis débiteur (toutes les pages)</div>
+									<div className="mt-1 text-xl font-semibold">{formatThousands(totalPassifsDebiteur)} MGA</div>
+								</Card>
+								<Card className="border-neutral-200 bg-white p-4">
+									<div className="text-sm text-neutral-600">Créances dont je suis bénéficiaire (toutes les pages)</div>
+									<div className="mt-1 text-xl font-semibold">{formatThousands(totalCreances)} MGA</div>
+								</Card>
+							</div>
+							<Alert variant={totalActifs >= totalPassifsDebiteur ? 'default' : 'destructive'}>
+								<AlertDescription>
+									{totalActifs >= totalPassifsDebiteur
+										? 'Contrôle des soldes : le total des actifs couvre les passifs dont vous êtes débiteur.'
+										: `Écart constaté : les passifs débiteur dépassent les actifs de ${formatThousands(totalPassifsDebiteur - totalActifs)} MGA.`}
+								</AlertDescription>
+							</Alert>
+						</>
+					)}
 					<Tabs defaultValue="debtor">
 						<TabsList>
 							<TabsTrigger value="debtor">Passifs dont je suis débiteur ({passifs.length})</TabsTrigger>
@@ -227,10 +335,10 @@ const Passifs = () => {
 										<span className="block min-w-0"><b className="whitespace-nowrap">Quantité :</b> {detailPassif.quantite != null ? formatThousands(detailPassif.quantite) : '-'}</span>
 										<span className="block min-w-0"><b className="whitespace-nowrap">Prix unitaire :</b> {detailPassif.prixUnitaire != null ? formatThousands(detailPassif.prixUnitaire) : '-'}</span>
 										<span className="block min-w-0"><b className="whitespace-nowrap">Créancier :</b> {renderPerson(detailPassif.creancierId)}</span>
-										<span className="block min-w-0"><b className="whitespace-nowrap">Détenteur :</b> {renderPerson(detailPassif.detentaire)}</span>
-										<span className="block min-w-0"><b className="whitespace-nowrap">Ayant droit :</b> {renderPerson(detailPassif.ayant_droit)}</span>
-										<span className="block min-w-0"><b className="whitespace-nowrap">Utilisateur :</b> {detailPassif.userId?.userNickName || detailPassif.userId?.userName || '-'}</span>
-										<span className="block min-w-0"><b className="whitespace-nowrap">Email :</b> {detailPassif.userId?.userEmail || '-'}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Détenteur :</b> {renderPerson(detailPassif.detentaireId || detailPassif.detentaire)}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Ayant droit :</b> {renderPerson(detailPassif.ayantDroitId || detailPassif.ayant_droit || detailPassif.ayantDroit)}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Utilisateur débiteur :</b> {renderPerson(detailPassif.userId)}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Rôle :</b> {detailPassif.role || '-'}</span>
 										<span className="block min-w-0"><b className="whitespace-nowrap">Téléphone :</b> {detailPassif.userId?.userPhone || '-'}</span>
 										<span className="block min-w-0"><b className="whitespace-nowrap">Statut :</b> {detailPassif.isActive ? 'Actif' : 'Inactif'}</span>
 										<span className="block min-w-0"><b className="whitespace-nowrap">Type :</b> {detailPassif.typePassif || detailPassif.type || '-'}</span>
@@ -268,6 +376,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 							<TableHead className="text-xs text-neutral-600 text-center">Quantité</TableHead>
 							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
 							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
+							<TableHead className="text-xs text-neutral-600">Rôle</TableHead>
 							<TableHead className="text-xs text-neutral-600">Type</TableHead>
 							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
 							<TableHead className="text-xs text-neutral-600">Date</TableHead>
@@ -297,8 +406,9 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<TableCell className="text-sm truncate max-w-35" title={item.depot || '-'}>{item.depot || '-'}</TableCell>
 									<TableCell className="text-sm truncate max-w-35" title={item.depotAdresse || '-'}>{item.depotAdresse || '-'}</TableCell>
 									<TableCell className="text-sm text-center font-medium">{formatThousands(getQuantiteAffichee(item))}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaireId || item.detentaire)}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayantDroitId || item.ayant_droit || item.ayantDroit)}</TableCell>
+									<TableCell className="text-sm">{item.displayRole === 'DEBITEUR' ? 'Débiteur' : 'Créancier'}</TableCell>
 									<TableCell className="text-sm">
 										<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>
 											{typeBadge.label}
@@ -364,7 +474,8 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<div className="font-semibold">Quantité</div>
 									<div>{quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</div>
 								</div>
-								<div className="text-xs text-neutral-600">Détenteur: {renderPerson(item.detentaire || item.detentaireId)}</div>
+								<div className="text-xs text-neutral-600">Détenteur: {renderPerson(item.detentaireId || item.detentaire)}</div>
+								<div className="text-xs text-neutral-600">Rôle: {item.displayRole === 'DEBITEUR' ? 'Débiteur' : 'Créancier'}</div>
 								<div className="flex flex-wrap gap-1 sm:justify-end">
 									<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>{typeBadge.label}</Badge>
 									<Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>

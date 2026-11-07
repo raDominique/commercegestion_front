@@ -4,20 +4,11 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Loader } from '../../components/ui/loader';
 import { Label } from '../../components/ui/label';
-import {
-	Select,
-	SelectTrigger,
-	SelectContent,
-	SelectItem,
-	SelectValue
-} from '../../components/ui/select';
-import InfoIcon from '@mui/icons-material/Info';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { getUserTransactions } from '../../services/transaction.service';
-import { depositMovement, getMovementErrorMessage } from '../../services/movements-v2.service';
+import { depositStockToAMember, getUserTransactions } from '../../services/transaction.service';
 import { getProfile } from '../../services/auth.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
@@ -33,6 +24,7 @@ import { getMySites, getSitesByUser } from '../../services/site.service';
 import { getQuantiteVendableBySite } from '../../services/actifs.service';
 import { getAccessToken } from '../../services/token.service';
 import { TransactionType, getTransactionStatusBadgeProps } from '../../constants/transaction.enums';
+import { getTransactionErrorMessage } from '../../utils/transactionErrors.js';
 
 const Depot = () => {
 	const { user } = useAuth();
@@ -310,18 +302,18 @@ const Depot = () => {
 				return;
 			}
 
-			await depositMovement({
-				ayantDroitId,
-				detentaireId: transferForm.detentaire,
-				depotId: transferForm.siteDestinationId,
+			const response = await depositStockToAMember({
+				detentaire: transferForm.detentaire,
+				ayant_droit: ayantDroitId,
 				productId: transferForm.productId,
+				siteOrigineId: transferForm.siteOrigineId,
+				siteDestinationId: transferForm.siteDestinationId,
 				quantite: Number(transferForm.quantite),
 				prixUnitaire: Number(transferForm.prixUnitaire),
-				siteOrigineId: transferForm.siteOrigineId,
 				observations: transferForm.observations || '',
-			});
+			}, token);
 
-			toast.success('Dépôt effectué');
+			toast.success(response?.data?.message || 'Dépôt envoyé et en attente d’approbation.');
 			setTransferForm({
 				actifId: '',
 				productId: '',
@@ -337,10 +329,10 @@ const Depot = () => {
 			});
 			setProductsOnSite([]);
 			setMaxTransferQty(null);
-			fetchActifs();
+			await fetchActifs();
 		} catch (error) {
 			console.error('Erreur lors du transfert:', error);
-			toast.error(getMovementErrorMessage(error, 'Erreur lors du dépôt'));
+			toast.error(getTransactionErrorMessage(error, 'Erreur lors du dépôt'));
 		} finally {
 			setSaving(false);
 		}

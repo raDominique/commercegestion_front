@@ -17,13 +17,13 @@ import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBan
 import ActifsTable from '../../components/commons/ActifsTable';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { getUserByEmail, getUsers } from '../../services/user.service';
-import { getMyDepositsAtOthers } from '../../services/transaction.service';
-import { getMovementErrorMessage, transferMovement } from '../../services/movements-v2.service';
+import { getMyDepositsAtOthers, virementDroit } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import useScreenType from '../../utils/useScreenType';
 import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 import { MemberIdLookupInput } from '../../components/commons/MemberIdLookupInput.jsx';
+import { getTransactionErrorMessage } from '../../utils/transactionErrors.js';
 
 const VirementDroit = () => {
   usePageTitle('Virement de droit');
@@ -240,18 +240,17 @@ const VirementDroit = () => {
         return;
       }
 
-      await transferMovement({
+      const response = await virementDroit({
         id_transactions: actif._id,
-        ayantDroitSourceId: sourceAyantDroitId,
-        ayantDroitDestinationId: destinationAyantDroitId,
+        beneficiaryId: destinationAyantDroitId,
         detentaireId,
         productId,
-        depotId: siteId,
+        siteId,
         quantite: quantiteVal,
         ...(form.observations.trim() ? { observations: form.observations.trim() } : {}),
-      });
+      }, token);
       const reliquat = Math.max(0, Number(actif.quantite) - quantiteVal);
-      toast.success(`Virement de droit effectué : ${quantiteVal} transféré(s) au bénéficiaire. Reliquat du dépôt : ${reliquat}.`);
+      toast.success(response?.data?.message || `Virement de droit envoyé et en attente d’approbation. Quantité : ${quantiteVal}; reliquat estimé : ${reliquat}.`);
       setVirerModalOpen(false);
       setSelectedActifForVirement(null);
       setSelectedRecipient(null);
@@ -263,7 +262,7 @@ const VirementDroit = () => {
       await fetchActifs();
     } catch (err) {
       console.error('Erreur lors du virement :', err);
-      toast.error(getMovementErrorMessage(err, 'Erreur lors du virement de droit'));
+      toast.error(getTransactionErrorMessage(err, 'Erreur lors du virement de droit'));
     } finally {
       setLoadingVirement(false);
     }
