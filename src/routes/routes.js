@@ -29,7 +29,7 @@ import DashboardPage from '../pages/Dashboard/Dashboard.jsx';
 import Depot from '../pages/Depot/Depot.jsx';
 import Retrait from '../pages/Retrait/Retrait.jsx';
 import VirementDroit from '../pages/VirementDroit/VirementDroit.jsx';
-import Boutique from '../pages/Boutique/Boutique.jsx';
+import Marketplace from '../pages/Marketplace/Marketplace.jsx';
 import Actifs from '../pages/Actifs/Actifs.jsx';
 import AppelOffre from '../pages/AppelOffre/AppelOffre.jsx';
 import Passifs from '../pages/Passifs/Passifs.jsx';
@@ -62,7 +62,7 @@ export const privateRoutes = [
     // Routes accessibles à Utilisateur et Moderateur et Admin
     { path: '/actifs', element: Actifs, role: 'Utilisateur,Admin', userValidated: true, icon: TrendingUp },
     { path: '/passifs', element: Passifs, role: 'Utilisateur,Admin', userValidated: true, icon: TrendingDown },
-    { path: '/boutique', element: Boutique, role: 'Utilisateur,Admin', userValidated: true, icon: Store },
+    { path: '/marketplace', element: Marketplace, role: 'Utilisateur,Admin', userValidated: true, icon: Store, label: 'Marketplace' },
     { path: '/depot', element: Depot, role: 'Utilisateur,Admin', userValidated: true, icon: CreditCard },
     { path: '/retrait', element: Retrait, role: 'Utilisateur,Admin', userValidated: true, icon: AccountBalanceWallet },
     { path: '/virement-droit', element: VirementDroit, role: 'Utilisateur,Admin', userValidated: true, icon: Outbox, label: 'Virement de droit vers un tiers' },

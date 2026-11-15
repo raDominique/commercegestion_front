@@ -85,7 +85,7 @@ export const getMyShopItems = async (params = {}, token) => {
 };
 
 /**
- * Supprime une annonce de la boutique (DELETE /shop/shop-items/:id)
+ * Supprime une annonce de la marketplace (DELETE /shop/shop-items/:id)
  * @param {string} id - Identifiant de l'annonce à supprimer
  * @param {string} token - Token d'authentification (Bearer)
  * @returns {Promise<Object>} Résultat de l'API

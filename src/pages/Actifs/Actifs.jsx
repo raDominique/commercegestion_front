@@ -194,7 +194,7 @@ const Actifs = () => {
 		fetchActifs();
 	}, [page, search]);
 
-	// Chargement des annonces (mes annonces / boutique)
+	// Chargement des annonces (mes annonces / marketplace)
 	const fetchMyShopItems = async () => {
 		setShopLoading(true);
 		try {

@@ -58,10 +58,10 @@ const orderOptions = [
   { value: -1, label: 'Descendant' },
 ];
 
-const Boutique = () => {
+const Marketplace = () => {
   const { user, isAuthenticated } = useAuth();
   const { items, addToCart, removeFromCart, updateQuantity, clearCart, getTotalPrice, checkout } = useCart();
-  usePageTitle('Boutique');
+  usePageTitle('Marketplace');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -232,7 +232,7 @@ const Boutique = () => {
         <TabsContent value="products" className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-2xl text-neutral-900 mb-2">Boutiques</h1>
+              <h1 className="text-2xl text-neutral-900 mb-2">Marketplace</h1>
               <p className="text-sm text-neutral-600">Les produits disponibles à l'achat</p>
             </div>
           </div>
@@ -553,7 +553,7 @@ const Boutique = () => {
                 <div className="px-4 py-4 border-t border-neutral-200 space-y-4">
                   <div className="flex items-center justify-end gap-6">
                     <span className="text-sm font-semibold text-neutral-700 whitespace-nowrap">TOTAL</span>
-                    <span className="text-right text-base sm:text-lg font-bold text-neutral-900 break-words">{formatThousands(getTotalPrice())} Ar</span>
+                    <span className="text-right text-base sm:text-lg font-bold text-neutral-900 wrap-break-word">{formatThousands(getTotalPrice())} Ar</span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -660,4 +660,4 @@ const Boutique = () => {
     </div>
   );
 };
-export default Boutique;
+export default Marketplace;

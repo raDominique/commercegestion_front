@@ -22,7 +22,7 @@ associées, illustrées par des captures d'écran réelles.
 3. [Anatomie de l'application](#3-anatomie-de-lapplication)
 4. [Tableau de bord](#4-tableau-de-bord)
 5. [Actifs et Passifs](#5-actifs-et-passifs)
-6. [Commerce : Boutique, Panier, Échange, Achat/Vente, Appels d'offre](#6-commerce)
+6. [Commerce : Marketplace, Panier, Échange, Achat/Vente, Appels d'offre](#6-commerce)
 7. [Trésorerie : Dépôt, Retrait, Virement de droit](#7-trésorerie)
 8. [Mon compte, Audit, Notifications](#8-mon-compte-audit-notifications)
 9. [Mes données : Produits, Transactions, Sites, Parrainages](#9-mes-données)
@@ -37,7 +37,7 @@ associées, illustrées par des captures d'écran réelles.
 Centre de Commerce et de Gestion en Ligne est une plateforme de commerce et de gestion permettant de :
 
 - **suivre ses actifs et ses passifs** (produits, quantités, sites, valorisation) ;
-- **acheter et vendre** : boutique, échanges d'actifs, ventes monétaires, appels d'offre ;
+- **acheter et vendre** : marketplace, échanges d'actifs, ventes monétaires, appels d'offre ;
 - **déposer et retirer** des quantités, **virer des droits** à des détenteurs tiers ;
 - **gérer ses sites, ses produits, ses transactions et ses parrainages** ;
 - **administrer la plateforme** (produits, codes CPC, utilisateurs, exports) — réservé aux administrateurs.
@@ -104,7 +104,7 @@ Une fois connecté, chaque page utilise la même charpente :
 - **En-tête (haut)** : logo, raccourcis **Panier** et **Notifications** (cloche avec badge
   de non-lus), menu mobile et **avatar** avec menu utilisateur (déconnexion).
 - **Navigation latérale (gauche)**, regroupée en 3 sections :
-  - **NAVIGATION** : Tableau de bord, Actifs, Passifs, Boutique, Depot, Retrait,
+  - **NAVIGATION** : Tableau de bord, Actifs, Passifs, Marketplace, Depot, Retrait,
     Virement de droit, Echange publics d'actifs, Achat/Vente, Appel d'offres ;
   - **COMPTE** : Mon Compte, Audit, Mes Produits, Mes Transactions, Opérations à valider,
     Mes Sites, Parrainages ;
@@ -214,9 +214,9 @@ pagination et sélecteur *Par page*.
 
 ## 6. Commerce
 
-### 6.1 Boutique — `/boutique`
+### 6.1 Marketplace — `/marketplace`
 
-**Route** : `/boutique` · **Rôle** : Utilisateur, Admin (compte validé)
+**Route** : `/marketplace` · **Rôle** : Utilisateur, Admin (compte validé)
 
 Marketplace des produits disponibles à la vente.
 
@@ -227,11 +227,11 @@ Marketplace des produits disponibles à la vente.
   filtrage par fournisseur.
 - Chaque ligne propose : **Ajouter au panier** (icône panier) et **Voir détails** (icône œil).
 
-![Page Boutique](screenshots/08-boutique.png)
+![Page Marketplace](screenshots/08-marketplace.png)
 
 **Onglet Achat rapide**
 
-![Boutique — onglet Achat rapide](screenshots/08-boutique__onglet-achat-rapide.png)
+![Marketplace — onglet Achat rapide](screenshots/08-marketplace__onglet-achat-rapide.png)
 
 **Modales d'action**
 
@@ -251,7 +251,7 @@ finalisation de la commande (choix du site de livraison + observations).
 **Modales d'action**
 
 - **Finalisation de commande** (checkout) : déclenchée depuis le panier — non illustrée,
-  le panier étant vide au moment des captures. Ajoutez d'abord un produit depuis la Boutique.
+  le panier étant vide au moment des captures. Ajoutez d'abord un produit depuis la Marketplace.
 
 ### 6.3 Échange publics d'actifs — `/echange-actifs`
 
@@ -494,7 +494,7 @@ Initialisation…), statut (En attente, Approuvé…), ordre chronologique.
 
 **Route** : `/mes-sites` · **Rôle** : Utilisateur, Admin (compte validé)
 
-Vos sites/boutiques : cartes avec nom, adresse, latitude/longitude, et action
+Vos sites/marketplaces : cartes avec nom, adresse, latitude/longitude, et action
 **Modifier** ; bouton global **Ajouter un site** ; compteur *Total sites*.
 
 ![Page Mes sites](screenshots/22-mes-sites.png)
@@ -704,7 +704,7 @@ Chaque carte comporte un bouton **Exporter** qui ouvre une modale de confirmatio
 | 05 | Tableau de bord | `/dashboard` | Utilisateur, Admin | `05-tableau-de-bord.png` |
 | 06 | Actifs | `/actifs` | Utilisateur, Admin | `06-actifs.png` |
 | 07 | Passifs | `/passifs` | Utilisateur, Admin | `07-passifs.png` |
-| 08 | Boutique | `/boutique` | Utilisateur, Admin | `08-boutique.png` |
+| 08 | Marketplace | `/marketplace` | Utilisateur, Admin | `08-marketplace.png` |
 | 09 | Dépôt | `/depot` | Utilisateur, Admin | `09-depot.png` |
 | 10 | Retrait | `/retrait` | Utilisateur, Admin | `10-retrait.png` |
 | 11 | Virement de droit | `/virement-droit` | Utilisateur, Admin | `11-virement-droit.png` |
@@ -735,7 +735,7 @@ Chaque carte comporte un bouton **Exporter** qui ouvre une modale de confirmatio
 05-tableau-de-bord.png                    05-tableau-de-bord-vue-2.png
 05-tableau-de-bord-vue-3.png              06-actifs.png
 06-actifs__onglet-annonces.png            07-passifs.png
-08-boutique.png                           08-boutique__onglet-achat-rapide.png
+08-marketplace.png                           08-marketplace__onglet-achat-rapide.png
 09-depot.png                              09-depot__onglet-formulaire.png
 10-retrait.png                            10-retrait__onglet-formulaire.png
 11-virement-droit.png                     12-echange-actifs.png
@@ -787,7 +787,7 @@ de test n'avait aucune donnée correspondante :
 |-----------|--------|-----------------------|
 | Actifs (onglet annonces) | Supprimer l'annonce | au moins une annonce en vente |
 | Passifs | Détail du Passif | au moins un passif |
-| Boutique | Détail produit | au moins un produit en vente |
+| Marketplace | Détail produit | au moins un produit en vente |
 | Panier | Finalisation de commande | panier non vide |
 | Mes produits | Détails / Modifier / Déposer / Supprimer | au moins un produit créé |
 | Opérations à valider | Approuver / Rejeter | au moins une opération en attente |

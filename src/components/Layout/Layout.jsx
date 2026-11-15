@@ -37,7 +37,7 @@ export function Layout({ children }) {
 
   // Génération dynamique des items de navigation à partir des routes
   const userNavItems = privateRoutes.filter(r => ['user', 'admin'].some(role => r.role && r.role.includes(role)) && [
-    '/actifs', '/passifs', '/boutique', '/depot', '/retrait'
+    '/actifs', '/passifs', '/marketplace', '/depot', '/retrait'
   ].includes(r.path)).map(r => ({ path: r.path, label: r.path.replace('/', '').replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()), element: r.element }));
 
   const accountNavItems = privateRoutes.filter(r => ['user', 'admin'].some(role => r.role && r.role.includes(role)) && [

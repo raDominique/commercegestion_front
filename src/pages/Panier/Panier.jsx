@@ -80,7 +80,7 @@ export default function Panier() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => navigate('/boutique')}
+              onClick={() => navigate('/marketplace')}
               className="border-neutral-300"
             >
               <ArrowBackIcon className="w-5 h-5" />
@@ -106,11 +106,11 @@ export default function Panier() {
                   Découvrez nos produits et commencez vos achats
                 </p>
                 <Button
-                  onClick={() => navigate('/boutique')}
+                  onClick={() => navigate('/marketplace')}
                   status="active"
                   color="default"
                 >
-                  Parcourir la boutique
+                  Parcourir la marketplace
                 </Button>
               </div>
             </div>
@@ -228,7 +228,7 @@ export default function Panier() {
                 <Button
                   variant="outline"
                   status="inactive"
-                  onClick={() => navigate('/boutique')}
+                  onClick={() => navigate('/marketplace')}
                   className="w-full border-neutral-300 mt-2"
                 >
                   Continuer mes achats

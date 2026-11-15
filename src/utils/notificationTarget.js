@@ -15,7 +15,7 @@ const KEYWORD_ROUTES = [
   { test: /retrait/i, path: '/retrait', label: 'Retrait' },
   { test: /parrain/i, path: '/parrainages', label: 'Parrainages' },
   { test: /produit/i, path: '/mes-produits', label: 'Mes produits' },
-  { test: /boutique|commande/i, path: '/boutique', label: 'Boutique' },
+  { test: /marketplace|commande/i, path: '/marketplace', label: 'Marketplace' },
   { test: /site/i, path: '/mes-sites', label: 'Mes sites' },
   { test: /compte|profil|validation|inscription|utilisateur/i, path: '/admin/utilisateurs', label: 'Utilisateurs', adminOnly: true },
 ];

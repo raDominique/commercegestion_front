@@ -167,7 +167,7 @@ const MesSites = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div>
             <h1 className="text-2xl text-neutral-900 mb-2">Mes Sites</h1>
-            <p className="text-sm text-neutral-600">Vos sites et boutiques en ligne</p>
+            <p className="text-sm text-neutral-600">Vos sites et marketplaces en ligne</p>
           </div>
         </div>
 
@@ -190,7 +190,7 @@ const MesSites = () => {
                     id="siteName"
                     value={newSite.siteName}
                     onChange={(e) => setNewSite({ ...newSite, siteName: e.target.value })}
-                    placeholder="Ma boutique en ligne"
+                    placeholder="Ma marketplace en ligne"
                     required
                     className="border-neutral-300"
                   />
@@ -349,7 +349,7 @@ const MesSites = () => {
                     id="editSiteName"
                     value={editSite.siteName}
                     onChange={e => setEditSite({ ...editSite, siteName: e.target.value })}
-                    placeholder="Ma boutique en ligne"
+                    placeholder="Ma marketplace en ligne"
                     required
                     className="border-neutral-300"
                   />

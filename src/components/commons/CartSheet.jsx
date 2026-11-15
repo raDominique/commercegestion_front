@@ -54,11 +54,11 @@ export function CartSheet({ open, onOpenChange }) {
             <Button
               onClick={() => {
                 onOpenChange(false);
-                navigate('/boutique');
+                navigate('/marketplace');
               }}
               variant="default"
             >
-              Parcourir la boutique
+              Parcourir la marketplace
             </Button>
           </div>
         ) : (

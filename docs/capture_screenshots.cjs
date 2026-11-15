@@ -66,7 +66,7 @@ const PRIVATE_PAGES = [
   { num: '05', slug: 'tableau-de-bord', path: '/dashboard', label: 'Tableau de bord', scrolls: [850, 1750] },
   { num: '06', slug: 'actifs', path: '/actifs', label: 'Actifs' },
   { num: '07', slug: 'passifs', path: '/passifs', label: 'Passifs' },
-  { num: '08', slug: 'boutique', path: '/boutique', label: 'Boutique' },
+  { num: '08', slug: 'marketplace', path: '/marketplace', label: 'Marketplace' },
   { num: '09', slug: 'depot', path: '/depot', label: 'Dépôt' },
   { num: '10', slug: 'retrait', path: '/retrait', label: 'Retrait' },
   { num: '11', slug: 'virement-droit', path: '/virement-droit', label: 'Virement de droit' },
@@ -125,7 +125,7 @@ const EXTRA = {
   'echange-actifs': {
     views: [{ tab: 'Produits à vendre', slug: 'onglet-offres', wait: 'Acheter', passes: true }],
   },
-  boutique: { views: [{ tab: 'Achat rapide', slug: 'onglet-achat-rapide', passes: true }] },
+  marketplace: { views: [{ tab: 'Achat rapide', slug: 'onglet-achat-rapide', passes: true }] },
   depot: { views: [{ tab: 'Formulaire de dépôt', slug: 'onglet-formulaire', passes: true }] },
   retrait: { views: [{ tab: 'Formulaire de retrait', slug: 'onglet-formulaire', passes: true }] },
   'achat-vente': { views: [{ tab: 'Échange produit', slug: 'onglet-echange-produit', passes: true }] },

@@ -6,7 +6,7 @@
 | Administration/AdminProducts.jsx | `<Table>` | Oui |
 | Administration/AdminCpc.jsx | `<Table>` | Oui |
 | Actifs/Actifs.jsx | `<Table>` | Oui |
-| Boutique/Boutique.jsx | `<Table>` | Oui |
+| Marketplace/Marketplace.jsx | `<Table>` | Oui |
 | OperationsAValider/OperationsAValider.jsx | `<Table>` | Oui |
 | Parrainages/Parrainages.jsx | `<Table>` | Oui |
 | MesTransactions/MesTransactions.jsx | `<Table>` | Partiel (1/3 tables) |

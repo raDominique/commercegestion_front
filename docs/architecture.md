@@ -14,7 +14,7 @@ Arborescence clef
 - `src/main.jsx` — point d'entrée, providers (Router, Contexts)
 - `src/App.jsx` — wrapper principal de l'application
 - `src/routes/` — définition des routes et logique de navigation (`AppRoutes.jsx`, `routes.js`)
-- `src/pages/` — pages principales classées par domaines (Boutique, Depot, Admin, etc.)
+- `src/pages/` — pages principales classées par domaines (Marketplace, Depot, Admin, etc.)
 - `src/components/` — composants partagés et UI primitives
   - `components/ui/` — primitives (button, input, card, table, etc.)
   - `components/Layout/` — header, footer, sidebar, layout

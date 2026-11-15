@@ -139,7 +139,7 @@ src/
 | `src/utils/inputMasks.js` | Masques d'entrée pour téléphones, nombres, etc. | Ajouter de nouveaux masques, modifier les existants. |
 | `src/routes/routes.js` | Définit toutes les routes avec icônes MUI, rôles requis (role), et métadonnées. | Ajouter de nouvelles routes, modifier les rôles par défaut. |
 | `src/routes/AppRoutes.jsx` | Configure Router, Routes, Route avec PublicRoutes (login/register) et PrivateRoutes (avec ProtectedRoute et gestion de rôles). | Modifier la logique de protection des routes, ajuster le ProtectedRoute. |
-| `src/pages/` | 24 pages principales classées par domaine : Home, Login, Register, ForgotPassword, ResetPassword, Dashboard, Boutique, Actifs, Passifs, Depot, Retrait, VirementDroit, AppelOffre, OperationsAValider, Parrainages, MesProduits, MesTransactions, MesSites, MonCompte, Notifications, EchangeActifs, AchatVente, Panier. | Créer de nouvelles pages, modifier l'import de composants selon besoins. |
+| `src/pages/` | 24 pages principales classées par domaine : Home, Login, Register, ForgotPassword, ResetPassword, Dashboard, Marketplace, Actifs, Passifs, Depot, Retrait, VirementDroit, AppelOffre, OperationsAValider, Parrainages, MesProduits, MesTransactions, MesSites, MonCompte, Notifications, EchangeActifs, AchatVente, Panier. | Créer de nouvelles pages, modifier l'import de composants selon besoins. |
 | `src/components/Layout/Layout.jsx` | Wrapper principal applique Header + Sidebar + Content + Footer selon taille d'écran. | Modifier la structure de layout, ajuster la visibilité selon roles. |
 | `src/components/Layout/Header.jsx` | Barre supérieure avec logo, notification bell, panier, menu mobile/desktop, avatar user, bouton déconnexion. | Ajouter des éléments d'interface, modifier la navigation. |
 | `src/components/Layout/Sidebar.jsx` | Menu de navigation vertical avec groupes Navigation/Compte/Administration (conditionnel selon rôle). | Ajouter de nouveaux items de navigation, modifier la visibilité par rôle. |
@@ -187,7 +187,7 @@ src/
 | `src/components/commons/ExportDialog.jsx` | Fenêtre d'export CSV/Excel. | Ajouter des options de filtrage, modifier le format. |
 | `src/components/commons/ActifsTable.jsx` | Tableau d'actifs. | Ajuster les colonnes, modifier le style. |
 | `src/pages/Dashboard/Dashboard.jsx` | Tableau de bord avec cartes statistiques, 6 graphiques Recharts empilés. | Ajouter de nouvelles cartes/métriques, modifier les graphiques. |
-| `src/pages/Boutique/Boutique.jsx` | Page Boutique avec produits à vendre, filtrage fournisseur, recherche, tri, pagination, panier, checkout. | Ajouter de nouveaux filtres, modifier le flow checkout. |
+| `src/pages/Marketplace/Marketplace.jsx` | Page Marketplace avec produits à vendre, filtrage fournisseur, recherche, tri, pagination, panier, checkout. | Ajouter de nouveaux filtres, modifier le flow checkout. |
 | `src/pages/VirementDroit/VirementDroit.jsx` | Page Virement de droit. | Voir docs/FRONTEND_VIREMENT_DROIT.md pour les règles métier. |
 | `src/pages/Notifications/Notifications.jsx` | Liste des notifications avec marquage comme lu/tout marquer lu, redirection vers la page métier. | Configurer les nouveaux types de notifications. |
 | `src/pages/OperationsAValider/OperationsAValider.jsx` | Flow opérations à valider (admin). | Modifier les règles de validation, ajouter de nouveaux statuts. |
@@ -212,7 +212,7 @@ src/
 | `src/pages/MonCompte/Audit.jsx` | Audit. | Voir above. |
 | `src/pages/OperationsAValider/OperationsAValider.jsx` | Opérations à valider. | Voir above. |
 | `src/pages/MesSites/MesSites.jsx` | Mes sites. | Modifier l'affichage, ajouter des filtres. |
-| `src/pages/Boutique/Boutique.jsx` | Boutique. | Voir above. |
+| `src/pages/Marketplace/Marketplace.jsx` | Marketplace. | Voir above. |
 
 ---
 
@@ -520,7 +520,7 @@ Voir section 11 ci-dessous.
 
 ### 10.2 Pages Clés
 
-- **Boutique** (`Boutique.jsx`) : Produits à vendre avec filtrage fournisseur, recherche, tri, pagination, panier, checkout avec sélection de site de livraison et observations.
+- **Marketplace** (`Marketplace.jsx`) : Produits à vendre avec filtrage fournisseur, recherche, tri, pagination, panier, checkout avec sélection de site de livraison et observations.
 - **Virement de droit** (`VirementDroit`) : Voir documentation `docs/FRONTEND_VIREMENT_DROIT.md` pour l'endpoint et règles métier.
 - **Notifications** (`Notifications.jsx`) : Liste des notifications avec marquage comme lu/tout marquer lu, redirection vers la page métier concernée.
 - **Opérations à valider** (`OperationsAValider.jsx`) : Flow admin de validation des opérations en attente.
@@ -839,7 +839,7 @@ Ce section fournit un récapitulatif des fichiers du projet avec des indications
 | `src/components/commons/ExportDialog.jsx` | Ajouter options filtrage, modifier format |
 | `src/components/commons/ActifsTable.jsx` | Ajuster colonnes, modifier style |
 | `src/pages/Dashboard/Dashboard.jsx` | Ajouter nouvelles cartes/métriques, modifier graphiques, adapter layout |
-| `src/pages/Boutique/Boutique.jsx` | Ajouter nouveaux filtres, modifier flow checkout, nouvelles props |
+| `src/pages/Marketplace/Marketplace.jsx` | Ajouter nouveaux filtres, modifier flow checkout, nouvelles props |
 | `src/pages/VirementDroit/VirementDroit.jsx` | Adapter selon règles métier (voir docs/FRONTEND_VIREMENT_DROIT.md) |
 | `src/pages/Notifications/Notifications.jsx` | Configurer nouveaux types notifications, modifier redirection |
 | `src/pages/OperationsAValider/OperationsAValider.jsx` | Modifier règles validation, ajouter nouveaux statuts |

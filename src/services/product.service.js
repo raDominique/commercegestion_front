@@ -198,7 +198,7 @@ export const getMyProducts = async (params = {}, token) => {
 };
 
 /**
- * Récupère la liste des produits pour la boutique (GET /shop/shop-items)
+ * Récupère la liste des produits pour la marketplace (GET /shop/shop-items)
  * @param {Object} params - Paramètres de recherche et de tri (search, order, sortBy, limit, page)
  * @returns {Promise<Object>} Résultat de l'API
  */
