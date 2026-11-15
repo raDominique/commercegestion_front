@@ -221,7 +221,7 @@ export default function Login() {
           ]}
         />
         <p className="mt-6 border-t border-white/20 pt-4 text-xs tracking-wide text-violet-200">
-          © Etokisana — Plateforme de commerce et gestion
+          © Centre de Commerce et de Gestion en Ligne — Plateforme de commerce et gestion
         </p>
       </BrandPanel>
 
@@ -238,7 +238,7 @@ export default function Login() {
                   ? 'Le code Authenticator est validé. Saisissez maintenant le code reçu par e-mail.'
                   : 'Choisissez votre facteur de vérification et saisissez le code correspondant.'
               : <>
-                  Connectez-vous à votre compte <span className="font-semibold text-violet-700">Etokisana</span> pour reprendre votre activité.
+                  Connectez-vous à votre compte <span className="font-semibold text-violet-700">Centre de Commerce et de Gestion en Ligne</span> pour reprendre votre activité.
                 </>
           }
         />

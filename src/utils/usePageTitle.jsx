@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 
 const usePageTitle = (title) => {
     useEffect(() => {
-        document.title = `${title} | Etokisana`;
+        document.title = `${title} | Centre de Commerce et de Gestion en Ligne`;
     }, [title]);
 };
 

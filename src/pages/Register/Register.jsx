@@ -267,7 +267,7 @@ const Register = () => {
     <AuthShell>
       <BrandPanel
         eyebrow="Inscription gratuite"
-        title="Rejoignez Etokisana en 3 étapes."
+        title="Rejoignez Centre de Commerce et de Gestion en Ligne en 3 étapes."
         subtitle="Un seul compte pour vendre, acheter, suivre vos opérations et développer votre réseau."
       >
         <ol className="space-y-px border border-white/20 bg-violet-700">

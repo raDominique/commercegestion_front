@@ -64,7 +64,7 @@ function formatRelative(value) {
 const MAX_STORED_READ_IDS = 300;
 
 function storageKey(prefix, userKey) {
-  return `etokisana:notif:${prefix}:${userKey || 'anon'}`;
+  return `Centre de Commerce et de Gestion en Ligne:notif:${prefix}:${userKey || 'anon'}`;
 }
 
 function safeGet(key) {

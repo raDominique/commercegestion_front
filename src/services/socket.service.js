@@ -60,7 +60,7 @@ export function extractSocketUserId(profile) {
 
 /**
  * Initialise la connexion socket.io (idempotente par userId+role+url).
- * @param {string} url - URL HTTP(S) du serveur (ex: https://api-etokisana.tsirylab.com)
+ * @param {string} url - URL HTTP(S) du serveur (ex: https://api-Centre de Commerce et de Gestion en Ligne.tsirylab.com)
  * @param {Object} params - { userId, userAccess } (rôle déjà mappé ou non)
  */
 export function initSocket(url, params) {

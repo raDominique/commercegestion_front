@@ -7,7 +7,7 @@
     "label": "Connexion",
     "kind": "page",
     "actualPath": "/login",
-    "content": "Etokisana\n\nCOMMERCE & GESTION\n\nESPACE MEMBRE\nGérez votre commerce en toute simplicité.\n\nRetrouvez vos produits, transactions, sites et parrainages dans un espace unique et sécurisé.\n\n01\nTableau de bord clair\nActifs, passifs et opérations en un coup d’œil.\n02\nTransactions suivies\nDépôts, retraits et échanges tracés étape par étape.\n03\nAccès sécurisé\nVotre compte protégé, vos données restent à vous.\n\n© Etokisana — Plateforme de commerce et gestion\n\nBon retour parmi nous\n\nConnectez-vous à votre compte Etokisana pour reprendre votre activité.\n\nAdresse e-mail\nMot de passe\nMot de passe oublié ?\nSe connecter\nNOUVEAU ICI\n\nPas encore de compte ? Créer un compte\n\nInscription en 3 étapes, sans engagement.\n\nEn vous connectant, vous acceptez nos conditions d’utilisation."
+    "content": "Centre de Commerce et de Gestion en Ligne\n\nCOMMERCE & GESTION\n\nESPACE MEMBRE\nGérez votre commerce en toute simplicité.\n\nRetrouvez vos produits, transactions, sites et parrainages dans un espace unique et sécurisé.\n\n01\nTableau de bord clair\nActifs, passifs et opérations en un coup d’œil.\n02\nTransactions suivies\nDépôts, retraits et échanges tracés étape par étape.\n03\nAccès sécurisé\nVotre compte protégé, vos données restent à vous.\n\n© Centre de Commerce et de Gestion en Ligne — Plateforme de commerce et gestion\n\nBon retour parmi nous\n\nConnectez-vous à votre compte Centre de Commerce et de Gestion en Ligne pour reprendre votre activité.\n\nAdresse e-mail\nMot de passe\nMot de passe oublié ?\nSe connecter\nNOUVEAU ICI\n\nPas encore de compte ? Créer un compte\n\nInscription en 3 étapes, sans engagement.\n\nEn vous connectant, vous acceptez nos conditions d’utilisation."
   },
   {
     "file": "02-inscription.png",
@@ -17,7 +17,7 @@
     "label": "Inscription",
     "kind": "page",
     "actualPath": "/register",
-    "content": "Etokisana\n\nCOMMERCE & GESTION\n\nINSCRIPTION GRATUITE\nRejoignez Etokisana en 3 étapes.\n\nUn seul compte pour vendre, acheter, suivre vos opérations et développer votre réseau.\n\n01\nType d'utilisateur\nÉtape en cours\n02\nInformations personnelles\nIdentité & contact\n03\nDocuments & Images\nJustificatifs\n\nVos informations restent confidentielles et sécurisées.\n\nCréer votre compte\n\nÉtape 01 sur 03 — Type d'utilisateur.\n\n01\nType d'utilisateur\nEn cours\n02\nInformations personnelles\nÉtape 02\n03\nDocuments & Images\nÉtape 03\nQuel est votre profil ?\nParticulier\nCompte personnel\n✓\nEntreprise\nCompte professionnel\n✓\nVos parrains\n\nSaisissez les codes à 8 caractères reçus de vos parrains. Le nom s’affiche automatiquement.\n\nCode Parrain 1\n*\nCode Parrain 2\n*\nContinuer\nDéjà un compte ? Se connecter"
+    "content": "Centre de Commerce et de Gestion en Ligne\n\nCOMMERCE & GESTION\n\nINSCRIPTION GRATUITE\nRejoignez Centre de Commerce et de Gestion en Ligne en 3 étapes.\n\nUn seul compte pour vendre, acheter, suivre vos opérations et développer votre réseau.\n\n01\nType d'utilisateur\nÉtape en cours\n02\nInformations personnelles\nIdentité & contact\n03\nDocuments & Images\nJustificatifs\n\nVos informations restent confidentielles et sécurisées.\n\nCréer votre compte\n\nÉtape 01 sur 03 — Type d'utilisateur.\n\n01\nType d'utilisateur\nEn cours\n02\nInformations personnelles\nÉtape 02\n03\nDocuments & Images\nÉtape 03\nQuel est votre profil ?\nParticulier\nCompte personnel\n✓\nEntreprise\nCompte professionnel\n✓\nVos parrains\n\nSaisissez les codes à 8 caractères reçus de vos parrains. Le nom s’affiche automatiquement.\n\nCode Parrain 1\n*\nCode Parrain 2\n*\nContinuer\nDéjà un compte ? Se connecter"
   },
   {
     "file": "03-mot-de-passe-oublie.png",
@@ -27,7 +27,7 @@
     "label": "Mot de passe oublié",
     "kind": "page",
     "actualPath": "/forgot-password",
-    "content": "Etokisana\n\nCOMMERCE & GESTION\n\nASSISTANCE\nRetrouvez l’accès à votre compte.\n\nSaisissez votre e-mail ou votre code utilisateur : nous vous envoyons un lien de réinitialisation sécurisé.\n\n01\nLien sécurisé\nValable une courte durée, à usage unique.\n02\nSimple et rapide\nDeux minutes suffisent pour repartir.\nMot de passe oublié\n\nEntrez votre e-mail ou code utilisateur pour recevoir les instructions de réinitialisation.\n\nEmail ou code utilisateur\nEnvoyer le lien\nRetour à la page Connexion"
+    "content": "Centre de Commerce et de Gestion en Ligne\n\nCOMMERCE & GESTION\n\nASSISTANCE\nRetrouvez l’accès à votre compte.\n\nSaisissez votre e-mail ou votre code utilisateur : nous vous envoyons un lien de réinitialisation sécurisé.\n\n01\nLien sécurisé\nValable une courte durée, à usage unique.\n02\nSimple et rapide\nDeux minutes suffisent pour repartir.\nMot de passe oublié\n\nEntrez votre e-mail ou code utilisateur pour recevoir les instructions de réinitialisation.\n\nEmail ou code utilisateur\nEnvoyer le lien\nRetour à la page Connexion"
   },
   {
     "file": "04-reinitialisation-mdp.png",
@@ -37,7 +37,7 @@
     "label": "Réinitialisation du mot de passe",
     "kind": "page",
     "actualPath": "/reset-password",
-    "content": "Etokisana\n\nCOMMERCE & GESTION\n\nSÉCURITÉ\nChoisissez un nouveau mot de passe.\n\nUn mot de passe long et unique protège vos transactions et vos données.\n\n01\n8 caractères minimum\nMélangez lettres, chiffres et symboles.\n02\nConfirmation immédiate\nVous êtes reconnecté en un clic.\nRéinitialiser le mot de passe\n\nDéfinissez un nouveau mot de passe pour votre compte Etokisana.\n\nNouveau mot de passe\nConfirmer le mot de passe\nRéinitialiser\nRetour à la connexion"
+    "content": "Centre de Commerce et de Gestion en Ligne\n\nCOMMERCE & GESTION\n\nSÉCURITÉ\nChoisissez un nouveau mot de passe.\n\nUn mot de passe long et unique protège vos transactions et vos données.\n\n01\n8 caractères minimum\nMélangez lettres, chiffres et symboles.\n02\nConfirmation immédiate\nVous êtes reconnecté en un clic.\nRéinitialiser le mot de passe\n\nDéfinissez un nouveau mot de passe pour votre compte Centre de Commerce et de Gestion en Ligne.\n\nNouveau mot de passe\nConfirmer le mot de passe\nRéinitialiser\nRetour à la connexion"
   },
   {
     "file": "05-tableau-de-bord.png",

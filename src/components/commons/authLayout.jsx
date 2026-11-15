@@ -23,7 +23,7 @@ export function AuthShell({ children, className }) {
 /**
  * Panneau marque (gauche) — aplat violet-600 uni, sans motif d'arrière-plan.
  */
-export function BrandPanel({ eyebrow = 'Etokisana', title, subtitle, children, className }) {
+export function BrandPanel({ eyebrow = 'Centre de Commerce et de Gestion en Ligne', title, subtitle, children, className }) {
   return (
     <aside
       className={cn(
@@ -34,10 +34,10 @@ export function BrandPanel({ eyebrow = 'Etokisana', title, subtitle, children, c
       <div className="flex h-full flex-col">
         <div className="flex items-center gap-3">
           <span className="flex h-12 w-12 items-center justify-center rounded-md bg-white p-1.5">
-            <img src={LogoImage} alt="Logo Etokisana" className="h-full w-full object-contain" />
+            <img src={LogoImage} alt="Logo Centre de Commerce et de Gestion en Ligne" className="h-full w-full object-contain" />
           </span>
           <div className="leading-tight">
-            <p className="text-base font-bold tracking-tight">Etokisana</p>
+            <p className="text-base font-bold tracking-tight">Centre de Commerce et de Gestion en Ligne</p>
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-violet-200">
               Commerce & gestion
             </p>
@@ -109,7 +109,7 @@ export function AuthHeader({ title, subtitle, className }) {
   return (
     <div className={cn('mb-8 text-left', className)}>
       <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 p-1 lg:hidden">
-        <img src={LogoImage} alt="Logo Etokisana" className="h-full w-full object-contain" />
+        <img src={LogoImage} alt="Logo Centre de Commerce et de Gestion en Ligne" className="h-full w-full object-contain" />
       </span>
       <h2 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-[28px] sm:leading-9">{title}</h2>
       <div aria-hidden="true" className="mt-3 h-1 w-12 bg-violet-600" />

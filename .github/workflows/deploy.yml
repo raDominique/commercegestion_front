@@ -1,4 +1,4 @@
-name: Deploy Etokisana
+name: Deploy Centre de Commerce et de Gestion en Ligne
 
 on:
   push:

@@ -1,4 +1,4 @@
-# Etokisana — commercegestion_front
+# Centre de Commerce et de Gestion en Ligne — commercegestion_front
 
 Documentation centrale du projet frontend "commercegestion_front".
 

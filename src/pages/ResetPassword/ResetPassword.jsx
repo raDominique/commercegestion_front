@@ -79,7 +79,7 @@ const ResetPassword = () => {
       <FormPanel>
         <AuthHeader
           title="Réinitialiser le mot de passe"
-          subtitle="Définissez un nouveau mot de passe pour votre compte Etokisana."
+          subtitle="Définissez un nouveau mot de passe pour votre compte Centre de Commerce et de Gestion en Ligne."
         />
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">

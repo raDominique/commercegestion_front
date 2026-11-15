@@ -1,4 +1,4 @@
-# Guide utilisateur — Etokisana
+# Guide utilisateur — Centre de Commerce et de Gestion en Ligne
 
 **Plateforme de commerce & gestion**
 Documentation à destination des utilisateurs de l'application `commercegestion_front`.
@@ -34,7 +34,7 @@ associées, illustrées par des captures d'écran réelles.
 
 ## 1. Présentation générale
 
-Etokisana est une plateforme de commerce et de gestion permettant de :
+Centre de Commerce et de Gestion en Ligne est une plateforme de commerce et de gestion permettant de :
 
 - **suivre ses actifs et ses passifs** (produits, quantités, sites, valorisation) ;
 - **acheter et vendre** : boutique, échanges d'actifs, ventes monétaires, appels d'offre ;
@@ -819,4 +819,4 @@ python docs/convert_to_docx.py                              # → docs/Documenta
 
 ---
 
-*Guide généré le 14 octobre 2026 — Etokisana, plateforme de commerce & gestion.*
+*Guide généré le 14 octobre 2026 — Centre de Commerce et de Gestion en Ligne, plateforme de commerce & gestion.*
