@@ -14,34 +14,33 @@ import { getMySites } from '../../services/site.service';
 import { getQuantiteVendableBySite } from '../../services/actifs.service';
 import { getAccessToken } from '../../services/token.service';
 import { useAuth } from '../../context/AuthContext';
-import { UserAutocomplete } from '../../components/commons/UserAutocomplete.jsx';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
 import { Loader } from '../../components/ui/loader';
 import { formatThousands } from '../../utils/formatNumber';
-import { MemberIdLookupInput } from '../../components/commons/MemberIdLookupInput.jsx';
 import { getTransactionErrorMessage } from '../../utils/transactionErrors.js';
+import { MemberIdLookupInput } from '../../components/commons/MemberIdLookupInput.jsx';
 
 const getUserDisplayName = (u) => u?.name || u?.userNickName || u?.userName || u?.email || '';
 const truncate = (text, max = 35) => !text || text.length <= max ? text : text.slice(0, max) + '…';
 
 const AchatVente = () => {
   usePageTitle('Achat / Vente');
-  const { user } = useAuth();
+  const { user, getProfile } = useAuth();
   const [saving, setSaving] = useState(false);
   const [users, setUsers] = useState([]);
   const [sites, setSites] = useState([]);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const [vendeurInput, setVendeurInput] = useState('');
-  const [vendeurId, setVendeurId] = useState('');
-  const [vendeurName, setVendeurName] = useState('');
-  const [vendeurLookupLoading, setVendeurLookupLoading] = useState(false);
-  const [vendeurNotFound, setVendeurNotFound] = useState(false);
-  const [resolvedVendeur, setResolvedVendeur] = useState(null);
-  const [vendeurSearchMode, setVendeurSearchMode] = useState('id');
-  const vendeurSearchRef = useRef('');
+  const [vendeur, setVendeur] = useState(null);
+  const [vendeurLoading, setVendeurLoading] = useState(true);
+  const [vendeurError, setVendeurError] = useState('');
   const [contrepartieInput, setContrepartieInput] = useState('');
   const [contrepartieId, setContrepartieId] = useState('');
+  const [contrepartieName, setContrepartieName] = useState('');
+  const [contrepartieSearchMode, setContrepartieSearchMode] = useState('id');
+  const [contrepartieLookupLoading, setContrepartieLookupLoading] = useState(false);
+  const [contrepartieError, setContrepartieError] = useState('');
+  const contrepartieSearchRef = useRef('');
   const [siteOrigineId, setSiteOrigineId] = useState('');
   const [productId, setProductId] = useState('');
   const [quantite, setQuantite] = useState('');
@@ -55,6 +54,37 @@ const AchatVente = () => {
       setSites(Array.isArray(sitesData) ? sitesData : []);
     });
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadVendeur = async () => {
+      setVendeurLoading(true);
+      setVendeurError('');
+      try {
+        const profile = await getProfile();
+        const id = profile?._id || profile?.id;
+        const email = profile?.userEmail || profile?.email;
+        const userId = profile?.userId || '';
+        if (!id || !email) throw new Error('Profil vendeur incomplet');
+        if (active) setVendeur({ id, email, userId });
+      } catch (error) {
+        console.error('Impossible de charger le profil vendeur:', error);
+        if (active) {
+          setVendeur(null);
+          setVendeurError('Les informations du vendeur connecté sont indisponibles. Veuillez réessayer plus tard.');
+        }
+      } finally {
+        if (active) setVendeurLoading(false);
+      }
+    };
+
+    if (user) loadVendeur();
+    else {
+      setVendeur(null);
+      setVendeurLoading(false);
+    }
+    return () => { active = false; };
+  }, [getProfile, user]);
 
   useEffect(() => {
     if (siteOrigineId) {
@@ -71,6 +101,7 @@ const AchatVente = () => {
     }
   }, [siteOrigineId]);
 
+  /* Legacy seller lookup UI retained below for reference while this form uses the authenticated seller.
   const resetForm = () => {
     setVendeurInput('');
     setVendeurId('');
@@ -239,6 +270,131 @@ const AchatVente = () => {
     </div>
   );
 
+  */
+  const vendeurId = vendeur?.id || '';
+  const vendeurIdentifiers = new Set(
+    [vendeur?.id, vendeur?.userId, vendeur?.email]
+      .filter(Boolean)
+      .map((identifier) => String(identifier).toLowerCase())
+  );
+
+  const applyContrepartie = (member) => {
+    if (!member) {
+      setContrepartieId('');
+      setContrepartieName('');
+      setContrepartieError('Aucun membre trouvé avec cet ID ou cette adresse e-mail.');
+      return;
+    }
+
+    const identifiers = [member?._id, member?.id, member?.userId, member?.userEmail, member?.email]
+      .filter(Boolean)
+      .map((identifier) => String(identifier).toLowerCase());
+
+    if (identifiers.some((identifier) => vendeurIdentifiers.has(identifier))) {
+      setContrepartieId('');
+      setContrepartieName('');
+      setContrepartieError('Le vendeur connecté ne peut pas être la contrepartie.');
+      return;
+    }
+
+    setContrepartieId(member._id || member.id || member.userId || '');
+    setContrepartieName(getUserDisplayName(member));
+    setContrepartieError('');
+  };
+
+  const resolveContrepartieByCode = async (code) => {
+    setContrepartieLookupLoading(true);
+    try {
+      const res = await getUsers({ search: code, limit: 10 });
+      const members = Array.isArray(res)
+        ? res
+        : (Array.isArray(res?.data) ? res.data : (Array.isArray(res?.data?.data) ? res.data.data : []));
+      const member = members.find((item) => item && String(item.userId || '').toUpperCase() === code) || members[0] || null;
+      if (contrepartieSearchRef.current !== code) return;
+      applyContrepartie(member);
+    } catch (err) {
+      console.error('Erreur lors de la recherche de la contrepartie:', err);
+      if (contrepartieSearchRef.current === code) applyContrepartie(null);
+    } finally {
+      setContrepartieLookupLoading(false);
+    }
+  };
+
+  const resolveContrepartieByEmail = async (email) => {
+    setContrepartieLookupLoading(true);
+    try {
+      const member = await getUserByEmail(email);
+      if (contrepartieSearchRef.current !== email) return;
+      applyContrepartie(member);
+    } catch (err) {
+      console.error('Erreur lors de la recherche de la contrepartie par e-mail:', err);
+      if (contrepartieSearchRef.current === email) applyContrepartie(null);
+    } finally {
+      setContrepartieLookupLoading(false);
+    }
+  };
+
+  const handleContrepartieModeChange = (mode) => {
+    setContrepartieSearchMode(mode);
+    setContrepartieInput('');
+    setContrepartieId('');
+    setContrepartieName('');
+    setContrepartieError('');
+    contrepartieSearchRef.current = '';
+  };
+
+  const handleContrepartieChange = (event) => {
+    const rawValue = event.target.value;
+    setContrepartieInput(contrepartieSearchMode === 'id' ? rawValue.toUpperCase() : rawValue);
+    setContrepartieId('');
+    setContrepartieName('');
+    setContrepartieError('');
+    contrepartieSearchRef.current = '';
+  };
+
+  const handleContrepartieSearch = (value, mode) => {
+    if (mode === 'email') {
+      const email = String(value || '').trim().toLowerCase();
+      contrepartieSearchRef.current = email;
+      setContrepartieInput(email);
+      setContrepartieId('');
+      setContrepartieName('');
+      setContrepartieError('');
+      resolveContrepartieByEmail(email);
+      return;
+    }
+
+    const code = String(value || '').trim().toUpperCase();
+    if (code.length !== 8) return;
+    contrepartieSearchRef.current = code;
+    setContrepartieInput(code);
+    setContrepartieId('');
+    setContrepartieName('');
+    setContrepartieError('');
+
+    const member = users.find((item) => String(item?.userId || '').toUpperCase() === code);
+    if (member) {
+      applyContrepartie(member);
+      return;
+    }
+    resolveContrepartieByCode(code);
+  };
+
+  const resetForm = () => {
+    setContrepartieInput('');
+    setContrepartieId('');
+    setContrepartieName('');
+    setContrepartieSearchMode('id');
+    setContrepartieError('');
+    contrepartieSearchRef.current = '';
+    setSiteOrigineId('');
+    setProductId('');
+    setQuantite('');
+    setRapportEchange('');
+    setObservations('');
+    setProducts([]);
+  };
+
   const ready = {
     vendeur: !!vendeurId,
     contrepartie: !!contrepartieId,
@@ -312,20 +468,40 @@ const AchatVente = () => {
                 <form onSubmit={handleSubmit} className="space-y-4 p-4">
                   <div className="space-y-2">
                     <Label required>1. Vendeur</Label>
-                    {vendeurField}
+                    <Input
+                      value={vendeurLoading ? 'Chargement…' : vendeur?.email || ''}
+                      placeholder="E-mail du vendeur connecté"
+                      readOnly
+                      disabled
+                      className="border-neutral-300 bg-neutral-100 text-neutral-700"
+                    />
+                    {vendeurError ? (
+                      <p className="text-xs text-red-600">{vendeurError}</p>
+                    ) : (
+                      <p className="text-xs text-neutral-500">Le vendeur est automatiquement le membre connecté.</p>
+                    )}
                   </div>
 
                   {ready.vendeur && (
                     <div className="space-y-2">
                       <Label required>2. Contrepartie (acheteur)</Label>
-                      <UserAutocomplete
-                        users={users}
+                      <MemberIdLookupInput
                         value={contrepartieInput}
-                        onChange={(val) => { setContrepartieInput(val); if (!val) setContrepartieId(''); }}
-                        onSelect={(u) => setContrepartieId(u._id || u.id)}
-                        getDisplayName={getUserDisplayName}
-                        placeholder="Rechercher la contrepartie..."
+                        onChange={handleContrepartieChange}
+                        onSearch={handleContrepartieSearch}
+                        searchMode={contrepartieSearchMode}
+                        onSearchModeChange={handleContrepartieModeChange}
+                        emailLookupLoading={contrepartieLookupLoading}
+                        placeholder="ID membre (8 caractères) ou e-mail"
+                        className={`bg-white ${contrepartieError ? 'border-red-400' : ''}`}
                       />
+                      {contrepartieError ? (
+                        <p className="text-xs text-red-600">{contrepartieError}</p>
+                      ) : contrepartieName ? (
+                        <p className="text-xs text-emerald-600">Membre valide : {contrepartieName}</p>
+                      ) : (
+                        <p className="text-xs text-neutral-500">Recherchez l'acheteur par son ID membre ou son adresse e-mail.</p>
+                      )}
                     </div>
                   )}
 
