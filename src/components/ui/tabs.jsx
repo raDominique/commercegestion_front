@@ -18,7 +18,7 @@ function TabsList({ className, ...props }) {
       className={cn(
         "flex items-end gap-0 px-2",
         "border-b-2 border-violet-300",
-        "overflow-x-auto max-w-full",
+        "max-w-full",
         className,
       )}
       {...props}
