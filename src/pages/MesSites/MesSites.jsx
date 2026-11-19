@@ -13,7 +13,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import { createSite, getMySites, getSiteById, updateSite, deleteSite } from '../../services/site.service';
+import { createSite, getMySites, getSiteById, updateSite, deleteSite, createSitesBulk } from '../../services/site.service';
 import GoogleMapPicker from '../../components/ui/GoogleMapPicker.jsx';
 import { useIsMobile } from '../../components/ui/use-mobile.js';
 import { useAuth } from '../../context/AuthContext';
@@ -25,12 +25,9 @@ const MesSites = () => {
   usePageTitle('Mes sites');
   const [sites, setSites] = useState([]);
   const [total, setTotal] = useState(0);
-  const [newSite, setNewSite] = useState({
-    siteName: '',
-    siteAddress: '',
-    siteLat: '',
-    siteLng: '',
-  });
+  const [newSites, setNewSites] = useState([
+    { siteName: '', siteAddress: '', siteLat: '', siteLng: '' },
+  ]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editSite, setEditSite] = useState(null);
@@ -56,30 +53,59 @@ const MesSites = () => {
     fetchSites();
   }, [page, limit, search]);
 
-  // Ajout via modal
-  const handleAddSite = async (e) => {
+  // Ajout via modal (supporte plusieurs sites)
+  const handleAddSites = async (e) => {
     e.preventDefault();
+    const items = newSites.map((s) => ({
+      siteName: s.siteName,
+      siteAddress: s.siteAddress,
+      siteLat: s.siteLat,
+      siteLng: s.siteLng,
+    }));
+    // Validation minimale côté client
+    if (items.some((s) => !s.siteName || !s.siteAddress)) {
+      toast.error('Veuillez renseigner le nom et l’adresse de chaque site');
+      return;
+    }
     setLoading(true);
     try {
-      const payload = {
-        siteName: newSite.siteName,
-        siteAddress: newSite.siteAddress,
-        siteLat: newSite.siteLat ? parseFloat(newSite.siteLat) : undefined,
-        siteLng: newSite.siteLng ? parseFloat(newSite.siteLng) : undefined,
-      };
-      await createSite(payload);
-      toast.success('Site ajouté');
-      setNewSite({ siteName: '', siteAddress: '', siteLat: '', siteLng: '' });
+      const result = await createSitesBulk(items);
+      const errors = Array.isArray(result?.errors) ? result.errors : [];
+      if (result?.status === 'success') {
+        toast.success(result?.message || 'Sites ajoutés');
+      } else if (result?.status === 'partial_success') {
+        toast.warning(result?.message || `${errors.length} échec(s)`);
+        errors.slice(0, 3).forEach((err) => toast.error(err?.reason || 'Échec'));
+      } else {
+        toast.error(result?.message || 'Aucun site ajouté');
+        errors.slice(0, 3).forEach((err) => toast.error(err?.reason || 'Échec'));
+      }
+      setNewSites([{ siteName: '', siteAddress: '', siteLat: '', siteLng: '' }]);
       setIsDialogOpen(false);
-      // Recharge la liste après ajout
       const data = await getMySites({ limit, page, search });
       setSites(Array.isArray(data.data) ? data.data : []);
       setTotal(typeof data.total === 'number' ? data.total : 0);
     } catch (error) {
-      toast.error("Erreur lors de l'ajout du site");
+      toast.error(error?.response?.data?.message || "Erreur lors de l'ajout des sites");
     } finally {
       setLoading(false);
     }
+  };
+
+  const addSiteRow = () => {
+    setNewSites((current) => [...current, { siteName: '', siteAddress: '', siteLat: '', siteLng: '' }]);
+  };
+
+  const removeSiteRow = (index) => {
+    setNewSites((current) => (
+        current.length <= 1 ? current : current.filter((_, i) => i !== index)
+    ));
+  };
+
+  const updateSiteRow = (index, field, value) => {
+    setNewSites((current) => current.map((row, i) => (
+        i === index ? { ...row, [field]: value } : row
+    )));
   };
 
   // Ouvre le dialog de modification et charge les données du site
@@ -182,62 +208,94 @@ const MesSites = () => {
               <DialogHeader>
                 <DialogTitle>Ajouter un nouveau site</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleAddSite} className="space-y-4">
-                {/* ...formulaire d'ajout inchangé... */}
-                <div className="space-y-2">
-                  <Label htmlFor="siteName">Nom du site</Label>
-                  <Input
-                    id="siteName"
-                    value={newSite.siteName}
-                    onChange={(e) => setNewSite({ ...newSite, siteName: e.target.value })}
-                    placeholder="Ma marketplace en ligne"
-                    required
-                    className="border-neutral-300"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="siteAddress">Adresse du site</Label>
-                  <Input
-                    id="siteAddress"
-                    value={newSite.siteAddress}
-                    onChange={(e) => setNewSite({ ...newSite, siteAddress: e.target.value })}
-                    placeholder="Analakely, Antananarivo"
-                    required
-                    className="border-neutral-300"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Localisation sur la carte</Label>
-                  <GoogleMapPicker
-                    lat={newSite.siteLat}
-                    lng={newSite.siteLng}
-                    onChange={({ lat, lng }) => setNewSite({ ...newSite, siteLat: lat, siteLng: lng })}
-                  />
-                </div>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="space-y-2 flex-1">
-                    <Label htmlFor="siteLat">Latitude</Label>
-                    <Input
-                      id="siteLat"
-                      type="number"
-                      step="any"
-                      value={newSite.siteLat}
-                      readOnly
-                      className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
-                    />
+              <form onSubmit={handleAddSites} className="space-y-4">
+                {newSites.map((site, index) => (
+                  <div key={index} className="space-y-4 rounded-lg border border-neutral-200 bg-neutral-50/50 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-neutral-700">Site {index + 1}</p>
+                      {newSites.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:bg-red-50"
+                          onClick={() => removeSiteRow(index)}
+                        >
+                          <DeleteIcon className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`siteName-${index}`}>Nom du site</Label>
+                      <Input
+                        id={`siteName-${index}`}
+                        value={site.siteName}
+                        onChange={(e) => updateSiteRow(index, 'siteName', e.target.value)}
+                        placeholder="Ma marketplace en ligne"
+                        required
+                        className="border-neutral-300 bg-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`siteAddress-${index}`}>Adresse du site</Label>
+                      <Input
+                        id={`siteAddress-${index}`}
+                        value={site.siteAddress}
+                        onChange={(e) => updateSiteRow(index, 'siteAddress', e.target.value)}
+                        placeholder="Analakely, Antananarivo"
+                        required
+                        className="border-neutral-300 bg-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Localisation sur la carte</Label>
+                      <GoogleMapPicker
+                        lat={site.siteLat}
+                        lng={site.siteLng}
+                        onChange={({ lat, lng }) => {
+                          updateSiteRow(index, 'siteLat', lat);
+                          updateSiteRow(index, 'siteLng', lng);
+                        }}
+                      />
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="space-y-2 flex-1">
+                        <Label htmlFor={`siteLat-${index}`}>Latitude</Label>
+                        <Input
+                          id={`siteLat-${index}`}
+                          type="number"
+                          step="any"
+                          value={site.siteLat}
+                          readOnly
+                          className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
+                        />
+                      </div>
+                      <div className="space-y-2 flex-1">
+                        <Label htmlFor={`siteLng-${index}`}>Longitude</Label>
+                        <Input
+                          id={`siteLng-${index}`}
+                          type="number"
+                          step="any"
+                          value={site.siteLng}
+                          readOnly
+                          className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2 flex-1">
-                    <Label htmlFor="siteLng">Longitude</Label>
-                    <Input
-                      id="siteLng"
-                      type="number"
-                      step="any"
-                      value={newSite.siteLng}
-                      readOnly
-                      className="border-neutral-300 bg-neutral-100 cursor-not-allowed"
-                    />
-                  </div>
-                </div>
+                ))}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-dashed border-violet-300 text-violet-700 hover:bg-violet-50"
+                  onClick={addSiteRow}
+                >
+                  <AddIcon className="w-4 h-4 mr-2" />
+                  Ajouter un autre site
+                </Button>
+
                 <Button
                   type="submit"
                   status={loading ? "loading" : "active"}
@@ -245,7 +303,7 @@ const MesSites = () => {
                   className="w-full"
                   disabled={loading}
                 >
-                  {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Ajouter le site
+                  {loading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Ajouter {newSites.length > 1 ? `les ${newSites.length} sites` : 'le site'}
                 </Button>
               </form>
             </DialogContent>

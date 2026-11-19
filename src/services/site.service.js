@@ -9,6 +9,25 @@ import axiosConfig from './axios.config';
  * @param {number} siteData.siteLng - La longitude du site
  * @return {Promise} - Une promesse qui résout la réponse de l'API
  */
+export async function createSitesBulk(items) {
+    const normalized = Array.isArray(items) ? items.map((item) => ({
+        siteName: item.siteName,
+        siteAddress: item.siteAddress,
+        siteLat: item.siteLat === '' || item.siteLat === undefined || item.siteLat === null ? undefined : parseFloat(item.siteLat),
+        siteLng: item.siteLng === '' || item.siteLng === undefined || item.siteLng === null ? undefined : parseFloat(item.siteLng),
+    })) : [];
+    if (normalized.length === 0) throw new Error('items est requis');
+    if (normalized.length > 100) throw new Error('Maximum 100 sites par requête');
+    try {
+        const response = await axiosConfig.post('/api/v1/sites/bulk-create', { items: normalized }, {
+            headers: { 'Content-Type': 'application/json' },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Erreur lors de la création en masse des sites:', error);
+        throw error;
+    }
+}
 export async function createSite(siteData) {
     try {
         const response = await axiosConfig.post('/api/v1/sites', siteData, {
