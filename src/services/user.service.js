@@ -103,6 +103,33 @@ export async function resetUserTwoFactor(userId) {
 }
 
 /**
+ * Active plusieurs utilisateurs en une seule requête (PATCH /users/activate/bulk)
+ * @param {string[]} ids - Identifiants des utilisateurs à activer (1 à 100, sans doublon)
+ * @returns {Promise<Object>} BulkResult : { status, message, data, total, errors }
+ */
+export async function activateUsersBulk(ids) {
+    const uniqueIds = Array.isArray(ids) ? [...new Set(ids.filter(Boolean))] : [];
+    if (uniqueIds.length === 0) throw new Error('ids est requis');
+    if (uniqueIds.length > 100) throw new Error('Maximum 100 utilisateurs par requête');
+    const res = await axiosConfig.patch('/api/v1/users/activate/bulk', { ids: uniqueIds });
+    return res.data;
+}
+
+/**
+ * Supprime plusieurs utilisateurs en une seule requête (POST /users/delete/bulk)
+ * Remarque : c'est un POST (et non un DELETE) car le body contient la liste d'ids.
+ * @param {string[]} ids - Identifiants des utilisateurs à supprimer (1 à 100, sans doublon)
+ * @returns {Promise<Object>} BulkResult : { status, message, data, total, errors }
+ */
+export async function deleteUsersBulk(ids) {
+    const uniqueIds = Array.isArray(ids) ? [...new Set(ids.filter(Boolean))] : [];
+    if (uniqueIds.length === 0) throw new Error('ids est requis');
+    if (uniqueIds.length > 100) throw new Error('Maximum 100 utilisateurs par requête');
+    const res = await axiosConfig.post('/api/v1/users/delete/bulk', { ids: uniqueIds });
+    return res.data;
+}
+
+/**
  * Met à jour un utilisateur (PATCH /users/update/:id)
  * @param {string|number} userId - L'identifiant de l'utilisateur à mettre à jour
  * @param {Object} data - Les données à mettre à jour (userNickName, userPhone, avatar, etc.)

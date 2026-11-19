@@ -5,6 +5,7 @@ import { Input } from '../../components/ui/input';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../../components/ui/select';
 import { Badge } from '../../components/ui/badge';
 import { Switch } from '../../components/ui/switch';
+import { Checkbox } from '../../components/ui/checkbox';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 import useScreenType from '../../utils/useScreenType';
 import formatBirthDate from '../../utils/formatBirthDate';
@@ -16,7 +17,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import { toast } from 'sonner';
-import { getUsers, deleteUser, toggleUserRole, activateUser, getUserById, resetUserTwoFactor } from '../../services/user.service';
+import { getUsers, deleteUser, toggleUserRole, activateUser, getUserById, resetUserTwoFactor, activateUsersBulk, deleteUsersBulk } from '../../services/user.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogDescription } from '../../components/ui/dialog';
 import ExportButton from '../../components/commons/ExportButton.jsx';
 import { exportAndDownloadUsers } from '../../services/export.service.js';
@@ -24,9 +25,12 @@ import { getFullMediaUrl } from '../../services/media.service';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Loader } from '../../components/ui/loader';
 import usePageTitle from '../../utils/usePageTitle.jsx';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AdminUsers() {
     usePageTitle('Gestion des utilisateurs');
+    const { user: currentUser } = useAuth();
+    const currentUserId = String(currentUser?._id || currentUser?.id || currentUser?.sub || currentUser?.userId || '');
     const [searchTerm, setSearchTerm] = useState('');
     const dateFormat = useDateFormat();
     const [users, setUsers] = useState([]);
@@ -81,6 +85,7 @@ export default function AdminUsers() {
     };
 
     useEffect(() => {
+        setSelectedIds([]);
         fetchUsers();
          
     }, [searchTerm, page, limit, isVerified, isActive, userType]);
@@ -90,10 +95,30 @@ export default function AdminUsers() {
 
     // Gestion modals
     const [modalUserId, setModalUserId] = useState(null);
-    const [modalAction, setModalAction] = useState(null); // 'delete' | 'role' | 'activate'
+    const [modalAction, setModalAction] = useState(null); // 'delete' | 'role' | 'activate' | 'reset-2fa' | 'bulk-activate' | 'bulk-delete'
     const [modalOpen, setModalOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
     const modalUser = users.find((user) => user.id === modalUserId);
+
+    // Sélection multiple
+    const [selectedIds, setSelectedIds] = useState([]);
+    const allSelected = filteredUsers.length > 0 && filteredUsers.every((user) => selectedIds.includes(user.id));
+
+    const toggleSelectUser = (userId) => {
+        setSelectedIds((current) => (
+            current.includes(userId)
+                ? current.filter((id) => id !== userId)
+                : [...current, userId]
+        ));
+    };
+
+    const toggleSelectAll = () => {
+        setSelectedIds((current) => (
+            current.length === filteredUsers.length ? [] : filteredUsers.map((user) => user.id)
+        ));
+    };
+
+    const clearSelection = () => setSelectedIds([]);
 
     const openResetTwoFactor = (userId) => {
         setModalUserId(userId);
@@ -141,6 +166,62 @@ export default function AdminUsers() {
             fetchUsers();
         } catch (err) {
             toast.error("Erreur lors de l'activation");
+        } finally {
+            setActionLoading(false);
+            setModalOpen(false);
+        }
+    };
+
+    const showBulkResult = (result) => {
+        if (!result) return;
+        const errors = Array.isArray(result.errors) ? result.errors : [];
+        const message = result.message || `${result.total || 0} réussite(s), ${errors.length} échec(s)`;
+        if (result.status === 'success') {
+            toast.success(message);
+        } else if (result.status === 'partial_success') {
+            toast.warning(message);
+            errors.slice(0, 3).forEach((err) => {
+                toast.error(err?.reason || 'Échec', { description: err?.id ? `ID: ${err.id}` : undefined });
+            });
+        } else {
+            toast.error(message);
+            errors.slice(0, 3).forEach((err) => {
+                toast.error(err?.reason || 'Échec', { description: err?.id ? `ID: ${err.id}` : undefined });
+            });
+        }
+    };
+
+    const handleBulkActivate = async () => {
+        if (selectedIds.length === 0) return;
+        setActionLoading(true);
+        try {
+            const result = await activateUsersBulk(selectedIds);
+            showBulkResult(result);
+            fetchUsers();
+            clearSelection();
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Erreur lors de l'activation en masse");
+        } finally {
+            setActionLoading(false);
+            setModalOpen(false);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        const ids = selectedIds.filter((id) => String(id) !== currentUserId);
+        if (ids.length === 0) {
+            toast.error("Vous ne pouvez pas supprimer votre propre compte.");
+            setModalOpen(false);
+            return;
+        }
+        setActionLoading(true);
+        try {
+            const result = await deleteUsersBulk(ids);
+            showBulkResult(result);
+            fetchUsers();
+            clearSelection();
+        } catch (err) {
+            toast.error(err?.response?.data?.message || "Erreur lors de la suppression en masse");
         } finally {
             setActionLoading(false);
             setModalOpen(false);
@@ -304,11 +385,51 @@ export default function AdminUsers() {
                     </div>
                 </div>
 
+                {/* Barre d'actions en masse */}
+                {selectedIds.length > 0 && (
+                    <div className="flex flex-col gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-2 text-sm font-medium text-violet-900">
+                            <Badge className="bg-violet-600 text-white">{selectedIds.length}</Badge>
+                            <span>utilisateur(s) sélectionné(s)</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="bg-white border-violet-200 text-violet-700 hover:bg-violet-100"
+                                onClick={() => { setModalAction('bulk-activate'); setModalOpen(true); }}
+                            >
+                                Activer la sélection
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="bg-white border-red-200 text-red-600 hover:bg-red-50"
+                                onClick={() => { setModalAction('bulk-delete'); setModalOpen(true); }}
+                            >
+                                Supprimer la sélection
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-neutral-600 hover:text-neutral-900"
+                                onClick={clearSelection}
+                            >
+                                Annuler
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Users Table / List (responsive) */}
                 <Card className="border-neutral-200 bg-white">
                     <UsersTableOrList
                         loading={loading}
                         users={filteredUsers}
+                        selectedIds={selectedIds}
+                        allSelected={allSelected}
+                        onToggleSelect={toggleSelectUser}
+                        onToggleSelectAll={toggleSelectAll}
                         setModalUserId={setModalUserId}
                         setModalAction={setModalAction}
                         setModalOpen={setModalOpen}
@@ -326,12 +447,16 @@ export default function AdminUsers() {
                                 {modalAction === 'role' && 'Confirmer le changement de rôle'}
                                 {modalAction === 'activate' && 'Confirmer l’activation/suspension'}
                                 {modalAction === 'reset-2fa' && 'Désactiver la double authentification ?'}
+                                {modalAction === 'bulk-activate' && 'Activer les utilisateurs sélectionnés'}
+                                {modalAction === 'bulk-delete' && 'Supprimer les utilisateurs sélectionnés'}
                             </DialogTitle>
                             <DialogDescription>
                                 {modalAction === 'delete' && 'Voulez-vous vraiment supprimer cet utilisateur ? Cette action est irréversible.'}
                                 {modalAction === 'role' && 'Voulez-vous vraiment changer le rôle de cet utilisateur ?'}
                                 {modalAction === 'activate' && 'Voulez-vous vraiment activer ou suspendre cet utilisateur ?'}
                                 {modalAction === 'reset-2fa' && 'La méthode d’authentification actuelle sera réinitialisée. L’utilisateur pourra configurer à nouveau la 2FA depuis son profil.'}
+                                {modalAction === 'bulk-activate' && `Vous êtes sur le point d'activer ${selectedIds.length} utilisateur(s). Continuer ?`}
+                                {modalAction === 'bulk-delete' && `Vous êtes sur le point de supprimer définitivement ${selectedIds.length} utilisateur(s). Cette action est irréversible.`}
                             </DialogDescription>
                         </DialogHeader>
                         {modalAction === 'reset-2fa' && (
@@ -348,13 +473,44 @@ export default function AdminUsers() {
                                 </div>
                             </div>
                         )}
-                        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        {modalAction === 'bulk-delete' && (
+                            <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-red-600 ring-1 ring-red-200">
+                                    <DeleteIcon fontSize="small" />
+                                </span>
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-neutral-900">{selectedIds.length} compte(s) sélectionné(s)</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-red-800">
+                                        La suppression est définitive. Votre propre compte ne sera pas supprimé.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        {modalAction === 'bulk-activate' && (
+                            <div className="flex items-start gap-3 rounded-lg border border-violet-200 bg-violet-50 p-4">
+                                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white text-violet-700 ring-1 ring-violet-200">
+                                    <PersonIcon fontSize="small" />
+                                </span>
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-neutral-900">{selectedIds.length} compte(s) sélectionné(s)</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-violet-900">
+                                        Les comptes sélectionnés seront activés.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                             <DialogClose asChild>
                                 <Button variant="outline" status="inactive">Annuler</Button>
                             </DialogClose>
                             <Button
                                 variant="default"
-                                color={modalAction === 'reset-2fa' ? 'default' : undefined}
+                                color={
+                                    modalAction === 'reset-2fa' ? 'default'
+                                        : modalAction === 'bulk-delete' ? 'destructive'
+                                            : modalAction === 'bulk-activate' ? 'success'
+                                                : undefined
+                                }
                                 status={actionLoading ? 'loading' : (modalAction === 'reset-2fa' ? null : 'active')}
                                 disabled={actionLoading}
                                 onClick={() => {
@@ -364,10 +520,15 @@ export default function AdminUsers() {
                                         if (modalAction === 'activate') handleActivateUser(modalUserId);
                                         if (modalAction === 'reset-2fa') handleResetTwoFactor(modalUserId);
                                     }
+                                    if (modalAction === 'bulk-activate') handleBulkActivate();
+                                    if (modalAction === 'bulk-delete') handleBulkDelete();
                                 }}
                             >
                                 {actionLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />}
-                                {modalAction === 'reset-2fa' ? 'Désactiver la 2FA' : 'Confirmer'}
+                                {modalAction === 'reset-2fa' ? 'Désactiver la 2FA'
+                                    : modalAction === 'bulk-delete' ? `Supprimer ${selectedIds.length} compte(s)`
+                                        : modalAction === 'bulk-activate' ? `Activer ${selectedIds.length} compte(s)`
+                                            : 'Confirmer'}
                             </Button>
                         </div>
                     </DialogContent>
@@ -512,6 +673,10 @@ export default function AdminUsers() {
 function UsersTableOrList({
     loading,
     users,
+    selectedIds = [],
+    allSelected = false,
+    onToggleSelect,
+    onToggleSelectAll,
     setModalUserId,
     setModalAction,
     setModalOpen,
@@ -534,6 +699,13 @@ function UsersTableOrList({
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead className="w-10">
+                            <Checkbox
+                                checked={allSelected}
+                                onCheckedChange={onToggleSelectAll}
+                                aria-label="Sélectionner tous les utilisateurs"
+                            />
+                        </TableHead>
                         <TableHead className="text-xs text-neutral-600">N° membre</TableHead>
                         <TableHead className="text-xs text-neutral-600">Utilisateur</TableHead>
                         <TableHead className="text-xs text-neutral-600">Email</TableHead>
@@ -548,7 +720,14 @@ function UsersTableOrList({
                 </TableHeader>
                 <TableBody>
                     {users.map((user) => (
-                        <TableRow key={user.id}>
+                        <TableRow key={user.id} className={selectedIds.includes(user.id) ? 'bg-violet-50/60' : undefined}>
+                            <TableCell>
+                                <Checkbox
+                                    checked={selectedIds.includes(user.id)}
+                                    onCheckedChange={() => onToggleSelect?.(user.id)}
+                                    aria-label={`Sélectionner ${user.name}`}
+                                />
+                            </TableCell>
                             <TableCell>
                                 <div className="flex items-center gap-2">
                                     <Badge variant="outline" className="text-xs">{user.referralCode || 'N/A'}</Badge>
@@ -609,22 +788,32 @@ function UsersTableOrList({
     // Mobile: cards list
     return (
         <div className="space-y-4 p-4">
+            <div className="flex items-center justify-between gap-2 px-1">
+                <label className="flex items-center gap-2 text-sm text-neutral-600">
+                    <Checkbox checked={allSelected} onCheckedChange={onToggleSelectAll} aria-label="Sélectionner tous les utilisateurs" />
+                    <span>Tout sélectionner</span>
+                </label>
+            </div>
             {users.map((user) => (
-                <Card key={user.id} className="p-4">
+                <Card key={user.id} className={`p-4 ${selectedIds.includes(user.id) ? 'border-violet-300 bg-violet-50/60' : ''}`}>
                     <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${user.status === 'Actif' ? 'bg-violet-600 text-white' : 'bg-neutral-300 text-neutral-700'}`}>{user.name && user.name.charAt(0).toUpperCase()}</div>
-                                <div className="min-w-0">
-                                    <div className="font-medium text-neutral-900 truncate">{user.name}</div>
-                                    <div className="text-xs text-neutral-500 break-all">{user.email}</div>
+                        <div className="flex flex-1 items-start gap-3 min-w-0">
+                            <Checkbox
+                                checked={selectedIds.includes(user.id)}
+                                onCheckedChange={() => onToggleSelect?.(user.id)}
+                                aria-label={`Sélectionner ${user.name}`}
+                                className="mt-1"
+                            />
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${user.status === 'Actif' ? 'bg-violet-600 text-white' : 'bg-neutral-300 text-neutral-700'}`}>{user.name && user.name.charAt(0).toUpperCase()}</div>
+                            <div className="min-w-0 flex-1">
+                                <div className="font-medium text-neutral-900 truncate">{user.name}</div>
+                                <div className="text-xs text-neutral-500 break-all">{user.email}</div>
+                                <div className="mt-2 flex flex-wrap gap-2 items-center">
+                                    <Badge variant="outline" className="text-xs">{user.referralCode || 'N/A'}</Badge>
+                                    <Badge variant={user.emailVerified ? 'default' : 'secondary'} className="text-xs">{user.emailVerified ? 'Vérifié' : 'Non vérifié'}</Badge>
+                                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">{user.role === 'admin' ? 'Admin' : 'Utilisateur'}</Badge>
+                                    <Badge variant={user.status === 'Actif' ? 'default' : 'secondary'} className="text-xs">{user.status}</Badge>
                                 </div>
-                            </div>
-                            <div className="mt-4 flex flex-wrap gap-2 items-center">
-                                <Badge variant="outline" className="text-xs">{user.referralCode || 'N/A'}</Badge>
-                                <Badge variant={user.emailVerified ? 'default' : 'secondary'} className="text-xs">{user.emailVerified ? 'Vérifié' : 'Non vérifié'}</Badge>
-                                <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">{user.role === 'admin' ? 'Admin' : 'Utilisateur'}</Badge>
-                                <Badge variant={user.status === 'Actif' ? 'default' : 'secondary'} className="text-xs">{user.status}</Badge>
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-2">
