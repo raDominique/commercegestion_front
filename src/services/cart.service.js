@@ -157,3 +157,12 @@ export const getCart = async (token) => {
     }
   );
 };
+export const addToCartBulk = async (items, token) => {
+    const normalized = Array.isArray(items) ? items : [];
+    if (normalized.length === 0) throw new Error('items est requis');
+    if (normalized.length > 100) throw new Error('Maximum 100 elements par requete');
+    const res = await axiosInstance.post('/api/v1/cart/add/bulk', { items: normalized }, {
+        headers: { Authorization: token ? `Bearer ${token}` : undefined, 'Content-Type': 'application/json', accept: 'application/json' },
+    });
+    return res.data;
+};

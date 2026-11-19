@@ -375,3 +375,73 @@ export const getUserTransactions = async (userId, params = {}, token) => {
         }
     );
 };
+/* bulk transaction helpers appended */
+export const createDepositsBulk = async (items, token) => {
+    const normalized = Array.isArray(items) ? items : [];
+    if (normalized.length === 0) throw new Error('items est requis');
+    if (normalized.length > 100) throw new Error('Maximum 100 elements par requete');
+    const res = await axiosInstance.post('/api/v1/transactions/deposit/bulk', { items: normalized }, {
+        headers: { Authorization: token ? `Bearer ${token}` : undefined, 'Content-Type': 'application/json', accept: 'application/json' },
+    });
+    return res.data;
+};
+
+export const createReturnsBulk = async (items, token) => {
+    const normalized = Array.isArray(items) ? items : [];
+    if (normalized.length === 0) throw new Error('items est requis');
+    if (normalized.length > 100) throw new Error('Maximum 100 elements par requete');
+    const res = await axiosInstance.post('/api/v1/transactions/return/bulk', { items: normalized }, {
+        headers: { Authorization: token ? `Bearer ${token}` : undefined, 'Content-Type': 'application/json', accept: 'application/json' },
+    });
+    return res.data;
+};
+
+export const createInitializationsBulk = async (items, token) => {
+    const normalized = Array.isArray(items) ? items : [];
+    if (normalized.length === 0) throw new Error('items est requis');
+    if (normalized.length > 100) throw new Error('Maximum 100 elements par requete');
+    const res = await axiosInstance.post('/api/v1/transactions/initialization/bulk', { items: normalized }, {
+        headers: { Authorization: token ? `Bearer ${token}` : undefined, 'Content-Type': 'application/json', accept: 'application/json' },
+    });
+    return res.data;
+};
+
+export const createVirementsDroitBulk = async (items, token) => {
+    const normalized = Array.isArray(items) ? items : [];
+    if (normalized.length === 0) throw new Error('items est requis');
+    if (normalized.length > 100) throw new Error('Maximum 100 elements par requete');
+    const res = await axiosInstance.post('/api/v1/transactions/virement-droit/bulk', { items: normalized }, {
+        headers: { Authorization: token ? `Bearer ${token}` : undefined, 'Content-Type': 'application/json', accept: 'application/json' },
+    });
+    return res.data;
+};
+
+export const createVentesBulk = async (items, token) => {
+    const normalized = Array.isArray(items) ? items : [];
+    if (normalized.length === 0) throw new Error('items est requis');
+    if (normalized.length > 100) throw new Error('Maximum 100 elements par requete');
+    const res = await axiosInstance.post('/api/v1/transactions/vente/bulk', { items: normalized }, {
+        headers: { Authorization: token ? `Bearer ${token}` : undefined, 'Content-Type': 'application/json', accept: 'application/json' },
+    });
+    return res.data;
+};
+
+export const approveTransactionsBulk = async (ids, observations, token) => {
+    const uniqueIds = Array.isArray(ids) ? [...new Set(ids.filter(Boolean))] : [];
+    if (uniqueIds.length === 0) throw new Error('ids est requis');
+    if (uniqueIds.length > 100) throw new Error('Maximum 100 elements par requete');
+    const res = await axiosInstance.patch('/api/v1/transactions/approve/bulk', { ids: uniqueIds, observations }, {
+        headers: { Authorization: token ? `Bearer ${token}` : undefined, 'Content-Type': 'application/json', accept: 'application/json' },
+    });
+    return res.data;
+};
+
+export const rejectTransactionsBulk = async (ids, motifRejet, token) => {
+    const uniqueIds = Array.isArray(ids) ? [...new Set(ids.filter(Boolean))] : [];
+    if (uniqueIds.length === 0) throw new Error('ids est requis');
+    if (uniqueIds.length > 100) throw new Error('Maximum 100 elements par requete');
+    const res = await axiosInstance.patch('/api/v1/transactions/reject/bulk', { ids: uniqueIds, motifRejet }, {
+        headers: { Authorization: token ? `Bearer ${token}` : undefined, 'Content-Type': 'application/json', accept: 'application/json' },
+    });
+    return res.data;
+};

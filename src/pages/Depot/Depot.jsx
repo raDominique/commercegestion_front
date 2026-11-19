@@ -8,7 +8,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { depositStockToAMember, getUserTransactions } from '../../services/transaction.service';
+import { depositStockToAMember, getUserTransactions, createDepositsBulk } from '../../services/transaction.service';
 import { getProfile } from '../../services/auth.service';
 import usePageTitle from '../../utils/usePageTitle.jsx';
 import { getFullMediaUrl } from '../../services/media.service';
@@ -302,7 +302,7 @@ const Depot = () => {
 				return;
 			}
 
-			const response = await depositStockToAMember({
+			const result = await createDepositsBulk([{
 				detentaire: transferForm.detentaire,
 				ayant_droit: ayantDroitId,
 				productId: transferForm.productId,
@@ -311,7 +311,7 @@ const Depot = () => {
 				quantite: Number(transferForm.quantite),
 				prixUnitaire: Number(transferForm.prixUnitaire),
 				observations: transferForm.observations || '',
-			}, token);
+			}], token);
 
 			toast.success(response?.data?.message || 'Dépôt envoyé et en attente d’approbation.');
 			setTransferForm({

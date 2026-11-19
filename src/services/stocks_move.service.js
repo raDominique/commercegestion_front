@@ -186,9 +186,76 @@ export const getStockHistory = async (params = {}, token) => {
  * @param {string} token - Token d'authentification
  * @returns {Promise}
  */
+export const depositStocksBulk = async (items, token) => {
+    const normalized = Array.isArray(items) ? items.map((item) => ({
+        siteOrigineId: item.siteOrigineId,
+        siteDestinationId: item.siteDestinationId,
+        productId: item.productId,
+        quantite: Number(item.quantite),
+        detentaire: item.detentaire,
+        ayant_droit: item.ayant_droit,
+        prixUnitaire: item.prixUnitaire != null ? Number(item.prixUnitaire) : item.prixUnitaire,
+        observations: item.observations || '',
+    })) : [];
+    if (normalized.length === 0) throw new Error('items est requis');
+    if (normalized.length > 100) throw new Error('Maximum 100 éléments par requête');
+    const response = await axiosInstance.post('/api/v1/stocks/depot/bulk', { items: normalized }, {
+        headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+            'Content-Type': 'application/json',
+            accept: '*/*',
+        },
+    });
+    return response.data;
+};
+
+export const transferStocksBulk = async (items, token) => {
+    const normalized = Array.isArray(items) ? items.map((item) => ({
+        siteOrigineId: item.siteOrigineId,
+        siteDestinationId: item.siteDestinationId,
+        productId: item.productId,
+        quantite: Number(item.quantite),
+        detentaire: item.detentaire,
+        ayant_droit: item.ayant_droit,
+        prixUnitaire: item.prixUnitaire != null ? Number(item.prixUnitaire) : item.prixUnitaire,
+        observations: item.observations || '',
+    })) : [];
+    if (normalized.length === 0) throw new Error('items est requis');
+    if (normalized.length > 100) throw new Error('Maximum 100 éléments par requête');
+    const response = await axiosInstance.post('/api/v1/stocks/transfer/bulk', { items: normalized }, {
+        headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+            'Content-Type': 'application/json',
+            accept: '*/*',
+        },
+    });
+    return response.data;
+};
+
+export const virementStocksBulk = async (items, token) => {
+    const normalized = Array.isArray(items) ? items.map((item) => ({
+        siteOrigineId: item.siteOrigineId,
+        siteDestinationId: item.siteDestinationId,
+        productId: item.productId,
+        quantite: Number(item.quantite),
+        detentaire: item.detentaire,
+        ayant_droit: item.ayant_droit,
+        prixUnitaire: item.prixUnitaire != null ? Number(item.prixUnitaire) : item.prixUnitaire,
+        observations: item.observations || '',
+    })) : [];
+    if (normalized.length === 0) throw new Error('items est requis');
+    if (normalized.length > 100) throw new Error('Maximum 100 éléments par requête');
+    const response = await axiosInstance.post('/api/v1/stocks/virement/bulk', { items: normalized }, {
+        headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+            'Content-Type': 'application/json',
+            accept: '*/*',
+        },
+    });
+    return response.data;
+};
 export const depositFirstStock = async (params, token) => {
     return axiosInstance.post(
-        '/api/v1/stocks/depot',
         {
             siteOrigineId: params.siteOrigineId,
             siteDestinationId: params.siteDestinationId,

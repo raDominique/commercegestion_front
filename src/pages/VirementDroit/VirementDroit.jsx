@@ -17,7 +17,7 @@ import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBan
 import ActifsTable from '../../components/commons/ActifsTable';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { getUserByEmail, getUsers } from '../../services/user.service';
-import { getMyDepositsAtOthers, virementDroit } from '../../services/transaction.service';
+import { getMyDepositsAtOthers, virementDroit, createVirementsDroitBulk } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import useScreenType from '../../utils/useScreenType';
@@ -240,17 +240,19 @@ const VirementDroit = () => {
         return;
       }
 
-      const response = await virementDroit({
-        id_transactions: actif._id,
+      const result = await createVirementsDroitBulk([{
         beneficiaryId: destinationAyantDroitId,
         detentaireId,
         productId,
         siteId,
         quantite: quantiteVal,
         ...(form.observations.trim() ? { observations: form.observations.trim() } : {}),
-      }, token);
+      }], token);
       const reliquat = Math.max(0, Number(actif.quantite) - quantiteVal);
-      toast.success(response?.data?.message || `Virement de droit envoyé et en attente d’approbation. Quantité : ${quantiteVal}; reliquat estimé : ${reliquat}.`);
+      const errors = Array.isArray(result?.errors) ? result.errors : [];
+      if (result?.status === 'success') toast.success(result?.message || `Virement de droit envoyé et en attente d'approbation. Quantité : ${quantiteVal}; reliquat estimé : ${reliquat}.`);
+      else if (result?.status === 'partial_success') { toast.warning(result?.message || `${errors.length} échec(s)`); errors.slice(0,3).forEach((e) => toast.error(e?.reason || 'Échec')); }
+      else { toast.error(result?.message || 'Erreur lors du virement de droit'); errors.slice(0,3).forEach((e) => toast.error(e?.reason || 'Échec')); }
       setVirerModalOpen(false);
       setSelectedActifForVirement(null);
       setSelectedRecipient(null);

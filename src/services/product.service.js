@@ -230,3 +230,22 @@ export const selectAllProduits = async (params = {}) => {
     return response.data;
 };
 
+export const createProductsBulk = async (items, images, token) => {
+    // items: array of product data objects
+    // images: array of File (same length) or undefined entries
+    const formData = new FormData();
+    formData.append('items', JSON.stringify(items));
+    if (Array.isArray(images)) {
+        images.forEach((img, idx) => {
+            if (img) formData.append(`image_${idx}`, img);
+        });
+    }
+    const response = await axiosInstance.post('/api/v1/products/bulk', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+            ...(token && { Authorization: `Bearer ${token}` }),
+            'accept': '*/*',
+        },
+    });
+    return response.data;
+};

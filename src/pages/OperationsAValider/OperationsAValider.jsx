@@ -26,7 +26,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from '../../components/ui/dialog';
-import { getTransactionErrorMessage } from '../../utils/transactionErrors.js';
+import { Checkbox } from '../../components/ui/checkbox';
+import { approveTransactionsBulk, rejectTransactionsBulk } from '../../services/transaction.service';
 
 const OperationsAValider = () => {
   usePageTitle('Opérations à valider');
@@ -52,7 +53,16 @@ const OperationsAValider = () => {
   const [selectedTransactionForReject, setSelectedTransactionForReject] = useState(null);
   const [motifRejet, setMotifRejet] = useState('');
 
-  const { isDesktop } = useScreenType();
+  // Sélection multiple pour actions en masse
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isBulkApproveDialogOpen, setIsBulkApproveDialogOpen] = useState(false);
+  const [isBulkRejectDialogOpen, setIsBulkRejectDialogOpen] = useState(false);
+  const [bulkObservations, setBulkObservations] = useState('');
+  const [bulkMotifRejet, setBulkMotifRejet] = useState('');
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [pendingTransactions]);
   const dateFormat = useDateFormat();
 
   // Charger les transactions en attente
@@ -174,10 +184,7 @@ const OperationsAValider = () => {
         return;
       }
 
-      await approveTransaction(selectedTransactionForApprove._id, {
-        approuveurId: userId,
-        observations: observations || '',
-      }, token);
+      await approveTransactionsBulk([selectedTransactionForApprove._id], observations || '', token);
 
       toast.success('Transaction approuvée');
       await refreshPendingTransactions();
@@ -224,10 +231,7 @@ const OperationsAValider = () => {
         return;
       }
 
-      await rejectTransaction(selectedTransactionForReject._id, {
-        approuveurId: userId,
-        motifRejet: motifRejet,
-      }, token);
+      await rejectTransactionsBulk([selectedTransactionForReject._id], motifRejet, token);
 
       toast.success('Transaction rejetée');
       await refreshPendingTransactions();
@@ -240,6 +244,87 @@ const OperationsAValider = () => {
     } finally {
       setActionLoading(false);
       setActionTransactionId(null);
+    }
+  };
+
+  // Actions en masse
+  const toggleSelectTransaction = (id) => {
+    setSelectedIds((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
+  };
+
+  const toggleSelectAll = () => {
+    const pendingIds = pendingTransactions.map((t) => t._id);
+    setSelectedIds((current) => (current.length === pendingIds.length ? [] : pendingIds));
+  };
+
+  const allSelected = pendingTransactions.length > 0 && pendingTransactions.every((t) => selectedIds.includes(t._id));
+
+  const handleBulkApprove = async () => {
+    if (selectedIds.length === 0) return;
+    setActionLoading(true);
+    try {
+      let userId = user?._id;
+      if (!userId) {
+        const profile = await getProfile();
+        userId = profile?._id || profile?.id;
+      }
+      const token = getAccessToken();
+      if (!token) {
+        toast.error('Token d\'authentification manquant');
+        return;
+      }
+      const result = await approveTransactionsBulk(selectedIds, bulkObservations || '', token);
+      const errors = Array.isArray(result?.errors) ? result.errors : [];
+      if (result?.status === 'success') toast.success(result?.message || 'Transactions approuvées');
+      else if (result?.status === 'partial_success') {
+        toast.warning(result?.message || `${errors.length} échec(s)`);
+        errors.slice(0, 3).forEach((e) => toast.error(e?.reason || 'Échec'));
+      } else {
+        toast.error(result?.message || 'Aucune transaction approuvée');
+        errors.slice(0, 3).forEach((e) => toast.error(e?.reason || 'Échec'));
+      }
+      await refreshPendingTransactions();
+      setSelectedIds([]);
+      setIsBulkApproveDialogOpen(false);
+      setBulkObservations('');
+    } catch (err) {
+      toast.error(getTransactionErrorMessage(err, 'Impossible d\'approuver les transactions.'));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedIds.length === 0) return;
+    if (!bulkMotifRejet.trim()) {
+      toast.error('Le motif du rejet est obligatoire');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        toast.error('Token d\'authentification manquant');
+        return;
+      }
+      const result = await rejectTransactionsBulk(selectedIds, bulkMotifRejet, token);
+      const errors = Array.isArray(result?.errors) ? result.errors : [];
+      if (result?.status === 'success') toast.success(result?.message || 'Transactions rejetées');
+      else if (result?.status === 'partial_success') {
+        toast.warning(result?.message || `${errors.length} échec(s)`);
+        errors.slice(0, 3).forEach((e) => toast.error(e?.reason || 'Échec'));
+      } else {
+        toast.error(result?.message || 'Aucune transaction rejetée');
+        errors.slice(0, 3).forEach((e) => toast.error(e?.reason || 'Échec'));
+      }
+      await refreshPendingTransactions();
+      setSelectedIds([]);
+      setIsBulkRejectDialogOpen(false);
+      setBulkMotifRejet('');
+    } catch (err) {
+      toast.error(getTransactionErrorMessage(err, 'Impossible de rejeter les transactions.'));
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -260,6 +345,26 @@ const OperationsAValider = () => {
         </div>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="flex flex-col gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 text-sm font-medium text-violet-900">
+            <Badge className="bg-violet-600 text-white">{selectedIds.length}</Badge>
+            <span>opération(s) sélectionnée(s)</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" className="bg-white border-violet-200 text-violet-700 hover:bg-violet-100" onClick={() => { setBulkObservations(''); setIsBulkApproveDialogOpen(true); }}>
+              Approuver la sélection
+            </Button>
+            <Button size="sm" variant="outline" className="bg-white border-red-200 text-red-600 hover:bg-red-50" onClick={() => { setBulkMotifRejet(''); setIsBulkRejectDialogOpen(true); }}>
+              Rejeter la sélection
+            </Button>
+            <Button size="sm" variant="ghost" className="text-neutral-600 hover:text-neutral-900" onClick={() => setSelectedIds([])}>
+              Annuler
+            </Button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <Card className="border-neutral-200 bg-white p-6">
           <div className="flex justify-center"><Loader message="Chargement..." /></div>
@@ -272,6 +377,10 @@ const OperationsAValider = () => {
               transactions={pendingTransactions} 
               isDesktop={isDesktop} 
               dateFormat={dateFormat}
+              selectedIds={selectedIds}
+              allSelected={allSelected}
+              onToggleSelect={toggleSelectTransaction}
+              onToggleSelectAll={toggleSelectAll}
               onApprove={handleOpenApproveDialog}
               onReject={handleOpenRejectDialog}
               actionLoading={actionLoading}
@@ -401,13 +510,78 @@ const OperationsAValider = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog d'approbation en masse */}
+      <Dialog open={isBulkApproveDialogOpen} onOpenChange={setIsBulkApproveDialogOpen}>
+        <DialogContent className="sm:max-w-106.25">
+          <DialogHeader>
+            <DialogTitle>Approuver la sélection</DialogTitle>
+            <DialogDescription>
+              {selectedIds.length} opération(s) sélectionnée(s)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="bulkObservations">Observations (optionnel)</Label>
+              <Input
+                id="bulkObservations"
+                placeholder="Ajouter des observations"
+                value={bulkObservations}
+                onChange={(e) => setBulkObservations(e.target.value)}
+                className="border-neutral-300"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" status="inactive" onClick={() => setIsBulkApproveDialogOpen(false)} disabled={actionLoading}>
+              Annuler
+            </Button>
+            <Button variant="default" status={actionLoading ? "loading" : "active"} onClick={handleBulkApprove} disabled={actionLoading}>
+              {actionLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Approuver
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de rejet en masse */}
+      <Dialog open={isBulkRejectDialogOpen} onOpenChange={setIsBulkRejectDialogOpen}>
+        <DialogContent className="sm:max-w-106.25">
+          <DialogHeader>
+            <DialogTitle>Rejeter la sélection</DialogTitle>
+            <DialogDescription>
+              {selectedIds.length} opération(s) sélectionnée(s)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="bulkMotifRejet" required>Motif du rejet</Label>
+              <Input
+                id="bulkMotifRejet"
+                placeholder="Veuillez indiquer le motif du rejet"
+                value={bulkMotifRejet}
+                onChange={(e) => setBulkMotifRejet(e.target.value)}
+                className="border-neutral-300"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" status="inactive" onClick={() => setIsBulkRejectDialogOpen(false)} disabled={actionLoading}>
+              Annuler
+            </Button>
+            <Button variant="destructive" status={actionLoading ? "loading" : (bulkMotifRejet.trim() ? "active" : "inactive")} onClick={handleBulkReject} disabled={actionLoading || !bulkMotifRejet.trim()}>
+              {actionLoading && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Confirmer le rejet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
 
 export default OperationsAValider;
 
-function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat, onApprove, onReject, actionLoading, actionTransactionId }) {
+function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat, selectedIds = [], allSelected = false, onToggleSelect, onToggleSelectAll, onApprove, onReject, actionLoading, actionTransactionId }) {
   if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
   if (!transactions || transactions.length === 0) return <div className="p-8 text-center text-neutral-400">Aucune opération à valider</div>;
 
@@ -417,6 +591,9 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <Checkbox checked={allSelected} onCheckedChange={onToggleSelectAll} aria-label="Sélectionner toutes les opérations" />
+              </TableHead>
               <TableHead className="text-xs text-neutral-600">N° Transaction</TableHead>
               <TableHead className="text-xs text-neutral-600">Produit</TableHead>
               <TableHead className="text-xs text-neutral-600">Type</TableHead>
@@ -443,7 +620,10 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
               const isActioning = actionLoading && actionTransactionId === item._id;
 
               return (
-                <TableRow key={item._id || item.id || idx}>
+                <TableRow key={item._id || item.id || idx} className={selectedIds.includes(item._id) ? 'bg-violet-50/60' : undefined}>
+                  <TableCell>
+                    <Checkbox checked={selectedIds.includes(item._id)} onCheckedChange={() => onToggleSelect?.(item._id)} aria-label="Sélectionner l'opération" />
+                  </TableCell>
                   <TableCell className="text-sm font-mono truncate max-w-xs">{item.transactionNumber || '-'}</TableCell>
                   <TableCell className="text-sm truncate max-w-xs">{productName}</TableCell>
                   <TableCell className="text-sm"><Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{typeLabel || item.type || '-'}</Badge></TableCell>
@@ -501,10 +681,12 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
         const isActioning = actionLoading && actionTransactionId === item._id;
 
         return (
-          <Card key={item._id || item.id || idx} className="p-4">
+          <Card key={item._id || item.id || idx} className={`p-4 ${selectedIds.includes(item._id) ? 'border-violet-300 bg-violet-50/60' : ''}`}>
             <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-neutral-900 truncate">{productName}</div>
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                <Checkbox checked={selectedIds.includes(item._id)} onCheckedChange={() => onToggleSelect?.(item._id)} aria-label="Sélectionner l'opération" className="mt-1" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-neutral-900 truncate">{productName}</div>
                 <div className="text-xs text-neutral-500">N°: {item.transactionNumber || '-'}</div>
                 <div className="mt-2 flex flex-wrap gap-2 text-sm text-neutral-600">
                   <div>Quantité: {quantite ? formatThousands(quantite) : '-'}</div>
@@ -535,6 +717,7 @@ function PendingTransactionsTable({ loading, transactions, isDesktop, dateFormat
                   </div>
                 )}
               </div>
+            </div>
               <div className="flex flex-col items-end gap-2">
                 <Badge className={`text-xs ${badgeClass} px-2 py-0.5 rounded`}>{typeLabel || item.type || '-'}</Badge>
                 <Badge className={`text-xs ${statusClass} px-2 py-0.5 rounded`}>{statusLabel || item.status || '-'}</Badge>

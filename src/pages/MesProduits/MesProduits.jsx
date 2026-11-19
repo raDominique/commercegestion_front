@@ -21,13 +21,13 @@ import usePageTitle from '../../utils/usePageTitle.jsx';
 import useScreenType from '../../utils/useScreenType.jsx';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
-import { getMyProducts, getProductById, createProduct, updateProduct, deleteProduct } from '../../services/product.service';
+import { getMyProducts, getProductById, createProduct, updateProduct, deleteProduct, createProductsBulk } from '../../services/product.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '../../components/ui/dialog';
 import { Label } from '../../components/ui/label';
 import { getAllCpcSelect } from '../../services/cpc.service';
 import { getAllUsersSelect } from '../../services/user.service';
-import { depositFirstStock } from '../../services/stocks_move.service.js';
+import { depositFirstStock, depositStocksBulk } from '../../services/stocks_move.service.js';
 import { getMySites } from '../../services/site.service';
 import { useAuth } from '../../context/AuthContext';
 import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBanner.jsx';
@@ -37,6 +37,7 @@ import { UserAutocomplete } from '../../components/commons/UserAutocomplete';
 const MesProduits = () => {
   // Gestion des erreurs pour le formulaire dépôt
   const [depositErrors, setDepositErrors] = useState({});
+  const [extraDeposits, setExtraDeposits] = useState([]);
   const { user } = useAuth();
   // Options CPC pour édition
   const [editCpcOptions, setEditCpcOptions] = useState([]);
@@ -85,15 +86,35 @@ const MesProduits = () => {
     if (Object.keys(errors).length > 0) return;
     const token = localStorage.getItem('token');
     try {
-      await depositFirstStock({
+      const mainItem = {
         ...depositForm,
         ayant_droit: depositForm.detentaire, // Synchroniser ayant_droit avec detentaire
         productId: depositProductId || depositForm.productId,
         quantite: Number(depositForm.quantite),
         prixUnitaire: Number(depositForm.prixUnitaire),
-      }, token);
-      const successMessage = 'Dépôt effectué';
-      toast.success(successMessage);
+      };
+      const extraItems = extraDeposits.map((row) => ({
+        siteOrigineId: row.siteOrigineId,
+        siteDestinationId: row.siteDestinationId,
+        productId: row.productId || depositProductId || depositForm.productId,
+        quantite: Number(row.quantite),
+        prixUnitaire: Number(row.prixUnitaire),
+        detentaire: row.detentaire || depositForm.detentaire,
+        ayant_droit: row.detentaire || depositForm.detentaire,
+        observations: row.observations || '',
+      }));
+      const items = [mainItem, ...extraItems].filter((it) => it.siteOrigineId || it.siteDestinationId);
+      const result = await depositStocksBulk(items, token);
+      const errors = Array.isArray(result?.errors) ? result.errors : [];
+      if (result?.status === 'success') {
+        toast.success(result?.message || 'Dépôt effectué');
+      } else if (result?.status === 'partial_success') {
+        toast.warning(result?.message || `${errors.length} échec(s)`);
+        errors.slice(0, 3).forEach((err) => toast.error(err?.reason || 'Échec'));
+      } else {
+        toast.error(result?.message || 'Erreur lors du dépôt');
+        errors.slice(0, 3).forEach((err) => toast.error(err?.reason || 'Échec'));
+      }
       setDepositModalOpen(false);
       setDepositForm({
         siteOrigineId: '',
@@ -105,6 +126,7 @@ const MesProduits = () => {
         ayant_droit: '',
         observations: '',
       });
+      setExtraDeposits([]);
       setDepositErrors({});
       fetchProducts();
     } catch (err) {
@@ -208,6 +230,7 @@ const MesProduits = () => {
         productHauteur: '',
         image: null,
       });
+      setExtraProducts([]);
       fetchProducts();
     } catch (err) {
       toast.error("Erreur lors de la modification du produit");
@@ -268,7 +291,7 @@ const MesProduits = () => {
     productHauteur: '',
     image: null,
   });
-  // Complétion auto
+  const [extraProducts, setExtraProducts] = useState([]);
   const handleCpcSelect = (id, nom, code) => {
     setForm(f => ({
       ...f,
@@ -289,7 +312,7 @@ const MesProduits = () => {
     const token = localStorage.getItem('token');
     setAdding(true);
     try {
-      await createProduct({
+      const result = await createProductsBulk([{
         // productState: form.productState,
         codeCPC: form.codeCPC,
         productVolume: form.productVolume,
@@ -301,8 +324,11 @@ const MesProduits = () => {
         categoryId: form.categoryId,
         productName: form.productName,
         productHauteur: form.productHauteur,
-      }, form.image, token);
-      toast.success('Produit ajouté');
+      }, ...extraProducts.map((row) => ({ codeCPC: row.codeCPC, productVolume: row.productVolume, productLargeur: row.productLargeur, productPoids: row.productPoids, productCategory: row.productCategory, productDescription: row.productDescription, productLongueur: row.productLongueur, categoryId: row.categoryId, productName: row.productName, productHauteur: row.productHauteur })), ], [form.image, ...extraProducts.map((r) => r.image || null)], token);
+      const errors = Array.isArray(result?.errors) ? result.errors : [];
+      if (result?.status === 'success') toast.success(result?.message || 'Produit ajouté');
+      else if (result?.status === 'partial_success') { toast.warning(result?.message || `${errors.length} echec(s)`); errors.slice(0,3).forEach((e) => toast.error(e?.reason || 'Echec')); }
+      else { toast.error(result?.message || "Erreur lors de l'ajout du produit"); errors.slice(0,3).forEach((e) => toast.error(e?.reason || "Echec")); }
       setAddModalOpen(false);
       setForm({
         // productState: '',
@@ -318,6 +344,7 @@ const MesProduits = () => {
         productHauteur: '',
         image: null,
       });
+      setExtraProducts([]);
       fetchProducts();
     } catch (err) {
       toast.error('Erreur lors de l\'ajout du produit');
@@ -606,7 +633,7 @@ const MesProduits = () => {
             </p>
           </div>
           <div>
-            <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
+            <Dialog open={addModalOpen} onOpenChange={(open) => { setAddModalOpen(open); if (!open) setExtraProducts([]); }}>
               <DialogTrigger asChild>
                 <Button
                   status="active"
@@ -743,6 +770,75 @@ const MesProduits = () => {
                         <Input name="categoryId" value={form.categoryId} onChange={handleInputChange} required placeholder="65dcf1234567890abcdef123" className="border-neutral-300" readOnly />
                       </div> */}
                   </div>
+                  {/* Produits supplémentaires */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-neutral-700">Produits supplémentaires</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="border-dashed border-violet-300 text-violet-700 hover:bg-violet-50"
+                        onClick={() => setExtraProducts((current) => [...current, { codeCPC: '', productVolume: '', productLargeur: '', productPoids: '', productCategory: '', productDescription: '', productLongueur: '', categoryId: '', productName: '', productHauteur: '', image: null }])}
+                      >
+                        <AddIcon className="w-4 h-4 mr-2" /> Ajouter un autre produit
+                      </Button>
+                    </div>
+                    {extraProducts.map((row, index) => (
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border border-neutral-200 bg-neutral-50/50 p-4">
+                        <div className="space-y-2">
+                          <Label>Code CPC</Label>
+                          <Input value={row.codeCPC} onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, codeCPC: e.target.value } : r))} placeholder="01111" className="border-neutral-300 bg-white" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Catégorie CPC</Label>
+                          <Input value={row.productCategory} onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, productCategory: e.target.value } : r))} placeholder="Catégorie" className="border-neutral-300 bg-white" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>ID Catégorie</Label>
+                          <Input value={row.categoryId} onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, categoryId: e.target.value } : r))} placeholder="ID catégorie" className="border-neutral-300 bg-white" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Nom du produit</Label>
+                          <Input value={row.productName} onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, productName: e.target.value } : r))} placeholder="Nom du produit" className="border-neutral-300 bg-white" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Volume</Label>
+                          <Input type="number" step="any" value={row.productVolume} onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, productVolume: e.target.value } : r))} placeholder="Volume" className="border-neutral-300 bg-white" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Largeur</Label>
+                          <Input type="number" step="any" value={row.productLargeur} onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, productLargeur: e.target.value } : r))} placeholder="Largeur" className="border-neutral-300 bg-white" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Poids</Label>
+                          <Input type="number" step="any" value={row.productPoids} onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, productPoids: e.target.value } : r))} placeholder="Poids" className="border-neutral-300 bg-white" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Longueur</Label>
+                          <Input type="number" step="any" value={row.productLongueur} onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, productLongueur: e.target.value } : r))} placeholder="Longueur" className="border-neutral-300 bg-white" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Hauteur</Label>
+                          <Input type="number" step="any" value={row.productHauteur} onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, productHauteur: e.target.value } : r))} placeholder="Hauteur" className="border-neutral-300 bg-white" />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <Label>Description</Label>
+                          <Input value={row.productDescription} onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, productDescription: e.target.value } : r))} placeholder="Description" className="border-neutral-300 bg-white" />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <Label>Image</Label>
+                          <div className="flex gap-2">
+                            <Input type="file" accept="image/*" onChange={(e) => setExtraProducts((current) => current.map((r, i) => i === index ? { ...r, image: e.target.files?.[0] || null } : r))} className="border-neutral-300 bg-white flex-1" />
+                            <Button type="button" variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => setExtraProducts((current) => current.filter((_, i) => i !== index))}>
+                              <DeleteIcon className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
                   <div className="flex justify-end gap-2 mt-4">
                     <Button variant="outline" type="button" status="inactive" onClick={() => setAddModalOpen(false)} disabled={adding}>Annuler</Button>
                     <Button variant="default" status={adding ? "loading" : "active"} color="default" type="submit" disabled={adding}>
@@ -949,7 +1045,7 @@ const MesProduits = () => {
       </Dialog>
 
       {/* Modal dépôt */}
-      <Dialog open={depositModalOpen} onOpenChange={setDepositModalOpen}>
+      <Dialog open={depositModalOpen} onOpenChange={(open) => { setDepositModalOpen(open); if (!open) setExtraDeposits([]); }}>
         <DialogContent className="bg-white border border-neutral-200">
           <DialogHeader>
             <DialogTitle>Déposer le produit</DialogTitle>
@@ -1119,9 +1215,55 @@ const MesProduits = () => {
                 <Input name="observations" value={depositForm.observations} onChange={e => setDepositForm(f => ({ ...f, observations: e.target.value }))} placeholder="Observations (facultatif)" className="border-neutral-300" />
               </div>
             </div>
+
+            {/* Dépôts supplémentaires */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-neutral-700">Dépôts supplémentaires</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-dashed border-violet-300 text-violet-700 hover:bg-violet-50"
+                  onClick={() => setExtraDeposits((current) => [...current, { siteOrigineId: '', siteDestinationId: '', quantite: '', prixUnitaire: '', detentaire: '', observations: '' }])}
+                >
+                  <AddIcon className="w-4 h-4 mr-2" /> Ajouter un autre dépôt
+                </Button>
+              </div>
+              {extraDeposits.map((row, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-lg border border-neutral-200 bg-neutral-50/50 p-4">
+                  <div className="space-y-2">
+                    <Label>Site d'origine (ID)</Label>
+                    <Input value={row.siteOrigineId} onChange={(e) => setExtraDeposits((current) => current.map((r, i) => i === index ? { ...r, siteOrigineId: e.target.value } : r))} placeholder="ID site d'origine" className="border-neutral-300 bg-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Site de destination (ID)</Label>
+                    <Input value={row.siteDestinationId} onChange={(e) => setExtraDeposits((current) => current.map((r, i) => i === index ? { ...r, siteDestinationId: e.target.value } : r))} placeholder="ID site de destination" className="border-neutral-300 bg-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Quantité</Label>
+                    <Input type="number" min="0" step="any" value={row.quantite} onChange={(e) => setExtraDeposits((current) => current.map((r, i) => i === index ? { ...r, quantite: e.target.value } : r))} placeholder="Quantité" className="border-neutral-300 bg-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Prix unitaire</Label>
+                    <Input type="number" min="0" step="any" value={row.prixUnitaire} onChange={(e) => setExtraDeposits((current) => current.map((r, i) => i === index ? { ...r, prixUnitaire: e.target.value } : r))} placeholder="Prix unitaire" className="border-neutral-300 bg-white" />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Observations</Label>
+                    <div className="flex gap-2">
+                      <Input value={row.observations} onChange={(e) => setExtraDeposits((current) => current.map((r, i) => i === index ? { ...r, observations: e.target.value } : r))} placeholder="Observations (facultatif)" className="border-neutral-300 bg-white flex-1" />
+                      <Button type="button" variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => setExtraDeposits((current) => current.filter((_, i) => i !== index))}>
+                        <DeleteIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <div className="flex justify-end gap-2 mt-4">
-              <Button variant="outline" type="button" status="inactive" onClick={() => setDepositModalOpen(false)}>Annuler</Button>
-              <Button variant="default" status="active" color="default" type="submit">Déposer</Button>
+              <Button variant="outline" type="button" status="inactive" onClick={() => { setDepositModalOpen(false); setExtraDeposits([]); }}>Annuler</Button>
+              <Button variant="default" status="active" color="default" type="submit">Déposer {extraDeposits.length > 0 ? `(${extraDeposits.length + 1})` : ''}</Button>
             </div>
           </form>
         </DialogContent>

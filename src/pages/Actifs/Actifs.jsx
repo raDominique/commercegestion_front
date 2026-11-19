@@ -6,7 +6,7 @@ import { Loader } from '../../components/ui/loader';
 import { getActifs } from '../../services/ledger.service';
 import { getActifsByIds } from '../../services/actifs.service';
 import { getProfile } from '../../services/auth.service';
-import { initializeTransaction } from '../../services/transaction.service';
+import { initializeTransaction, createInitializationsBulk } from '../../services/transaction.service';
 import { addShopItem, getMyShopItems, deleteShopItem, getShopItem } from '../../services/shop-available.service';
 import { selectAllProduits } from '../../services/product.service';
 import { getMySites } from '../../services/site.service';
@@ -361,7 +361,13 @@ const Actifs = () => {
 				observations: stockForm.observations,
 			};
 
-			await initializeTransaction(params, user?.token || localStorage.getItem('authToken'));
+			await createInitializationsBulk([{
+				productId: selectedActifForStock.productId,
+				siteOrigineId,
+				quantite: stockForm.quantite,
+				prixUnitaire: selectedActifForStock.prixUnitaire || 0,
+				observations: stockForm.observations,
+			}], user?.token || localStorage.getItem('authToken'));
 			toast.success('Stock ajouté');
 			setStockModalOpen(false);
 			setStockForm({ quantite: '', observations: '' });
@@ -508,7 +514,13 @@ const Actifs = () => {
 				observations: '',
 			};
 
-			await initializeTransaction(params, user?.token || localStorage.getItem('authToken'));
+			await createInitializationsBulk([{
+				productId: addProductForm.productId,
+				siteOrigineId: addProductForm.siteId,
+				quantite: addProductForm.quantite,
+				prixUnitaire: addProductForm.prixUnitaire,
+				observations: '',
+			}], user?.token || localStorage.getItem('authToken'));
 			toast.success('Opération hors plateforme effectuée');
 			setAddProductModalOpen(false);
 			setAddProductForm({ productId: '', siteId: '', quantite: '', prixUnitaire: '' });

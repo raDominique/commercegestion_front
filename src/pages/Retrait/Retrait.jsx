@@ -10,7 +10,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { getUserTransactions, returnStockToAMember } from '../../services/transaction.service';
+import { getUserTransactions, returnStockToAMember, createReturnsBulk } from '../../services/transaction.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getUserByEmail, getUsers } from '../../services/user.service';
 import { getMySites, getSitesByUser } from '../../services/site.service';
@@ -298,7 +298,7 @@ const Retrait = () => {
 				return;
 			}
 
-			const response = await returnStockToAMember({
+			const result = await createReturnsBulk([{
 				detentaire: withdrawalForm.detentaire,
 				ayant_droit: ayantDroitId,
 				productId: withdrawalForm.productId,
@@ -307,7 +307,7 @@ const Retrait = () => {
 				quantite: Number(withdrawalForm.quantite),
 				prixUnitaire: withdrawalForm.prixUnitaire !== '' ? Number(withdrawalForm.prixUnitaire) : null,
 				observations: withdrawalForm.observations || '',
-			}, token);
+			}], token);
 			setWithdrawalForm({
 				actifId: '',
 				productId: '',
