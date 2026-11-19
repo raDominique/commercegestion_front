@@ -10,7 +10,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import useScreenType from '../../utils/useScreenType';
 import { Badge } from '../../components/ui/badge';
 import { formatThousands } from '../../utils/formatNumber';
-import { getUserTransactions, returnStockToAMember, createReturnsBulk } from '../../services/transaction.service';
+import { getUserTransactions, returnStockToAMember, createReturnsBulk, getWithdrawable, withdrawAll } from '../../services/transaction.service';
 import { getFullMediaUrl } from '../../services/media.service';
 import { getUserByEmail, getUsers } from '../../services/user.service';
 import { getMySites, getSitesByUser } from '../../services/site.service';
@@ -29,9 +29,15 @@ import { getTransactionErrorMessage } from '../../utils/transactionErrors.js';
 
 const Retrait = () => {
 	const { user } = useAuth();
+	const currentUserId = String(user?._id || user?.id || user?.sub || user?.userId || '');
 	const dateFormat = useDateFormat();
 	const { isDesktop } = useScreenType();
 	usePageTitle('Retrait');
+
+	const [activeTab, setActiveTab] = useState('list');
+	const [integralSelf, setIntegralSelf] = useState(true);
+	const [integralHolderId, setIntegralHolderId] = useState('');
+	const [integralHolderCode, setIntegralHolderCode] = useState('');
 
 	// États pour l'historique
 	const [passifs, setPassifs] = useState([]);
@@ -45,6 +51,33 @@ const Retrait = () => {
 	const [productsOnSite, setProductsOnSite] = useState([]);
 	const [maxWithdrawalQty, setMaxWithdrawalQty] = useState(null);
 
+	useEffect(() => {
+		if (activeTab === 'integral') {
+			setIntegralHolderId(integralSelf ? currentUserId : integralHolderId);
+			getMySites({ limit: 100, page: 1 }).then((res) => {
+				const data = Array.isArray(res?.data?.data) ? res.data.data : Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+				setIntegralDestinationSites(data);
+				if (data.length && !integralSiteDestinationId) setIntegralSiteDestinationId(data[0]._id);
+			}).catch(() => {});
+		}
+	}, [activeTab]);
+	useEffect(() => {
+		if (integralSelf) setIntegralHolderId(currentUserId);
+	}, [integralSelf, currentUserId]);
+	const [integralSiteId, setIntegralSiteId] = useState('');
+	const [integralProductId, setIntegralProductId] = useState('');
+	const [integralSiteDestinationId, setIntegralSiteDestinationId] = useState('');
+	const [integralObservations, setIntegralObservations] = useState('');
+	const [integralPreview, setIntegralPreview] = useState(null);
+	const [integralLoading, setIntegralLoading] = useState(false);
+	const [integralExecuting, setIntegralExecuting] = useState(false);
+	const [integralDestinationSites, setIntegralDestinationSites] = useState([]);
+
+	useEffect(() => {
+		if (activeTab === 'integral' && maxWithdrawalQty != null) {
+			setWithdrawalForm((f) => ({ ...f, quantite: String(maxWithdrawalQty) }));
+		}
+	}, [activeTab, maxWithdrawalQty]);
 	const [withdrawalForm, setWithdrawalForm] = useState({
 		actifId: '',
 		productId: '',
@@ -344,10 +377,11 @@ const Retrait = () => {
 				<UserNotValidatedBanner />
 			) : (
 				<>
-				<Tabs defaultValue="list">
+				<Tabs value={activeTab} onValueChange={setActiveTab}>
 					<TabsList>
 						<TabsTrigger value="list" title="Historique de mes retraits">Historique de mes retraits</TabsTrigger>
 						<TabsTrigger value="form" title="Formulaire de retrait">Formulaire de retrait</TabsTrigger>
+						<TabsTrigger value="integral" title="Retrait intégral">Retrait intégral</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="list" className="space-y-6">
@@ -667,7 +701,7 @@ const Retrait = () => {
 												<Label required>5. Quantité (Stock disponible: {formatThousands(maxWithdrawalQty || 0)})</Label>
 												<Input
 													name="quantite"
-												value={withdrawalForm.quantite || ''}
+												value={activeTab === 'integral' ? (maxWithdrawalQty ?? withdrawalForm.quantite) : (withdrawalForm.quantite || '')}
 													onChange={e => {
 														const qty = Number(e.target.value);
 														if (qty <= (maxWithdrawalQty || 0) || e.target.value === '') {
@@ -681,6 +715,7 @@ const Retrait = () => {
 												min="0"
 												step="any"
 												max={maxWithdrawalQty || undefined}
+																														readOnly={activeTab === 'integral'}
 												/>
 											</div>
 										)}
@@ -737,6 +772,187 @@ const Retrait = () => {
 										</Button>
 									</div>
 								</form>
+							</Card>
+						</TabsContent>
+						<TabsContent value="integral">
+							<Card className="border-neutral-200 bg-white">
+								<div className="px-4 pt-4">
+									<h2 className="text-lg font-semibold text-neutral-900">Retrait intégral</h2>
+									<p className="text-sm text-neutral-600">Retire tout ce qui est retirable chez un détenteur, en une action.</p>
+								</div>
+								<div className="space-y-4 p-4">
+									<div className="flex items-center gap-2 mb-2">
+										<input type="checkbox" id="integralSelf" checked={integralSelf} onChange={(e) => {
+											setIntegralSelf(e.target.checked);
+											if (e.target.checked) {
+												setIntegralHolderCode(currentUserId);
+												setIntegralHolderId(currentUserId);
+												setMemberNotFound(false);
+												const token = getAccessToken();
+												setIntegralLoading(true);
+												setIntegralPreview(null);
+												getWithdrawable(currentUserId, {}, token).then((res) => setIntegralPreview(res)).catch(() => {}).finally(() => setIntegralLoading(false));
+											} else {
+												setIntegralHolderCode('');
+												setIntegralHolderId('');
+												setIntegralPreview(null);
+											}
+										}} />
+										<label htmlFor="integralSelf" className="text-sm text-neutral-700">Auto-retrait (mon propre stock)</label>
+									</div>
+									{!integralSelf && (
+									<div className="space-y-2">
+										<Label required>Détenteur</Label>
+										<div className={`rounded-md p-2 ${memberNotFound ? 'border border-red-400 bg-red-50' : ''}`}>
+											<MemberIdLookupInput
+												placeholder="ID du membre (8 caractères) ou e-mail"
+												value={integralHolderCode}
+												emailLookupLoading={memberLookupLoading}
+												searchMode={memberSearchMode}
+												onSearchModeChange={setMemberSearchMode}
+												onSearch={(value, mode) => {
+													const inputValue = String(value || '').trim();
+													if (mode === 'email') {
+														const search = inputValue.toLowerCase();
+														memberSearchCodeRef.current = search;
+														setMemberNotFound(false);
+														setIntegralHolderId('');
+														setIntegralPreview(null);
+														setIntegralHolderCode(value);
+														resolveMemberByEmail(search).then(found => {
+															if (memberSearchCodeRef.current !== search) return;
+															if (!found) return setMemberNotFound(true);
+															const foundName = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || '');
+															setIntegralHolderId(found._id);
+															setIntegralHolderCode(found.userId || inputValue);
+															// auto-fetch preview
+															const tk = getAccessToken(); setIntegralLoading(true); setIntegralPreview(null); getWithdrawable(found._id, {}, tk).then((res) => setIntegralPreview(res)).catch(() => toast.error('Erreur aperçu')).finally(() => setIntegralLoading(false));
+														});
+														return;
+													}
+													const code = inputValue.toUpperCase();
+													if (code.length !== 8) return;
+													memberSearchCodeRef.current = code;
+													setMemberNotFound(false);
+													setIntegralHolderId('');
+													setIntegralPreview(null);
+													setIntegralHolderCode(code);
+													resolveMemberByCode(code).then(found => {
+														if (memberSearchCodeRef.current !== code) return;
+														if (!found) return setMemberNotFound(true);
+														const foundName = ([found.userName, found.userFirstname].filter(Boolean).join(' ') || found.userNickName || '');
+														setIntegralHolderId(found._id);
+														// auto-fetch preview
+														const tk = getAccessToken(); setIntegralLoading(true); setIntegralPreview(null); getWithdrawable(found._id, {}, tk).then((res) => setIntegralPreview(res)).catch(() => toast.error('Erreur aperçu')).finally(() => setIntegralLoading(false));
+													});
+												}}
+												onChange={e => {
+													const rawValue = e.target.value;
+													const value = memberSearchMode === 'email' ? rawValue : rawValue.toUpperCase();
+													const code = value.trim();
+													memberSearchCodeRef.current = memberSearchMode === 'email' ? code.toLowerCase() : code;
+													setMemberNotFound(false);
+													setIntegralHolderCode(value);
+													setIntegralHolderId('');
+													setIntegralPreview(null);
+												}}
+											/>
+										</div>
+										{memberNotFound && <p className="text-xs text-red-600">Membre introuvable.</p>}
+									</div>
+									)}
+
+									{integralLoading && <div className="flex justify-center"><Loader message="Chargement..." /></div>}
+
+									{integralPreview && (
+										<div className="space-y-4">
+											{Array.isArray(integralPreview.data) && integralPreview.data.length > 0 && (
+												<div className="overflow-x-auto">
+													<Table>
+														<TableHeader>
+															<TableRow>
+																<TableHead className="text-xs text-neutral-600">Produit</TableHead>
+																<TableHead className="text-xs text-neutral-600">Site d'origine</TableHead>
+																<TableHead className="text-xs text-neutral-600 text-right">Disponible</TableHead>
+																<TableHead className="text-xs text-neutral-600 text-right">Solde déposé</TableHead>
+																<TableHead className="text-xs text-neutral-600 text-right">Quantité retirée</TableHead>
+															</TableRow>
+														</TableHeader>
+														<TableBody>
+															{integralPreview.data.map((pos, idx) => (
+																<TableRow key={pos.actifId || idx}>
+																	<TableCell className="text-sm">{pos.productName || pos.productId}</TableCell>
+																	<TableCell className="text-sm">{pos.siteName || pos.siteOrigineId}</TableCell>
+																	<TableCell className="text-sm text-right">{pos.disponible}</TableCell>
+																	<TableCell className="text-sm text-right">{pos.soldeDepose == null ? '-' : pos.soldeDepose}</TableCell>
+																	<TableCell className="text-sm text-right">{pos.quantiteRetirable}</TableCell>
+																</TableRow>
+															))}
+														</TableBody>
+													</Table>
+												</div>
+											)}
+											{Array.isArray(integralPreview.exclues) && integralPreview.exclues.length > 0 && (
+												<div className="space-y-1">
+													<p className="text-xs font-medium text-neutral-500">Positions exclues :</p>
+													{integralPreview.exclues.map((e, idx) => (
+														<p key={idx} className="text-xs text-neutral-400">{e.productName} — {e.motif}</p>
+													))}
+												</div>
+											)}
+											{(!integralPreview.data || integralPreview.data.length === 0) && (
+												<p className="text-sm text-neutral-500">Aucune position retirable.</p>
+											)}
+											{integralPreview.data && integralPreview.data.length > 0 && (
+												<div className="space-y-4">
+													<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+														<div className="space-y-2">
+															<Label>Site de destination</Label>
+															<Select value={integralSiteDestinationId} onValueChange={setIntegralSiteDestinationId}>
+																<SelectTrigger className="bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700">
+																	<SelectValue placeholder="Site de destination" />
+																</SelectTrigger>
+																<SelectContent>
+																	{integralDestinationSites.map((s) => (
+																		<SelectItem key={s._id} value={s._id}>{s.siteName}</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
+														</div>
+														<div className="space-y-2">
+															<Label>Observations</Label>
+															<Input value={integralObservations} onChange={(e) => setIntegralObservations(e.target.value)} placeholder="Observations (optionnel)" className="border-neutral-300" />
+														</div>
+													</div>
+													<Button type="button" variant="default" color="default" disabled={integralExecuting || !integralSiteDestinationId} onClick={async () => {
+														if (!integralHolderId || !integralSiteDestinationId) { toast.error('Champs requis manquants'); return; }
+														setIntegralExecuting(true);
+														try {
+															const token = getAccessToken();
+															const body = { detentaireId: integralHolderId, siteDestinationId: integralSiteDestinationId };
+															if (integralObservations) body.observations = integralObservations;
+															const result = await withdrawAll(body, token);
+															const errors = Array.isArray(result?.errors) ? result.errors : [];
+															if (result?.status === 'success') toast.success(result?.message || 'Retrait intégral effectué');
+															else if (result?.status === 'partial_success') { toast.warning(result?.message || `${errors.length} échec(s)`); errors.slice(0,3).forEach((e) => toast.error(e?.reason || 'Échec')); }
+															else { toast.error(result?.message || 'Erreur lors du retrait intégral'); errors.slice(0,3).forEach((e) => toast.error(e?.reason || 'Échec')); }
+															setIntegralPreview(null);
+															setIntegralHolderId('');
+															setIntegralHolderCode('');
+															await fetchPassifs();
+														} catch (err) {
+															toast.error(getTransactionErrorMessage(err, 'Erreur lors du retrait intégral'));
+														} finally {
+															setIntegralExecuting(false);
+														}
+													}}>
+														{integralExecuting && <Loader size="sm" className="border-white border-t-transparent shrink-0" />} Retirer tout
+													</Button>
+												</div>
+											)}
+										</div>
+									)}
+								</div>
 							</Card>
 						</TabsContent>
 					</Tabs>

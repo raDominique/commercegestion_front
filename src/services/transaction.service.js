@@ -445,3 +445,18 @@ export const rejectTransactionsBulk = async (ids, motifRejet, token) => {
     });
     return res.data;
 };
+export const getWithdrawable = async (detentaireId, filters = {}, token) => {
+    const params = { detentaireId, ...filters };
+    const response = await axiosInstance.get('/api/v1/transactions/return/withdrawable', {
+        params,
+        headers: { Authorization: token ? `Bearer ${token}` : undefined, accept: 'application/json' },
+    });
+    return response.data;
+};
+
+export const withdrawAll = async (body, token) => {
+    const response = await axiosInstance.post('/api/v1/transactions/return/all', body, {
+        headers: { Authorization: token ? `Bearer ${token}` : undefined, 'Content-Type': 'application/json', accept: 'application/json' },
+    });
+    return response.data;
+};

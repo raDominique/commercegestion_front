@@ -32,6 +32,7 @@ import { approveTransactionsBulk, rejectTransactionsBulk } from '../../services/
 const OperationsAValider = () => {
   usePageTitle('Opérations à valider');
   const { user } = useAuth();
+  const { isDesktop } = useScreenType();
 
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
