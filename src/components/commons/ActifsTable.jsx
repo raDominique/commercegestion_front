@@ -49,8 +49,6 @@ export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, on
               <TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
               <TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
               <TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
-              <TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
-              <TableHead className="text-xs text-neutral-600">Date</TableHead>
               <TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -72,8 +70,6 @@ export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, on
                   <TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
                   <TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
                   <TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell>
-                  <TableCell className="text-sm truncate max-w-xs">{renderPerson(item.ayant_droit || item.ayantDroit)}</TableCell>
-                  <TableCell className="text-sm">{item.dateCreation ? (dateFormat ? dateFormat(item.dateCreation) : item.dateCreation) : '-'}</TableCell>
                   <TableCell className="text-sm text-right">
                     <div className="flex flex-col items-end gap-2">
                       <div className="flex gap-2 justify-end">
