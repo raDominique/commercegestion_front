@@ -397,7 +397,11 @@ export const createReturnsBulk = async (items, token) => {
 };
 
 export const createInitializationsBulk = async (items, token) => {
-    const normalized = Array.isArray(items) ? items : [];
+    const normalized = Array.isArray(items) ? items.map((item) => ({
+        ...item,
+        quantite: Number(item?.quantite),
+        ...(item?.prixUnitaire != null ? { prixUnitaire: Number(item.prixUnitaire) } : {}),
+    })) : [];
     if (normalized.length === 0) throw new Error('items est requis');
     if (normalized.length > 100) throw new Error('Maximum 100 elements par requete');
     const res = await axiosInstance.post('/api/v1/transactions/initialization/bulk', { items: normalized }, {

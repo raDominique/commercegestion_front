@@ -32,12 +32,18 @@ import {
 // Largeur forcée de la colonne Actions — même pattern que Actifs.jsx
 const ACTION_COL_STYLE_LG = { minWidth: '200px', width: '200px' };
 
-const renderPerson = (person) => {
+// Affiche uniquement l'adresse email d'une personne (ayant droit)
+const renderEmail = (person) => {
 	if (!person) return '-';
 	if (typeof person === 'string') return person;
-	const name = person.userNickName || person.userName || person.name || '';
-	const email = person.userEmail || person.email || '';
-	return [name, email].filter(Boolean).join(' · ') || '-';
+	return person.userEmail || person.email || person.userNickName || person.userName || person.name || '-';
+};
+
+// Affiche uniquement le nom d'une personne (sans email)
+const renderName = (person) => {
+	if (!person) return '-';
+	if (typeof person === 'string') return person;
+	return person.userNickName || person.userName || person.name || '-';
 };
 
 // Pour "type": "PASSIF" dont "statut": "APPROVED", on affiche quantiteDisponible
@@ -209,10 +215,10 @@ const Passifs = () => {
 									<div className="flex flex-col gap-y-1 text-xs text-neutral-700 wrap-break-word sm:grid sm:grid-cols-2 sm:gap-x-4">
 										<span className="block min-w-0"><b className="whitespace-nowrap">Quantité :</b> {detailPassif.quantite != null ? formatThousands(detailPassif.quantite) : '-'}</span>
 										<span className="block min-w-0"><b className="whitespace-nowrap">Prix unitaire :</b> {detailPassif.prixUnitaire != null ? formatThousands(detailPassif.prixUnitaire) : '-'}</span>
-										<span className="block min-w-0"><b className="whitespace-nowrap">Créancier :</b> {renderPerson(detailPassif.creancierId)}</span>
-										<span className="block min-w-0"><b className="whitespace-nowrap">Détenteur :</b> {renderPerson(detailPassif.detentaire || detailPassif.detentaire)}</span>
-										<span className="block min-w-0"><b className="whitespace-nowrap">Ayant droit :</b> {renderPerson(detailPassif.ayantDroitId || detailPassif.ayant_droit || detailPassif.ayantDroit)}</span>
-										<span className="block min-w-0"><b className="whitespace-nowrap">Utilisateur débiteur :</b> {renderPerson(detailPassif.userId)}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Créancier :</b> {renderName(detailPassif.creancierId)}</span>
+										{/* <span className="block min-w-0"><b className="whitespace-nowrap">Détenteur :</b> {renderName(detailPassif.detentaire || detailPassif.detentaire)}</span> */}
+										<span className="block min-w-0 break-all"><b className="whitespace-nowrap">Ayant droit :</b> {renderEmail(detailPassif.ayantDroitId || detailPassif.ayant_droit || detailPassif.ayantDroit)}</span>
+										<span className="block min-w-0"><b className="whitespace-nowrap">Utilisateur débiteur :</b> {renderName(detailPassif.userId)}</span>
 										<span className="block min-w-0"><b className="whitespace-nowrap">Rôle :</b> {detailPassif.role || '-'}</span>
 										<span className="block min-w-0"><b className="whitespace-nowrap">Téléphone :</b> {detailPassif.userId?.userPhone || '-'}</span>
 										<span className="block min-w-0"><b className="whitespace-nowrap">Statut :</b> {detailPassif.isActive ? 'Actif' : 'Inactif'}</span>
@@ -249,7 +255,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 							<TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
 							<TableHead className="text-xs text-neutral-600 text-center">Quantité</TableHead>
-							<TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
+							<TableHead className="text-xs text-neutral-600">Ayant droit</TableHead>
 							<TableHead className="text-xs text-neutral-600">Rôle</TableHead>
 							<TableHead className="text-xs text-neutral-600">Type</TableHead>
 							<TableHead className="text-xs text-neutral-600">Statut</TableHead>
@@ -279,7 +285,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<TableCell className="text-sm truncate max-w-35" title={item.depot || '-'}>{item.depot || '-'}</TableCell>
 									<TableCell className="text-sm truncate max-w-35" title={item.depotAdresse || '-'}>{item.depotAdresse || '-'}</TableCell>
 									<TableCell className="text-sm text-center font-medium">{formatThousands(getQuantiteAffichee(item))}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaire)}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs">{renderName(item.detentaire || item.detentaire)}</TableCell>
 									<TableCell className="text-sm">{item.displayRole === 'DEBITEUR' ? 'Débiteur' : 'Créancier'}</TableCell>
 									<TableCell className="text-sm">
 										<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>
@@ -320,7 +326,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 				const produit = item.productName || (item.productId && (item.productId.productName || item.productId)) || '-';
 				const code = item.productCode || item.productId?.codeCPC || '-';
 				const quantite = getQuantiteAffichee(item);
-				const ayantDroit = renderPerson(item.ayant_droit || item.ayantDroit);
+				const ayantDroit = renderEmail(item.ayant_droit || item.ayantDroit);
 				const date = item.dateCreation || item.createdAt || item.approvedAt;
 
 				return (
@@ -345,13 +351,13 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<div className="font-semibold">Quantité</div>
 									<div>{quantite !== undefined && quantite !== null ? formatThousands(quantite) : '-'}</div>
 								</div>
-								<div className="text-xs text-neutral-600">Détenteur: {renderPerson(item.detentaire || item.detentaire)}</div>
+								<div className="text-xs text-neutral-600 break-all">Détenteur: {renderName(item.detentaire || item.detentaire)}</div>
 								<div className="text-xs text-neutral-600">Rôle: {item.displayRole === 'DEBITEUR' ? 'Débiteur' : 'Créancier'}</div>
 								<div className="flex flex-wrap gap-1 sm:justify-end">
 									<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>{typeBadge.label}</Badge>
 									<Badge className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>
 								</div>
-								<div className="text-xs text-neutral-600">Ayant droit: {ayantDroit}</div>
+								<div className="text-xs text-neutral-600 break-all">Ayant droit: {ayantDroit}</div>
 								<div className="text-xs text-neutral-500">{date ? dateFormat(date) : '-'}</div>
 								<div className="flex items-center gap-2 mt-2">
 									<Tooltip>

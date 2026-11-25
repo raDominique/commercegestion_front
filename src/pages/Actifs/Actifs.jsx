@@ -41,12 +41,18 @@ import PaginationControls from '../../components/commons/PaginationControls.jsx'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { deduplicateMovementRows } from '../../utils/movementRows.js';
 
-const renderPerson = (person) => {
+// Affiche uniquement l'adresse email d'une personne (détenteur)
+const renderEmail = (person) => {
 	if (!person) return '-';
 	if (typeof person === 'string') return person;
-	const name = person.userNickName || person.userName || person.name || '';
-	const email = person.userEmail || person.email || '';
-	return [name, email].filter(Boolean).join(' · ') || '-';
+	return person.userEmail || person.email || person.userNickName || person.userName || person.name || '-';
+};
+
+// Affiche uniquement le nom d'une personne (sans email)
+const renderName = (person) => {
+	if (!person) return '-';
+	if (typeof person === 'string') return person;
+	return person.userNickName || person.userName || person.name || '-';
 };
 
 const getQuantityValue = (value) => {
@@ -933,7 +939,7 @@ const Actifs = () => {
 													<span className="block min-w-0"><b className="whitespace-nowrap">Adresse :</b> {actif.depotId?.siteAddress || '-'}</span>
 													<span className="block min-w-0"><b className="whitespace-nowrap">Qté :</b> {formatThousands(getQuantityValue(actif.quantite))}</span>
 													<span className="block min-w-0"><b className="whitespace-nowrap">Disponible :</b> {formatThousands(getQuantityValue(actif.quantiteDisponible ?? actif.quantite))}</span>
-													<span className="block min-w-0"><b className="whitespace-nowrap">Détenteur :</b> {renderPerson(actif.detentaire.userName)} {renderPerson(actif.detentaire.userFirstName)}</span>
+													<span className="block min-w-0 break-all"><b className="whitespace-nowrap">Détenteur :</b> {renderEmail(actif.detentaire)}</span>
 													<span className="block min-w-0"><b className="whitespace-nowrap">Ayant droit :</b> {actif.ayant_droit ? [actif.ayant_droit.userNickName, actif.ayant_droit.userName].filter(Boolean).join(' ') : '-'}</span>
 													<span className="block min-w-0 sm:col-span-2"><b className="whitespace-nowrap">Date :</b> {actif.createdAt ? dateFormat(actif.createdAt) : '-'}</span>
 												</div>
@@ -958,7 +964,7 @@ const Actifs = () => {
 												<div><b>Adresse site :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
 											</div>
 										</div>
-										<div><b>Vendeur :</b> {renderPerson(detailActif.vendeurId || detailActif.detentaire)}</div>
+										<div><b>Vendeur :</b> {renderName(detailActif.vendeurId || detailActif.detentaire)}</div>
 										<div><b>Quantité à vendre :</b> {formatThousands(detailActif.quantite ?? detailActif._shopRaw?.quantite ?? 0)}</div>
 										<div><b>Quantité originale :</b> {formatThousands(detailActif.quantiteOriginale ?? detailActif._shopRaw?.quantiteOriginale ?? 0)}</div>
 										<div><b>Prix unitaire (Ar) :</b> {formatThousands(detailActif.prixUnitaire ?? detailActif._shopRaw?.prixUnitaire ?? 0)}</div>
@@ -975,8 +981,8 @@ const Actifs = () => {
 										<div><b>Adresse dépôt :</b> {detailActif.depotId?.siteAddress || detailActif.depotAdresse || '-'}</div>
 										<div><b>QTE :</b> {formatThousands(getQuantityValue(detailActif.quantite))}</div>
 										<div><b>En attente :</b> {formatThousands(getQuantityValue(detailActif.quantiteEnAttente))}</div>
-										<div><b>Disponible :</b> {formatThousands(getQuantityValue(detailActif.quantiteDisponible ?? detailActif.quantite))}</div>									<div><b>Détenteur :</b> {renderPerson(detailActif.detentaire)}</div>
-									<div><b>Ayant droit :</b> {renderPerson(detailActif.ayant_droit || detailActif.ayantDroit)}</div>
+										<div><b>Disponible :</b> {formatThousands(getQuantityValue(detailActif.quantiteDisponible ?? detailActif.quantite))}</div>									<div className="break-all"><b>Détenteur :</b> {renderEmail(detailActif.detentaire)}</div>
+									<div><b>Ayant droit :</b> {renderName(detailActif.ayant_droit || detailActif.ayantDroit)}</div>
 								</div>
 								)
 							) : null}
@@ -1060,7 +1066,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 										))}
 									</div>
 								</TableCell>
-								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire || item.detentaireId)}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{renderEmail(item.detentaire || item.detentaireId)}</TableCell>
 								<TableCell className="text-sm text-right whitespace-nowrap" style={ACTION_COL_STYLE_LG}>
 									<div className="flex items-center justify-end gap-1">
 										<Tooltip>
@@ -1137,7 +1143,7 @@ function ActifsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDetai
 									<Badge key={idx} className={`text-xs ${statusBadge.className} px-2 py-0.5 rounded`}>{statusBadge.label}</Badge>
 								))}
 							</div>
-							<div className="text-xs text-neutral-600">Détenteur: {renderPerson(item.detentaire || item.detentaireId)}</div>
+							<div className="text-xs text-neutral-600 break-all">Détenteur: {renderEmail(item.detentaire || item.detentaireId)}</div>
 							<div className="flex items-center gap-2 mt-2">
 								<Tooltip>
 									<TooltipTrigger asChild>
@@ -1222,7 +1228,7 @@ function SellItemsTableOrList({ loading, actifs, dateFormat, isDesktop, onShowDe
 								<TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
 								<TableCell className="text-sm text-right">{formatThousands(item.prixUnitaire)}</TableCell>
 								<TableCell className="text-sm truncate max-w-xs">{item.statut || '-'}</TableCell>
-								<TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell>
+								<TableCell className="text-sm truncate max-w-xs">{renderEmail(item.detentaire)}</TableCell>
 								<TableCell className="text-sm">{item.dateCreation ? dateFormat(item.dateCreation) : '-'}</TableCell>
 								{/* ✅ FIX : largeur forcée via style inline */}
 								<TableCell className="text-sm text-right whitespace-nowrap" style={ACTION_COL_STYLE_SM}>

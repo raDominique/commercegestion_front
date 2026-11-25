@@ -9,12 +9,10 @@ import { formatThousands } from '../../utils/formatNumber';
 import { getFullMediaUrl } from '../../services/media.service';
 import { Loader } from '../ui/loader';
 
-const renderPerson = (person) => {
+const renderEmail = (person) => {
   if (!person) return '-';
   if (typeof person === 'string') return person;
-  const name = person.userNickName || person.userName || person.name || '';
-  const email = person.userEmail || person.email || '';
-  return [name, email].filter(Boolean).join(' · ') || '-';
+  return person.userEmail || person.email || person.userNickName || person.userName || person.name || '-';
 };
 
 export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal, onVirerDroit }) {
@@ -69,7 +67,7 @@ export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, on
                   <TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
                   <TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
                   <TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
-                  <TableCell className="text-sm truncate max-w-xs">{renderPerson(item.detentaire)}</TableCell>
+                  <TableCell className="text-sm truncate max-w-xs">{renderEmail(item.detentaire)}</TableCell>
                   <TableCell className="text-sm text-right">
                     <div className="flex flex-col items-end gap-2">
                       <div className="flex gap-2 justify-end">
