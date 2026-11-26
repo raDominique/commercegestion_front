@@ -62,8 +62,8 @@ axiosConfig.interceptors.response.use(
       error.response.status === 401 &&
       !originalRequest._retry &&
       !(originalRequest.url && (
-        originalRequest.url.includes('/auth/login')
-        || originalRequest.url.includes('/auth/refresh')
+        originalRequest.url.includes('api/v1/auth/login')
+        || originalRequest.url.includes('api/v1/auth/refresh')
       ))
     ) {
       if (isBootstrapping) {
@@ -83,7 +83,7 @@ axiosConfig.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
       try {
-        const res = await axiosConfig.post('/auth/refresh');
+        const res = await axiosConfig.post('/api/v1/auth/refresh');
         const newToken = res.data.accessToken;
         setAccessToken(newToken);
         processQueue(null, newToken);
