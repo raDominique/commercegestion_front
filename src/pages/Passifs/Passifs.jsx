@@ -285,7 +285,7 @@ function PassifsTableOrList({ loading, passifs, dateFormat, isDesktop, onShowDet
 									<TableCell className="text-sm truncate max-w-35" title={item.depot || '-'}>{item.depot || '-'}</TableCell>
 									<TableCell className="text-sm truncate max-w-35" title={item.depotAdresse || '-'}>{item.depotAdresse || '-'}</TableCell>
 									<TableCell className="text-sm text-center font-medium">{formatThousands(getQuantiteAffichee(item))}</TableCell>
-									<TableCell className="text-sm truncate max-w-xs">{renderName(item.detentaire || item.detentaire)}</TableCell>
+									<TableCell className="text-sm truncate max-w-xs" title={renderEmail(item.ayantDroit || item.ayant_droit || item.ayantDroitId)}>{renderEmail(item.ayantDroit || item.ayant_droit || item.ayantDroitId)}</TableCell>
 									<TableCell className="text-sm">{item.displayRole === 'DEBITEUR' ? 'Débiteur' : 'Créancier'}</TableCell>
 									<TableCell className="text-sm">
 										<Badge className={`text-xs ${typeBadge.className} px-2 py-0.5 rounded`}>
