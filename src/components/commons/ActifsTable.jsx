@@ -15,7 +15,7 @@ const renderEmail = (person) => {
   return person.userEmail || person.email || person.userNickName || person.userName || person.name || '-';
 };
 
-export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal, onVirerDroit }) {
+export default function ActifsTable({ loading, actifs, isDesktop, onShowDetail, onOpenStockModal, onOpenSellModal, onVirerDroit }) {
   const [loadingStates, setLoadingStates] = useState({});
 
   if (loading) return <div className="p-8 flex justify-center"><Loader message="Chargement..." /></div>;
@@ -45,7 +45,14 @@ export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, on
               <TableHead className="text-xs text-neutral-600">Image</TableHead>
               <TableHead className="text-xs text-neutral-600">Dépôt</TableHead>
               <TableHead className="text-xs text-neutral-600">Adresse dépôt</TableHead>
-              <TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
+              {actifs.some(item => item.quantiteDetenue != null) ? (
+                <>
+                  <TableHead className="text-xs text-neutral-600 text-right">Quantité détenue</TableHead>
+                  <TableHead className="text-xs text-neutral-600 text-right">Quantité virable</TableHead>
+                </>
+              ) : (
+                <TableHead className="text-xs text-neutral-600 text-right">Qté</TableHead>
+              )}
               <TableHead className="text-xs text-neutral-600">Détenteur</TableHead>
               <TableHead className="text-xs text-neutral-600 text-right p-4">Actions</TableHead>
             </TableRow>
@@ -66,7 +73,14 @@ export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, on
                   </TableCell>
                   <TableCell className="text-sm truncate max-w-xs">{item.depot || '-'}</TableCell>
                   <TableCell className="text-sm truncate max-w-xs">{item.depotAdresse || '-'}</TableCell>
-                  <TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
+                  {item.quantiteDetenue != null ? (
+                    <>
+                      <TableCell className="text-sm text-right">{formatThousands(item.quantiteDetenue)}</TableCell>
+                      <TableCell className="text-sm text-right">{formatThousands(item.quantiteMaxTransferable)}</TableCell>
+                    </>
+                  ) : (
+                    <TableCell className="text-sm text-right">{formatThousands(item.quantite)}</TableCell>
+                  )}
                   <TableCell className="text-sm truncate max-w-xs">{renderEmail(item.detentaire)}</TableCell>
                   <TableCell className="text-sm text-right">
                     <div className="flex flex-col items-end gap-2">
@@ -147,7 +161,14 @@ export default function ActifsTable({ loading, actifs, dateFormat, isDesktop, on
                 </div>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-2">
-                <div className="text-sm font-medium text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
+                {item.quantiteDetenue != null ? (
+                  <>
+                    <div className="text-sm font-medium text-neutral-900">Détenu: {formatThousands(item.quantiteDetenue)}</div>
+                    <div className="text-sm font-medium text-neutral-900">Virable: {formatThousands(item.quantiteMaxTransferable)}</div>
+                  </>
+                ) : (
+                  <div className="text-sm font-medium text-neutral-900">Qté: {formatThousands(item.quantite)}</div>
+                )}
                 <div className="text-xs text-neutral-600">PU: {formatThousands(item.prixUnitaire)}</div>
                 <div className="text-sm text-neutral-900 font-medium">Total: {formatThousands(item.valeurTotale)}</div>
                 <div className="flex gap-2 mt-2">

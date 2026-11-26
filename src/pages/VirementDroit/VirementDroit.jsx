@@ -17,7 +17,7 @@ import UserNotValidatedBanner from '../../components/commons/UserNotValidatedBan
 import ActifsTable from '../../components/commons/ActifsTable';
 import PaginationControls from '../../components/commons/PaginationControls.jsx';
 import { getUserByEmail, getUsers } from '../../services/user.service';
-import { getMyDepositsAtOthers, virementDroit, createVirementsDroitBulk } from '../../services/transaction.service';
+import { getMyDepositsAtOthers, createVirementsDroitBulk } from '../../services/transaction.service';
 import { getAccessToken } from '../../services/token.service';
 import useDateFormat from '../../utils/useDateFormat.jsx';
 import useScreenType from '../../utils/useScreenType';
@@ -101,7 +101,10 @@ const VirementDroit = () => {
         productImage: item.productId?.productImage || null,
         depot: item.siteDestinationId?.siteName || item.siteOrigineId?.siteName || '-',
         depotAdresse: item.siteDestinationId?.siteAddress || item.siteOrigineId?.siteAddress || '-',
-        quantite: item.remainingQuantity ?? item.remainingQuantite ?? item.reliquat ?? item.quantite,
+        quantiteDetenue: item.quantiteDetenue ?? item.quantite,
+        quantiteMaxTransferable: item.quantiteMaxTransferable ?? item.quantiteRestantAVirer ?? item.quantite,
+        quantiteRestantAVirer: item.quantiteRestantAVirer ?? item.quantiteMaxTransferable ?? item.quantite,
+        quantite: item.quantiteDetenue ?? item.quantite,
         status: item.status,
         detentaire: item.detentaire,
         ayant_droit: item.ayant_droit,
@@ -218,8 +221,9 @@ const VirementDroit = () => {
         setLoadingVirement(false);
         return;
       }
-      if (actif?.quantite != null && quantiteVal > Number(actif.quantite)) {
-        toast.error('Quantité supérieure au reliquat de ce dépôt');
+      const quantiteMaxTransferable = Number(actif?.quantiteMaxTransferable);
+      if (actif?.quantiteMaxTransferable != null && (!Number.isFinite(quantiteMaxTransferable) || quantiteVal > quantiteMaxTransferable)) {
+        toast.error('Quantité supérieure à la quantité virable de ce dépôt');
         setLoadingVirement(false);
         return;
       }
@@ -248,7 +252,7 @@ const VirementDroit = () => {
         quantite: quantiteVal,
         ...(form.observations.trim() ? { observations: form.observations.trim() } : {}),
       }], token);
-      const reliquat = Math.max(0, Number(actif.quantite) - quantiteVal);
+      const reliquat = Math.max(0, quantiteMaxTransferable - quantiteVal);
       const errors = Array.isArray(result?.errors) ? result.errors : [];
       if (result?.status === 'success') toast.success(result?.message || `Virement de droit envoyé et en attente d'approbation. Quantité : ${quantiteVal}; reliquat estimé : ${reliquat}.`);
       else if (result?.status === 'partial_success') { toast.warning(result?.message || `${errors.length} échec(s)`); errors.slice(0,3).forEach((e) => toast.error(e?.reason || 'Échec')); }
@@ -273,10 +277,14 @@ const VirementDroit = () => {
   const actif = selectedActifForVirement;
   const productId = actif?.productId?._id || actif?.productId || actif?.id || '';
   const quantity = Number(form.quantite);
+  const quantiteMaxTransferable = Number(actif?.quantiteMaxTransferable);
+  const reliquatAfterSaisie = Number.isFinite(quantiteMaxTransferable)
+    ? Math.max(0, quantiteMaxTransferable - (Number.isFinite(quantity) ? quantity : 0))
+    : null;
   const quantityIsValid = form.quantite !== ''
     && Number.isFinite(quantity)
     && quantity > 0
-    && (actif?.quantite == null || quantity <= Number(actif.quantite));
+    && (actif?.quantiteMaxTransferable == null || (Number.isFinite(quantiteMaxTransferable) && quantity <= quantiteMaxTransferable));
   const isVirementFormValid = Boolean(
     selectedRecipient
     && productId
@@ -529,17 +537,47 @@ const VirementDroit = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-1">Quantité <span className="text-red-500 ml-0.5">*</span></label>
-                  <Input
-                    type="number"
-                    min="any"
-                    step="any"
-                    max={actif?.quantite ?? undefined}
-                    value={form.quantite}
-                    onChange={(e) => setForm(prev => ({ ...prev, quantite: e.target.value }))}
-                    className="w-full border-neutral-300"
-                  />
-                  {actif?.quantite != null && (
-                    <div className="text-xs text-neutral-500 mt-1">Disponible: {actif.quantite}</div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      min={0}
+                      step="any"
+                      max={actif?.quantiteMaxTransferable ?? undefined}
+                      value={form.quantite}
+                      onChange={(e) => {
+                        const rawValue = e.target.value;
+                        if (rawValue === '') {
+                          setForm(prev => ({ ...prev, quantite: '' }));
+                          return;
+                        }
+                        const nextValue = Number(rawValue);
+                        const max = Number(actif?.quantiteMaxTransferable);
+                        setForm(prev => ({
+                          ...prev,
+                          quantite: Number.isFinite(max) ? String(Math.min(max, Math.max(0, nextValue))) : rawValue,
+                        }));
+                      }}
+                      className="w-full border-neutral-300"
+                    />
+                    {actif?.quantiteMaxTransferable != null && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setForm(prev => ({ ...prev, quantite: String(actif.quantiteMaxTransferable) }))}
+                        className="shrink-0"
+                      >
+                        Tout virer
+                      </Button>
+                    )}
+                  </div>
+                  {actif?.quantiteDetenue != null && (
+                    <div className="text-xs text-neutral-500 mt-1">Détenu: {actif.quantiteDetenue}</div>
+                  )}
+                  {actif?.quantiteMaxTransferable != null && (
+                    <div className="text-xs text-neutral-500 mt-1">Virable: {actif.quantiteMaxTransferable}</div>
+                  )}
+                  {reliquatAfterSaisie != null && (
+                    <div className="text-xs text-neutral-500 mt-1">Reste à virer: {reliquatAfterSaisie}</div>
                   )}
                 </div>
 
